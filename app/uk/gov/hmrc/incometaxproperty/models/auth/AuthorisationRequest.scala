@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.controllers
+package uk.gov.hmrc.incometaxproperty.models.auth
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.mvc.{Request, WrappedRequest}
+import uk.gov.hmrc.incometaxproperty.models.User
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
+case class AuthorisationRequest[T](user: User, request: Request[T]) extends WrappedRequest[T](request)
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
-  }
-}

@@ -19,9 +19,9 @@ package uk.gov.hmrc.incometaxproperty.models.Responses
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import uk.gov.hmrc.incometaxproperty.models.connectors.errors.ApiError
 import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
+import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 case class GetBusinessDetailsResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[BusinessDetails]])
 
 object GetBusinessDetailsResponse extends Logging {
@@ -40,7 +40,6 @@ object GetBusinessDetailsResponse extends Logging {
 
     private def extractResult(response: HttpResponse): Either[ApiError, Option[BusinessDetails]] = {
       val json = response.json
-      logger.error("getBusinessDetailsResponse (Test): " + json.toString())
       json.validate[BusinessDetails]
         .fold[Either[ApiError, Option[BusinessDetails]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
     }

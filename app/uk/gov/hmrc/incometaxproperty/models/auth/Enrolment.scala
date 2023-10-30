@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.auth
 
-import play.api.libs.json.{Json, OFormat}
+sealed abstract class Enrolment(val key: String, val value: String)
 
-import java.time.LocalDate
-
-case class BusinessDetails(tradingStartDate: LocalDate, cashOrAccruals: Boolean)
-
-object BusinessDetails {
-  implicit val format: OFormat[BusinessDetails] = Json.format[BusinessDetails]
+object Enrolment {
+  case object Individual extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
+  case object Agent extends Enrolment(key = "HMRC-AS-AGENT", value = "AgentReferenceNumber")
+  case object Nino extends Enrolment(key = "HMRC-NI", value = "NINO")
 }

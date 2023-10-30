@@ -34,7 +34,8 @@ package uk.gov.hmrc.incometaxproperty.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.incometaxproperty.models.{ApiServiceError, BusinessDetails}
+import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
+import uk.gov.hmrc.incometaxproperty.models.errors.ApiServiceError
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,9 +44,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConnector)
                                            (implicit ec: ExecutionContext) {
 
-  def getBusinessDetails(taxYear: Int, userId: String)
-                             (implicit hc: HeaderCarrier): Future[Either[ApiServiceError, Option[BusinessDetails]]] = {
-    connector.getBusinessDetails(taxYear, userId).map {
+  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ApiServiceError, Option[BusinessDetails]]] = {
+    connector.getBusinessDetails(nino).map {
       case Left(error) => Left(ApiServiceError(error.status.toString))
       case Right(allBusinessDetails) => Right(allBusinessDetails)
     }

@@ -19,8 +19,8 @@ package uk.gov.hmrc.incometaxproperty.connectors
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.models.Responses.GetBusinessDetailsResponse
-import uk.gov.hmrc.incometaxproperty.models.connectors.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.{ApiServiceError, BusinessDetails}
+import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
+import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
 import java.net.URL
 import javax.inject.Inject
@@ -33,9 +33,9 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
 
   override protected[connectors] val appConfig: AppConfig = appConf
 
-  def getBusinessDetails(taxYear: Int, userId: String)
+  def getBusinessDetails(nino: String)
                              (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[BusinessDetails]]] = {
-    val url = new URL(s"$baseUrl/income-tax/income/state-benefits/23-24/$userId")
+    val url = new URL(s"${appConfig.ifBaseUrl}/registration/business-details/nino/$nino")
     val apiVersion = "1171"
 
     val getRequestResponse = callGetBusinessDetails(url)(ifHeaderCarrier(url, apiVersion))

@@ -23,12 +23,10 @@ import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.utils.HeaderCarrierSyntax.HeaderCarrierOps
 
 import java.net.URL
-import scala.+:
 
 trait IFConnector {
 
   protected val appConfig: AppConfig
-  protected[connectors] lazy val baseUrl: String = if (appConfig.ifEnvironment == "test") appConfig.ifBaseUrl + "/if" else appConfig.ifBaseUrl
 
   protected val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 

@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.services
 
-import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 
-import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 
-case class BusinessDetails(tradingStartDate: LocalDate, cashOrAccruals: Boolean)
+@Singleton
+class AuthService @Inject()(val authConnector: AuthConnector) extends AuthorisedFunctions
 
-object BusinessDetails {
-  implicit val format: OFormat[BusinessDetails] = Json.format[BusinessDetails]
-}
