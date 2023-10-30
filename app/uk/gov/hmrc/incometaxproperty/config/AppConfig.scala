@@ -23,4 +23,11 @@ import play.api.Configuration
 class AppConfig @Inject()(config: Configuration) {
 
   val appName: String = config.get[String]("appName")
+
+  lazy val ifBaseUrl: String = config.get[String]( "integration-framework")
+  lazy val ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+
+  private lazy val authorisationTokenKey: String = "microservice.services.integration-framework.authorisation-token"
+  def authorisationTokenFor(apiVersion: String): String = config.get[String](authorisationTokenKey + s".$apiVersion")
+
 }
