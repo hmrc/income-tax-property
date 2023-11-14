@@ -25,7 +25,7 @@ case object DataNotUpdatedError extends ServiceError {
 }
 
 case object DataNotFoundError extends ServiceError {
-  override val message: String = "User data could not be found due to mongo exception"
+  override val message: String = "User data could not be found"
 }
 
 case class MongoError(error: String) extends ServiceError {

@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.Responses
+package uk.gov.hmrc.incometaxproperty.models.responses
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 sealed trait IncomeSourceDetailsResponseModel
 
-case class IncomeSourceDetailsModel(nino: String,
-                                    mtdbsa: String,
+case class IncomeSourceDetailsModel(safeId: String,
+                                    nino: String,
+                                    mtdId: String,
                                     yearOfMigration: Option[String],
+                                    propertyIncome: Boolean,
                                     businesses: List[BusinessDetailsModel],
                                     properties: List[PropertyDetailsModel]) extends IncomeSourceDetailsResponseModel
 

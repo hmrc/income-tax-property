@@ -19,7 +19,7 @@ package uk.gov.hmrc.incometaxproperty.connectors
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.parsers.PropertyDetailsParser
-import uk.gov.hmrc.incometaxproperty.models.Responses.IncomeSourceDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
 import java.net.URL

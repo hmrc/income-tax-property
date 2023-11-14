@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
-import uk.gov.hmrc.incometaxproperty.models.Responses.PropertyDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
 
 case class PropertyDetailsParser(httpResponse: HttpResponse, result: Either[ApiError, Option[PropertyDetailsModel]])
 
