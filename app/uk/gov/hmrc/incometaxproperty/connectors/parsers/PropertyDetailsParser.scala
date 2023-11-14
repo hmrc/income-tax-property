@@ -16,33 +16,57 @@
 
 package uk.gov.hmrc.incometaxproperty.connectors.parsers
 
-import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, ParsingError, ServiceError}
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{JsPath, JsonValidationError}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import uk.gov.hmrc.incometaxproperty.connectors.Parser
-import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.responses.{ErrorBodyModel, ErrorsBodyModel, IncomeSourceDetailsModel, PropertyDetailsModel}
 
-case class PropertyDetailsParser(httpResponse: HttpResponse, result: Either[ApiError, Option[PropertyDetailsModel]])
 
 object PropertyDetailsParser extends Logging {
 
-  implicit val getBusinessDetailsResponseReads: HttpReads[PropertyDetailsParser] = new HttpReads[PropertyDetailsParser] with Parser {
+  type GetIncomeSourceDetailResponse = Either[ServiceError, IncomeSourceDetailsModel]
 
-    override val parserName: String = this.getClass.getSimpleName
+  implicit object getProperDetailsResponseReads extends HttpReads[GetIncomeSourceDetailResponse] {
 
-    override def read(method: String, url: String, response: HttpResponse): PropertyDetailsParser = response.status match {
-      case OK => PropertyDetailsParser(response, extractResult(response))
-      case NOT_FOUND => PropertyDetailsParser(response, Right(None))
-      case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
-        PropertyDetailsParser(response, handleError(response, response.status))
-      case _ => PropertyDetailsParser(response, handleError(response, INTERNAL_SERVER_ERROR))
-    }
+     val parserName: String = this.getClass.getSimpleName
 
-    private def extractResult(response: HttpResponse): Either[ApiError, Option[PropertyDetailsModel]] = {
-      val json = response.json
-      json.validate[PropertyDetailsModel]
-        .fold[Either[ApiError, Option[PropertyDetailsModel]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
+     def read(method: String, url: String, response: HttpResponse): GetIncomeSourceDetailResponse = response.status match {
+      case OK => response.json.validate[IncomeSourceDetailsModel](IncomeSourceDetailsModel.format).fold[GetIncomeSourceDetailResponse](
+        validationErrors => badSuccessJsonFromAPI(validationErrors),
+        parsedModel => Right(parsedModel)
+      )
+      case NOT_FOUND => handleIFError(response)
+      case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY => handleIFError(response)
+      case _ => handleIFError(response)
     }
   }
+
+  def badSuccessJsonFromAPI[Response](validationErrors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])] ): Either[ServiceError, Response] = {
+    Left(ParsingError(s"$validationErrors"))
+  }
+
+  def handleIFError[Response](response: HttpResponse): Either[ServiceError, Response] = {
+
+
+    try {
+      val json = response.json
+
+      lazy val apiError = json.asOpt[ErrorBodyModel]
+      lazy val apiErrors = json.asOpt[ErrorsBodyModel]
+
+      (apiError, apiErrors) match {
+        case (Some(apiError), _) => Left(ApiServiceError(apiError.reason))
+        case (_, Some(apiErrors)) => Left(ApiServiceError(apiErrors.failures.toString()))
+        case _ =>
+          Left(ApiServiceError(""))
+      }
+    } catch {
+      case _:
+        Exception =>
+        Left(ParsingError(""))
+    }
+  }
+
 }

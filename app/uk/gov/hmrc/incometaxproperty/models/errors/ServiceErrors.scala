@@ -40,3 +40,6 @@ case class ApiServiceError(error: String) extends ServiceError {
   override val message: String = s"API exception occurred. Exception: $error"
 }
 
+case class ParsingError(error: String) extends ServiceError {
+  override val message: String = s"parsing error occurred $error"
+}

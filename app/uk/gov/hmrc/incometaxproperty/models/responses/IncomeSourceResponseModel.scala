@@ -16,70 +16,33 @@
 
 package uk.gov.hmrc.incometaxproperty.models.responses
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import IncomeSourceDetailsModel.TaxPayerDisplayResponse
+import play.api.libs.json.{Format, JsValue, Json, OFormat}
+import java.time.LocalDateTime
 
-sealed trait IncomeSourceDetailsResponseModel
+sealed trait IncomeSourceDetailsResponse {
+  def toJson: JsValue
+}
 
-case class IncomeSourceDetailsModel(safeId: String,
-                                    nino: String,
-                                    mtdId: String,
-                                    yearOfMigration: Option[String],
-                                    propertyIncome: Boolean,
-                                    businesses: List[BusinessDetailsModel],
-                                    properties: List[PropertyDetailsModel]) extends IncomeSourceDetailsResponseModel
+case class IncomeSourceDetailsModel(processingDate: LocalDateTime,
+                                    taxPayerDisplayResponse: TaxPayerDisplayResponse
+                                   ) extends IncomeSourceDetailsResponse {
 
-case class IncomeSourceDetailsError(status: Int, reason: String) extends IncomeSourceDetailsResponseModel
-
-case class IncomeSourceDetailsNotFound(status: Int, reason: String) extends IncomeSourceDetailsResponseModel
+  override def toJson: JsValue = Json.toJson(this)
+}
 
 object IncomeSourceDetailsModel {
-
-  def applyWithFields(nino: String,
-                      mtdbsa: String,
-                      yearOfMigration: Option[String],
-                      businessData: Option[List[BusinessDetailsModel]],
-                      propertyData: Option[List[PropertyDetailsModel]]): IncomeSourceDetailsModel = {
-    val businessDetails = businessData match {
-      case Some(data) => data
-      case None => List()
-    }
-    val propertyDetails = propertyData match {
-      case Some(data) => data
-      case None => List()
-    }
-    IncomeSourceDetailsModel(
-      nino,
-      mtdbsa,
-      yearOfMigration,
-      businessDetails,
-      propertyDetails
-    )
-  }
-  val ifReads: Reads[IncomeSourceDetailsModel] = (
-    (__ \ "taxPayerDisplayResponse" \ "nino").read[String] and
-      (__ \ "taxPayerDisplayResponse" \ "mtdId").read[String] and
-      (__ \ "taxPayerDisplayResponse" \ "yearOfMigration").readNullable[String] and
-      (__ \ "taxPayerDisplayResponse" \ "businessData").readNullable(Reads.list(BusinessDetailsModel.desReads)) and
-      (__ \ "taxPayerDisplayResponse" \ "propertyData").readNullable(Reads.list(PropertyDetailsModel.desReads))
-    ) (IncomeSourceDetailsModel.applyWithFields _)
-
-  val desReads: Reads[IncomeSourceDetailsModel] = (
-    (__ \ "nino").read[String] and
-      (__ \ "mtdbsa").read[String].orElse((__ \ "mtdId").read[String]) and
-      (__ \ "yearOfMigration").readNullable[String] and
-      (__ \ "businessData").readNullable(Reads.list(BusinessDetailsModel.desReads)) and
-      (__ \ "propertyData").readNullable(Reads.list(PropertyDetailsModel.desReads))
-    ) (IncomeSourceDetailsModel.applyWithFields _)
-
   implicit val format: Format[IncomeSourceDetailsModel] = Json.format[IncomeSourceDetailsModel]
 
-}
+  case class TaxPayerDisplayResponse(safeId: String,
+                                     nino: String,
+                                     mtdId: String,
+                                     yearOfMigration: Option[String],
+                                     propertyIncome: Boolean,
+                                     businessData: Option[Seq[BusinessDetailsModel]],
+                                     propertyData: Option[Seq[PropertyDetailsModel]])
 
-object IncomeSourceDetailsError {
-  implicit val format: Format[IncomeSourceDetailsError] = Json.format[IncomeSourceDetailsError]
-}
-
-object IncomeSourceDetailsNotFound {
-  implicit val format: Format[IncomeSourceDetailsNotFound] = Json.format[IncomeSourceDetailsNotFound]
+  object TaxPayerDisplayResponse {
+    implicit val taxPayerDisplayResponseFormat: OFormat[TaxPayerDisplayResponse] = Json.format[TaxPayerDisplayResponse]
+  }
 }
