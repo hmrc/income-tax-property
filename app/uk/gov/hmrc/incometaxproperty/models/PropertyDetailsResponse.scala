@@ -16,12 +16,6 @@
 
 package uk.gov.hmrc.incometaxproperty.models
 
-import play.api.libs.json.{Json, OFormat}
-
 import java.time.LocalDate
 
-case class BusinessDetails(tradingStartDate: LocalDate, cashOrAccruals: Boolean)
-
-object BusinessDetails {
-  implicit val format: OFormat[BusinessDetails] = Json.format[BusinessDetails]
-}
+case class PropertyDetailsResponse(tradingStartDate: LocalDate, cashOrAccruals: Boolean)

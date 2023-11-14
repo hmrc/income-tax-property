@@ -18,8 +18,8 @@ package uk.gov.hmrc.incometaxproperty.connectors
 
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.models.Responses.GetBusinessDetailsResponse
-import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
+import uk.gov.hmrc.incometaxproperty.connectors.parsers.PropertyDetailsParser
+import uk.gov.hmrc.incometaxproperty.models.Responses.IncomeSourceDetailsModel
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
 import java.net.URL
@@ -34,7 +34,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
   override protected[connectors] val appConfig: AppConfig = appConf
 
   def getBusinessDetails(nino: String)
-                             (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[BusinessDetails]]] = {
+                             (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyDetailsParser]]] = {
     val url = new URL(s"${appConfig.ifBaseUrl}/registration/business-details/nino/$nino")
     val apiVersion = "1171"
 
@@ -43,7 +43,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     getRequestResponse.map(res => res.result)
   }
 
-  private def callGetBusinessDetails(url: URL)(implicit hc: HeaderCarrier): Future[GetBusinessDetailsResponse] = {
-    httpClient.GET[GetBusinessDetailsResponse](url)
+  private def callGetBusinessDetails(url: URL)(implicit hc: HeaderCarrier): Future[PropertyDetailsParser] = {
+    httpClient.GET[PropertyDetailsParser](url)
   }
 }
