@@ -36,6 +36,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{DataNotFoundError, ServiceError}
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,13 +45,19 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConnector)
                                            (implicit ec: ExecutionContext) {
 
-  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, Option[PropertyDetailsResponse]]] = {
+  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyDetailsResponse]] = {
     connector.getBusinessDetails(nino).map {
       case Left(error) => Left(error)
-      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold(
+      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold[Either[ServiceError, PropertyDetailsResponse]](
         Left(DataNotFoundError))(
-        propDetailsList => PropertyDetailsResponse(propDetailsList.head.tradingStartDate, propDetailsList.head.cashOrAccruals)
-      )
+        propDetailsList =>
+          Right(PropertyDetailsResponse(filterProperty(propDetailsList).head.tradingStartDate,
+            filterProperty(propDetailsList).head.cashOrAccruals)
+      ))
     }
+  }
+
+  def filterProperty(propertyDetailsList: Seq[PropertyDetailsModel]): Seq[PropertyDetailsModel] = {
+    propertyDetailsList.filter(propData => propData.incomeSourceType.contains("uk-property"))
   }
 }
