@@ -33,8 +33,7 @@ class IntegrationFrameworkController @Inject()(integrationFrameworkService: Inte
 
   def getBusinessDetails(nino: String): Action[AnyContent] = authorisedAction.async { implicit request =>
     integrationFrameworkService.getBusinessDetails(nino).map {
-      case Right(None) => NoContent
-      case Right(Some(businessDetails)) => Ok(Json.toJson(businessDetails))
+      case Right(businessDetails) => Ok(Json.toJson(businessDetails))
       case Left(_) => InternalServerError
     }
   }
