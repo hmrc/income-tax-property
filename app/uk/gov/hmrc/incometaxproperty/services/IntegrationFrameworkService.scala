@@ -35,9 +35,7 @@ package uk.gov.hmrc.incometaxproperty.services
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
-import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
-
-import java.time.LocalDate
+import uk.gov.hmrc.incometaxproperty.models.errors.{DataNotFoundError, ServiceError}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,15 +45,11 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
 
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, Option[PropertyDetailsResponse]]] = {
     connector.getBusinessDetails(nino).map {
-      case Left(error) => Left(ApiServiceError(error.status.toString))
-      case Right(allBusinessDetails) => Right(allBusinessDetails.map())
-    }
-  }
-
-  def getProperDetails(cashOrAccurals: Option[Boolean], tradingStartDate: Option[LocalDate]): Either[ServiceError, PropertyDetailsResponse] = {
-    (cashOrAccurals, tradingStartDate) match {
-      case (Some(cashOrAcc), Some(startDate)) => Right(PropertyDetailsResponse(startDate, cashOrAcc))
-      case (_, _) => Left(DataNotFoundError)
+      case Left(error) => Left(error)
+      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold(
+        Left(DataNotFoundError))(
+        propDetailsList => PropertyDetailsResponse(propDetailsList.head.tradingStartDate, propDetailsList.head.cashOrAccruals)
+      )
     }
   }
 }
