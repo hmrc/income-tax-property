@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.incometaxproperty.models.responses
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import java.time.LocalDate
-import scala.util.{Success, Try}
 
 case class PropertyDetailsModel(incomeSourceType: Option[String],
                                 incomeSourceId: String,

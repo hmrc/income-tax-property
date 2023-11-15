@@ -17,7 +17,6 @@
 package uk.gov.hmrc.incometaxproperty.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
 
 import java.time.LocalDate
 

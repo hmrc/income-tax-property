@@ -20,13 +20,16 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
+import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
 import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
-import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, SingleErrorBody}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, ServiceError, SingleErrorBody}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
 import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnector
-import scala.concurrent.ExecutionContext.Implicits.global
 
-import java.time.LocalDate
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.time.{LocalDate, LocalDateTime}
+import scala.util.Either
 
 class IntegrationFrameworkServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
@@ -34,22 +37,32 @@ class IntegrationFrameworkServiceSpec extends UnitTest
 {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  private val apiError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError)
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
   private val underTest = new IntegrationFrameworkService(mockIntegrationFrameworkConnector)
 
   ".GetBusinessDetails" should {
     "return error when GetBusinessDetails fails" in {
-      mockGetBusinessDetails( "some-nino", Left(apiError))
-      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError(apiError.status.toString))
+      mockGetBusinessDetails( "some-nino", Left(ApiServiceError("error")))
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("error"))
     }
 
     "return BusinessDetails when GetBusinessDetails succeeds" in {
-      val businessDetails = BusinessDetails(LocalDate.now(), true)
-      mockGetBusinessDetails("some-nino", Right(Some(businessDetails)))
+      val tradingStartDate = LocalDate.parse("2020-12-10")
+      val propertyDetailsModel = PropertyDetailsModel(
+        Some("uk-property"), "", LocalDate.now(), LocalDate.now(),
+        Some(tradingStartDate), Some(true),
+        None, None, None, None, None, None, None, None, None, None, None)
 
-      await(underTest.getBusinessDetails("some-nino")) shouldBe Right(Some(businessDetails))
+      val  incomeSourceModel = IncomeSourceDetailsModel(
+        LocalDateTime.now(),
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, true, None, Some(Seq(propertyDetailsModel)))
+      )
+
+      mockGetBusinessDetails("some-nino", Right(incomeSourceModel))
+
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
+        PropertyDetailsResponse(Some(tradingStartDate), Some(true)))
     }
   }
 }

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3}
+import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.incometaxproperty.models.BusinessDetails
-import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
+import uk.gov.hmrc.incometaxproperty.connectors.parsers.PropertyDetailsParser.GetIncomeSourceDetailResponse
+
 
 import scala.concurrent.Future
 
@@ -30,8 +30,8 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
   protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
 
   def mockGetBusinessDetails(nino: String,
-                                  result: Either[ApiError, Option[BusinessDetails]])
-  : CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[BusinessDetails]]]] = {
+                                  result: GetIncomeSourceDetailResponse)
+  : CallHandler2[String, HeaderCarrier, Future[GetIncomeSourceDetailResponse]] = {
     (mockIntegrationFrameworkConnector.getBusinessDetails(_: String)(_: HeaderCarrier))
       .expects(nino, *)
       .returning(Future.successful(result))

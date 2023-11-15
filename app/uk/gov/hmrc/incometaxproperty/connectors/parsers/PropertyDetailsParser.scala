@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incometaxproperty.connectors.parsers
 
-import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, ParsingError, ServiceError}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, ParsingError, ServiceError}
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsPath, JsonValidationError}

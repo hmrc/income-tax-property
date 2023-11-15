@@ -38,6 +38,7 @@ import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{DataNotFoundError, ServiceError}
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
 
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,9 +52,9 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
       case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold[Either[ServiceError, PropertyDetailsResponse]](
         Left(DataNotFoundError))(
         propDetailsList =>
-          Right(PropertyDetailsResponse(filterProperty(propDetailsList).head.tradingStartDate,
-            filterProperty(propDetailsList).head.cashOrAccruals)
-      ))
+          Right(PropertyDetailsResponse(filterProperty(propDetailsList).headOption.fold(Option.empty[LocalDate])(pd => pd.tradingStartDate),
+            filterProperty(propDetailsList).headOption.fold(Option.empty[Boolean])(pd => pd.cashOrAccruals)
+      )))
     }
   }
 
