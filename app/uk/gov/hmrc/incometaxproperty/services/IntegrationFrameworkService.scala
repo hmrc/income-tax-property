@@ -34,11 +34,11 @@ package uk.gov.hmrc.incometaxproperty.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
+import uk.gov.hmrc.incometaxproperty.models.BusinessDetailsResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{DataNotFoundError, ServiceError}
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel.toResponseModel
 
-import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,19 +46,18 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConnector)
                                            (implicit ec: ExecutionContext) {
 
-  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyDetailsResponse]] = {
+  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, BusinessDetailsResponse]] = {
     connector.getBusinessDetails(nino).map {
       case Left(error) => Left(error)
-      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold[Either[ServiceError, PropertyDetailsResponse]](
+      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold[Either[ServiceError, BusinessDetailsResponse]](
         Left(DataNotFoundError))(
         propDetailsList =>
-          Right(PropertyDetailsResponse(filterProperty(propDetailsList).headOption.fold(Option.empty[LocalDate])(pd => pd.tradingStartDate),
-            filterProperty(propDetailsList).headOption.fold(Option.empty[Boolean])(pd => pd.cashOrAccruals)
-      )))
+          Right(BusinessDetailsResponse(filterProperty(propDetailsList).map(property => toResponseModel(property)))))
     }
   }
 
   def filterProperty(propertyDetailsList: Seq[PropertyDetailsModel]): Seq[PropertyDetailsModel] = {
-    propertyDetailsList.filter(propData => propData.incomeSourceType.contains("uk-property"))
+    Seq(propertyDetailsList.find(propData => propData.incomeSourceType.contains("uk-property")),
+    propertyDetailsList.find(propData => propData.incomeSourceType.contains("foreign-property"))).flatten
   }
 }

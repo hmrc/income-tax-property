@@ -17,6 +17,7 @@
 package uk.gov.hmrc.incometaxproperty.models.responses
 
 import play.api.libs.json._
+import uk.gov.hmrc.incometaxproperty.models.PropertyData
 
 import java.time.LocalDate
 
@@ -40,4 +41,8 @@ case class PropertyDetailsModel(incomeSourceType: Option[String],
 
 object PropertyDetailsModel {
   implicit val format: OFormat[PropertyDetailsModel] = Json.format[PropertyDetailsModel]
+
+  def toResponseModel(propertyDetailsModel: PropertyDetailsModel): PropertyData = {
+    PropertyData(propertyDetailsModel.incomeSourceType, propertyDetailsModel.tradingStartDate, propertyDetailsModel.cashOrAccruals)
+  }
 }

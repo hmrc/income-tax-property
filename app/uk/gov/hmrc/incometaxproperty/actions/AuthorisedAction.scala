@@ -69,7 +69,7 @@ class AuthorisedAction @Inject()(defaultActionBuilder: DefaultActionBuilder,
         implicit val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
         authorised().retrieve(affinityGroup) {
           case Some(AffinityGroup.Agent) => agentAuthentication(block, mtdItId)(request, headerCarrier)
-          case _ => individualAuthentication(block, mtdItId)(request, headerCarrier)
+          case Some(AffinityGroup.Individual) => individualAuthentication(block, mtdItId)(request, headerCarrier)
         } recover {
           case _: NoActiveSession =>
             val logMessage = s"[AuthorisedAction][async] - No active session."

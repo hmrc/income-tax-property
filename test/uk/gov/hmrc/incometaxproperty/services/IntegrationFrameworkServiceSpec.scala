@@ -20,7 +20,7 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.models.PropertyDetailsResponse
+import uk.gov.hmrc.incometaxproperty.models.{PropertyData, BusinessDetailsResponse}
 import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, ServiceError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
@@ -29,7 +29,6 @@ import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnect
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.time.{LocalDate, LocalDateTime}
-import scala.util.Either
 
 class IntegrationFrameworkServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
@@ -47,7 +46,7 @@ class IntegrationFrameworkServiceSpec extends UnitTest
       await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("error"))
     }
 
-    "return BusinessDetails when GetBusinessDetails succeeds" in {
+    "return uk property details when user only has uk property" in {
       val tradingStartDate = LocalDate.parse("2020-12-10")
       val propertyDetailsModel = PropertyDetailsModel(
         Some("uk-property"), "", LocalDate.now(), LocalDate.now(),
@@ -62,7 +61,34 @@ class IntegrationFrameworkServiceSpec extends UnitTest
       mockGetBusinessDetails("some-nino", Right(incomeSourceModel))
 
       await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
-        PropertyDetailsResponse(Some(tradingStartDate), Some(true)))
+        BusinessDetailsResponse(Seq(PropertyData(Some("uk-property"),Some(tradingStartDate), Some(true)))))
+    }
+
+
+    "return uk and foreign property details when user has both" in {
+      val tradingStartDate = LocalDate.parse("2020-12-10")
+      val ukPropertyDetailsModel = PropertyDetailsModel(
+        Some("uk-property"), "", LocalDate.now(), LocalDate.now(),
+        Some(tradingStartDate), Some(true),
+        None, None, None, None, None, None, None, None, None, None, None)
+      val foreignPropertyDetailsModel = PropertyDetailsModel(
+        Some("foreign-property"), "", LocalDate.now(), LocalDate.now(),
+        Some(tradingStartDate), Some(false),
+        None, None, None, None, None, None, None, None, None, None, None)
+
+      val  incomeSourceModel = IncomeSourceDetailsModel(
+        LocalDateTime.now(),
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, true, None, Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel)))
+      )
+
+      mockGetBusinessDetails("some-nino", Right(incomeSourceModel))
+
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
+        BusinessDetailsResponse(
+          Seq(
+            PropertyData(Some("uk-property"),Some(tradingStartDate), Some(true)),
+            PropertyData(Some("foreign-property"),Some(tradingStartDate), Some(false))
+          )))
     }
   }
 }
