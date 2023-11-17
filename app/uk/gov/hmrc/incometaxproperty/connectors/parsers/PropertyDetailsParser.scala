@@ -43,11 +43,10 @@ object PropertyDetailsParser extends Logging {
     }
   }
 
-  def badSuccessJsonFromAPI[Response](validationErrors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])] ): Either[ServiceError, Response] = {
+  private def badSuccessJsonFromAPI[Response](validationErrors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])] ): Either[ServiceError, Response] =
     Left(ParsingError(s"$validationErrors"))
-  }
 
-  def handleIFError[Response](response: HttpResponse): Either[ServiceError, Response] = {
+  private def handleIFError[Response](response: HttpResponse): Either[ServiceError, Response] = {
 
 
     try {
