@@ -1,3 +1,5 @@
 # microservice specific routes
 
-GET     /business-details/nino/:nino                      uk.gov.hmrc.incometaxproperty.controllers.BusinessDetailsController.getBusinessDetails(nino: String)
+GET         /business-details/nino/:nino                      uk.gov.hmrc.incometaxproperty.controllers.BusinessDetailsController.getBusinessDetails(nino: String)
+
+GET        /income-tax/business/property/{taxYear}/{taxableEntityId}/{incomeSourceId}/period         uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
