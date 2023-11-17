@@ -20,14 +20,14 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 
-case class BusinessDetailsResponse(propertyData: Seq[PropertyData])
+case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
 
 object BusinessDetailsResponse {
   implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
 }
 
-case class PropertyData(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
+case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
 
-object PropertyData {
-  implicit val format: OFormat[PropertyData] = Json.format[PropertyData]
+object PropertyDetails {
+  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
 }

@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.errors
+package uk.gov.hmrc.incometaxproperty.utils.providers
 
-trait ServiceError {
-  val message: String
-}
+import akka.actor.ActorSystem
+import play.api.mvc.Result
+import play.api.test.DefaultAwaitTimeout
+import play.api.test.Helpers.await
 
-case object DataNotFoundError extends ServiceError {
-  override val message: String = "User data could not be found"
-}
+import scala.concurrent.ExecutionContext.Implicits.global
 
-case class ApiServiceError(error: String) extends ServiceError {
-  override val message: String = s"API exception occurred. Exception: $error"
+trait ResultBodyConsumerProvider extends DefaultAwaitTimeout {
+
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+
+  def consumeBody(result: Result): String =
+    await(result.body.consumeData.map(_.utf8String))
 }

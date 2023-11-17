@@ -20,15 +20,15 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.models.{PropertyData, BusinessDetailsResponse}
-import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
-import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, ServiceError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
+import uk.gov.hmrc.incometaxproperty.models.{BusinessDetailsResponse, PropertyDetails}
 import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnector
+import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import java.time.{LocalDate, LocalDateTime}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class IntegrationFrameworkServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
@@ -42,8 +42,8 @@ class IntegrationFrameworkServiceSpec extends UnitTest
 
   ".GetBusinessDetails" should {
     "return error when GetBusinessDetails fails" in {
-      mockGetBusinessDetails( "some-nino", Left(ApiServiceError("error")))
-      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("error"))
+      mockGetBusinessDetails( "some-nino", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("500"))
     }
 
     "return uk property details when user only has uk property" in {
@@ -53,15 +53,15 @@ class IntegrationFrameworkServiceSpec extends UnitTest
         Some(tradingStartDate), Some(true),
         None, None, None, None, None, None, None, None, None, None, None)
 
-      val  incomeSourceModel = IncomeSourceDetailsModel(
+      val incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
-        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, true, None, Some(Seq(propertyDetailsModel)))
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, Some(Seq(propertyDetailsModel)))
       )
 
-      mockGetBusinessDetails("some-nino", Right(incomeSourceModel))
+      mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
 
       await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
-        BusinessDetailsResponse(Seq(PropertyData(Some("uk-property"),Some(tradingStartDate), Some(true)))))
+        BusinessDetailsResponse(Seq(PropertyDetails(Some("uk-property"),Some(tradingStartDate), Some(true)))))
     }
 
 
@@ -78,16 +78,16 @@ class IntegrationFrameworkServiceSpec extends UnitTest
 
       val  incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
-        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, true, None, Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel)))
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel)))
       )
 
-      mockGetBusinessDetails("some-nino", Right(incomeSourceModel))
+      mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
 
       await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
         BusinessDetailsResponse(
           Seq(
-            PropertyData(Some("uk-property"),Some(tradingStartDate), Some(true)),
-            PropertyData(Some("foreign-property"),Some(tradingStartDate), Some(false))
+            PropertyDetails(Some("uk-property"),Some(tradingStartDate), Some(true)),
+            PropertyDetails(Some("foreign-property"),Some(tradingStartDate), Some(false))
           )))
     }
   }

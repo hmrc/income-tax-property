@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.errors
+package uk.gov.hmrc.incometaxproperty.utils
 
-trait ServiceError {
-  val message: String
-}
+import play.api.mvc.ControllerComponents
+import play.api.test.Helpers.stubControllerComponents
+import uk.gov.hmrc.incometaxproperty.utils.providers.ResultBodyConsumerProvider
 
-case object DataNotFoundError extends ServiceError {
-  override val message: String = "User data could not be found"
-}
+trait ControllerUnitTest extends UnitTest
+  with ResultBodyConsumerProvider {
 
-case class ApiServiceError(error: String) extends ServiceError {
-  override val message: String = s"API exception occurred. Exception: $error"
+  protected val cc: ControllerComponents = stubControllerComponents()
 }

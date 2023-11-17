@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import org.scalamock.handlers.CallHandler2
+import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.BusinessDetailsResponse
+import uk.gov.hmrc.incometaxproperty.models.errors.ServiceError
+import uk.gov.hmrc.incometaxproperty.services.IntegrationFrameworkService
 
 import scala.concurrent.Future
 
-trait MockIntegrationFrameworkConnector extends MockFactory {
+trait MockIntegrationFrameworkService extends MockFactory {
 
-  protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
+  protected val mockIntegrationFrameworkService: IntegrationFrameworkService = mock[IntegrationFrameworkService]
 
   def mockGetBusinessDetails(nino: String,
-                             result: Either[ApiError, Option[IncomeSourceDetailsModel]])
-  : CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[IncomeSourceDetailsModel]]]] = {
-    (mockIntegrationFrameworkConnector.getBusinessDetails(_: String)(_: HeaderCarrier))
+                             result: Either[ServiceError, BusinessDetailsResponse]
+                            ): CallHandler2[String, HeaderCarrier, Future[Either[ServiceError, BusinessDetailsResponse]]] = {
+    (mockIntegrationFrameworkService.getBusinessDetails(_: String)(_: HeaderCarrier))
       .expects(nino, *)
       .returning(Future.successful(result))
   }

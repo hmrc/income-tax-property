@@ -19,7 +19,7 @@ package uk.gov.hmrc.incometaxproperty.services
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.BusinessDetailsResponse
-import uk.gov.hmrc.incometaxproperty.models.errors.{DataNotFoundError, ServiceError}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel.toResponseModel
 
@@ -32,8 +32,8 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
 
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, BusinessDetailsResponse]] = {
     connector.getBusinessDetails(nino).map {
-      case Left(error) => Left(error)
-      case Right(allBusinessDetails) => allBusinessDetails.taxPayerDisplayResponse.propertyData.fold[Either[ServiceError, BusinessDetailsResponse]](
+      case Left(error) => Left(ApiServiceError(error.status.toString))
+      case Right(allBusinessDetails) => allBusinessDetails.flatMap(_.taxPayerDisplayResponse.propertyData).fold[Either[ServiceError, BusinessDetailsResponse]](
         Left(DataNotFoundError))(
         propDetailsList =>
           Right(BusinessDetailsResponse(filterProperty(propDetailsList).map(property => toResponseModel(property)))))
@@ -42,6 +42,6 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
 
   def filterProperty(propertyDetailsList: Seq[PropertyDetailsModel]): Seq[PropertyDetailsModel] = {
     Seq(propertyDetailsList.find(propData => propData.incomeSourceType.contains("uk-property")),
-    propertyDetailsList.find(propData => propData.incomeSourceType.contains("foreign-property"))).flatten
+      propertyDetailsList.find(propData => propData.incomeSourceType.contains("foreign-property"))).flatten
   }
 }

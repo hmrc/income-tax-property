@@ -27,7 +27,7 @@ class AppConfigStub extends MockFactory {
 
     private lazy val authorisationToken: String = "secret"
 
-    override  val  appName = "income-tax-property"
+    override lazy val appName = "income-tax-property"
 
     override lazy val ifBaseUrl: String = s"http://localhost:$wireMockPort"
     override lazy val ifEnvironment: String = environment
