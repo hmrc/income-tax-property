@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.status
-import uk.gov.hmrc.incometaxproperty.models.errors.DataNotFoundError
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
 import uk.gov.hmrc.incometaxproperty.models.{BusinessDetailsResponse, PropertyDetails}
 import uk.gov.hmrc.incometaxproperty.utils.ControllerUnitTest
 import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockAuthorisedAction, MockIntegrationFrameworkService}
@@ -53,13 +53,22 @@ class BusinessDetailsControllerSpec extends ControllerUnitTest
       Json.parse(consumeBody(result)) shouldBe Json.toJson(businessDetailsResponse)
     }
 
-    "return error when stateBenefitsService returns Left(errorModel)" in {
+    "return not found when businessDetailsService returns Left(DataNotFoundError)" in {
       mockAuthorisation()
       mockGetBusinessDetails("some-nino", Left(DataNotFoundError))
 
       val result = underTest.getBusinessDetails("some-nino")(fakeGetRequest)
 
       status(result) shouldBe NOT_FOUND
+    }
+
+    "return error when businessDetailsService returns Left(ApiServiceError)" in {
+      mockAuthorisation()
+      mockGetBusinessDetails("some-nino", Left(ApiServiceError("error")))
+
+      val result = underTest.getBusinessDetails("some-nino")(fakeGetRequest)
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }

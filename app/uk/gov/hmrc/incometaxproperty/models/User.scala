@@ -16,7 +16,4 @@
 
 package uk.gov.hmrc.incometaxproperty.models
 
-case class User(mtditid: String, arn: Option[String]) {
-
-  def isAgent: Boolean = arn.nonEmpty
-}
+case class User(mtditid: String, arn: Option[String])
