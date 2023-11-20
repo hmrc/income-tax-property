@@ -20,7 +20,7 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, SingleErrorBody}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
 import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
 import uk.gov.hmrc.incometaxproperty.models.{BusinessDetailsResponse, PropertyDetails}
@@ -44,6 +44,17 @@ class IntegrationFrameworkServiceSpec extends UnitTest
     "return error when GetBusinessDetails fails" in {
       mockGetBusinessDetails( "some-nino", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
       await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("500"))
+    }
+
+    "return error when GetBusinessDetails does not return data" in {
+      val  incomeSourceModel = IncomeSourceDetailsModel(
+        LocalDateTime.now(),
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, None)
+      )
+
+      mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
+
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(DataNotFoundError)
     }
 
     "return uk property details when user only has uk property" in {
