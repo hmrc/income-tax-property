@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.controllers
+package uk.gov.hmrc.incometaxproperty.utils
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.mvc.ControllerComponents
+import play.api.test.Helpers.stubControllerComponents
+import uk.gov.hmrc.incometaxproperty.utils.providers.ResultBodyConsumerProvider
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
+trait ControllerUnitTest extends UnitTest
+  with ResultBodyConsumerProvider {
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
-  }
+  protected val cc: ControllerComponents = stubControllerComponents()
 }
