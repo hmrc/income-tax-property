@@ -27,7 +27,8 @@ import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class PeriodicSubmissionConnector @Inject()(httpClient: HttpClient, appConf: AppConfig)
+class PeriodicSubmissionConnector @Inject()(httpClient: HttpClient,
+                                            appConf: AppConfig)
                                            (implicit ec: ExecutionContext) {
 
   val apiVersion = "1649"
