@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/*
 package support.stubs
 
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
@@ -29,16 +30,27 @@ class AppConfigStub extends MockFactory {
 
     override lazy val ifBaseUrl: String = s"http://localhost:$wireMockPort"
     override lazy val ifEnvironment: String = environment
-
-    override lazy val submissionBaseUrl: String = s"http://localhost:$wireMockPort"
-
-    override lazy val encryptionKey: String = "encryptionKey12345"
-    override lazy val useEncryption: Boolean = encrypt
-
     override def authorisationTokenFor(apiVersion: String): String = authorisationToken + s".$apiVersion"
-
-    override lazy val desBaseUrl: String = s"http://localhost:$wireMockPort"
-    override lazy val desAuthorisationToken: String = "authorisation-token"
-    override lazy val desEnvironment: String = "environment"
   }
 }
+*/
+/*
+package support.stubs
+
+import uk.gov.hmrc.incometaxproperty.config.AppConfig
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import org.scalamock.scalatest.MockFactory
+
+class AppConfigStub extends MockFactory {
+
+  def config(environment: String = "test", encrypt: Boolean = true): AppConfig = new AppConfig(mock[ServicesConfig]) {
+    private val wireMockPort = 11111
+
+    private lazy val authorisationToken: String = "secret"
+
+    override lazy val ifBaseUrl: String = s"http://localhost:$wireMockPort"
+    override lazy val ifEnvironment: String = environment
+    override def authorisationTokenFor(apiVersion: String): String = authorisationToken + s".$apiVersion"
+  }
+}
+*/

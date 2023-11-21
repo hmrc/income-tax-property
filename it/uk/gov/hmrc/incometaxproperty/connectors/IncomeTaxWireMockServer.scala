@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package support.helpers
+package uk.gov.hmrc.incometaxproperty.connectors
 
 import com.github.tomakehurst.wiremock
 import com.github.tomakehurst.wiremock.client.WireMock

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.error
+package uk.gov.hmrc.incometaxproperty.models.errors
 
 trait ServiceError {
   val message: String
