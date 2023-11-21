@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.errors
+package uk.gov.hmrc.incometaxproperty.models.responses
 
-trait ServiceError {
-  val message: String
+import play.api.libs.json.{Json, OFormat}
+
+case class PeriodicSubmissionModel(periodicSubmissionIds: Option[List[PeriodicSubmissionId]])
+
+object PeriodicSubmissionModel {
+  implicit val format: OFormat[PeriodicSubmissionModel] = Json.format[PeriodicSubmissionModel]
 }
 
-case object DataNotFoundError extends ServiceError {
-  override val message: String = "User data could not be found"
-}
+case class PeriodicSubmissionId(submissionId: String,
+                                fromDate: String,
+                                toDate: String)
 
-case class ApiServiceError(error: String) extends ServiceError {
-  override val message: String = s"API exception occurred. Exception: $error"
+object PeriodicSubmissionId {
+  implicit val format: OFormat[PeriodicSubmissionId] = Json.format[PeriodicSubmissionId]
 }

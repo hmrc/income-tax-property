@@ -22,8 +22,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import providers.AppConfigStubProvider
-import support.helpers.IncomeTaxWireMockServer
 import uk.gov.hmrc.http.test.HttpClientSupport
+import uk.gov.hmrc.incometaxproperty.connectors.IncomeTaxWireMockServer
 
 trait ConnectorSpec extends AnyWordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout

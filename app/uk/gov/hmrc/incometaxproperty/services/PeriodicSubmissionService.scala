@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.service
+package uk.gov.hmrc.incometaxproperty.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.PeriodicSubmissionConnector
-import uk.gov.hmrc.incometaxproperty.models.error.ApiServiceError
-import uk.gov.hmrc.incometaxproperty.models.propertyperiodicsubmission.response.PropertyPeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.errors.ApiServiceError
+import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionModel
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +28,7 @@ class PeriodicSubmissionService @Inject()(periodicSubmissionConnector: PeriodicS
                                          (implicit ec: ExecutionContext) {
 
   def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
-                           (implicit hc: HeaderCarrier): Future[Either[ApiServiceError, PropertyPeriodicSubmissionResponse]] = {
+                           (implicit hc: HeaderCarrier): Future[Either[ApiServiceError, PeriodicSubmissionModel]] = {
     periodicSubmissionConnector.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
       case Left(error) => Left(ApiServiceError(error.status.toString))
       case Right(data) => Right(data)

@@ -24,5 +24,6 @@ object AppDependencies {
     "org.scalamock"           %% "scalamock"                  % "5.2.0"                       % Test,
     "org.scalatest"           %% "scalatest"                  % "3.2.15"                      % Test,
     "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.6"                      % "test, it",
-    "com.github.tomakehurst"  %  "wiremock-jre8"              % "2.35.0"                      % "test, it")
+    "org.wiremock"            %  "wiremock"                    % "3.3.1"                       % "test, it"
+  )
 }

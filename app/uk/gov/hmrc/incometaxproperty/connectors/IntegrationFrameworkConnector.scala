@@ -18,10 +18,11 @@ package uk.gov.hmrc.incometaxproperty.connectors
 
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse
+import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionDataResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
-import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.PeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
 
 import java.net.URL
 import javax.inject.Inject
@@ -43,5 +44,27 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
 
   private def callGetBusinessDetails(url: URL)(implicit hc: HeaderCarrier): Future[GetBusinessDetailsResponse] = {
     httpClient.GET[GetBusinessDetailsResponse](url)
+  }
+
+  def getPeriodicSubmission(taxYear: String,
+                            taxableEntityId: String,
+                            incomeSourceId: String)
+                           (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
+    val apiVersion = "1649"
+    val url = new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period")
+    val apiResponse = callGetPeriodicSubmission(url)(ifHeaderCarrier(url, apiVersion))
+    val dataResponse = apiResponse.map { response =>
+      if (response.result.isLeft) {
+        Left(ApiError(response.httpResponse.status, SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)))
+        //pagerDutyLoggerService.pagerDutyLog(response.httpResponse, response.getClass.getSimpleName)
+      } else {
+        response.result
+      }
+    }
+    dataResponse
+  }
+
+  private def callGetPeriodicSubmission(url: URL)(implicit hc: HeaderCarrier): Future[GetPeriodicSubmissionDataResponse] = {
+    httpClient.GET[GetPeriodicSubmissionDataResponse](url)
   }
 }

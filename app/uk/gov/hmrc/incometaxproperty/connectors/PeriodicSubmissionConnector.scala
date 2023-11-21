@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.error.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetPeriodicSubmissionDataResponse
-import uk.gov.hmrc.incometaxproperty.models.propertyperiodicsubmission.response.PropertyPeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionModel
 
 import java.net.URL
 import javax.inject.Inject
@@ -29,14 +29,15 @@ import scala.concurrent.Future
 
 class PeriodicSubmissionConnector @Inject()(httpClient: HttpClient,
                                             appConf: AppConfig)
-                                           (implicit ec: ExecutionContext) {
+                                           (implicit ec: ExecutionContext) extends IFConnector {
 
   val apiVersion = "1649"
 
+  override protected val appConfig: AppConfig = appConf
   def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
-                        (implicit hc: HeaderCarrier): Future[Either[ApiError, PropertyPeriodicSubmissionResponse]] = {
-    val url = new URL(s"/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period")
-    val apiResponse =  httpClient.GET[GetPeriodicSubmissionDataResponse](url)
+                        (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
+    val url = new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period")
+    val apiResponse =  callGetPeriodicSubmission(url)(ifHeaderCarrier(url, apiVersion))
     val dataResponse = apiResponse.map { response =>
       if (response.result.isLeft) {
       Left(ApiError(response.httpResponse.status, SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)))
@@ -47,4 +48,9 @@ class PeriodicSubmissionConnector @Inject()(httpClient: HttpClient,
     }
     dataResponse
   }
+
+  private def callGetPeriodicSubmission(url: URL)(implicit hc: HeaderCarrier): Future[GetPeriodicSubmissionDataResponse] = {
+    httpClient.GET[GetPeriodicSubmissionDataResponse](url)
+  }
+
 }

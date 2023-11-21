@@ -20,9 +20,9 @@ import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.connectors.error.ApiError
-import uk.gov.hmrc.incometaxproperty.models.propertyperiodicsubmission.response.PropertyPeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionModel
 
-case class GetPeriodicSubmissionDataResponse(httpResponse: HttpResponse, result: Either[ApiError, PropertyPeriodicSubmissionResponse])
+case class GetPeriodicSubmissionDataResponse(httpResponse: HttpResponse, result: Either[ApiError, PeriodicSubmissionModel])
 
 object GetPeriodicSubmissionDataResponse {
 
@@ -33,15 +33,15 @@ object GetPeriodicSubmissionDataResponse {
 
       override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionDataResponse = response.status match {
         case OK => GetPeriodicSubmissionDataResponse(response, extractResult(response))
-        case NOT_FOUND | NO_CONTENT => GetPeriodicSubmissionDataResponse(response, Right(PropertyPeriodicSubmissionResponse(None)))
+        case NOT_FOUND | NO_CONTENT => GetPeriodicSubmissionDataResponse(response, Right(PeriodicSubmissionModel(None)))
         case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           GetPeriodicSubmissionDataResponse(response, handleError(response, response.status))
         case _ => GetPeriodicSubmissionDataResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
       }
 
-      private def extractResult(response: HttpResponse): Either[ApiError, PropertyPeriodicSubmissionResponse] = {
-        response.json.validate[PropertyPeriodicSubmissionResponse]
-          .fold[Either[ApiError, PropertyPeriodicSubmissionResponse]](_ => badSuccessJsonResponse, parsedModel => Right(parsedModel))
+      private def extractResult(response: HttpResponse): Either[ApiError, PeriodicSubmissionModel] = {
+        response.json.validate[PeriodicSubmissionModel]
+          .fold[Either[ApiError, PeriodicSubmissionModel]](_ => badSuccessJsonResponse, parsedModel => Right(parsedModel))
       }
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models.propertyperiodicsubmission.error
+package uk.gov.hmrc.incometaxproperty.models.errors
 
 case class PropertyPeriodicSubmissionError(failures: Seq[Failure])
 

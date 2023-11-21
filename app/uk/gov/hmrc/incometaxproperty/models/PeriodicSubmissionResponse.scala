@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package providers
+package uk.gov.hmrc.incometaxproperty.models
 
-import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.utils.AppConfigStub
+import play.api.libs.json.{Json, OFormat}
 
+case class PeriodicSubmissionResponse(periodicSubmission: Seq[PeriodicSubmission])
 
-trait AppConfigStubProvider {
+object PeriodicSubmissionResponse {
+  implicit val format: OFormat[PeriodicSubmissionResponse] = Json.format[PeriodicSubmissionResponse]
+}
 
-  lazy val appConfigStub: AppConfig = new AppConfigStub().config()
+case class PeriodicSubmission(submissionId: String,
+                              fromDate: String,
+                              toDate: String)
+
+object PeriodicSubmission {
+  implicit val format: OFormat[PeriodicSubmission] = Json.format[PeriodicSubmission]
 }
