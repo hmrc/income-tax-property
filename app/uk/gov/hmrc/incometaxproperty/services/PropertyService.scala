@@ -25,8 +25,8 @@ import uk.gov.hmrc.incometaxproperty.models.{PeriodicSubmission, PeriodicSubmiss
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PropertyServices @Inject()(integrationFrameworkConnector: IntegrationFrameworkConnector)
-                                (implicit ec: ExecutionContext) {
+class PropertyService @Inject()(integrationFrameworkConnector: IntegrationFrameworkConnector)
+                               (implicit ec: ExecutionContext) {
 
   def getPeriodicSubmission(taxYear: String,
                             taxableEntityId: String,
@@ -37,10 +37,11 @@ class PropertyServices @Inject()(integrationFrameworkConnector: IntegrationFrame
       case Right(data) => val periodicSubmissionIds = data.periodicSubmissionIdModels.map { x: PeriodicSubmissionIdModel =>
         PeriodicSubmission(x.submissionId, x.fromDate, x.toDate)
       }
-        if (periodicSubmissionIds.nonEmpty)
+        if (periodicSubmissionIds.nonEmpty) {
           Right(PeriodicSubmissionResponse(periodicSubmissionIds))
-        else
+        } else {
           Left(DataNotFoundError)
+        }
     }
   }
 }
