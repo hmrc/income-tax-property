@@ -20,7 +20,7 @@ import org.scalamock.scalatest.MockFactory
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionId, PeriodicSubmissionModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel}
 import uk.gov.hmrc.incometaxproperty.support.ConnectorIntegrationTest
 
 import java.time.LocalDate
@@ -38,8 +38,8 @@ class PeriodicSubmissionConnectorSpec
   private val underTest = new PeriodicSubmissionConnector(httpClient, appConfigStub)
 
   val aPeriodicSubmissionModel = PeriodicSubmissionModel(Some(List(
-    PeriodicSubmissionId("1", "2021-01-01", "2021-11-11"),
-    PeriodicSubmissionId("2", "2022-02-02", "2022-12-12")
+    PeriodicSubmissionIdModel("1", "2021-01-01", "2021-11-11"),
+    PeriodicSubmissionIdModel("2", "2022-02-02", "2022-12-12")
   )))
 
   "Given a need to get Periodic Submission Data" when {

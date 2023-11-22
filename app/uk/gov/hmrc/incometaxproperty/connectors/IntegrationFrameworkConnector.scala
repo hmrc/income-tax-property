@@ -20,7 +20,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionDataResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
-import uk.gov.hmrc.incometaxproperty.models.PeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
 
@@ -46,9 +45,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     httpClient.GET[GetBusinessDetailsResponse](url)
   }
 
-  def getPeriodicSubmission(taxYear: String,
-                            taxableEntityId: String,
-                            incomeSourceId: String)
+  def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
                            (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
     val apiVersion = "1649"
     val url = new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period")

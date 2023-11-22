@@ -20,21 +20,22 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.incometaxproperty.actions.AuthorisedAction
 import uk.gov.hmrc.incometaxproperty.models.errors.DataNotFoundError
-import uk.gov.hmrc.incometaxproperty.services.{IntegrationFrameworkService, PeriodicSubmissionService}
+import uk.gov.hmrc.incometaxproperty.services.PropertyServices
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class PeriodicSubmissionController @Inject()(integrationFrameworkService: IntegrationFrameworkService,
+class PeriodicSubmissionController @Inject()(propertyServices: PropertyServices,
                                              authorisedAction: AuthorisedAction,
                                              cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
   def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String): Action[AnyContent] = authorisedAction.async { implicit request =>
-    integrationFrameworkService.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
+    propertyServices.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
       case Right(periodicSubmissionData) => Ok(Json.toJson(periodicSubmissionData))
+      case Left(DataNotFoundError) => NotFound
       case Left(_) => InternalServerError
     }
   }
