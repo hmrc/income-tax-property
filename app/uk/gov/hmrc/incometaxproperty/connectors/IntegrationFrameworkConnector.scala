@@ -53,7 +53,6 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     val dataResponse = apiResponse.map { response =>
       if (response.result.isLeft) {
         Left(ApiError(response.httpResponse.status, SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)))
-        //pagerDutyLoggerService.pagerDutyLog(response.httpResponse, response.getClass.getSimpleName)
       } else {
         response.result
       }

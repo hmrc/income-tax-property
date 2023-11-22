@@ -33,7 +33,7 @@ object GetPeriodicSubmissionDataResponse {
 
       override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionDataResponse = response.status match {
         case OK => GetPeriodicSubmissionDataResponse(response, extractResult(response))
-        case NOT_FOUND | NO_CONTENT => GetPeriodicSubmissionDataResponse(response, Right(PeriodicSubmissionModel(List.empty)))
+        case NOT_FOUND => GetPeriodicSubmissionDataResponse(response, Right(PeriodicSubmissionModel(List.empty)))
         case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           GetPeriodicSubmissionDataResponse(response, handleError(response, response.status))
         case _ => GetPeriodicSubmissionDataResponse(response, handleError(response, INTERNAL_SERVER_ERROR))

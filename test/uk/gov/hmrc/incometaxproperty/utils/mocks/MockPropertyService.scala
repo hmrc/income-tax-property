@@ -21,13 +21,13 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.models.PeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.ServiceError
-import uk.gov.hmrc.incometaxproperty.services.PropertyServices
+import uk.gov.hmrc.incometaxproperty.services.PropertyService
 
 import scala.concurrent.Future
 
 trait MockPropertyService extends MockFactory {
 
-  protected val mockPropertyServices: PropertyServices = mock[PropertyServices]
+  protected val mockPropertyServices: PropertyService = mock[PropertyService]
 
   def mockGetPeriodicSubmission(taxYear: String,
                                 taxableEntityId: String,
