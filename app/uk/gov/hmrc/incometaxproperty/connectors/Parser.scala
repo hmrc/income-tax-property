@@ -18,7 +18,7 @@ package uk.gov.hmrc.incometaxproperty.connectors
 
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.incometaxproperty.connectors.error.{ApiError, MultiErrorsBody, SingleErrorBody}
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
 
 trait Parser {
 

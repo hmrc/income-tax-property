@@ -18,10 +18,10 @@ package uk.gov.hmrc.incometaxproperty.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
+import uk.gov.hmrc.incometaxproperty.models.BusinessDetailsResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyDetailsModel.toResponseModel
-import uk.gov.hmrc.incometaxproperty.models.{BusinessDetailsResponse, PeriodicSubmissionResponse}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,13 +44,4 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
     Seq(propertyDetailsList.find(propData => propData.incomeSourceType.contains("uk-property")),
       propertyDetailsList.find(propData => propData.incomeSourceType.contains("foreign-property"))).flatten
   }
-
-  def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
-                           (implicit hc: HeaderCarrier): Future[Either[ApiServiceError, PeriodicSubmissionResponse]] = {
-    connector.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
-      case Left(error) => Left(ApiServiceError(error.status.toString))
-      case Right(data) => Right(data)
-    }
-  }
-
 }

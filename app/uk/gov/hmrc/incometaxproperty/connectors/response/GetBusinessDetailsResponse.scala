@@ -33,20 +33,17 @@ object GetBusinessDetailsResponse extends Logging {
 
     override def read(method: String, url: String, response: HttpResponse): GetBusinessDetailsResponse = response.status match {
       case OK => GetBusinessDetailsResponse(response, extractResult(response))
-//      case NOT_FOUND => GetBusinessDetailsResponse(response, Right(None))
-//      case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST =>
-//        GetBusinessDetailsResponse(response, handleError(response, response.status))
-//      case _ => GetBusinessDetailsResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
-        case _ => logger.error("Issue reported from API")
-                  null
+      case NOT_FOUND => GetBusinessDetailsResponse(response, Right(None))
+      case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST =>
+        GetBusinessDetailsResponse(response, handleError(response, response.status))
+      case _ => GetBusinessDetailsResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
     }
 
     private def extractResult(response: HttpResponse): Either[ApiError, Option[IncomeSourceDetailsModel]] = {
       val json = response.json
       logger.error("GetBusinessDetailsResponse: " + json.toString())
-//      json.validate[IncomeSourceDetailsModel]
-//        .fold[Either[ApiError, Option[IncomeSourceDetailsModel]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
-    null
+      json.validate[IncomeSourceDetailsModel]
+        .fold[Either[ApiError, Option[IncomeSourceDetailsModel]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
     }
   }
 }

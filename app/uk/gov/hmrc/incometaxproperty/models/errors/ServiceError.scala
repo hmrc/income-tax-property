@@ -19,13 +19,16 @@ package uk.gov.hmrc.incometaxproperty.models.errors
 trait ServiceError {
   val message: String
 }
-
-case object DataNotUpdatedError extends ServiceError {
-  override val message: String = "User data was not updated due to mongo exception"
+case class ApiServiceError(error: String) extends ServiceError {
+  override val message: String = s"API exception occurred. Exception: $error"
 }
 
 case object DataNotFoundError extends ServiceError {
   override val message: String = "User data could not be found due to mongo exception"
+}
+
+case object DataNotUpdatedError extends ServiceError {
+  override val message: String = "User data was not updated due to mongo exception"
 }
 
 case class MongoError(error: String) extends ServiceError {
@@ -36,6 +39,3 @@ case class EncryptionDecryptionError(error: String) extends ServiceError {
   override val message: String = s"Encryption / Decryption exception occurred. Exception: $error"
 }
 
-case class ApiServiceError(error: String) extends ServiceError {
-  override val message: String = s"API exception occurred. Exception: $error"
-}

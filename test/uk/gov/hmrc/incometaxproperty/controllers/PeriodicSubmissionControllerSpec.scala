@@ -16,54 +16,66 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
-import uk.gov.hmrc.incometaxproperty.models.BusinessDetailsResponse
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.libs.json.Json
+import play.api.test.Helpers.status
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
+import uk.gov.hmrc.incometaxproperty.models.{PeriodicSubmission, PeriodicSubmissionResponse}
 import uk.gov.hmrc.incometaxproperty.utils.ControllerUnitTest
-import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockAuthorisedAction, MockIntegrationFrameworkService}
+import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import uk.gov.hmrc.incometaxproperty.utils.providers.FakeRequestProvider
 
-import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class PeriodicSubmissionControllerSpec extends ControllerUnitTest
-  with MockIntegrationFrameworkService
+  with MockPropertyService
   with MockAuthorisedAction
   with FakeRequestProvider {
 
   private val underTest = new PeriodicSubmissionController(
-    mockIntegrationFrameworkService,
+    mockPropertyServices,
     mockAuthorisedAction,
     cc
   )
 
-  ".getBusinessDetailsData" should {
+  ".getPeriodicSubmissionData" should {
 
 
-    val businessDetailsResponse = BusinessDetailsResponse(List(PropertyDetails(Some("income-source"), Some(LocalDate.now), Some(true))))
+    val periodicSubmissionResponse = PeriodicSubmissionResponse(List(PeriodicSubmission("submissionId", "2022-11-11", "2023-12-22")))
 
-    "return aBusinessDetails when IntegrationFrameworkService returns Right(aBusinessDetails)" in {
+    "return aPeriodicSubmission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
       mockAuthorisation()
-      mockGetBusinessDetails("some-nino", Right(businessDetailsResponse))
+      mockGetPeriodicSubmission("2023-24",
+        "taxableEntityId",
+        "incomeSourceId",
+        Right(periodicSubmissionResponse))
 
-      val result = await(underTest.getBusinessDetails("some-nino")(fakeGetRequest))
+      val result = await(underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest))
 
       result.header.status shouldBe OK
-      Json.parse(consumeBody(result)) shouldBe Json.toJson(businessDetailsResponse)
+      Json.parse(consumeBody(result)) shouldBe Json.toJson(periodicSubmissionResponse)
     }
 
-    "return not found when businessDetailsService returns Left(DataNotFoundError)" in {
+    "return not found when PeriodicSubmissionService returns Left(DataNotFoundError)" in {
       mockAuthorisation()
-      mockGetBusinessDetails("some-nino", Left(DataNotFoundError))
+      mockGetPeriodicSubmission("2023-24",
+        "taxableEntityId",
+        "incomeSourceId",
+        Left(DataNotFoundError))
 
-      val result = underTest.getBusinessDetails("some-nino")(fakeGetRequest)
+      val result = underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe NOT_FOUND
     }
 
-    "return error when businessDetailsService returns Left(ApiServiceError)" in {
+    "return internal server error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
       mockAuthorisation()
-      mockGetBusinessDetails("some-nino", Left(ApiServiceError("error")))
+      mockGetPeriodicSubmission("2023-24",
+        "taxableEntityId",
+        "incomeSourceId",
+        Left(ApiServiceError("error")))
 
-      val result = underTest.getBusinessDetails("some-nino")(fakeGetRequest)
+      val result = underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
