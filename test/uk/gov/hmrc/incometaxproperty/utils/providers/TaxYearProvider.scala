@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package providers
+package uk.gov.hmrc.incometaxproperty.utils.providers
 
 import utils.TaxYearUtils
 

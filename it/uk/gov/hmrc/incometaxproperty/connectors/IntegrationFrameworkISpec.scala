@@ -17,18 +17,16 @@
 package uk.gov.hmrc.incometaxproperty.connectors
 
 import org.scalamock.scalatest.MockFactory
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel}
-import uk.gov.hmrc.incometaxproperty.support.ConnectorIntegrationTest
 import uk.gov.hmrc.incometaxproperty.utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
-import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
+class IntegrationFrameworkISpec extends ConnectorIntegrationTest
   with MockFactory {
 
   private val nino = "some-nino"
@@ -66,16 +64,57 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
   "Given a need to get Periodic Submission Data" when {
     "a call is made to the backend API it" should {
-      "return correct IF data when correct parameters are passed" in {
-        val taxYear = LocalDate.now.getYear.toString
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
+      "return correct submissions data" in {
 
         val httpResponse = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
 
-        stubGetHttpClientCall(s"/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period", httpResponse)
+        val taxYear = 2024
+        val taxableEntityId = "some-taxable-entity-id"
+        val incomeSourceId = "some-income-source-id"
 
-        await(underTest.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(aPeriodicSubmissionModel)
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
+
+        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(aPeriodicSubmissionModel)
+      }
+
+      "return Data Not Found from Upstream" in {
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(List.empty[PeriodicSubmissionModel]).toString())
+
+        val taxYear = 2024
+        val taxableEntityId = "some-taxable-entity-id"
+        val incomeSourceId = "some-income-source-id"
+
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
+
+        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(PeriodicSubmissionModel(List.empty))
+      }
+
+      "return Service Unavailable Error from Upstream" in {
+        val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+
+        val taxYear = 2024
+        val taxableEntityId = "some-taxable-entity-id"
+        val incomeSourceId = "some-income-source-id"
+
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
+
+        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(ApiError(
+          SERVICE_UNAVAILABLE,
+          SingleErrorBody("GetPeriodicSubmissionDataResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
+      }
+
+      "handle Any Other Error from Upstream" in {
+        val httpResponse = HttpResponse(BAD_GATEWAY, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+
+        val taxYear = 2024
+        val taxableEntityId = "some-taxable-entity-id"
+        val incomeSourceId = "some-income-source-id"
+
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
+
+        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(ApiError(
+          BAD_GATEWAY,
+          SingleErrorBody("GetPeriodicSubmissionDataResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
       }
     }
   }
