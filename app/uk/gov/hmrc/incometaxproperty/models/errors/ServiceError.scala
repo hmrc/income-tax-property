@@ -24,6 +24,6 @@ case class ApiServiceError(error: String) extends ServiceError {
 }
 
 case object DataNotFoundError extends ServiceError {
-  override val message: String = "User data could not be found due to mongo exception"
+  override val message: String = "User data could not be found"
 }
 

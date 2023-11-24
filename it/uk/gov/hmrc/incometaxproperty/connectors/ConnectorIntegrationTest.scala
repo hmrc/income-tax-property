@@ -14,12 +14,32 @@
  * limitations under the License.
  */
 
-package support
+package uk.gov.hmrc.incometaxproperty.connectors
 
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.http.test.HttpClientSupport
+import uk.gov.hmrc.incometaxproperty.support.helpers.WireMockServer
+import uk.gov.hmrc.incometaxproperty.support.stubs.WireMockStubs
+import uk.gov.hmrc.incometaxproperty.utils.providers.AppConfigStubProvider
 
-trait UnitTest extends AnyWordSpec
+trait ConnectorIntegrationTest extends AnyWordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
-  with Matchers
+  with HttpClientSupport
+  with AppConfigStubProvider
+  with WireMockServer
+  with WireMockStubs
+  with BeforeAndAfterAll {
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    startWiremock()
+  }
+
+  override def afterAll(): Unit = {
+    stopWiremock()
+    super.afterAll()
+  }
+}

@@ -29,12 +29,12 @@ trait MockPropertyService extends MockFactory {
 
   protected val mockPropertyServices: PropertyService = mock[PropertyService]
 
-  def mockGetPeriodicSubmission(taxYear: String,
-                                taxableEntityId: String,
-                                incomeSourceId: String,
-                                result: Either[ServiceError, PeriodicSubmissionResponse]
-                            ): CallHandler4[String, String, String, HeaderCarrier, Future[Either[ServiceError, PeriodicSubmissionResponse]]] = {
-    (mockPropertyServices.getPeriodicSubmission(_: String, _: String, _: String)(_: HeaderCarrier))
+  def mockGetAllPeriodicSubmission(taxYear: Int,
+                                   taxableEntityId: String,
+                                   incomeSourceId: String,
+                                   result: Either[ServiceError, PeriodicSubmissionResponse]
+                                  ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ServiceError, PeriodicSubmissionResponse]]] = {
+    (mockPropertyServices.getAllPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }

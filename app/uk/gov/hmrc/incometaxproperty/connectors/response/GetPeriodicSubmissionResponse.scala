@@ -22,21 +22,21 @@ import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionModel
 
-case class GetPeriodicSubmissionDataResponse(httpResponse: HttpResponse, result: Either[ApiError, PeriodicSubmissionModel])
+case class GetPeriodicSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, PeriodicSubmissionModel])
 
-object GetPeriodicSubmissionDataResponse {
+object GetPeriodicSubmissionResponse {
 
-  implicit val getPeriodicSubmissionDataReads: HttpReads[GetPeriodicSubmissionDataResponse] =
-    new HttpReads[GetPeriodicSubmissionDataResponse] with Parser {
+  implicit val getPeriodicSubmissionDataReads: HttpReads[GetPeriodicSubmissionResponse] =
+    new HttpReads[GetPeriodicSubmissionResponse] with Parser {
 
       override protected[connectors] val parserName: String = this.getClass.getSimpleName
 
-      override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionDataResponse = response.status match {
-        case OK => GetPeriodicSubmissionDataResponse(response, extractResult(response))
-        case NOT_FOUND => GetPeriodicSubmissionDataResponse(response, Right(PeriodicSubmissionModel(List.empty)))
+      override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionResponse = response.status match {
+        case OK => GetPeriodicSubmissionResponse(response, extractResult(response))
+        case NOT_FOUND => GetPeriodicSubmissionResponse(response, Right(PeriodicSubmissionModel(List.empty)))
         case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
-          GetPeriodicSubmissionDataResponse(response, handleError(response, response.status))
-        case _ => GetPeriodicSubmissionDataResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+          GetPeriodicSubmissionResponse(response, handleError(response, response.status))
+        case _ => GetPeriodicSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
       }
 
       private def extractResult(response: HttpResponse): Either[ApiError, PeriodicSubmissionModel] = {

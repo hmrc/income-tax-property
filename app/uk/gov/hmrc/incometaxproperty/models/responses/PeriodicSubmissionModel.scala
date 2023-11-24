@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.incometaxproperty.models.responses
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json, OFormat}
 
-case class PeriodicSubmissionModel(periodicSubmissionIdModels: List[PeriodicSubmissionIdModel])
+case class PeriodicSubmissionModel(periodicSubmissionIds: List[PeriodicSubmissionIdModel]) {
+  def toJson: JsValue = Json.toJson(this)
+}
 
 object PeriodicSubmissionModel {
   implicit val format: OFormat[PeriodicSubmissionModel] = Json.format[PeriodicSubmissionModel]

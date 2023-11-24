@@ -28,20 +28,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject()(integrationFrameworkConnector: IntegrationFrameworkConnector)
                                (implicit ec: ExecutionContext) {
 
-  def getPeriodicSubmission(taxYear: String,
-                            taxableEntityId: String,
-                            incomeSourceId: String)
-                           (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionResponse]] = {
-    integrationFrameworkConnector.getPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
+  def getAllPeriodicSubmission(taxYear: Int,
+                               taxableEntityId: String,
+                               incomeSourceId: String)
+                              (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionResponse]] = {
+    integrationFrameworkConnector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
       case Left(error) => Left(ApiServiceError(error.status.toString))
-      case Right(data) => val periodicSubmissionIds = data.periodicSubmissionIdModels.map { x: PeriodicSubmissionIdModel =>
-        PeriodicSubmission(x.submissionId, x.fromDate, x.toDate)
+      case Right(data) => val periodicSubmissionIds = data.periodicSubmissionIds.map { submissionId: PeriodicSubmissionIdModel =>
+        PeriodicSubmission(submissionId.submissionId, submissionId.fromDate, submissionId.toDate)
       }
-        if (periodicSubmissionIds.nonEmpty) {
-          Right(PeriodicSubmissionResponse(periodicSubmissionIds))
-        } else {
-          Left(DataNotFoundError)
-        }
+      if (periodicSubmissionIds.nonEmpty) {
+        Right(PeriodicSubmissionResponse(periodicSubmissionIds))
+      } else {
+        Left(DataNotFoundError)
+      }
     }
   }
 }

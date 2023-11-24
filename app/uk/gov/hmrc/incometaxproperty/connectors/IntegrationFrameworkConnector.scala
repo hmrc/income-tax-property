@@ -18,8 +18,8 @@ package uk.gov.hmrc.incometaxproperty.connectors
 
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionDataResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
+import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionResponse}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
 
@@ -45,22 +45,36 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     httpClient.GET[GetBusinessDetailsResponse](url)
   }
 
-  def getPeriodicSubmission(taxYear: String, taxableEntityId: String, incomeSourceId: String)
-                           (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
-    val apiVersion = "1649"
-    val url = new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxYear/$taxableEntityId/$incomeSourceId/period")
-    val apiResponse = callGetPeriodicSubmission(url)(ifHeaderCarrier(url, apiVersion))
-    val dataResponse = apiResponse.map { response =>
+  def getAllPeriodicSubmission(taxYear: Int,
+                               taxableEntityId: String,
+                               incomeSourceId: String)
+                              (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
+
+    val (url, apiVersion) = if (shouldUse2324(taxYear)) {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period"), "1954")
+    } else {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParam(taxYear)}"), "1649")
+    }
+
+    val apiResponse = callGetPeriodicSubmissionUpstream(url)(ifHeaderCarrier(url, apiVersion))
+    apiResponse.map { response =>
       if (response.result.isLeft) {
         Left(ApiError(response.httpResponse.status, SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)))
       } else {
         response.result
       }
     }
-    dataResponse
   }
 
-  private def callGetPeriodicSubmission(url: URL)(implicit hc: HeaderCarrier): Future[GetPeriodicSubmissionDataResponse] = {
-    httpClient.GET[GetPeriodicSubmissionDataResponse](url)
+  private def callGetPeriodicSubmissionUpstream(url: URL)(implicit hc: HeaderCarrier): Future[GetPeriodicSubmissionResponse] = {
+    httpClient.GET[GetPeriodicSubmissionResponse](url)
   }
+
+  private def shouldUse2324(taxYear: Int): Boolean = {
+    taxYear == 2024
+  }
+  private def toTaxYearParam(taxYear: Int): String = {
+    s"${taxYear - 1}-${taxYear.toString takeRight 2}"
+  }
+
 }

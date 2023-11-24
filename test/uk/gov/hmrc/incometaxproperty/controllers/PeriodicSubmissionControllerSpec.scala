@@ -45,12 +45,12 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
     "return aPeriodicSubmission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
       mockAuthorisation()
-      mockGetPeriodicSubmission("2023-24",
+      mockGetAllPeriodicSubmission(2024,
         "taxableEntityId",
         "incomeSourceId",
         Right(periodicSubmissionResponse))
 
-      val result = await(underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest))
+      val result = await(underTest.getAllPeriodicSubmission(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest))
 
       result.header.status shouldBe OK
       Json.parse(consumeBody(result)) shouldBe Json.toJson(periodicSubmissionResponse)
@@ -58,24 +58,24 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
     "return not found when PeriodicSubmissionService returns Left(DataNotFoundError)" in {
       mockAuthorisation()
-      mockGetPeriodicSubmission("2023-24",
+      mockGetAllPeriodicSubmission(2024,
         "taxableEntityId",
         "incomeSourceId",
         Left(DataNotFoundError))
 
-      val result = underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest)
+      val result = underTest.getAllPeriodicSubmission(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe NOT_FOUND
     }
 
     "return internal server error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
       mockAuthorisation()
-      mockGetPeriodicSubmission("2023-24",
+      mockGetAllPeriodicSubmission(2024,
         "taxableEntityId",
         "incomeSourceId",
         Left(ApiServiceError("error")))
 
-      val result = underTest.getPeriodicSubmission("2023-24", "taxableEntityId", "incomeSourceId")(fakeGetRequest)
+      val result = underTest.getAllPeriodicSubmission(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }

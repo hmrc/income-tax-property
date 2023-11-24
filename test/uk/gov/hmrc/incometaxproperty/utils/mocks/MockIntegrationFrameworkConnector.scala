@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import org.scalamock.handlers.CallHandler2
+import org.scalamock.handlers.{CallHandler2, CallHandler4}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.IncomeSourceDetailsModel
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
 
 import scala.concurrent.Future
 
@@ -34,6 +34,16 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
   : CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[IncomeSourceDetailsModel]]]] = {
     (mockIntegrationFrameworkConnector.getBusinessDetails(_: String)(_: HeaderCarrier))
       .expects(nino, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockGetAllPeriodicSubmission(taxYear: Int,
+                                taxableEntityId: String,
+                                incomeSourceId: String,
+                                result: Either[ApiError, PeriodicSubmissionModel]
+                               ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ApiError, PeriodicSubmissionModel]]] = {
+    (mockIntegrationFrameworkConnector.getAllPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }
 }
