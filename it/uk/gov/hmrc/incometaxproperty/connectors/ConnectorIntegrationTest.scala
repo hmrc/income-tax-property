@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.support
+package uk.gov.hmrc.incometaxproperty.connectors
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -29,7 +29,8 @@ trait ConnectorIntegrationTest extends AnyWordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
   with HttpClientSupport
   with AppConfigStubProvider
-  with WireMockServer with WireMockStubs
+  with WireMockServer
+  with WireMockStubs
   with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {

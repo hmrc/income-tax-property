@@ -19,11 +19,11 @@ package uk.gov.hmrc.incometaxproperty.models.errors
 trait ServiceError {
   val message: String
 }
+case class ApiServiceError(error: String) extends ServiceError {
+  override val message: String = s"API exception occurred. Exception: $error"
+}
 
 case object DataNotFoundError extends ServiceError {
   override val message: String = "User data could not be found"
 }
 
-case class ApiServiceError(error: String) extends ServiceError {
-  override val message: String = s"API exception occurred. Exception: $error"
-}
