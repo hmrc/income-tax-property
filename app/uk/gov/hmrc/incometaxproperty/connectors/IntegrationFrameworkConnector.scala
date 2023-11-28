@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.incometaxproperty.connectors
 
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import play.api.Logging
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
-import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionResponse}
+import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionResponse, GetPropertyPeriodicSubmissionResponse}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel, PropertyPeriodicSubmission}
 
 import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: AppConfig)
-                                             (implicit ec: ExecutionContext) extends IFConnector {
+                                             (implicit ec: ExecutionContext) extends IFConnector with Logging {
 
 
   override protected[connectors] val appConfig: AppConfig = appConf
@@ -50,13 +51,18 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
                                incomeSourceId: String)
                               (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
 
-    val (url, apiVersion) = if (shouldUse2324(taxYear)) {
-      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period"), "1954")
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$taxableEntityId/$incomeSourceId/period"), "1954")
     } else {
-      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParam(taxYear)}"), "1649")
+      (new URL(
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParamBefore2324(taxYear)}"),
+        "1649")
     }
 
-    val apiResponse = callGetPeriodicSubmissionUpstream(url)(ifHeaderCarrier(url, apiVersion))
+    val apiResponse = httpClient.GET[GetPeriodicSubmissionResponse](url)(
+      implicitly[HttpReads[GetPeriodicSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion),
+      ec)
     apiResponse.map { response =>
       if (response.result.isLeft) {
         Left(ApiError(response.httpResponse.status, SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)))
@@ -66,15 +72,38 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
-  private def callGetPeriodicSubmissionUpstream(url: URL)(implicit hc: HeaderCarrier): Future[GetPeriodicSubmissionResponse] = {
-    httpClient.GET[GetPeriodicSubmissionResponse](url)
+  def getPropertyPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, submissionId: String)
+                             (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyPeriodicSubmission]]] = {
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId"), "1862")
+    } else {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic?" +
+        s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId"), "1595")
+    }
+
+    httpClient.GET[GetPropertyPeriodicSubmissionResponse](url)(
+      implicitly[HttpReads[GetPropertyPeriodicSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion),
+      ec).map { response: GetPropertyPeriodicSubmissionResponse =>
+        if(response.result.isLeft) {
+          val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(s"Error getting a property periodic submission from the Integration Framework:" +
+            s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+        }
+        response.result
+      }
   }
 
-  private def shouldUse2324(taxYear: Int): Boolean = {
-    taxYear == 2024
+  private def after2324Api(taxYear: Int): Boolean = {
+    taxYear >= 2024
   }
-  private def toTaxYearParam(taxYear: Int): String = {
+
+  private def toTaxYearParamBefore2324(taxYear: Int): String = {
     s"${taxYear - 1}-${taxYear.toString takeRight 2}"
+  }
+
+  private def toTaxYearParamAfter2324(taxYear: Int): String = {
+    s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
   }
 
 }

@@ -27,6 +27,7 @@ import uk.gov.hmrc.incometaxproperty.models.{PeriodicSubmission, PeriodicSubmiss
 import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class PropertyServiceSpec extends UnitTest
@@ -57,8 +58,8 @@ class PropertyServiceSpec extends UnitTest
     "return data when GetPeriodicSubmission has valid values" in {
       val aPeriodicSubmissionModel = PeriodicSubmissionModel {
         List(
-          PeriodicSubmissionIdModel("1", "2021-01-01", "2021-11-11"),
-          PeriodicSubmissionIdModel("2", "2022-02-02", "2022-12-12")
+          PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11")),
+          PeriodicSubmissionIdModel("2", LocalDate.parse("2022-02-02"), LocalDate.parse("2022-12-12"))
         )
       }
 
@@ -66,8 +67,8 @@ class PropertyServiceSpec extends UnitTest
 
       val expectedPeriodicSubmissionResponse = PeriodicSubmissionResponse {
         List(
-          PeriodicSubmission("1", "2021-01-01", "2021-11-11"),
-          PeriodicSubmission("2", "2022-02-02", "2022-12-12"))
+          PeriodicSubmission("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11")),
+          PeriodicSubmission("2", LocalDate.parse("2022-02-02"), LocalDate.parse("2022-12-12")))
       }
       await(underTest.getAllPeriodicSubmission(2024, "A34324", "Rental")) shouldBe Right(expectedPeriodicSubmissionResponse)
     }
