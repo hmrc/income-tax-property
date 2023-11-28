@@ -21,15 +21,19 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel, PropertyPeriodicSubmission}
 import uk.gov.hmrc.incometaxproperty.utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   with MockFactory {
 
   private val nino = "some-nino"
+  private val taxableEntityId = "some-taxable-entity-id"
+  private val incomeSourceId = "some-income-source-id"
+  private val submissionId = "some-submission-id"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new IntegrationFrameworkConnector(httpClient, appConfigStub)
@@ -37,7 +41,6 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   ".getBusinessDetails" when {
     "when we call the IF" should {
       "return correct IF data when correct parameters are passed" in {
-
         val httpResponse = HttpResponse(OK, Json.toJson(anIncomeSourceDetails).toString())
 
         stubGetHttpClientCall(s"/registration/business-details/nino/$nino", httpResponse)
@@ -57,20 +60,18 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   }
 
 
-  val aPeriodicSubmissionModel: PeriodicSubmissionModel = PeriodicSubmissionModel(List(
-    PeriodicSubmissionIdModel("1", "2021-01-01", "2021-11-11"),
-    PeriodicSubmissionIdModel("2", "2022-02-02", "2022-12-12")
-  ))
 
   "Given a need to get Periodic Submission Data" when {
-    "a call is made to the backend API it" should {
 
+    val aPeriodicSubmissionModel: PeriodicSubmissionModel = PeriodicSubmissionModel(List(
+      PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11")),
+      PeriodicSubmissionIdModel("2", LocalDate.parse("2022-02-02"), LocalDate.parse("2022-12-12"))
+    ))
+
+    "a call is made to the backend API it" should {
       "return correct submissions data for the APIs used before 2024" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
-
         val taxYear = 2021
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
 
         stubGetHttpClientCall(s"/income-tax/business/property/$taxableEntityId/$incomeSourceId/period\\?taxYear=2020-21", httpResponse)
 
@@ -78,12 +79,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
       }
 
       "return correct submissions data for 2024 onwards" in {
-
         val httpResponse = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
-
         val taxYear = 2024
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
 
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
 
@@ -92,10 +89,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
       "return Data Not Found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(List.empty[PeriodicSubmissionModel]).toString())
-
         val taxYear = 2024
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
 
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
 
@@ -104,10 +98,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
       "return Service Unavailable Error from Upstream" in {
         val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-
         val taxYear = 2024
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
 
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
 
@@ -120,14 +111,55 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         val httpResponse = HttpResponse(BAD_GATEWAY, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
 
         val taxYear = 2024
-        val taxableEntityId = "some-taxable-entity-id"
-        val incomeSourceId = "some-income-source-id"
 
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
 
         await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(ApiError(
           BAD_GATEWAY,
           SingleErrorBody("GetPeriodicSubmissionResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
+      }
+    }
+  }
+
+  ".getPropertyPeriodicSubmission" when {
+
+    val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
+      submittedOn = Some(LocalDateTime.now),
+      fromDate = LocalDate.now.minusDays(1),
+      toDate = LocalDate.now,
+      None, None, None, None
+    )
+
+    "when we call the IF" should {
+      "return correct IF data when correct parameters are passed before 2024" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
+        val taxYear = 2021
+
+        stubGetHttpClientCall(s"/income-tax/business/property/periodic\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId", httpResponse)
+
+        await(underTest.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId)(hc)) shouldBe
+          Right(Some(aPropertyPeriodicSubmission))
+      }
+
+      "return correct submissions data for 2024 onwards" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
+        val taxYear = 2024
+
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/periodic/$submissionId", httpResponse)
+
+        await(underTest.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId)(hc)) shouldBe
+          Right(Some(aPropertyPeriodicSubmission))
+      }
+
+      "return IF error when Left is returned" in {
+        val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = 2024
+
+        stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/periodic/$submissionId", httpResponse)
+
+        await(underTest.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId)(hc)) shouldBe
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
       }
     }
   }

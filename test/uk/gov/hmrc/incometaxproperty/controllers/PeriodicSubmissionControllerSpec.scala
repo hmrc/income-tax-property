@@ -25,6 +25,7 @@ import uk.gov.hmrc.incometaxproperty.utils.ControllerUnitTest
 import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import uk.gov.hmrc.incometaxproperty.utils.providers.FakeRequestProvider
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class PeriodicSubmissionControllerSpec extends ControllerUnitTest
@@ -41,7 +42,8 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
   ".getPeriodicSubmissionData" should {
 
 
-    val periodicSubmissionResponse = PeriodicSubmissionResponse(List(PeriodicSubmission("submissionId", "2022-11-11", "2023-12-22")))
+    val periodicSubmissionResponse = PeriodicSubmissionResponse(
+      List(PeriodicSubmission("submissionId", LocalDate.parse("2022-11-11"), LocalDate.parse("2023-12-22"))))
 
     "return aPeriodicSubmission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
       mockAuthorisation()

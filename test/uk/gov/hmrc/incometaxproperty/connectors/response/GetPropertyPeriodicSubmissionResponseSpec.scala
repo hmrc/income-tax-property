@@ -15,39 +15,42 @@
  */
 
 package uk.gov.hmrc.incometaxproperty.connectors.response
+
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.incometaxproperty.connectors.response.GetPeriodicSubmissionResponse.getPeriodicSubmissionDataReads
+import uk.gov.hmrc.incometaxproperty.connectors.response.GetPropertyPeriodicSubmissionResponse.getPropertyPeriodicSubmissionDataReads
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyPeriodicSubmission
 import uk.gov.hmrc.incometaxproperty.utils.UnitTest
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
-class GetPeriodicSubmissionResponseSpec extends UnitTest {
+class GetPropertyPeriodicSubmissionResponseSpec extends UnitTest {
 
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
   private val anyMethod: String = "GET"
   private val anyUrl = "/income-tax/business/property/"
 
-  private val underTest = getPeriodicSubmissionDataReads
+  private val underTest = getPropertyPeriodicSubmissionDataReads
 
-  "getPeriodicSubmissionDataReads" should {
-    "convert JsValue to GetPeriodicSubmissionResponse" when {
+  "getPropertyPeriodicSubmissionDataReads" should {
+
+    "convert JsValue to GetPropertyPeriodicSubmissionResponse" when {
+
       "status is OK and valid jsValue" in {
-        val periodicSubmissionModel = PeriodicSubmissionModel(
-          List(
-            PeriodicSubmissionIdModel("1", LocalDate.parse("2022-12-10"), LocalDate.parse("2021-11-11")),
-            PeriodicSubmissionIdModel("2", LocalDate.parse("2023-11-03"), LocalDate.parse("2023-05-12"))
-          )
+        val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+          submittedOn = Some(LocalDateTime.now),
+          fromDate = LocalDate.now.minusDays(1),
+          toDate = LocalDate.now,
+          None, None, None, None
         )
 
-        val httpResponse: HttpResponse = HttpResponse.apply(OK, periodicSubmissionModel.toJson.toString, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(OK, Json.toJson(propertyPeriodicSubmission).toString, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
-          Right(periodicSubmissionModel)
+          Right(Some(propertyPeriodicSubmission))
         )
       }
 
@@ -55,13 +58,13 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
         val jsValue: JsValue = Json.parse(
           """
             |{
-            |   "PeriodicSubmission": {"submissionId": []}
+            |   "PropertyPeriodicSubmission": {"value": []}
             |}
             |""".stripMargin)
 
         val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
         )
@@ -75,9 +78,9 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
-          Right(PeriodicSubmissionModel(List.empty))
+          Right(None)
         )
       }
 
@@ -86,7 +89,7 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )
@@ -97,7 +100,7 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
         )
@@ -108,7 +111,7 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
           Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
         )
@@ -119,7 +122,7 @@ class GetPeriodicSubmissionResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPeriodicSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyPeriodicSubmissionResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )
