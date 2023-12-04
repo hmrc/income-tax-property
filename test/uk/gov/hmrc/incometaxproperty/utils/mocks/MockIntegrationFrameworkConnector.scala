@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import org.scalamock.handlers.{CallHandler2, CallHandler4}
+import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
 
 import scala.concurrent.Future
 
@@ -38,12 +38,25 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
   }
 
   def mockGetAllPeriodicSubmission(taxYear: Int,
-                                taxableEntityId: String,
-                                incomeSourceId: String,
-                                result: Either[ApiError, PeriodicSubmissionModel]
-                               ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ApiError, PeriodicSubmissionModel]]] = {
+                                   taxableEntityId: String,
+                                   incomeSourceId: String,
+                                   result: Either[ApiError, List[PeriodicSubmissionIdModel]]
+                                  ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ApiError, List[PeriodicSubmissionIdModel]]]] = {
     (mockIntegrationFrameworkConnector.getAllPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }
+
+  def mockGetPropertyPeriodicSubmission(taxYear: Int,
+                                        taxableEntityId: String,
+                                        incomeSourceId: String,
+                                        submissionId: String,
+                                        result: Either[ApiError, Option[PropertyPeriodicSubmission]]
+                                       ): CallHandler5[Int, String, String, String, HeaderCarrier,
+    Future[Either[ApiError, Option[PropertyPeriodicSubmission]]]] = {
+    (mockIntegrationFrameworkConnector.getPropertyPeriodicSubmission(_: Int, _: String, _: String, _: String)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, submissionId, *)
+      .returning(Future.successful(result))
+  }
+
 }

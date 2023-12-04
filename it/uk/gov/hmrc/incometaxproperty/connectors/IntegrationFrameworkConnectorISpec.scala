@@ -21,7 +21,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PeriodicSubmissionModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
 import uk.gov.hmrc.incometaxproperty.utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
 import java.time.{LocalDate, LocalDateTime}
@@ -60,13 +60,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   }
 
 
-
   "Given a need to get Periodic Submission Data" when {
 
-    val aPeriodicSubmissionModel: PeriodicSubmissionModel = PeriodicSubmissionModel(List(
+    val aPeriodicSubmissionModel = List(
       PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11")),
       PeriodicSubmissionIdModel("2", LocalDate.parse("2022-02-02"), LocalDate.parse("2022-12-12"))
-    ))
+    )
 
     "a call is made to the backend API it" should {
       "return correct submissions data for the APIs used before 2024" in {
@@ -88,12 +87,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
       }
 
       "return Data Not Found from Upstream" in {
-        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(List.empty[PeriodicSubmissionModel]).toString())
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(List.empty[PeriodicSubmissionIdModel]).toString())
         val taxYear = 2024
 
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period", httpResponse)
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(PeriodicSubmissionModel(List.empty))
+        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(List.empty)
       }
 
       "return Service Unavailable Error from Upstream" in {
@@ -104,7 +103,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(ApiError(
           SERVICE_UNAVAILABLE,
-          SingleErrorBody("GetPeriodicSubmissionResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
+          SingleErrorBody("GetPeriodicSubmissionIdResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
       }
 
       "handle Any Other Error from Upstream" in {
@@ -116,7 +115,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(ApiError(
           BAD_GATEWAY,
-          SingleErrorBody("GetPeriodicSubmissionResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
+          SingleErrorBody("GetPeriodicSubmissionIdResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")))
       }
     }
   }
