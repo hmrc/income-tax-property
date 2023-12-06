@@ -32,9 +32,9 @@ class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
                                              cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
-  def getAllPeriodicSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String): Action[AnyContent] =
+  def getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      propertyServices.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
+      propertyServices.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).map {
         case Right(periodicSubmissionData) => Ok(Json.toJson(periodicSubmissionData))
         case Left(DataNotFoundError) => NotFound
         case Left(_) => InternalServerError

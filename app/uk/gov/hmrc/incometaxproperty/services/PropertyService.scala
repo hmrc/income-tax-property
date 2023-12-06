@@ -18,30 +18,48 @@ package uk.gov.hmrc.incometaxproperty.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
+import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
-import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionIdModel
-import uk.gov.hmrc.incometaxproperty.models.{PeriodicSubmission, PeriodicSubmissionResponse}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
 
+import java.time.Period
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PropertyService @Inject()(integrationFrameworkConnector: IntegrationFrameworkConnector)
+class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
                                (implicit ec: ExecutionContext) {
 
-  def getAllPeriodicSubmission(taxYear: Int,
-                               taxableEntityId: String,
-                               incomeSourceId: String)
-                              (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionResponse]] = {
-    integrationFrameworkConnector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).map {
-      case Left(error) => Left(ApiServiceError(error.status.toString))
-      case Right(data) => val periodicSubmissionIds = data.periodicSubmissionIds.map { submissionId: PeriodicSubmissionIdModel =>
-        PeriodicSubmission(submissionId.submissionId, submissionId.fromDate, submissionId.toDate)
+  def getPropertyPeriodicSubmissions(taxYear: Int,
+                                     taxableEntityId: String,
+                                     incomeSourceId: String)
+                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyPeriodicSubmissionResponse]] = {
+    connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).flatMap {
+      case Left(error) => Future.successful(Left(ApiServiceError(error.status.toString)))
+      case Right(periodicSubmissionIds) =>
+        val propertyPeriodicSubmissions = getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, periodicSubmissionIds)
+        propertyPeriodicSubmissions.map(transformToResponse)
+    }
+  }
+
+  private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
+                                    (implicit hc: HeaderCarrier): Future[List[PropertyPeriodicSubmission]] = {
+    val propertyPeriodicSubmissions = periodicSubmissionIds
+      .filter(submissionId => Period.between(submissionId.fromDate, submissionId.toDate).getYears >= 1)
+      .map { submissionId =>
+        // get each of the property periodic submission details
+        connector.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId).map {
+          case Left(_) => None
+          case Right(propertyPeriodicSubmission) => propertyPeriodicSubmission
+        }
       }
-      if (periodicSubmissionIds.nonEmpty) {
-        Right(PeriodicSubmissionResponse(periodicSubmissionIds))
-      } else {
-        Left(DataNotFoundError)
-      }
+    Future.sequence(propertyPeriodicSubmissions).map(_.flatten)
+  }
+
+  private def transformToResponse(submissions: List[PropertyPeriodicSubmission]): Either[ServiceError, PropertyPeriodicSubmissionResponse] ={
+    if (submissions.nonEmpty) {
+      Right(PropertyPeriodicSubmissionResponse(submissions))
+    } else {
+      Left(DataNotFoundError)
     }
   }
 }

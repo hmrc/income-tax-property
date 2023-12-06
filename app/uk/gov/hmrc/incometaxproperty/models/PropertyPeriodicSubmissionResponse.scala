@@ -17,19 +17,12 @@
 package uk.gov.hmrc.incometaxproperty.models
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyPeriodicSubmission
 
 import java.time.LocalDate
 
-case class PeriodicSubmissionResponse(periodicSubmission: Seq[PeriodicSubmission])
+case class PropertyPeriodicSubmissionResponse(periodicSubmissions: Seq[PropertyPeriodicSubmission])
 
-object PeriodicSubmissionResponse {
-  implicit val format: OFormat[PeriodicSubmissionResponse] = Json.format[PeriodicSubmissionResponse]
-}
-
-case class PeriodicSubmission(submissionId: String,
-                              fromDate: LocalDate,
-                              toDate: LocalDate)
-
-object PeriodicSubmission {
-  implicit val format: OFormat[PeriodicSubmission] = Json.format[PeriodicSubmission]
+object PropertyPeriodicSubmissionResponse {
+  implicit val format: OFormat[PropertyPeriodicSubmissionResponse] = Json.format[PropertyPeriodicSubmissionResponse]
 }

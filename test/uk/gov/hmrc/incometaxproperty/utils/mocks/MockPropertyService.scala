@@ -19,7 +19,7 @@ package uk.gov.hmrc.incometaxproperty.utils.mocks
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.incometaxproperty.models.PeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.ServiceError
 import uk.gov.hmrc.incometaxproperty.services.PropertyService
 
@@ -27,14 +27,14 @@ import scala.concurrent.Future
 
 trait MockPropertyService extends MockFactory {
 
-  protected val mockPropertyServices: PropertyService = mock[PropertyService]
+  protected val mockPropertyService: PropertyService = mock[PropertyService]
 
-  def mockGetAllPeriodicSubmission(taxYear: Int,
-                                   taxableEntityId: String,
-                                   incomeSourceId: String,
-                                   result: Either[ServiceError, PeriodicSubmissionResponse]
-                                  ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ServiceError, PeriodicSubmissionResponse]]] = {
-    (mockPropertyServices.getAllPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+  def mockGetAllPeriodicSubmissions(taxYear: Int,
+                                    taxableEntityId: String,
+                                    incomeSourceId: String,
+                                    result: Either[ServiceError, PropertyPeriodicSubmissionResponse]
+                                   ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ServiceError, PropertyPeriodicSubmissionResponse]]] = {
+    (mockPropertyService.getPropertyPeriodicSubmissions(_: Int, _: String, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }

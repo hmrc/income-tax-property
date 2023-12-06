@@ -20,9 +20,9 @@ import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
-import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionResponse, GetPropertyPeriodicSubmissionResponse}
+import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionIdResponse, GetPropertyPeriodicSubmissionResponse}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
 
 import java.net.URL
 import javax.inject.Inject
@@ -49,7 +49,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
   def getAllPeriodicSubmission(taxYear: Int,
                                taxableEntityId: String,
                                incomeSourceId: String)
-                              (implicit hc: HeaderCarrier): Future[Either[ApiError, PeriodicSubmissionModel]] = {
+                              (implicit hc: HeaderCarrier): Future[Either[ApiError, List[PeriodicSubmissionIdModel]]] = {
 
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$taxableEntityId/$incomeSourceId/period"), "1954")
@@ -59,8 +59,8 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
         "1649")
     }
 
-    val apiResponse = httpClient.GET[GetPeriodicSubmissionResponse](url)(
-      implicitly[HttpReads[GetPeriodicSubmissionResponse]],
+    val apiResponse = httpClient.GET[GetPeriodicSubmissionIdResponse](url)(
+      implicitly[HttpReads[GetPeriodicSubmissionIdResponse]],
       ifHeaderCarrier(url, apiVersion),
       ec)
     apiResponse.map { response =>
