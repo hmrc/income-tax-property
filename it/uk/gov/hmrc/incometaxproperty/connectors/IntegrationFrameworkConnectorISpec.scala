@@ -21,7 +21,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses._
 import uk.gov.hmrc.incometaxproperty.utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
 import java.time.{LocalDate, LocalDateTime}
@@ -158,6 +158,49 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         stubGetHttpClientCall(s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/periodic/$submissionId", httpResponse)
 
         await(underTest.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId)(hc)) shouldBe
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+  }
+
+  ".getPropertyAnnualSubmission" when {
+    val aPropertyAnnualSubmission = PropertyAnnualSubmission(
+      submittedOn = LocalDateTime.now,
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None
+    )
+
+    "when we call the IF" should {
+      "return correct IF data when correct parameters are passed before 2024" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
+        val taxYear = 2021
+
+        stubGetHttpClientCall(s"/income-tax/business/property/annual\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId", httpResponse)
+
+        await(underTest.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe
+          Right(Some(aPropertyAnnualSubmission))
+      }
+
+      "return correct submissions data for 2024 onwards" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
+        val taxYear = 2024
+
+        stubGetHttpClientCall(s"/income-tax/business/property/annual/23-24/$taxableEntityId/$incomeSourceId", httpResponse)
+
+        await(underTest.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe
+          Right(Some(aPropertyAnnualSubmission))
+      }
+
+      "return IF error when Left is returned" in {
+        val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = 2024
+
+        stubGetHttpClientCall(s"/income-tax/business/property/annual/23-24/$taxableEntityId/$incomeSourceId", httpResponse)
+
+        await(underTest.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
       }
     }

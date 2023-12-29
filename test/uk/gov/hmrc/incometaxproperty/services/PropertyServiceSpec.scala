@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses._
 import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
 
@@ -60,6 +60,61 @@ class PropertyServiceSpec extends UnitTest
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId)) shouldBe
         Right(PropertyPeriodicSubmissionResponse(List(propertyPeriodicSubmission)))
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission has ids and the period is less than a year" in {
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11")),
+      )
+
+      val taxYear = 2024
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId)) shouldBe Left(DataNotFoundError)
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission has ids and there is no submission" in {
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
+      )
+
+      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(DataNotFoundError)
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
+      val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
+
+      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(DataNotFoundError)
+
+    }
+
+    "return ApiError when GetPeriodicSubmissionIds fails" in {
+      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(ApiServiceError("500"))
+    }
+  }
+
+  ".getPropertyAnnualSubmission" should {
+
+    "return data when successful" in {
+      val aPropertyAnnualSubmission = PropertyAnnualSubmission(
+        submittedOn = LocalDateTime.now,
+        Some(AnnualForeignFhlEea(
+          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+        )), None, None, None
+      )
+      val taxYear = 2024
+
+      mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Right(Some(aPropertyAnnualSubmission)))
+
+      await(underTest.getPropertyAnnualSubmission(taxYear, nino, incomeSourceId)) shouldBe
+        Right(aPropertyAnnualSubmission)
     }
 
     "return DataNotFoundError when GetPeriodicSubmission has ids and the period is less than a year" in {

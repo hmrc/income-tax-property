@@ -20,7 +20,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
 
 import java.time.Period
 import javax.inject.Inject
@@ -41,6 +41,16 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
+  def getPropertyAnnualSubmission(taxYear: Int,
+                                  taxableEntityId: String,
+                                  incomeSourceId: String)
+                                 (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyAnnualSubmission]] = {
+    connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId).map {
+      case Left(error) => Left(ApiServiceError(error.status.toString))
+      case Right(annualSubmission) => annualSubmission.map(Right.apply).getOrElse(Left(DataNotFoundError))
+    }
+  }
+
   private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
                                     (implicit hc: HeaderCarrier): Future[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds
@@ -55,7 +65,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     Future.sequence(propertyPeriodicSubmissions).map(_.flatten)
   }
 
-  private def transformToResponse(submissions: List[PropertyPeriodicSubmission]): Either[ServiceError, PropertyPeriodicSubmissionResponse] ={
+  private def transformToResponse(submissions: List[PropertyPeriodicSubmission]): Either[ServiceError, PropertyPeriodicSubmissionResponse] = {
     if (submissions.nonEmpty) {
       Right(PropertyPeriodicSubmissionResponse(submissions))
     } else {

@@ -20,9 +20,9 @@ import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
 import uk.gov.hmrc.incometaxproperty.connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
-import uk.gov.hmrc.incometaxproperty.connectors.response.{GetBusinessDetailsResponse, GetPeriodicSubmissionIdResponse, GetPropertyPeriodicSubmissionResponse}
+import uk.gov.hmrc.incometaxproperty.connectors.response._
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses._
 
 import java.net.URL
 import javax.inject.Inject
@@ -73,7 +73,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
   }
 
   def getPropertyPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, submissionId: String)
-                             (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyPeriodicSubmission]]] = {
+                                   (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyPeriodicSubmission]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId"), "1862")
     } else {
@@ -85,13 +85,35 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       implicitly[HttpReads[GetPropertyPeriodicSubmissionResponse]],
       ifHeaderCarrier(url, apiVersion),
       ec).map { response: GetPropertyPeriodicSubmissionResponse =>
-        if(response.result.isLeft) {
-          val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
-          logger.error(s"Error getting a property periodic submission from the Integration Framework:" +
-            s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
-        }
-        response.result
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error getting a property periodic submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
       }
+      response.result
+    }
+  }
+
+  def getPropertyAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
+                                 (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyAnnualSubmission]]] = {
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId"), "1805")
+    } else {
+      (new URL(s"${appConfig.ifBaseUrl}/income-tax/business/property/annual?" +
+        s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId"), "1598")
+    }
+
+    httpClient.GET[GetPropertyAnnualSubmissionResponse](url)(
+      implicitly[HttpReads[GetPropertyAnnualSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion),
+      ec).map { response: GetPropertyAnnualSubmissionResponse =>
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error getting a property annual submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+      }
+      response.result
+    }
   }
 
   private def after2324Api(taxYear: Int): Boolean = {

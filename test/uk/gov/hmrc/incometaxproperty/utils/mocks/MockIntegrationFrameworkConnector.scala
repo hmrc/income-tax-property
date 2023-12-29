@@ -21,7 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
 
 import scala.concurrent.Future
 
@@ -56,6 +56,17 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     Future[Either[ApiError, Option[PropertyPeriodicSubmission]]]] = {
     (mockIntegrationFrameworkConnector.getPropertyPeriodicSubmission(_: Int, _: String, _: String, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, submissionId, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockGetPropertyAnnualSubmission(taxYear: Int,
+                                      taxableEntityId: String,
+                                      incomeSourceId: String,
+                                      result: Either[ApiError, Option[PropertyAnnualSubmission]]
+                                     ): CallHandler4[Int, String, String, HeaderCarrier,
+    Future[Either[ApiError, Option[PropertyAnnualSubmission]]]] = {
+    (mockIntegrationFrameworkConnector.getPropertyAnnualSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }
 
