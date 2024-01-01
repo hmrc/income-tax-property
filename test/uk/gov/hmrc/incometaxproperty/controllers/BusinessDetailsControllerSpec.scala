@@ -64,7 +64,7 @@ class BusinessDetailsControllerSpec extends ControllerUnitTest
 
     "return error when businessDetailsService returns Left(ApiServiceError)" in {
       mockAuthorisation()
-      mockGetBusinessDetails("some-nino", Left(ApiServiceError("error")))
+      mockGetBusinessDetails("some-nino", Left(ApiServiceError(500)))
 
       val result = underTest.getBusinessDetails("some-nino")(fakeGetRequest)
 

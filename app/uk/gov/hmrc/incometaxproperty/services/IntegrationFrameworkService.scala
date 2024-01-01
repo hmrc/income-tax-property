@@ -32,7 +32,7 @@ class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConne
 
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, BusinessDetailsResponse]] = {
     connector.getBusinessDetails(nino).map {
-      case Left(error) => Left(ApiServiceError(error.status.toString))
+      case Left(error) => Left(ApiServiceError(error.status))
       case Right(allBusinessDetails) => allBusinessDetails.flatMap(_.taxPayerDisplayResponse.propertyData).fold[Either[ServiceError, BusinessDetailsResponse]](
         Left(DataNotFoundError))(
         propDetailsList =>

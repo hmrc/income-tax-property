@@ -43,7 +43,7 @@ class IntegrationFrameworkServiceSpec extends UnitTest
   ".GetBusinessDetails" should {
     "return error when GetBusinessDetails fails" in {
       mockGetBusinessDetails( "some-nino", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
-      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError("500"))
+      await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError(500))
     }
 
     "return error when GetBusinessDetails does not return data" in {

@@ -19,7 +19,7 @@ package uk.gov.hmrc.incometaxproperty.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.incometaxproperty.actions.AuthorisedAction
-import uk.gov.hmrc.incometaxproperty.models.errors.DataNotFoundError
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
 import uk.gov.hmrc.incometaxproperty.services.PropertyService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -40,4 +40,15 @@ class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
         case Left(_) => InternalServerError
       }
     }
+
+  def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
+    authorisedAction.async { implicit request =>
+      propertyServices.createPeriodicSubmission(nino, incomeSourceId, taxYear, request.body.asJson).map {
+        case Right(periodicSubmissionData) => Created(Json.toJson(periodicSubmissionData))
+        case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+        case Left(ApiServiceError(CONFLICT)) => Conflict
+        case Left(_) => InternalServerError
+      }
+    }
+
 }

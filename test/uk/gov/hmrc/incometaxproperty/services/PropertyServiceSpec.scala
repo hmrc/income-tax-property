@@ -17,7 +17,8 @@
 package uk.gov.hmrc.incometaxproperty.services
 
 
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
@@ -150,7 +151,44 @@ class PropertyServiceSpec extends UnitTest
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(ApiServiceError("500"))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(ApiServiceError(500))
     }
   }
+
+  "create periodic submission" should {
+
+     val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "fromDate": "1933-03-31",
+        |   "toDate": "2000-02-29",
+        |   "foreignFhlEea": {
+        |      "income": {
+        |         "rentAmount": 200.00
+        |      },
+        |      "expenses": {
+        |         "consolidatedExpenseAmount": 1000.99
+        |       }
+        |   }
+        |}
+        |""".stripMargin)
+
+    "return submissionId for valid request" in {
+      val periodicSubmissionId = PeriodicSubmissionId("submissionId")
+      val taxYear = 2024
+
+      mockCreatePeriodicSubmission(taxYear, nino, incomeSourceId, Right(Some(periodicSubmissionId)))
+
+      await(underTest.createPeriodicSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe
+        Right(periodicSubmissionId)
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockCreatePeriodicSubmission(taxYear, nino, incomeSourceId, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.createPeriodicSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+
+  }
 }
+
