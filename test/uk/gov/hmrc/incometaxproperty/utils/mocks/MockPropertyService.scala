@@ -21,6 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.ServiceError
+import uk.gov.hmrc.incometaxproperty.models.responses.PropertyAnnualSubmission
 import uk.gov.hmrc.incometaxproperty.services.PropertyService
 
 import scala.concurrent.Future
@@ -35,6 +36,16 @@ trait MockPropertyService extends MockFactory {
                                     result: Either[ServiceError, PropertyPeriodicSubmissionResponse]
                                    ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ServiceError, PropertyPeriodicSubmissionResponse]]] = {
     (mockPropertyService.getPropertyPeriodicSubmissions(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockGetAnnualSubmission(taxYear: Int,
+                              taxableEntityId: String,
+                              incomeSourceId: String,
+                              result: Either[ServiceError, PropertyAnnualSubmission]
+                             ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ServiceError, PropertyAnnualSubmission]]] = {
+    (mockPropertyService.getPropertyAnnualSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
   }
