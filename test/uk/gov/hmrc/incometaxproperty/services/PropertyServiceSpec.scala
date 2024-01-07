@@ -96,7 +96,7 @@ class PropertyServiceSpec extends UnitTest
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(ApiServiceError("500"))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental")) shouldBe Left(ApiServiceError(500))
     }
   }
 

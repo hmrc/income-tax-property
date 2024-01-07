@@ -79,7 +79,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       mockGetAnnualSubmission(2024,
         "taxableEntityId",
         "incomeSourceId",
-        Left(ApiServiceError("error")))
+        Left(ApiServiceError(500)))
 
       val result = underTest.getAnnualSubmission(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 

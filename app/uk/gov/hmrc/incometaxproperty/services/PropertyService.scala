@@ -47,7 +47,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
                                   incomeSourceId: String)
                                  (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyAnnualSubmission]] = {
     connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId).map {
-      case Left(error) => Left(ApiServiceError(error.status.toString))
+      case Left(error) => Left(ApiServiceError(error.status))
       case Right(annualSubmission) => annualSubmission.map(Right.apply).getOrElse(Left(DataNotFoundError))
     }
   }
