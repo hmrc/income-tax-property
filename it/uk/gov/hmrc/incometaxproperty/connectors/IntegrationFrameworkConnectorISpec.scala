@@ -18,7 +18,7 @@ package uk.gov.hmrc.incometaxproperty.connectors
 
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses._
@@ -205,4 +205,73 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
       }
     }
   }
+
+  "Given a need to create Periodic Submission Data" when {
+
+    val aPeriodicSubmissionModel = PeriodicSubmissionId("1")
+     val requestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "fromDate": "1933-03-31",
+        |   "toDate": "2000-02-29",
+        |   "foreignFhlEea": {
+        |      "income": {
+        |         "rentAmount": 200.00
+        |      },
+        |      "expenses": {
+        |         "consolidatedExpenseAmount": 1000.99
+        |       }
+        |   }
+        |}
+        |""".stripMargin)
+
+    "create periodic submission" should {
+      "create submissions data for the APIs used before 2024" in {
+        val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
+        val taxYear = 2021
+
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",requestBody.toString(), httpResponse)
+
+        await(underTest.createPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, requestBody)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
+      }
+
+      "create submissions data for 2024 onwards" in {
+        val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
+        val taxYear = 2024
+
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
+
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
+      }
+
+      "return Conflict from Upstream" in {
+        val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
+        val taxYear = 2024
+
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
+
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
+      }
+      "return not found from Upstream" in {
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+        val taxYear = 2024
+
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
+
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+      }
+
+      "return Service Unavailable Error from Upstream" in {
+        val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = 2024
+
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
+
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe
+          Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+  }
+
+
 }

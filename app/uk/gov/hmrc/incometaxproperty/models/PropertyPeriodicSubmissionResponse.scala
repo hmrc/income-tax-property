@@ -19,8 +19,6 @@ package uk.gov.hmrc.incometaxproperty.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyPeriodicSubmission
 
-import java.time.LocalDate
-
 case class PropertyPeriodicSubmissionResponse(periodicSubmissions: Seq[PropertyPeriodicSubmission])
 
 object PropertyPeriodicSubmissionResponse {

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
-import play.api.libs.json.Json
+import play.api.http.Status.{BAD_REQUEST, CONFLICT, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
 import uk.gov.hmrc.incometaxproperty.utils.ControllerUnitTest
 import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import uk.gov.hmrc.incometaxproperty.utils.providers.FakeRequestProvider
@@ -82,12 +82,90 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
       mockGetAllPeriodicSubmissions(2024,
         "taxableEntityId",
         "incomeSourceId",
-        Left(ApiServiceError("error")))
+        Left(ApiServiceError(500)))
 
       val result = underTest.getAllPeriodicSubmissions(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
+
+  "Create Periodic Submission" should {
+
+     val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "fromDate": "1933-03-31",
+        |   "toDate": "2000-02-29",
+        |   "foreignFhlEea": {
+        |      "income": {
+        |         "rentAmount": 200.00
+        |      },
+        |      "expenses": {
+        |         "consolidatedExpenseAmount": 1000.99
+        |       }
+        |   }
+        |}
+        |""".stripMargin)
+
+    val periodicSubmissionResponse = PeriodicSubmissionId("submissionId")
+    "return a property periodic submission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
+      mockAuthorisation()
+      mockCreatePeriodicSubmissions(
+        "taxableEntityId",
+        "incomeSourceId",
+        2024,
+        Some(validRequestBody),
+        Right(periodicSubmissionResponse))
+
+      val result = await(underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest))
+
+      result.header.status shouldBe CREATED
+      Json.parse(consumeBody(result)) shouldBe Json.toJson(periodicSubmissionResponse)
+    }
+
+    "return conflict when PeriodicSubmissionService returns conflict error" in {
+      mockAuthorisation()
+      mockCreatePeriodicSubmissions(
+        "taxableEntityId",
+        "incomeSourceId",
+        2024,
+        Some(validRequestBody),
+        Left(ApiServiceError(409)))
+
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+      status(result) shouldBe CONFLICT
+    }
+
+    "return internal server error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+      mockAuthorisation()
+      mockCreatePeriodicSubmissions(
+        "taxableEntityId",
+        "incomeSourceId",
+        2024,
+        Some(validRequestBody),
+        Left(ApiServiceError(500)))
+
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+    }
+
+    "return bad request error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+      mockAuthorisation()
+      mockCreatePeriodicSubmissions(
+        "taxableEntityId",
+        "incomeSourceId",
+        2024,
+        Some(validRequestBody),
+        Left(ApiServiceError(400)))
+
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 }
 
