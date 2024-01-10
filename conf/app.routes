@@ -5,6 +5,7 @@ GET         /business-details/nino/:nino                                        
 #API-1649 and API-1954
 GET         /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId        uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
 
+#API-1598 & API-1805
 GET         /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId           uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
 
 #API-1593 & #1861
