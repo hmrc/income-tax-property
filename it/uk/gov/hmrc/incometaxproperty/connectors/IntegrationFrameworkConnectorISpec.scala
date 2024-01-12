@@ -299,13 +299,22 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         await(underTest.updatePeriodicSubmission(taxableEntityId, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
       }
 
-      "create submissions data for 2024 onwards" in {
+      "update submissions data for 2024 onwards" in {
         val httpResponse = HttpResponse(NO_CONTENT, "")
         val taxYear = 2024
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
         await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
+      }
+
+      "return not found from Upstream" in {
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
       "return unprocessable-entity from Upstream" in {
