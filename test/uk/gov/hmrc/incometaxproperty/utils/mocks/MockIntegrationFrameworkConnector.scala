@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5}
+import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
@@ -79,6 +79,18 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     Future[Either[ApiError, Option[PeriodicSubmissionId]]]] = {
     (mockIntegrationFrameworkConnector.createPeriodicSubmission(_: Int, _: String, _: String, _: JsValue)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockUpdatePeriodicSubmission(taxYear: Int,
+                                   taxableEntityId: String,
+                                   incomeSourceId: String,
+                                   submissionId: String,
+                                   result: Either[ApiError, Option[String]]
+                                  ): CallHandler6[String, String, Int, String, JsValue, HeaderCarrier,
+    Future[Either[ApiError, Option[String]]]] = {
+    (mockIntegrationFrameworkConnector.updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: JsValue)(_: HeaderCarrier))
+      .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, *, *)
       .returning(Future.successful(result))
   }
 
