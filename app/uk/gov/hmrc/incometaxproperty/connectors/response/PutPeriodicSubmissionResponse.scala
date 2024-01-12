@@ -21,9 +21,8 @@ import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
-import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmission
 
-case class PutPeriodicSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[PeriodicSubmission]])
+case class PutPeriodicSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[String]])
 
 object PutPeriodicSubmissionResponse extends Logging {
 

@@ -139,7 +139,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
   }
 
   def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: JsValue)
-                              (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmission]]] = {
+                              (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId""", "1958")
     } else {
