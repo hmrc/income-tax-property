@@ -138,6 +138,28 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
+  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: JsValue)
+                              (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmission]]] = {
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId""", "1958")
+    } else {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId""", "1594")
+    }
+
+    httpClient.PUTString[PutPeriodicSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
+      implicitly[HttpReads[PutPeriodicSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
+      ec).map { response: PutPeriodicSubmissionResponse =>
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error updating a property periodic submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+      }
+      response.result
+    }
+  }
+
+
   private def after2324Api(taxYear: Int): Boolean = {
     taxYear >= 2024
   }

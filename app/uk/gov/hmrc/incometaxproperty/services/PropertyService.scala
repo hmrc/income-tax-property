@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
-import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmission, PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
 
 import java.time.Period
 import javax.inject.Inject
@@ -61,6 +61,14 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
+  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: Option[JsValue])
+                              (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmission]] = {
+
+    connector.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, body.get).flatMap {
+      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
+      case Right(_) => Future.successful(Right(PeriodicSubmission()))
+    }
+  }
 
   private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
                                     (implicit hc: HeaderCarrier): Future[List[PropertyPeriodicSubmission]] = {

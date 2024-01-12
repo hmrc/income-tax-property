@@ -1,12 +1,15 @@
 # microservice specific routes
 #API-1711
-GET         /business-details/nino/:nino                                                            uk.gov.hmrc.incometaxproperty.controllers.BusinessDetailsController.getBusinessDetails(nino: String)
+GET         /business-details/nino/:nino                                                                                       uk.gov.hmrc.incometaxproperty.controllers.BusinessDetailsController.getBusinessDetails(nino: String)
 
 #API-1649 and API-1954
-GET         /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId        uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
+GET         /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                          uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
 
 #API-1598 & API-1805
-GET         /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId           uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
+GET         /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                            uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
 
 #API-1593 & #1861
-POST        /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear        uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+POST        /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                                   uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+
+#API-1593 & #1861
+PUT         /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear/submissionId/:submissionId        uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String)

@@ -51,4 +51,13 @@ class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
       }
     }
 
+  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String): Action[AnyContent] =
+    authorisedAction.async { implicit request =>
+      propertyServices.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, request.body.asJson).map {
+        case Right(_) => NoContent
+        case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+        case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
+        case Left(_) => InternalServerError
+      }
+    }
 }
