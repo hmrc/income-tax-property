@@ -273,5 +273,70 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
     }
   }
 
+  "Given a need to update Periodic Submission Data" when {
+
+    val requestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "foreignFhlEea": {
+        |      "income": {
+        |         "rentAmount": 200.00
+        |      },
+        |      "expenses": {
+        |         "consolidatedExpense": 1000.99
+        |       }
+        |   }
+        |}
+        |""".stripMargin)
+
+    "update periodic submission" should {
+      "update submissions data for the APIs used before 2024" in {
+        val httpResponse = HttpResponse(NO_CONTENT, "")
+        val taxYear = 2021
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(taxableEntityId, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
+      }
+
+      "update submissions data for 2024 onwards" in {
+        val httpResponse = HttpResponse(NO_CONTENT, "")
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
+      }
+
+      "return not found from Upstream" in {
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+      }
+
+      "return unprocessable-entity from Upstream" in {
+        val httpResponse = HttpResponse(UNPROCESSABLE_ENTITY, Json.toJson(SingleErrorBody("some-code", "unprocessable-entity")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
+      }
+
+      "return Service Unavailable Error from Upstream" in {
+        val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
+
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe
+          Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+  }
+
 
 }

@@ -41,6 +41,7 @@ class PropertyServiceSpec extends UnitTest
   private val underTest = new PropertyService(mockIntegrationFrameworkConnector)
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
+  private val submissionId = "submissionId"
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -187,6 +188,39 @@ class PropertyServiceSpec extends UnitTest
       val taxYear = 2024
       mockCreatePeriodicSubmission(taxYear, nino, incomeSourceId, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
       await(underTest.createPeriodicSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+
+  }
+
+  "update periodic submission" should {
+
+    val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "foreignFhlEea": {
+        |      "income": {
+        |         "rentAmount": 200.00
+        |      },
+        |      "expenses": {
+        |         "consolidatedExpense": 1000.99
+        |       }
+        |   }
+        |}
+        |""".stripMargin)
+
+    "return no content for valid request" in {
+      val taxYear = 2024
+
+      mockUpdatePeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Right(None))
+
+      await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe
+        Right("")
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockUpdatePeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
 
   }
