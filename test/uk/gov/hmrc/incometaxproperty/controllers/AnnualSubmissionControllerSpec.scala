@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
-import play.api.libs.json.Json
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
 import uk.gov.hmrc.incometaxproperty.models.responses.{AnnualForeignFhlEea, ForeignFhlAdjustments, ForeignFhlAllowances, PropertyAnnualSubmission}
@@ -84,6 +84,92 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       val result = underTest.getAnnualSubmission(2024, "taxableEntityId", "incomeSourceId")(fakeGetRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  ".createOrUpdateAnnualSubmission" should {
+    "Update Periodic Submission" should {
+
+      val validRequestBody: JsValue = Json.parse(
+        """
+          |{
+          |
+          |   "foreignProperty": {
+          |       "countryCode": "ABC"
+          |   }
+          |   "ukOtherProperty" {
+          |     "ukOtherPropertyAnnualAllowances" {
+          |       "structuredBuildingAllowance" {
+          |         "firstYear" {
+          |           "qualifyingDate" : "ABC",
+          |           "qualifyingAmountExpenditure": False
+          |         }
+          |       }
+          |     }
+          |   }
+          |}
+          |""".stripMargin)
+
+      "return a property periodic submission when IntegrationFrameworkService returns no content" in {
+        mockAuthorisation()
+        mockUpdatePeriodicSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          "submissionId",
+          Some(validRequestBody),
+          Right(""))
+
+        val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest))
+
+        result.header.status shouldBe NO_CONTENT
+        consumeBody(result) shouldBe empty
+      }
+
+      "return unprocessable-entity when PeriodicSubmissionService returns conflict error" in {
+        mockAuthorisation()
+        mockUpdatePeriodicSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          "submissionId",
+          Some(validRequestBody),
+          Left(ApiServiceError(422)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+
+        status(result) shouldBe UNPROCESSABLE_ENTITY
+      }
+
+      "return internal server error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+        mockAuthorisation()
+        mockUpdatePeriodicSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          "submissionId",
+          Some(validRequestBody),
+          Left(ApiServiceError(500)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "return bad request error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+        mockAuthorisation()
+        mockUpdatePeriodicSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          "submissionId",
+          Some(validRequestBody),
+          Left(ApiServiceError(400)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+
+        status(result) shouldBe BAD_REQUEST
+      }
     }
   }
 }
