@@ -4,8 +4,9 @@ package uk.gov.hmrc.incometaxproperty.models.responses
 import play.api.libs.json.{Json, OFormat}
 
 case class AnnualSubmissionModel(foreignFhlEea: Option[ForeignFhlEeaAnnual],
-                                 foreignProperty: Option[ForeignPropertyAnnual],
-                                 ukOtherProperty: Option[UkOtherPropertyAnnual])
+                                 foreignProperty: Option[Seq[ForeignPropertyAnnual]],
+                                 ukOtherProperty: Option[UkOtherPropertyAnnual],
+                                 ukFhlProperty: Option[AnnualUkFhlProperty])
 
 object AnnualSubmissionModel {
   implicit val format: OFormat[AnnualSubmissionModel] = Json.format[AnnualSubmissionModel]
@@ -47,8 +48,8 @@ case class ukOtherPropertyAnnualAllowances(annualInvestmentAllowance: Option[Big
                                            otherCapitalAllowance: Option[BigDecimal],
                                            costOfReplacingDomesticGoods: Option[BigDecimal],
                                            electricChargePointAllowance: Option[BigDecimal],
-                                           structuredBuildingAllowance: Option[StructuredBuildingAllowance],
-                                           enhancedStructuredBuildingAllowance: Option[StructuredBuildingAllowance],
+                                           structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
+                                           enhancedStructuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
                                            zeroEmissionsCarAllowance: Option[BigDecimal])
 
 object ukOtherPropertyAnnualAllowances {
