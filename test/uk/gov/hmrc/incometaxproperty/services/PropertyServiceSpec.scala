@@ -224,5 +224,30 @@ class PropertyServiceSpec extends UnitTest
     }
 
   }
+
+  "create annual submission" should {
+    val validRequestBody: JsValue = Json.toJson(PropertyAnnualSubmission(
+      submittedOn = LocalDateTime.now,
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None))
+
+    "return no content for valid request" in {
+      val taxYear = 2024
+
+      mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right(None))
+
+      await(underTest.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe
+        Right(None)
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockUpdatePeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
 }
 

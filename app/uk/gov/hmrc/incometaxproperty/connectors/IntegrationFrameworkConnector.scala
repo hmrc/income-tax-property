@@ -159,8 +159,8 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
-  def updateOrUpdateAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
-  (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
+  def createOrUpdateAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
+                                    (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId""", "1861")
     } else {
