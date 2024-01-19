@@ -41,9 +41,9 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String): Action[AnyContent] =
+  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      propertyService.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, request.body.asJson).map {
+      propertyService.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, request.body.asJson).map {
         case Right(_) => NoContent
         case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
         case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity

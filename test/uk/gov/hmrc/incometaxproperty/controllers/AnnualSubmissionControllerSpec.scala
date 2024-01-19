@@ -88,27 +88,15 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
   }
 
   ".createOrUpdateAnnualSubmission" should {
-    "Update Periodic Submission" should {
+    val validRequestBody = Json.toJson(PropertyAnnualSubmission(
+      submittedOn = LocalDateTime.now,
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None))
 
-      val validRequestBody: JsValue = Json.parse(
-        """
-          |{
-          |
-          |   "foreignProperty": {
-          |       "countryCode": "ABC"
-          |   }
-          |   "ukOtherProperty" {
-          |     "ukOtherPropertyAnnualAllowances" {
-          |       "structuredBuildingAllowance" {
-          |         "firstYear" {
-          |           "qualifyingDate" : "ABC",
-          |           "qualifyingAmountExpenditure": False
-          |         }
-          |       }
-          |     }
-          |   }
-          |}
-          |""".stripMargin)
+
+    "Update annual Submission" in {
 
       "return a property periodic submission when IntegrationFrameworkService returns no content" in {
         mockAuthorisation()
@@ -120,7 +108,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
           Some(validRequestBody),
           Right(""))
 
-        val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest))
+        val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePutRequest))
 
         result.header.status shouldBe NO_CONTENT
         consumeBody(result) shouldBe empty
@@ -136,7 +124,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
           Some(validRequestBody),
           Left(ApiServiceError(422)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
 
         status(result) shouldBe UNPROCESSABLE_ENTITY
       }
@@ -151,7 +139,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
           Some(validRequestBody),
           Left(ApiServiceError(500)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
@@ -166,7 +154,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
           Some(validRequestBody),
           Left(ApiServiceError(400)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
 
         status(result) shouldBe BAD_REQUEST
       }

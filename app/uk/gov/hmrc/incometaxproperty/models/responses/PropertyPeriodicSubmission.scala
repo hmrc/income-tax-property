@@ -23,10 +23,10 @@ import java.time.{LocalDate, LocalDateTime}
 case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
                                       fromDate: LocalDate,
                                       toDate: LocalDate,
-                                      foreignFhlEea: Option[ForeignFhlEeaAnnual],
-                                      foreignProperty: Option[Seq[ForeignPropertyAnnual]],
+                                      foreignFhlEea: Option[ForeignFhlEea],
+                                      foreignProperty: Option[Seq[ForeignProperty]],
                                       ukFhlProperty: Option[UkFhlProperty],
-                                      ukOtherProperty: Option[UkOtherPropertyAnnual])
+                                      ukOtherProperty: Option[UkOtherProperty])
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
@@ -36,7 +36,7 @@ case class ForeignFhlEea(income: ForeignFhlIncome,
                          expenses: ForeignFhlExpenses)
 
 object ForeignFhlEea {
-  implicit val format: OFormat[ForeignFhlEeaAnnual] = Json.format[ForeignFhlEeaAnnual]
+  implicit val format: OFormat[ForeignFhlEea] = Json.format[ForeignFhlEea]
 }
 
 case class ForeignFhlIncome(rentAmount: BigDecimal)
@@ -63,7 +63,7 @@ case class ForeignProperty(countryCode: String,
                            expenses: Option[ForeignPropertyExpenses])
 
 object ForeignProperty {
-  implicit val format: OFormat[ForeignPropertyAnnual] = Json.format[ForeignPropertyAnnual]
+  implicit val format: OFormat[ForeignProperty] = Json.format[ForeignProperty]
 }
 
 case class ForeignPropertyIncome(rentIncome: Option[ForeignPropertyRentIncome],
@@ -142,7 +142,7 @@ case class UkOtherProperty(income: UkOtherPropertyIncome,
                            expenses: UkOtherPropertyExpenses)
 
 object UkOtherProperty {
-  implicit val format: OFormat[UkOtherPropertyAnnual] = Json.format[UkOtherPropertyAnnual]
+  implicit val format: OFormat[UkOtherProperty] = Json.format[UkOtherProperty]
 }
 
 case class UkOtherPropertyIncome(premiumsOfLeaseGrant: Option[BigDecimal],

@@ -70,10 +70,10 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
-  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: Option[JsValue])
+  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
                                     (implicit hc: HeaderCarrier): Future[Either[ServiceError, String]] = {
 
-    connector.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, submissionId, body.get).flatMap {
+    connector.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, body.get).flatMap {
       case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
       case Right(_) => Future.successful(Right(""))
     }
