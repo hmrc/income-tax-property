@@ -219,7 +219,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
     "create Annual Submission" should {
       "create submissions data for the APIs used before 2024" in {
         val taxYear = 2021
-        val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
+        val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
         stubPutHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right()
@@ -228,7 +228,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
       "create submissions data for 2024 onwards" in {
         val taxYear = 2024
 
-        val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
+        val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
 
         stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
