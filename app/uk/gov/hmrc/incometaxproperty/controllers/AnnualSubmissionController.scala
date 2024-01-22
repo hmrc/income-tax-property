@@ -40,4 +40,13 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
         case Left(_) => InternalServerError
       }
     }
+
+  def deleteAnnualSubmission (taxYear: Int, nino: String, incomeSourceId: String): Action[AnyContent] =
+    authorisedAction.async { implicit request =>
+      propertyService.deletePropertyAnnualSubmission(taxYear, nino, incomeSourceId).map {
+        case Right(annualSubmissionData) => Ok(Json.toJson(annualSubmissionData))
+        case Left(DataNotFoundError) => NotFound
+        case Left(_) => InternalServerError
+      }
+    }
 }
