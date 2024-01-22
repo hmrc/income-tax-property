@@ -230,7 +230,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
       }
@@ -239,7 +239,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
         val taxYear = 2024
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
       }
@@ -247,7 +247,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
         val taxYear = 2024
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
