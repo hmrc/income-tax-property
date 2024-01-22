@@ -96,17 +96,14 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       )), None, None, None))
 
 
-    "Update annual Submission" in {
-
-      "return a property periodic submission when IntegrationFrameworkService returns no content" in {
+      "creating an annual submission returns no content" in {
         mockAuthorisation()
-        mockUpdatePeriodicSubmissions(
+        mockCreateOrUpdateAnnualSubmissions(
           "taxableEntityId",
           "incomeSourceId",
           2024,
-          "submissionId",
           Some(validRequestBody),
-          Right(""))
+          Right())
 
         val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePutRequest))
 
@@ -114,13 +111,12 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         consumeBody(result) shouldBe empty
       }
 
-      "return unprocessable-entity when PeriodicSubmissionService returns conflict error" in {
+      "return unprocessable-entity when AnnualSubmissionService returns conflict error" in {
         mockAuthorisation()
-        mockUpdatePeriodicSubmissions(
+        mockCreateOrUpdateAnnualSubmissions(
           "taxableEntityId",
           "incomeSourceId",
           2024,
-          "submissionId",
           Some(validRequestBody),
           Left(ApiServiceError(422)))
 
@@ -129,13 +125,12 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         status(result) shouldBe UNPROCESSABLE_ENTITY
       }
 
-      "return internal server error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+      "return internal server error when AnnualSubmissionService returns Left(ApiServiceError)" in {
         mockAuthorisation()
-        mockUpdatePeriodicSubmissions(
+        mockCreateOrUpdateAnnualSubmissions(
           "taxableEntityId",
           "incomeSourceId",
           2024,
-          "submissionId",
           Some(validRequestBody),
           Left(ApiServiceError(500)))
 
@@ -144,13 +139,12 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-      "return bad request error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+      "return bad request error when AnnualSubmissionService returns Left(ApiServiceError)" in {
         mockAuthorisation()
-        mockUpdatePeriodicSubmissions(
+        mockCreateOrUpdateAnnualSubmissions(
           "taxableEntityId",
           "incomeSourceId",
           2024,
-          "submissionId",
           Some(validRequestBody),
           Left(ApiServiceError(400)))
 
@@ -159,6 +153,5 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         status(result) shouldBe BAD_REQUEST
       }
     }
-  }
 }
 

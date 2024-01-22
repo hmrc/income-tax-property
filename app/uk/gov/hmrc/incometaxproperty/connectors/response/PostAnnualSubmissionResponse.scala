@@ -22,7 +22,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
-case class PostAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[String]])
+case class PostAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
 
 object PostAnnualSubmissionResponse extends Logging {
 

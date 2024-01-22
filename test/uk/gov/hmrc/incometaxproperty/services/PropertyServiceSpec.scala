@@ -214,7 +214,7 @@ class PropertyServiceSpec extends UnitTest
       mockUpdatePeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Right(None))
 
       await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe
-        Right(None)
+        Right("")
     }
 
     "return ApiError for invalid request" in {
@@ -236,10 +236,10 @@ class PropertyServiceSpec extends UnitTest
     "return no content for valid request" in {
       val taxYear = 2024
 
-      mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right(None))
+      mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right())
 
       await(underTest.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe
-        Right(None)
+        Right()
     }
 
     "return ApiError for invalid request" in {

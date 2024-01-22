@@ -220,9 +220,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
       "create submissions data for the APIs used before 2024" in {
         val taxYear = 2021
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
-        stubPostHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
       }
 
       "create submissions data for 2024 onwards" in {
@@ -230,35 +230,35 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
 
-        stubPostHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
       }
 
       "return Conflict from Upstream" in {
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
         val taxYear = 2024
 
-        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
         val taxYear = 2024
 
-        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
       "return Service Unavailable Error from Upstream" in {
         val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
         val taxYear = 2024
 
-        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
     }
