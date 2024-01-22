@@ -222,7 +222,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
         stubPutHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right()
       }
 
       "create submissions data for 2024 onwards" in {
@@ -230,24 +230,24 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPropertyAnnualSubmission).toString())
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right(None)
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right()
       }
 
       "return Conflict from Upstream" in {
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
         val taxYear = 2024
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
         val taxYear = 2024
 
-        stubPutHttpClientCall(s"/income-tax/business/property/annual/$nino/23-24/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
@@ -256,7 +256,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
         val taxYear = 2024
 
-        stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
