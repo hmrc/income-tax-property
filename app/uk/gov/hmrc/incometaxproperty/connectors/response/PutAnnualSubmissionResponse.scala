@@ -22,20 +22,20 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
-case class PostAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
+case class PutAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
 
-object PostAnnualSubmissionResponse extends Logging {
+object PutAnnualSubmissionResponse extends Logging {
 
-  implicit val postPeriodicSubmission: HttpReads[PostAnnualSubmissionResponse] = new HttpReads[PostAnnualSubmissionResponse] with Parser {
+  implicit val putAnnualSubmission: HttpReads[PutAnnualSubmissionResponse] = new HttpReads[PutAnnualSubmissionResponse] with Parser {
 
     override protected[connectors] val parserName: String = this.getClass.getSimpleName
 
-    override def read(method: String, url: String, response: HttpResponse): PostAnnualSubmissionResponse = response.status match {
-      case NO_CONTENT => PostAnnualSubmissionResponse(response, Right(None))
-      case NOT_FOUND => PostAnnualSubmissionResponse(response, handleError(response, NOT_FOUND))
+    override def read(method: String, url: String, response: HttpResponse): PutAnnualSubmissionResponse = response.status match {
+      case NO_CONTENT => PutAnnualSubmissionResponse(response, Right(None))
+      case NOT_FOUND => PutAnnualSubmissionResponse(response, handleError(response, NOT_FOUND))
       case BAD_REQUEST | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
-        PostAnnualSubmissionResponse(response, handleError(response, response.status))
-      case _ => PostAnnualSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+        PutAnnualSubmissionResponse(response, handleError(response, response.status))
+      case _ => PutAnnualSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
     }
   }
 }

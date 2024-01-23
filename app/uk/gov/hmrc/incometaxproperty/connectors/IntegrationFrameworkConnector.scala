@@ -167,10 +167,10 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1597")
     }
 
-    httpClient.PUTString[PostAnnualSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
-      implicitly[HttpReads[PostAnnualSubmissionResponse]],
+    httpClient.PUTString[PutAnnualSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
+      implicitly[HttpReads[PutAnnualSubmissionResponse]],
       ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
-      ec).map { response: PostAnnualSubmissionResponse =>
+      ec).map { response: PutAnnualSubmissionResponse =>
       if (response.result.isLeft) {
         val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
         logger.error(s"Error creating a property annual submission from the Integration Framework:" +
