@@ -15,4 +15,4 @@ POST        /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxy
 PUT         /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear/submissionId/:submissionId        uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String)
 
 #API-1597 & API-1804
-PUT        /property/submissions/Annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                             uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+PUT        /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                             uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
