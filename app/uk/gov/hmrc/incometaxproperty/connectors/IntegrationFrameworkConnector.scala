@@ -120,9 +120,9 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
   def createPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
                               (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
-      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId""", "1861")
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId""", "1804")
     } else {
-      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1593")
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1597")
     }
 
     httpClient.POSTString[PostPeriodicSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
