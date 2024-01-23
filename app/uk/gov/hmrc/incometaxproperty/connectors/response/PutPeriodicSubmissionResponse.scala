@@ -26,7 +26,7 @@ case class PutPeriodicSubmissionResponse(httpResponse: HttpResponse, result: Eit
 
 object PutPeriodicSubmissionResponse extends Logging {
 
-  implicit val postPeriodicSubmission: HttpReads[PutPeriodicSubmissionResponse] = new HttpReads[PutPeriodicSubmissionResponse] with Parser {
+  implicit val putPeriodicSubmission: HttpReads[PutPeriodicSubmissionResponse] = new HttpReads[PutPeriodicSubmissionResponse] with Parser {
 
     override protected[connectors] val parserName: String = this.getClass.getSimpleName
 

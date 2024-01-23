@@ -19,44 +19,40 @@ package uk.gov.hmrc.incometaxproperty.connectors.response
 import play.api.http.Status.{BAD_REQUEST, FAILED_DEPENDENCY, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.incometaxproperty.connectors.response.PutAnnualSubmissionResponse.putAnnualSubmission
+import uk.gov.hmrc.incometaxproperty.connectors.response.PutPeriodicSubmissionResponse.putPeriodicSubmission
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.utils.UnitTest
 
-
-class PutAnnualSubmissionResponseSpec extends UnitTest{
+class PutPeriodicSubmissionResponseSpec extends UnitTest{
 
     private val anyHeaders: Map[String, Seq[String]] = Map.empty
     private val anyMethod: String = "PUT"
     private val anyUrl = "/income-tax/business/property/"
 
-    private val underTest = putAnnualSubmission
+    private val underTest = putPeriodicSubmission
 
-    "getPropertyAnnualSubmissionDataReads" should {
+    "putPropertyPeriodicSubmissionDataReads" should {
 
-      "convert JsValue to GetPropertyAnnualSubmissionResponse" when {
-
-        "status is NO_CONTENT and valid jsValue" in {
+      "convert JsValue to PutPropertyPeriodicSubmissionResponse" when {
 
           val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
-            Right()
+            Right(None)
           )
-        }
 
         "status is OK and invalid jsValue" in {
           val jsValue: JsValue = Json.parse(
             """
               |{
-              |   "PropertyPeriodicSubmission": {"value": []}
+              |   "PropertyAnnualSubmission": {"value": []}
               |}
               |""".stripMargin)
 
           val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
           )
@@ -67,7 +63,7 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "some-reason")))
           )
@@ -78,7 +74,7 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
           )
@@ -89,7 +85,7 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
           )
@@ -100,7 +96,7 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
           )
@@ -111,11 +107,11 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
+          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
             httpResponse,
             Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
           )
         }
       }
     }
-}
+  }
