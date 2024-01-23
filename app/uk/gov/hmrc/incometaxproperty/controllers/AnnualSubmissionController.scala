@@ -19,7 +19,7 @@ package uk.gov.hmrc.incometaxproperty.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.incometaxproperty.actions.AuthorisedAction
-import uk.gov.hmrc.incometaxproperty.models.errors.DataNotFoundError
+import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
 import uk.gov.hmrc.incometaxproperty.services.PropertyService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -37,6 +37,16 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
       propertyService.getPropertyAnnualSubmission(taxYear, nino, incomeSourceId).map {
         case Right(annualSubmissionData) => Ok(Json.toJson(annualSubmissionData))
         case Left(DataNotFoundError) => NotFound
+        case Left(_) => InternalServerError
+      }
+    }
+
+  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
+    authorisedAction.async { implicit request =>
+      propertyService.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, request.body.asJson).map {
+        case Right(_) => NoContent
+        case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+        case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
         case Left(_) => InternalServerError
       }
     }

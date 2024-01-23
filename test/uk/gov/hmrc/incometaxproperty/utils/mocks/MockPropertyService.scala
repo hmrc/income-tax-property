@@ -74,4 +74,15 @@ trait MockPropertyService extends MockFactory {
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, *, *)
       .returning(Future.successful(result))
   }
+
+  def mockCreateOrUpdateAnnualSubmissions(taxableEntityId: String,
+                                    incomeSourceId: String,
+                                    taxYear: Int,
+                                    body: Option[JsValue],
+                                    result: Either[ServiceError, Unit]
+                                   ): CallHandler5[String, String, Int, Option[JsValue], HeaderCarrier, Future[Either[ServiceError, Unit]]] = {
+    (mockPropertyService.createOrUpdateAnnualSubmission(_: String, _: String, _: Int, _: Option[JsValue])(_: HeaderCarrier))
+      .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
+      .returning(Future.successful(result))
+  }
 }

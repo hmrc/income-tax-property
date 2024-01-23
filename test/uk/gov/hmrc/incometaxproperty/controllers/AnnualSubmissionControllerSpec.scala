@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
-import play.api.libs.json.Json
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError}
 import uk.gov.hmrc.incometaxproperty.models.responses.{AnnualForeignFhlEea, ForeignFhlAdjustments, ForeignFhlAllowances, PropertyAnnualSubmission}
@@ -86,5 +86,72 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
+
+  ".createOrUpdateAnnualSubmission" should {
+    val validRequestBody = Json.toJson(PropertyAnnualSubmission(
+      submittedOn = LocalDateTime.now,
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None))
+
+
+      "creating an annual submission returns no content" in {
+        mockAuthorisation()
+        mockCreateOrUpdateAnnualSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          Some(validRequestBody),
+          Right())
+
+        val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePutRequest))
+
+        result.header.status shouldBe NO_CONTENT
+        consumeBody(result) shouldBe empty
+      }
+
+      "return unprocessable-entity when AnnualSubmissionService returns conflict error" in {
+        mockAuthorisation()
+        mockCreateOrUpdateAnnualSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          Some(validRequestBody),
+          Left(ApiServiceError(422)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+        status(result) shouldBe UNPROCESSABLE_ENTITY
+      }
+
+      "return internal server error when AnnualSubmissionService returns Left(ApiServiceError)" in {
+        mockAuthorisation()
+        mockCreateOrUpdateAnnualSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          Some(validRequestBody),
+          Left(ApiServiceError(500)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "return bad request error when AnnualSubmissionService returns Left(ApiServiceError)" in {
+        mockAuthorisation()
+        mockCreateOrUpdateAnnualSubmissions(
+          "taxableEntityId",
+          "incomeSourceId",
+          2024,
+          Some(validRequestBody),
+          Left(ApiServiceError(400)))
+
+        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+
+        status(result) shouldBe BAD_REQUEST
+      }
+    }
 }
 

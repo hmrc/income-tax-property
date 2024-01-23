@@ -94,4 +94,15 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .returning(Future.successful(result))
   }
 
+  def mockCreateAnnualSubmission(taxYear: Int,
+                                   taxableEntityId: String,
+                                   incomeSourceId: String,
+                                 result: Either[ApiError,Unit]
+                                  ): CallHandler5[Int, String, String, JsValue, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+    (mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: Int, _: String, _: String, _: JsValue)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
+      .returning(Future.successful(result))
+  }
+
 }

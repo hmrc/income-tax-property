@@ -159,6 +159,27 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
+  def createOrUpdateAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
+                                    (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId""", "1804")
+    } else {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1597")
+    }
+
+    httpClient.PUTString[PutAnnualSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
+      implicitly[HttpReads[PutAnnualSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
+      ec).map { response: PutAnnualSubmissionResponse =>
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error creating a property annual submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+      }
+      response.result
+    }
+  }
+
 
   private def after2324Api(taxYear: Int): Boolean = {
     taxYear >= 2024
