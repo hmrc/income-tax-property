@@ -41,9 +41,9 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def deleteAnnualSubmission(environment: String, correlationId: String, incomeSourceId: String, taxableEntityId: String, taxYear: Int): Action[AnyContent] =
+  def deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      propertyService.deletePropertyAnnualSubmission(environment, correlationId, incomeSourceId, taxableEntityId, taxYear).map {
+      propertyService.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).map {
         case Right(_) => NoContent
         case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
         case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity

@@ -22,7 +22,7 @@ import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyAnnualSubmission
 
-case class DeletePropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[PropertyAnnualSubmission]])
+case class DeletePropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
 
 object DeletePropertyAnnualSubmissionResponse {
 

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incometaxproperty.connectors
 
-import play.api.{Environment, Logging}
+import play.api.Logging
 import play.api.libs.json.{JsValue, StaticBinding}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
@@ -116,12 +116,12 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       response.result
     }
   }
-  def deletePropertyAnnualSubmission(environment: String, correlationId: String, incomeSourceId: String, taxableEntityId: String, taxYear: Int)
-                                 (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PropertyAnnualSubmission]]] = {
+  def deletePropertyAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
+                                 (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
-      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$taxableEntityId&environment=$environment&correlationId=$correlationId&incomeSourceId=$incomeSourceId""", "1958")
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId""", "1863")
     } else {
-      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(taxYear)}&environment=$environment&correlationId=$correlationId&incomeSourceId=$incomeSourceId""", "1594")
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1596")
     }
 
     httpClient.DELETE[DeletePropertyAnnualSubmissionResponse](url)(

@@ -42,6 +42,7 @@ class PropertyServiceSpec extends UnitTest
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"
+  private val taxableEntityId = "taxableEntityId"
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -223,6 +224,23 @@ class PropertyServiceSpec extends UnitTest
       await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
 
+  }
+  "delete annual submission" should {
+
+    "return no content for valid request" in {
+      val taxYear = 2024
+
+      mockDeleteAnnualSubmissions(incomeSourceId, taxableEntityId, taxYear, Right(None))
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)) shouldBe
+        Right(())
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockDeleteAnnualSubmissions(incomeSourceId, taxableEntityId, taxYear, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
   }
 }
 

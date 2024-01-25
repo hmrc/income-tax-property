@@ -52,16 +52,14 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
-  def   deletePropertyAnnualSubmission( environment: String,
-                                        correlationId: String,
-                                        incomeSourceId: String,
+  def   deletePropertyAnnualSubmission(incomeSourceId: String,
                                         taxableEntityId: String,
-                                        taxYear: Int
-                                  )
-                                 (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyAnnualSubmission]] = {
-    connector.deletePropertyAnnualSubmission(environment, correlationId, incomeSourceId, taxableEntityId, taxYear).map {
-      case Left(error) => Left(ApiServiceError(error.status))
-      case Right(annualSubmission) => annualSubmission.map(Right.apply).getOrElse(Left(DataNotFoundError))
+                                        taxYear: Int)
+                                 (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
+
+    connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).flatMap {
+      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
+      case Right(_) => Future.successful(Right())
     }
   }
 
