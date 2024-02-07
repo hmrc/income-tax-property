@@ -81,6 +81,15 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
+  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
+                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
+
+    connector.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, body.get).flatMap {
+      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
+      case Right(_) => Future.successful(Right())
+    }
+  }
+
   private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
                                     (implicit hc: HeaderCarrier): Future[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds

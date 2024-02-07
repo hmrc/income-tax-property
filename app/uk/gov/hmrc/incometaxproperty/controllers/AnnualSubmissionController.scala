@@ -40,10 +40,19 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
         case Left(_) => InternalServerError
       }
     }
-
   def deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
       propertyService.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).map {
+        case Right(_) => NoContent
+        case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+        case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
+        case Left(_) => InternalServerError
+      }
+    }
+
+  def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
+    authorisedAction.async { implicit request =>
+      propertyService.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, request.body.asJson).map {
         case Right(_) => NoContent
         case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
         case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity

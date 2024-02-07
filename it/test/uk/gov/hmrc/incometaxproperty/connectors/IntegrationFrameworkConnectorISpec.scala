@@ -254,6 +254,65 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
     }
   }
 
+  ".createOrUpdateAnnualSubmission" when {
+
+    val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+      submittedOn = LocalDateTime.now,
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None
+    )
+
+    "create Annual Submission" should {
+      "create submissions data for the APIs used before 2024" in {
+        val taxYear = 2021
+        val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
+        stubPutHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, taxableEntityId, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right()
+      }
+
+      "create submissions data for 2024 onwards" in {
+        val taxYear = 2024
+
+        val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
+
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId", Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Right()
+      }
+
+      "return Conflict from Upstream" in {
+        val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
+      }
+      "return not found from Upstream" in {
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+      }
+
+      "return Service Unavailable Error from Upstream" in {
+        val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = 2024
+
+        stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",  Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
+
+        await(underTest.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId,  Json.toJson(aPropertyAnnualSubmission))(hc)) shouldBe
+          Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+
+  }
+
   "Given a need to create Periodic Submission Data" when {
 
     val aPeriodicSubmissionModel = PeriodicSubmissionId("1")

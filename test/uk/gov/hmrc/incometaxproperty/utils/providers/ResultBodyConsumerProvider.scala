@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.incometaxproperty.utils.providers
 
-import akka.actor.ActorSystem
+
+import org.apache.pekko.actor.ActorSystem
 import play.api.mvc.Result
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await

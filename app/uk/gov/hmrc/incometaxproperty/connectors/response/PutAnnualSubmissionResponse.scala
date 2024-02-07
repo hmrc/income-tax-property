@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,25 @@
 package uk.gov.hmrc.incometaxproperty.connectors.response
 
 import play.api.Logging
-import play.api.http.Status._
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.incometaxproperty.connectors.Parser
 import uk.gov.hmrc.incometaxproperty.models.errors.ApiError
 
-case class PutPeriodicSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[String]])
+case class PutAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
 
-object PutPeriodicSubmissionResponse extends Logging {
+object PutAnnualSubmissionResponse extends Logging {
 
-  implicit val putPeriodicSubmission: HttpReads[PutPeriodicSubmissionResponse] = new HttpReads[PutPeriodicSubmissionResponse] with Parser {
+  implicit val putAnnualSubmission: HttpReads[PutAnnualSubmissionResponse] = new HttpReads[PutAnnualSubmissionResponse] with Parser {
 
     override protected[connectors] val parserName: String = this.getClass.getSimpleName
 
-    override def read(method: String, url: String, response: HttpResponse): PutPeriodicSubmissionResponse = response.status match {
-      case NO_CONTENT => PutPeriodicSubmissionResponse(response, Right(None))
-      case NOT_FOUND => PutPeriodicSubmissionResponse(response, handleError(response, NOT_FOUND))
+    override def read(method: String, url: String, response: HttpResponse): PutAnnualSubmissionResponse = response.status match {
+      case NO_CONTENT => PutAnnualSubmissionResponse(response, Right(None))
+      case NOT_FOUND => PutAnnualSubmissionResponse(response, handleError(response, NOT_FOUND))
       case BAD_REQUEST | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
-        PutPeriodicSubmissionResponse(response, handleError(response, response.status))
-      case _ => PutPeriodicSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+        PutAnnualSubmissionResponse(response, handleError(response, response.status))
+      case _ => PutAnnualSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
     }
   }
 }

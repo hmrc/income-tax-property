@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.incometaxproperty.actions
 
-import akka.actor.ActorSystem
-import akka.stream.SystemMaterializer
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.SystemMaterializer
 import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc._
