@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incometaxproperty.connectors.response
 
-import play.api.http.Status.{BAD_REQUEST, CREATED, FAILED_DEPENDENCY, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SERVICE_UNAVAILABLE}
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.incometaxproperty.connectors.response.PostPeriodicSubmissionResponse.postPeriodicSubmission
