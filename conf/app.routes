@@ -8,6 +8,9 @@ GET         /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesou
 #API-1598 & API-1805
 GET         /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                            uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
 
+#API-1596 & API-1863
+DELETE      /property/submissions/annual/taxyear/:taxYear/taxableEntityId/:taxableEntityId/incomesourceid/:incomeSourceId      uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
+
 #API-1593 & #1861
 POST        /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                                   uk.gov.hmrc.incometaxproperty.controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
 

@@ -42,6 +42,7 @@ class PropertyServiceSpec extends UnitTest
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"
+  private val taxableEntityId = "taxableEntityId"
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -225,6 +226,24 @@ class PropertyServiceSpec extends UnitTest
 
   }
 
+  "delete annual submission" should {
+
+  "return no content for valid request" in {
+    val taxYear = 2024
+    mockDeleteAnnualSubmissions(incomeSourceId, taxableEntityId, taxYear, Right(None))
+
+    await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)) shouldBe
+      Right(())
+  }
+
+  "return ApiError for invalid request" in {
+    val taxYear = 2024
+    mockDeleteAnnualSubmissions(incomeSourceId, taxableEntityId, taxYear, Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+    await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)) shouldBe Left(ApiServiceError(BAD_REQUEST))
+  }
+}
+
+
   "create annual submission" should {
     val validRequestBody: JsValue = Json.toJson(PropertyAnnualSubmission(
       submittedOn = LocalDateTime.now,
@@ -233,11 +252,10 @@ class PropertyServiceSpec extends UnitTest
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
       )), None, None, None))
 
+
     "return no content for valid request" in {
       val taxYear = 2024
-
       mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right())
-
       await(underTest.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe
         Right()
     }
@@ -248,6 +266,5 @@ class PropertyServiceSpec extends UnitTest
       await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
-
 }
 

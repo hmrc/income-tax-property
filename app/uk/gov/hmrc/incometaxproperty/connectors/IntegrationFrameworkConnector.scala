@@ -116,6 +116,26 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       response.result
     }
   }
+  def deletePropertyAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
+                                 (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (after2324Api(taxYear)) {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId""", "1863")
+    } else {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1596")
+    }
+
+    httpClient.DELETE[DeletePropertyAnnualSubmissionResponse](url)(
+      implicitly[HttpReads[DeletePropertyAnnualSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion),
+      ec).map { response: DeletePropertyAnnualSubmissionResponse =>
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error deleting a property annual submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+      }
+      response.result
+    }
+  }
 
   def createPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
                               (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {

@@ -206,6 +206,54 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
     }
   }
 
+  "Delete annual submission" should {
+    "update submissions data for the APIs used before 2024" in {
+      val httpResponse = HttpResponse(NO_CONTENT, "")
+      val taxYear = 2021
+
+      stubDeleteHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId", httpResponse)
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe Right(())
+    }
+
+    "Delete annual submission for 2024 onwards" in {
+      val httpResponse = HttpResponse(NO_CONTENT, "")
+      val taxYear = 2024
+
+      stubDeleteHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId", httpResponse)
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe Right(())
+    }
+
+    "return not found from Upstream" in {
+      val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+      val taxYear = 2024
+
+      stubDeleteHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId", httpResponse)
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+    }
+
+    "return unprocessable-entity from Upstream" in {
+      val httpResponse = HttpResponse(UNPROCESSABLE_ENTITY, Json.toJson(SingleErrorBody("some-code", "unprocessable-entity")).toString())
+      val taxYear = 2024
+
+      stubDeleteHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId", httpResponse)
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
+    }
+
+    "return Service Unavailable Error from Upstream" in {
+      val httpResponse = HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+      val taxYear = 2024
+
+      stubDeleteHttpClientCall(s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId", httpResponse)
+
+      await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe
+        Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+    }
+  }
+
   ".createOrUpdateAnnualSubmission" when {
 
     val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
@@ -264,6 +312,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
     }
 
   }
+
   "Given a need to create Periodic Submission Data" when {
 
     val aPeriodicSubmissionModel = PeriodicSubmissionId("1")

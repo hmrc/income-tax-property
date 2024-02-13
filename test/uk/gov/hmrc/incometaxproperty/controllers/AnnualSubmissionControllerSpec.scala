@@ -87,6 +87,62 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
     }
   }
 
+
+  "Delete Annual Submission" should {
+
+    "return NO_CONTENT when IntegrationFrameworkService returns Right()" in {
+      mockAuthorisation()
+      mockDeleteAnnualSubmissions(
+        "incomeSourceId",
+        "taxableEntityId",
+        2024,
+        Right())
+
+      val result = await(underTest.deleteAnnualSubmission("incomeSourceId", "taxableEntityId", 2024)(fakePutRequest))
+
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return BAD_REQUEST when AnnualSubmissionService returns Left(ApiServiceError(400))" in {
+      mockAuthorisation()
+      mockDeleteAnnualSubmissions(
+        "incomeSourceId",
+        "taxableEntityId",
+        2024,
+        Left(ApiServiceError(400)))
+
+      val result = await(underTest.deleteAnnualSubmission("incomeSourceId", "taxableEntityId", 2024)(fakePutRequest))
+
+      result.header.status shouldBe BAD_REQUEST
+    }
+
+    "return UNPROCESSABLE_ENTITY when AnnualSubmissionService returns Left(ApiServiceError(422))" in {
+      mockAuthorisation()
+      mockDeleteAnnualSubmissions(
+        "incomeSourceId",
+        "taxableEntityId",
+        2024,
+        Left(ApiServiceError(422)))
+
+      val result = await(underTest.deleteAnnualSubmission("incomeSourceId", "taxableEntityId", 2024)(fakePutRequest))
+
+      result.header.status shouldBe UNPROCESSABLE_ENTITY
+    }
+
+    "return INTERNAL_SERVER_ERROR when AnnualSubmissionService returns Left(ApiServiceError(500))" in {
+      mockAuthorisation()
+      mockDeleteAnnualSubmissions(
+        "incomeSourceId",
+        "taxableEntityId",
+        2024,
+        Left(ApiServiceError(500)))
+
+      val result = await(underTest.deleteAnnualSubmission("incomeSourceId", "taxableEntityId", 2024)(fakePutRequest))
+
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   ".createOrUpdateAnnualSubmission" should {
     val validRequestBody = Json.toJson(PropertyAnnualSubmission(
       submittedOn = LocalDateTime.now,
@@ -152,6 +208,6 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
         status(result) shouldBe BAD_REQUEST
       }
-    }
+  }
 }
 

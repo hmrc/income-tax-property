@@ -75,6 +75,16 @@ trait MockPropertyService extends MockFactory {
       .returning(Future.successful(result))
   }
 
+  def mockDeleteAnnualSubmissions(  incomeSourceId: String,
+                                    taxableEntityId: String,
+                                    taxYear: Int,
+                                    result: Either[ServiceError, Unit]
+                                   ): CallHandler4[String, String, Int, HeaderCarrier, Future[Either[ServiceError, Unit]]] = {
+    (mockPropertyService.deletePropertyAnnualSubmission(_: String, _: String, _: Int)(_: HeaderCarrier))
+      .expects(incomeSourceId, taxableEntityId, taxYear, *)
+      .returning(Future.successful(result))
+  }
+
   def mockCreateOrUpdateAnnualSubmissions(taxableEntityId: String,
                                     incomeSourceId: String,
                                     taxYear: Int,

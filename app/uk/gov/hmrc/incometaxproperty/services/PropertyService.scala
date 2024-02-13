@@ -52,6 +52,17 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
     }
   }
 
+  def   deletePropertyAnnualSubmission(incomeSourceId: String,
+                                        taxableEntityId: String,
+                                        taxYear: Int)
+                                 (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
+
+    connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).flatMap {
+      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
+      case Right(_) => Future.successful(Right())
+    }
+  }
+
   def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
                               (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionId]] = {
 
