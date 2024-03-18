@@ -16,4 +16,8 @@
 
 package uk.gov.hmrc.incometaxproperty.models
 
-case class User(mtditid: String, arn: Option[String])
+import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+
+case class User(mtditid: String, arn: Option[String]) {
+  def getMtditid: Mtditid = Mtditid(mtditid)
+}

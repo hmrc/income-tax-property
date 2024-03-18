@@ -34,3 +34,11 @@ case class InvalidJsonFormatError(expectedCaseClassName: String,
                                   rawJson: String, error: List[(JsPath, scala.collection.Seq[JsonValidationError])]) extends ServiceError {
   val message: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"
 }
+
+final case class CannotReadJsonError(details: List[(JsPath, scala.collection.Seq[JsonValidationError])]) extends ServiceError {
+  val message: String = s"Cannot read JSON: ${details.toString}"
+}
+
+final case class CannotParseJsonError(details: Throwable) extends ServiceError {
+  val message: String = s"Cannot parse JSON: ${details.getMessage}"
+}
