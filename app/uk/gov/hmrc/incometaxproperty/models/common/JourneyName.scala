@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.common
 
-import play.api.libs.json.{Json, OFormat}
+import enumeratum._
+import uk.gov.hmrc.incometaxproperty.utils
 
-import java.time.LocalDate
-
-case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
-
-object BusinessDetailsResponse {
-  implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
+sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
 }
 
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
+object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
+  val values: IndexedSeq[JourneyName] = findValues
 
-object PropertyDetails {
-  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
+  case object PropertyAbout extends JourneyName("property-about")
+
+  case object Income extends JourneyName("income")
+
 }

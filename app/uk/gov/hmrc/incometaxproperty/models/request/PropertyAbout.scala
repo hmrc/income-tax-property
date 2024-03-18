@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
+case class PropertyAbout(totalIncome: String, ukProperty: Seq[String], reportPropertyIncome: Option[Boolean])
 
-case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
-
-object BusinessDetailsResponse {
-  implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
-}
-
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
-
-object PropertyDetails {
-  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
+object PropertyAbout {
+  implicit val formats: OFormat[PropertyAbout] = Json.format[PropertyAbout]
 }

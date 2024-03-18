@@ -16,18 +16,21 @@
 
 package uk.gov.hmrc.incometaxproperty.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, Reads}
+import uk.gov.hmrc.incometaxproperty.models.errors.{InvalidJsonFormatError, ServiceError}
 
-import java.time.LocalDate
+import scala.reflect.ClassTag
 
-case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
+package object domain {
+  type ApiResultT[A] = Either[ServiceError, A]
 
-object BusinessDetailsResponse {
-  implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
+  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
+    jsObj
+      .validate[A]
+      .asEither
+      .fold(
+        err => Left(InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList)),
+        answers => Right(answers)
+      )
 }
 
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
-
-object PropertyDetails {
-  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
-}

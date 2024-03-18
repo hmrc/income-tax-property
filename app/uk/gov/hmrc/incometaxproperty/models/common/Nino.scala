@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.common
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.mvc.PathBindable
 
-import java.time.LocalDate
-
-case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
-
-object BusinessDetailsResponse {
-  implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
+final case class Nino(value: String) extends AnyVal {
+  override def toString: String = value
 }
 
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
+object Nino {
 
-object PropertyDetails {
-  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
+  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
+
+    override def bind(key: String, value: String): Either[String, Nino] =
+      strBinder.bind(key, value).map(Nino.apply)
+
+    override def unbind(key: String, nino: Nino): String =
+      strBinder.unbind(key, nino.value)
+
+  }
 }

@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.utils
 
-import play.api.libs.json.{Json, OFormat}
+import enumeratum._
+import play.api.libs.json._
 
-import java.time.LocalDate
+trait PlayJsonEnum[A <: EnumEntry] { self: Enum[A] =>
+  implicit val keyWrites: KeyWrites[A] = EnumFormats.keyWrites(this)
 
-case class BusinessDetailsResponse(propertyData: Seq[PropertyDetails])
+  implicit def contraKeyWrites[K <: A]: KeyWrites[K] = {
+    val w = this.keyWrites
 
-object BusinessDetailsResponse {
-  implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
-}
+    new KeyWrites[K] {
+      def writeKey(k: K) = w.writeKey(k)
+    }
+  }
 
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
-
-object PropertyDetails {
-  implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]
+  implicit val jsonFormat: Format[A]               = EnumFormats.formats(this)
+  implicit def contraJsonWrites[B <: A]: Writes[B] = jsonFormat.contramap[B](b => b: A)
 }
