@@ -22,12 +22,10 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import uk.gov.hmrc.incometaxproperty.config.AppConfig
-import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import uk.gov.hmrc.incometaxproperty.models.responses._
-import uk.gov.hmrc.incometaxproperty.repositories.MongoJourneyAnswersRepository
-import uk.gov.hmrc.incometaxproperty.utils.mocks.MockIntegrationFrameworkConnector
+import uk.gov.hmrc.incometaxproperty.utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository}
 import uk.gov.hmrc.incometaxproperty.utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
@@ -35,12 +33,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class PropertyServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
+  with MockMongoJourneyAnswersRepository
   with HttpClientSupport {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val repository: MongoJourneyAnswersRepository = mock[MongoJourneyAnswersRepository]
-  private val underTest = new PropertyService(mockIntegrationFrameworkConnector, repository)
+  private val underTest = new PropertyService(mockIntegrationFrameworkConnector, mockMongoJourneyAnswersRepository)
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"
