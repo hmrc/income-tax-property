@@ -21,7 +21,7 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.incometaxproperty.models.common.JourneyName.PropertyAbout
+import uk.gov.hmrc.incometaxproperty.models.common.JourneyName.About
 import uk.gov.hmrc.incometaxproperty.models.common.JourneyStatus.NotStarted
 import uk.gov.hmrc.incometaxproperty.models.common._
 import uk.gov.hmrc.incometaxproperty.models.domain.JourneyAnswers
@@ -56,7 +56,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
       .map(_ => ())
 
 
-  val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(PropertyAbout)
+  val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
 
   val filters: Bson = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),
@@ -78,7 +78,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         mtditid,
         businessId,
         taxYear,
-        JourneyName.PropertyAbout,
+        JourneyName.About,
         NotStarted,
         Json.obj("field" -> "value"),
         expectedExpireAt,
@@ -99,7 +99,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         mtditid,
         businessId,
         taxYear,
-        JourneyName.PropertyAbout,
+        JourneyName.About,
         NotStarted,
         Json.obj("field" -> "updated"),
         expectedExpireAt,

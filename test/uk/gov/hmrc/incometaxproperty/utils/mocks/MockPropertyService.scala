@@ -18,9 +18,10 @@ package uk.gov.hmrc.incometaxproperty.utils.mocks
 
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.common.JourneyContext
 import uk.gov.hmrc.incometaxproperty.models.errors.ServiceError
 import uk.gov.hmrc.incometaxproperty.models.responses.PropertyAnnualSubmission
 import uk.gov.hmrc.incometaxproperty.models.responses.PeriodicSubmissionId
@@ -95,4 +96,12 @@ trait MockPropertyService extends MockFactory {
       .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
       .returning(Future.successful(result))
   }
+
+  def mockPersistAnswers[A](ctx: JourneyContext, answers: A): CallHandler3[JourneyContext, A, Writes[A], Future[Boolean]] = {
+    (mockPropertyService.persistAnswers(_: JourneyContext, _: A)(_: Writes[A]))
+      .expects(ctx, answers, *)
+      .returning(Future.successful(true))
+  }
+
+
 }

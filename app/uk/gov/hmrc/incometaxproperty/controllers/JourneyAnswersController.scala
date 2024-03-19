@@ -37,7 +37,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def savePropertyAbout(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
-    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino).toJourneyContext(JourneyName.PropertyAbout)
+    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino).toJourneyContext(JourneyName.About)
     val requestBody = parseBody[PropertyAbout](request)
 
     requestBody match {
