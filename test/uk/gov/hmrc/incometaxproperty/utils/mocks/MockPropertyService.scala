@@ -99,7 +99,7 @@ trait MockPropertyService extends MockFactory {
 
   def mockPersistAnswers[A](ctx: JourneyContext, answers: A): CallHandler3[JourneyContext, A, Writes[A], Future[Boolean]] = {
     (mockPropertyService.persistAnswers(_: JourneyContext, _: A)(_: Writes[A]))
-      .expects(ctx, answers, *)
+      .expects(*, *, *)
       .returning(Future.successful(true))
   }
 

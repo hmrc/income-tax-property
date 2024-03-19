@@ -17,8 +17,10 @@
 
 package uk.gov.hmrc.incometaxproperty.controllers
 
+import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Results.NoContent
+import play.api.test.Helpers.status
 import uk.gov.hmrc.incometaxproperty.models.common.JourneyName.About
 import uk.gov.hmrc.incometaxproperty.models.request.PropertyAbout
 import uk.gov.hmrc.incometaxproperty.models.common.{BusinessId, JourneyContext, JourneyContextWithNino, Mtditid, Nino, TaxYear}
@@ -62,23 +64,16 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
 
       mockAuthorisation()
       mockPersistAnswers(ctx, PropertyAbout("over", Seq("property.rentals"), Some(true)))
-      val result = await(underTest.savePropertyAbout(taxYear, businessId, nino)(fakePostRequest))
-      result.header.status shouldBe NoContent
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyAbout(taxYear, businessId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
     }
 
-    //    "return bad request error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
-    //      mockAuthorisation()
-    //      mockCreatePeriodicSubmissions(
-    //        "taxableEntityId",
-    //        "incomeSourceId",
-    //        2024,
-    //        Some(validRequestBody),
-    //        Left(ApiServiceError(400)))
-    //
-    //      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
-    //
-    //      status(result) shouldBe BAD_REQUEST
-    //    }
+    "return bad request error when PeriodicSubmissionService returns Left(ApiServiceError)" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyAbout(taxYear, businessId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
 
   }
 
