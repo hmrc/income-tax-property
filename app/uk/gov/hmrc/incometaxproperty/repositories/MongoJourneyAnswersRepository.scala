@@ -27,13 +27,13 @@ import uk.gov.hmrc.incometaxproperty.repositories.ExpireAtCalculator.calculateEx
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import java.time.Instant
+import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
   extends PlayMongoRepository[JourneyAnswers](
     collectionName = "journey-answers",
     mongoComponent = mongo,
@@ -72,7 +72,7 @@ class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent)(implicit ec
   }
 
   private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
-    val now = Instant.now()
+    val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
     Updates.combine(
