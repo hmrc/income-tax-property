@@ -17,7 +17,7 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*",
     "controllers.testOnly.*",
-    "uk.gov.hmrc.incometaxproperty.models.*",
+    "models.*",
   )
 
   Seq(
@@ -40,7 +40,7 @@ lazy val microservice = Project("income-tax-property", file("."))
   )
   .settings(resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
-      "uk.gov.hmrc.incometaxproperty.models.common._",
+      "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     )
   )
