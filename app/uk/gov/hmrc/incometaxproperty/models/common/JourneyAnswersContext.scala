@@ -17,10 +17,10 @@
 package uk.gov.hmrc.incometaxproperty.models.common
 
 
-case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
+final case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
   def toJourneyContext(journeyName: JourneyName): JourneyContext = JourneyContext(taxYear, businessId, mtditid, journeyName)
 }
 
-case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
+final case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
 
 }

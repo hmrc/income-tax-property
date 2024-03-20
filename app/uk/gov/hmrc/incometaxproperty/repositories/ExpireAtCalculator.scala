@@ -27,14 +27,11 @@ object ExpireAtCalculator {
 
   def calculateExpireAt(nowInstant: Instant): Instant = {
     val now         = nowInstant.atZone(zoneId)
-    val currentYear = now.getYear
 
-    val startOfThisTaxYear =
-      if (now.getMonthValue < TaxYearStartMonth.getValue || (now.getMonthValue == TaxYearStartMonth.getValue && now.getDayOfMonth < StartTaxYearDayOfMonth)) {
-        now.withYear(currentYear - 1).withMonth(Month.APRIL.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
-      } else {
-        now.withMonth(Month.APRIL.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
-      }
+    val startOfThisTaxYear = {
+      val startOfYear = now.withMonth(TaxYearStartMonth.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
+      if (now.isBefore(startOfYear)) startOfYear.minusYears(1) else startOfYear
+    }
 
     val startOfTaxYearFourYearsFromNow = startOfThisTaxYear
       .plusYears(HowManyTaxYearsToStore)
