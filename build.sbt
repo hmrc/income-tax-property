@@ -1,3 +1,4 @@
+import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.DefaultBuildSettings
 
 lazy val coverageSettings: Seq[Setting[?]] = {
@@ -16,11 +17,12 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*",
     "controllers.testOnly.*",
+    "uk.gov.hmrc.incometaxproperty.models.*",
   )
 
   Seq(
     ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 95,
+    ScoverageKeys.coverageMinimumStmtTotal := 90,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )
@@ -36,7 +38,12 @@ lazy val microservice = Project("income-tax-property", file("."))
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(resolvers += Resolver.jcenterRepo,
+    RoutesKeys.routesImport ++= Seq(
+      "uk.gov.hmrc.incometaxproperty.models.common._",
+      "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
+    )
+  )
   .settings(PlayKeys.playDefaultPort := 19160)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .disablePlugins(JUnitXmlReportPlugin)

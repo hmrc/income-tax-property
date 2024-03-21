@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.incometaxproperty.models.errors
 
+import play.api.libs.json.{JsPath, JsonValidationError}
+
 trait ServiceError {
   val message: String
 }
+
 case class ApiServiceError(status: Int) extends ServiceError {
   override val message: String = s"API exception occurred. Exception: $status"
 }
@@ -27,3 +30,15 @@ case object DataNotFoundError extends ServiceError {
   override val message: String = "User data could not be found"
 }
 
+case class InvalidJsonFormatError(expectedCaseClassName: String,
+                                  rawJson: String, error: List[(JsPath, scala.collection.Seq[JsonValidationError])]) extends ServiceError {
+  val message: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"
+}
+
+final case class CannotReadJsonError(details: List[(JsPath, scala.collection.Seq[JsonValidationError])]) extends ServiceError {
+  val message: String = s"Cannot read JSON: ${details.toString}"
+}
+
+final case class CannotParseJsonError(details: Throwable) extends ServiceError {
+  val message: String = s"Cannot parse JSON: ${details.getMessage}"
+}

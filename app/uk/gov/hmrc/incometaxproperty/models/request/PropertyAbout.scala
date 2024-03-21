@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.request
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import play.api.libs.json.{Json, OFormat}
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+case class PropertyAbout(totalIncome: String, ukProperty: Seq[String], reportPropertyIncome: Option[Boolean])
+
+object PropertyAbout {
+  implicit val formats: OFormat[PropertyAbout] = Json.format[PropertyAbout]
 }

@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.common
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+final case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
+  def toJourneyContext(journeyName: JourneyName): JourneyContext = JourneyContext(taxYear, businessId, mtditid, journeyName)
+}
+
+final case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
+
 }

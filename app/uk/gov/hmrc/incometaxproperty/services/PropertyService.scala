@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.incometaxproperty.services
 
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incometaxproperty.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.incometaxproperty.models.PropertyPeriodicSubmissionResponse
+import uk.gov.hmrc.incometaxproperty.models.common.JourneyContext
 import uk.gov.hmrc.incometaxproperty.models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
 import uk.gov.hmrc.incometaxproperty.models.responses.{PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
+import uk.gov.hmrc.incometaxproperty.repositories.MongoJourneyAnswersRepository
 
 import java.time.Period
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
+class PropertyService @Inject()(connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)
                                (implicit ec: ExecutionContext) {
 
   def getPropertyPeriodicSubmissions(taxYear: Int,
@@ -111,4 +113,9 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector)
       Left(DataNotFoundError)
     }
   }
+
+  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
+                                                         writes: Writes[A]): Future[Boolean] =
+    repository.upsertAnswers(ctx, Json.toJson(answers))
+
 }

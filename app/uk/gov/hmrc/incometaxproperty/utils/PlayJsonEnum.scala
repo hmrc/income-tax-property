@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.utils
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import enumeratum._
+import play.api.libs.json._
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+trait PlayJsonEnum[A <: EnumEntry] { self: Enum[A] =>
+  implicit val keyWrites: KeyWrites[A] = EnumFormats.keyWrites(this)
+
+  implicit def contraKeyWrites[K <: A]: KeyWrites[K] = {
+    val w = this.keyWrites
+
+    new KeyWrites[K] {
+      def writeKey(k: K) = w.writeKey(k)
+    }
+  }
+
+  implicit val jsonFormat: Format[A]               = EnumFormats.formats(this)
+  implicit def contraJsonWrites[B <: A]: Writes[B] = jsonFormat.contramap[B](b => b: A)
 }

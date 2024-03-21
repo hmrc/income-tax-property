@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.utils.mocks
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import org.scalatestplus.mockito.MockitoSugar.mock
+import uk.gov.hmrc.incometaxproperty.repositories.MongoJourneyAnswersRepository
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+trait MockMongoJourneyAnswersRepository {
+
+  protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = mock[MongoJourneyAnswersRepository]
+
+
 }

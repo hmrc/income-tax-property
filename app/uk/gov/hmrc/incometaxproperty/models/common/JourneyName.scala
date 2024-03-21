@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.common
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import enumeratum._
+import uk.gov.hmrc.incometaxproperty.utils
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
+}
+
+object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
+  val values: IndexedSeq[JourneyName] = findValues
+
+  case object About extends JourneyName("property-about")
+
+  case object Income extends JourneyName("income")
+
 }

@@ -19,3 +19,6 @@ PUT         /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxy
 
 #API-1597 & API-1804
 PUT        /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                             uk.gov.hmrc.incometaxproperty.controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+
+
+POST       /property/:taxYear/:businessId/property-about/:nino/answers                                                                  uk.gov.hmrc.incometaxproperty.controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -16,8 +16,21 @@
 
 package uk.gov.hmrc.incometaxproperty.models
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import play.api.libs.json.{JsObject, Reads}
+import uk.gov.hmrc.incometaxproperty.models.errors.{InvalidJsonFormatError, ServiceError}
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+import scala.reflect.ClassTag
+
+package object domain {
+  type ApiResultT[A] = Either[ServiceError, A]
+
+  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
+    jsObj
+      .validate[A]
+      .asEither
+      .fold(
+        err => Left(InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList)),
+        answers => Right(answers)
+      )
 }
+

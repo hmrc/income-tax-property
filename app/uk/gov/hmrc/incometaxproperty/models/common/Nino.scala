@@ -14,10 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxproperty.models
+package uk.gov.hmrc.incometaxproperty.models.common
 
-import uk.gov.hmrc.incometaxproperty.models.common.Mtditid
+import play.api.mvc.PathBindable
 
-case class User(mtditid: String, arn: Option[String]) {
-  def getMtditid: Mtditid = Mtditid(mtditid)
+final case class Nino(value: String) extends AnyVal {
+  override def toString: String = value
+}
+
+object Nino {
+
+  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
+
+    override def bind(key: String, value: String): Either[String, Nino] =
+      strBinder.bind(key, value).map(Nino.apply)
+
+    override def unbind(key: String, nino: Nino): String =
+      strBinder.unbind(key, nino.value)
+
+  }
 }
