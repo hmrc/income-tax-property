@@ -30,6 +30,36 @@ case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
+
+  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = {
+    PropertyPeriodicSubmission(
+      None,
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      None,
+      None,
+      Some(
+        UkOtherProperty(
+          ukOtherPropertyIncome,
+          UkOtherPropertyExpenses(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None
+          )
+        )
+      )
+    )
+  }
+
 }
 
 case class ForeignFhlEea(income: ForeignFhlIncome,

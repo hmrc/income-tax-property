@@ -20,7 +20,8 @@ import actions.{AuthorisationRequest, AuthorisedAction}
 import models.common._
 import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.Income._
-import models.request.{Income, PropertyAbout}
+import models.request.{Income, PropertyAbout, SaveIncome}
+import models.responses.{PropertyPeriodicSubmission, UkOtherPropertyIncome}
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
@@ -54,15 +55,19 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContext(taxYear, businessId, nino, request) { (ctx, income) =>
+      withJourneyContext(taxYear, businessId, nino, request) { (ctx, incomeToSave, ukOtherPropertyIncome) =>
         for {
           r <- propertyService.createPeriodicSubmission(
             nino.value,
             incomeSourceId.value,
             taxYear.endYear,
-            request.body.asJson.map(_.as[JsObject] - "ukProperty" - "totalIncome")
+            Some(
+              Json.toJson(
+                PropertyPeriodicSubmission.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
+              )
+            )
           )
-          _ <- propertyService.persistAnswers(ctx, income).map(isPersistSuccess =>
+          _ <- propertyService.persistAnswers(ctx, incomeToSave).map(isPersistSuccess =>
             if (!isPersistSuccess) {
               logger.error("Could not persist")
             } else {
@@ -80,16 +85,20 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContext(taxYear, businessId, nino, request) { (ctx, income) =>
+      withJourneyContext(taxYear, businessId, nino, request) { (ctx, incomeToSave, ukOtherPropertyIncome) =>
         for {
           r <- propertyService.updatePeriodicSubmission(
             nino.value,
             incomeSourceId.value,
             taxYear.endYear,
             submissionId.value,
-            request.body.asJson.map(_.as[JsObject] - "ukProperty" - "totalIncome")
+            Some(
+              Json.toJson(
+                PropertyPeriodicSubmission.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
+              )
+            )
           )
-          _ <- propertyService.persistAnswers(ctx, income).map(isPersistSuccess =>
+          _ <- propertyService.persistAnswers(ctx, incomeToSave).map(isPersistSuccess =>
             if (!isPersistSuccess) {
               logger.error("Could not persist")
             } else {
@@ -110,21 +119,21 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
                           businessId: BusinessId,
                           nino: Nino,
                           authorisationRequest: AuthorisationRequest[AnyContent]
-                        )(block: (JourneyContext, Income) => Future[Result]): Future[Result] = {
-    val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.headers.get("mtditid").get), nino).toJourneyContext(JourneyName.About)
-    val requestBody = parseBody[Income](authorisationRequest)
+                        )(block: (JourneyContext, Income, UkOtherPropertyIncome) => Future[Result]): Future[Result] = {
+    val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(JourneyName.About)
+    val requestBody = parseBody[SaveIncome](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>
         validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
           case JsSuccess(value, _) =>
-            block(ctx, value)
+            block(ctx, value.incomeToSave, value.ukOtherPropertyIncome)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
         }
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }
   }
 
-  private def parseBody[A: Reads](request: AuthorisationRequest[AnyContent]) = {
+  private def parseBody[A: Reads](request: AuthorisationRequest[AnyContent]): Try[Option[JsResult[A]]] = {
     Try(request.body.asJson.map(_.validate[A]))
   }
 
@@ -132,5 +141,4 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     logger.error(s"Bad Request: ${error.message}")
     BadRequest(Json.obj("code" -> BAD_REQUEST, "reason" -> error.message))
   }
-
 }

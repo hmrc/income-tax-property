@@ -35,8 +35,23 @@ object Income {
 
 final case class PremiumsGrantLease(yesOrNo: Boolean)
 
+object PremiumsGrantLease {
+  implicit val format: OFormat[PremiumsGrantLease] = Json.format[PremiumsGrantLease]
+}
 final case class ReversePremiumsReceived(reversePremiumsReceived: Boolean)
+
+object ReversePremiumsReceived {
+  implicit val format: OFormat[ReversePremiumsReceived] = Json.format[ReversePremiumsReceived]
+}
 
 final case class CalculatedFigureYourself(calculatedFigureYourself: Boolean)
 
+object CalculatedFigureYourself {
+  implicit val format: OFormat[CalculatedFigureYourself] = Json.format[CalculatedFigureYourself]
+}
+
 final case class DeductingTax(taxDeductedYesNo: Boolean)
+
+object DeductingTax {
+  implicit val format: OFormat[DeductingTax] = Json.format[DeductingTax]
+}

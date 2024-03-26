@@ -35,10 +35,4 @@ trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoColle
     mongoComponent,
     Clock.systemUTC()
   )
-
-//  def mockSaveAnswersForCreatePeriodicSubmission(): CallHandler2[JourneyContext, JsValue, Future[Boolean]] = {
-//    (mockMongoJourneyAnswersRepository.upsertAnswers(_: JourneyContext, _: JsValue))
-//      .expects(*, *)
-//      .returning(Future.successful(true))
-//  }
 }
