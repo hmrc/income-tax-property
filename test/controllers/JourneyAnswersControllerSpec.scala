@@ -16,13 +16,12 @@
 
 package controllers
 
+import models.common.JourneyName.About
+import models.common._
+import models.request.{Income, PropertyAbout}
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Results.NoContent
 import play.api.test.Helpers.status
-import models.common.JourneyName.About
-import models.request.PropertyAbout
-import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
@@ -63,6 +62,65 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
 
       mockAuthorisation()
       mockPersistAnswers(ctx, PropertyAbout("over", Seq("property.rentals"), Some(true)))
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyAbout(taxYear, businessId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyAbout(taxYear, businessId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "create or update property income section" should {
+
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        |        "isNonUKLandlord" : true,
+        |        "incomeFromPropertyRentals" : 45,
+        |        "leasePremiumPayment" : true,
+        |        "reversePremiumsReceived" : {
+        |            "reversePremiumsReceived" : true,
+        |            "amount" : 34
+        |        },
+        |        "otherIncomeFromProperty" : {
+        |            "amount" : 76
+        |        },
+        |        "deductingTax" : {
+        |            "taxDeductedYesNo" : false
+        |        },
+        |        "calculatedFigureYourself" : {
+        |            "calculatedFigureYourself" : false
+        |        },
+        |        "receivedGrantLeaseAmount" : 56,
+        |        "yearLeaseAmount" : 4,
+        |        "premiumsGrantLease" : {
+        |            "yesOrNo" : true,
+        |            "premiumsGrantLease" : 52.64
+        |        }
+        |    }""" .stripMargin)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockPersistAnswers(ctx, Income(
+        "between",
+        List("property.rentals"),
+        false,
+        false,
+        true,
+        50,
+        true,
+        true,
+        false,
+        false,
+        5,
+        true
+      ))
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyAbout(taxYear, businessId, nino)(request))
       result.header.status shouldBe NO_CONTENT

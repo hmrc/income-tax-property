@@ -16,12 +16,29 @@
 
 package utils.mocks
 
-import org.scalatestplus.mockito.MockitoSugar.mock
+import com.typesafe.config.ConfigFactory
+import models.common.JourneyContext
+import org.scalamock.handlers.CallHandler2
+import org.scalamock.scalatest.MockFactory
+import play.api.Configuration
+import play.api.libs.json.JsValue
 import repositories.MongoJourneyAnswersRepository
+import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 
-trait MockMongoJourneyAnswersRepository {
+import java.time.Clock
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = mock[MongoJourneyAnswersRepository]
+trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport {
 
+  protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(
+    mongoComponent,
+    Clock.systemUTC()
+  )
 
+//  def mockSaveAnswersForCreatePeriodicSubmission(): CallHandler2[JourneyContext, JsValue, Future[Boolean]] = {
+//    (mockMongoJourneyAnswersRepository.upsertAnswers(_: JourneyContext, _: JsValue))
+//      .expects(*, *)
+//      .returning(Future.successful(true))
+//  }
 }
