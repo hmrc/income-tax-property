@@ -43,7 +43,7 @@ object PropertyPeriodicSubmission {
         UkOtherProperty(
           ukOtherPropertyIncome,
           UkOtherPropertyExpenses(
-            None,
+            Some(0),
             None,
             None,
             None,
