@@ -105,7 +105,7 @@ class PropertyServiceSpec extends UnitTest
 
     "return data when successful" in {
       val aPropertyAnnualSubmission = PropertyAnnualSubmission(
-        submittedOn = LocalDateTime.now,
+        submittedOn = Some(LocalDateTime.now),
         Some(AnnualForeignFhlEea(
           ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
           ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
@@ -245,7 +245,7 @@ class PropertyServiceSpec extends UnitTest
 
   "create annual submission" should {
     val validRequestBody: JsValue = Json.toJson(PropertyAnnualSubmission(
-      submittedOn = LocalDateTime.now,
+      submittedOn = Some(LocalDateTime.now),
       Some(AnnualForeignFhlEea(
         ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))

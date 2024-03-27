@@ -42,7 +42,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
   ".getAnnualSubmissionData" should {
 
     val annualSubmission = PropertyAnnualSubmission(
-      submittedOn = LocalDateTime.now,
+      submittedOn = Some(LocalDateTime.now),
       Some(AnnualForeignFhlEea(
         ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
@@ -145,7 +145,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
   ".createOrUpdateAnnualSubmission" should {
     val validRequestBody = Json.toJson(PropertyAnnualSubmission(
-      submittedOn = LocalDateTime.now,
+      submittedOn = Some(LocalDateTime.now),
       Some(AnnualForeignFhlEea(
         ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
