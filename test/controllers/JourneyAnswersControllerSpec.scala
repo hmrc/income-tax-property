@@ -18,7 +18,6 @@ package controllers
 
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Results.NoContent
 import play.api.test.Helpers.status
 import models.common.JourneyName.About
 import models.request.PropertyAbout
