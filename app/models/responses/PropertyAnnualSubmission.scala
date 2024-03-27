@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
 
-case class PropertyAnnualSubmission(submittedOn: LocalDateTime,
+case class PropertyAnnualSubmission(submittedOn: Option[LocalDateTime],
                                     foreignFhlEea: Option[AnnualForeignFhlEea],
                                     foreignProperty: Option[Seq[AnnualForeignProperty]],
                                     ukFhlProperty: Option[AnnualUkFhlProperty],
@@ -119,8 +119,8 @@ object UkFhlAllowances {
   implicit val format: OFormat[UkFhlAllowances] = Json.format[UkFhlAllowances]
 }
 
-case class AnnualUkOtherProperty(ukOtherPropertyAnnualAdjustments: UkOtherAdjustments,
-                                 ukOtherPropertyAnnualAllowances: UkOtherAllowances)
+case class AnnualUkOtherProperty(ukOtherPropertyAnnualAdjustments: Option[UkOtherAdjustments],
+                                 ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances])
 
 object AnnualUkOtherProperty {
   implicit val format: OFormat[AnnualUkOtherProperty] = Json.format[AnnualUkOtherProperty]
@@ -130,7 +130,7 @@ case class UkOtherAdjustments(lossBroughtForward: Option[BigDecimal],
                               balancingCharge: Option[BigDecimal],
                               privateUseAdjustment: Option[BigDecimal],
                               businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
-                              nonResidentLandlord: Option[BigDecimal],
+                              nonResidentLandlord: Option[Boolean],
                               ukOtherRentARoom: Option[UkRentARoom])
 
 object UkOtherAdjustments {

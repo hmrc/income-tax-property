@@ -22,3 +22,5 @@ PUT        /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceI
 
 
 POST       /property/:taxYear/:businessId/property-about/:nino/answers                                                         controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST       /property/:taxYear/:businessId/property-rentals-adjustments/:nino/answers                                           controllers.JourneyAnswersController.savePropertyRentalsAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
 
+//
 case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
                                       fromDate: LocalDate,
                                       toDate: LocalDate,

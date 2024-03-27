@@ -40,7 +40,7 @@ class GetPropertyAnnualSubmissionResponseSpec extends UnitTest {
 
       "status is OK and valid jsValue" in {
         val propertyAnnualSubmission = PropertyAnnualSubmission(
-          submittedOn = LocalDateTime.now,
+          submittedOn = Some(LocalDateTime.now),
           None, None, None, None
         )
 

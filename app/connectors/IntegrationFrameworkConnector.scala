@@ -19,10 +19,12 @@ package connectors
 import config.AppConfig
 import connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
 import connectors.response._
+import models.common.{BusinessId, JourneyContext, Mtditid, Nino, TaxYear}
+import models.common.TaxYear.{asTyBefore24, asTys}
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses._
 import play.api.Logging
-import play.api.libs.json.{JsValue, StaticBinding}
+import play.api.libs.json.{JsValue, StaticBinding, Writes}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 
 import java.net.URL
@@ -191,6 +193,27 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       implicitly[HttpReads[PutAnnualSubmissionResponse]],
       ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
       ec).map { response: PutAnnualSubmissionResponse =>
+      if (response.result.isLeft) {
+        val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        logger.error(s"Error creating a property annual submission from the Integration Framework:" +
+          s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}")
+      }
+      response.result
+    }
+  }
+
+  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: PropertyAnnualSubmission)
+                                    (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$businessId""", "1804")
+    } else {
+      (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$businessId""", "1597")
+    }
+
+    httpClient.PUT[PropertyAnnualSubmission, PutAnnualSubmissionResponse](url, body)(
+      implicitly[Writes[PropertyAnnualSubmission]],
+      implicitly[HttpReads[PutAnnualSubmissionResponse]],
+      ifHeaderCarrier(url, apiVersion), ec).map { response: PutAnnualSubmissionResponse =>
       if (response.result.isLeft) {
         val correlationId = response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
         logger.error(s"Error creating a property annual submission from the Integration Framework:" +

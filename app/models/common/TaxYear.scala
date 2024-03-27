@@ -22,6 +22,10 @@ import play.api.mvc.PathBindable
 import java.time.LocalDate
 
 final case class TaxYear(endYear: Int) extends AnyVal {
+
+  def isAfter24: Boolean = {
+    endYear >= 2024
+  }
   override def toString: String = endYear.toString
 }
 
@@ -38,10 +42,19 @@ object TaxYear {
   /* Gets a representation of a taxYear in a YY-YY format (from a YYYY format).
    */
   def asTys(taxYear: TaxYear): String = {
-    val end   = taxYear.endYear - 2000
+    val end = taxYear.endYear - 2000
     val start = end - 1
     s"$start-$end"
   }
+
+  /* Gets a representation of a taxYear in a YYYY-YY format (from a YYYY format).
+ */
+  def asTyBefore24(taxYear: TaxYear): String = {
+    val end = taxYear.endYear - 2000
+    val start = taxYear.endYear - 1
+    s"$start-$end"
+  }
+
 
   implicit def pathBindable(implicit intBinder: PathBindable[Int]): PathBindable[TaxYear] = new PathBindable[TaxYear] {
 
