@@ -27,3 +27,5 @@ POST       /property/:taxYear/:businessId/property-about/:nino/answers          
 POST        /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers                                     controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
 
 PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
+
+POST       /property/:taxYear/:businessId/property-rentals-adjustments/:nino/answers                                           controllers.JourneyAnswersController.savePropertyRentalsAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
