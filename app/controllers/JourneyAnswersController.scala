@@ -95,7 +95,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             Some(
               Json.toJson(
                 PropertyPeriodicSubmission.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
-              )
+              ).as[JsObject] - "fromDate" - "toDate"
             )
           )
           _ <- propertyService.persistAnswers(ctx, incomeToSave).map(isPersistSuccess =>
