@@ -43,7 +43,7 @@ object PropertyPeriodicSubmission {
         UkOtherProperty(
           ukOtherPropertyIncome,
           UkOtherPropertyExpenses(
-            Some(0),
+            Some(0), //Todo: This needs to be fetched from request(to be updated with expenses), and needs to be updated when Expenses ticket is implemented!
             None,
             None,
             None,
