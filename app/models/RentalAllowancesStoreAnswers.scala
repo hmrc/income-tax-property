@@ -16,19 +16,17 @@
 
 package models
 
-import models.request.PropertyRentalsAdjustments
+import models.request.RentalAllowances
 import play.api.libs.json.{Json, OFormat}
 
 
-case class AdjustmentsStoreAnswers(balancingChargeYesNo: Boolean,
-                                   renovationAllowanceBalancingChargeYesNo: Boolean)
+case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesNo: Boolean)
 
-object AdjustmentsStoreAnswers {
-  implicit val formats: OFormat[AdjustmentsStoreAnswers] = Json.format[AdjustmentsStoreAnswers]
+object RentalAllowancesStoreAnswers {
+  implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]
 
-  def fromJourneyAnswers(answers: PropertyRentalsAdjustments): AdjustmentsStoreAnswers =
-    AdjustmentsStoreAnswers(
-      answers.balancingCharge.balancingChargeYesNo,
-      answers.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo,
+  def fromJourneyAnswers(answers: RentalAllowances): RentalAllowancesStoreAnswers =
+    RentalAllowancesStoreAnswers(
+      answers.electricChargePointAllowance.electricChargePointAllowanceYesNo
     )
 }
