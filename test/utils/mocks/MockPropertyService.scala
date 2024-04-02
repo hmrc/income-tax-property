@@ -21,8 +21,9 @@ import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.http.HeaderCarrier
 import models.PropertyPeriodicSubmissionResponse
-import models.common.JourneyContext
+import models.common.{JourneyContext, JourneyContextWithNino}
 import models.errors.ServiceError
+import models.request.RentalAllowances
 import models.responses.PropertyAnnualSubmission
 import models.responses.PeriodicSubmissionId
 import services.PropertyService
@@ -103,5 +104,11 @@ trait MockPropertyService extends MockFactory {
       .returning(Future.successful(true))
   }
 
+  def mockSavePropertyRentalAllowances[A](ctx: JourneyContextWithNino, answers: RentalAllowances):
+  CallHandler3[JourneyContextWithNino, RentalAllowances, HeaderCarrier, Future[Either[ServiceError, Boolean]]] = {
+    (mockPropertyService.savePropertyRentalAllowances(_: JourneyContextWithNino, _: RentalAllowances)(_: HeaderCarrier))
+      .expects(*, *, *)
+      .returning(Future.successful(Right(true)))
+  }
 
 }

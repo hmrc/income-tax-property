@@ -23,6 +23,9 @@ import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOth
 import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
+import models.common.JourneyName.About
+import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
+import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
@@ -66,6 +69,50 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       mockPersistAnswers(ctx, PropertyAbout("over", Seq("property.rentals"), Some(true)))
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyAbout(taxYear, businessId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyAbout(taxYear, businessId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "create or update property allowances section" should {
+
+    val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |  "annualInvestmentAllowance": 11,
+        |  "electricChargePointAllowance": {
+        |    "electricChargePointAllowanceYesNo": true,
+        |    "electricChargePointAllowanceAmount": 11
+        |  },
+        |  "zeroEmissionCarAllowance": 11,
+        |  "zeroEmissionGoodsVehicleAllowance": 11,
+        |  "businessPremisesRenovationController": 11,
+        |  "replacementOfDomesticGoodsController": 11,
+        |  "otherCapitalAllowance": 11
+        |}
+        """.stripMargin)
+    val ctx = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockSavePropertyRentalAllowances(ctx, RentalAllowances(
+        Some(11),
+        ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+        Some(11),
+        Some(11),
+        Some(11),
+        Some(11),
+        Some(11)
+      ))
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRentalAllowances(taxYear, businessId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
