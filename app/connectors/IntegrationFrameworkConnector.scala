@@ -181,6 +181,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
+  @deprecated
   def createOrUpdateAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
                                     (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {

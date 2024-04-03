@@ -92,7 +92,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return NO_CONTENT when IntegrationFrameworkService returns Right()" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -105,7 +105,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return BAD_REQUEST when AnnualSubmissionService returns Left(ApiServiceError(400))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -118,7 +118,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return UNPROCESSABLE_ENTITY when AnnualSubmissionService returns Left(ApiServiceError(422))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -131,7 +131,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return INTERNAL_SERVER_ERROR when AnnualSubmissionService returns Left(ApiServiceError(500))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,

@@ -22,10 +22,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
+import models.common.{BusinessId, JourneyContextWithNino, JourneyName, Mtditid, Nino, TaxYear}
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
+import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
 import models.responses._
 import utils.{AppConfigStub, UnitTest}
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,6 +35,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class PropertyServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
   with MockMongoJourneyAnswersRepository
+  with MockPropertyService
   with HttpClientSupport {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
@@ -265,5 +268,56 @@ class PropertyServiceSpec extends UnitTest
       await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, Some(validRequestBody))) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
+
+  "create annual submission 2" should {
+    val validRequestBody = PropertyAnnualSubmission(
+      submittedOn = Some(LocalDateTime.now),
+      Some(AnnualForeignFhlEea(
+        ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+        ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+      )), None, None, None)
+
+
+    "return no content for valid request" in {
+      val taxYear = 2024
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), validRequestBody)) shouldBe
+        Right()
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear),
+        BusinessId(incomeSourceId), Nino(nino), validRequestBody)) shouldBe Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+    }
+  }
+
+  "save property rental allowances" should {
+
+    val taxYear = 2024
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(TaxYear(taxYear), BusinessId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val allowances = RentalAllowances(
+      Some(11),
+      ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+      Some(11),
+      Some(11),
+      Some(11),
+      Some(11),
+      Some(11)
+    )
+    "return no content for valid request" in {
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      await(underTest.savePropertyRentalAllowances(ctx, allowances)) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.savePropertyRentalAllowances(ctx, allowances)) shouldBe Right(true)
+    }
+  }
+
+
 }
 
