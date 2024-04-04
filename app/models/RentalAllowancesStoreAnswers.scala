@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package models.common
+package models
 
-import enumeratum._
+import models.request.RentalAllowances
+import play.api.libs.json.{Json, OFormat}
 
-sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
-  override def toString: String = entryName
-}
 
-object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
-  val values: IndexedSeq[JourneyName] = findValues
+case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesNo: Boolean)
 
-  case object About extends JourneyName("property-about")
+object RentalAllowancesStoreAnswers {
+  implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]
 
-  case object Income extends JourneyName("income")
-
-  case object RentalAllowances extends JourneyName("rental-allowances")
-
+  def fromJourneyAnswers(answers: RentalAllowances): RentalAllowancesStoreAnswers =
+    RentalAllowancesStoreAnswers(
+      answers.electricChargePointAllowance.electricChargePointAllowanceYesNo
+    )
 }

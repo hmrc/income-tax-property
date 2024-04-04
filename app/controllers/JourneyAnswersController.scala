@@ -22,6 +22,8 @@ import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError
 import models.request.Income._
 import models.request.{Income, PropertyAbout, SaveIncome}
 import models.responses.{PropertyPeriodicSubmission, UkOtherPropertyIncome}
+import models.errors.{CannotParseJsonError, CannotReadJsonError, ServiceError}
+import models.request.{PropertyAbout, RentalAllowances}
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
@@ -141,4 +143,22 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     logger.error(s"Bad Request: ${error.message}")
     BadRequest(Json.obj("code" -> BAD_REQUEST, "reason" -> error.message))
   }
+
+  def savePropertyRentalAllowances(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+
+    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino)
+    val requestBody = parseBody[RentalAllowances](request)
+
+    requestBody match {
+      case Success(validatedRes) =>
+        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+          case JsSuccess(value, _) =>
+            propertyService.savePropertyRentalAllowances(ctx, value).map(_ => NoContent)
+          case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+        }
+      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+    }
+
+  }
+
 }

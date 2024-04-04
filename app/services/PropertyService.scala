@@ -17,10 +17,11 @@
 package services
 
 import connectors.IntegrationFrameworkConnector
-import models.PropertyPeriodicSubmissionResponse
-import models.common.JourneyContext
-import models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
-import models.responses.{PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
+import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
+import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, JourneyName, Mtditid, Nino, TaxYear}
+import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError}
+import models.request.RentalAllowances
+import models.responses._
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -83,6 +84,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     }
   }
 
+  @Deprecated
   def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
                                     (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
 
@@ -90,6 +92,11 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
       case Right(_) => Future.successful(Right())
     }
+  }
+
+  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: PropertyAnnualSubmission)
+                                    (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    connector.createOrUpdateAnnualSubmission(taxYear, businessId, nino, body)
   }
 
   private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
@@ -118,4 +125,29 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                                                          writes: Writes[A]): Future[Boolean] =
     repository.upsertAnswers(ctx, Json.toJson(answers))
 
+  def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)
+                                  (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {
+    val storeAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(answers)
+    val submission: PropertyAnnualSubmission = getPropertySubmission(answers)
+    for {
+      _ <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.businessId, ctx.nino, submission)
+      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), storeAnswers).map(Right(_))
+    } yield res
+  }
+
+  private def getPropertySubmission(answers: RentalAllowances) = {
+    val allowances = UkOtherAllowances(answers.annualInvestmentAllowance,
+      answers.zeroEmissionGoodsVehicleAllowance,
+      answers.businessPremisesRenovationAllowance,
+      answers.otherCapitalAllowance,
+      answers.replacementOfDomesticGoodsAllowance,
+      answers.electricChargePointAllowance.electricChargePointAllowanceAmount,
+      None,
+      None,
+      answers.zeroEmissionCarAllowance,
+      None
+    )
+    val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(allowances))
+    PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+  }
 }
