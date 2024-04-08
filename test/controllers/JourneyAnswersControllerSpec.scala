@@ -19,7 +19,7 @@ package controllers
 import models.common.JourneyName.About
 import models.common._
 import models.request._
-import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyExpenses}
+import models.responses.{PeriodicSubmissionId, UkOtherPropertyExpenses, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
 import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
@@ -76,6 +76,128 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     }
   }
 
+  "create property expenses section" should {
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        |   "ukOtherPropertyExpenses": {
+          |   "RentsRatesAndInsurance": 100,
+          |   "RepairsAndMaintenanceCosts": 200,
+          |   "loanInterest": 300,
+          |   "otherProfessionalFee": 400,
+          |   "costsOfServicesProvide": 500,
+          |   "propertyBusinessTravelCost": 600,
+          |   "otherAllowablePropertyExpenses": 700
+        |   }
+        |}""".stripMargin)
+
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+    "should return created for valid request body" in {
+
+      mockAuthorisation()
+      val expensesRequest = validRequestBody.as[SaveExpense]
+      mockCreatePeriodicSubmissions(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(Json.toJson(
+          PropertyPeriodicSubmission(
+            None,
+            LocalDate.now(),
+            LocalDate.now(),
+            None,
+            None,
+            None,
+            Some(
+              UkOtherProperty(
+                UkOtherPropertyIncome(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                expensesRequest.ukOtherPropertyExpenses)
+            )
+          )
+        )
+        ), Right(PeriodicSubmissionId("submissionId")))
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveExpenses(taxYear, businessId, nino, IncomeSourceId(""))(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "update property expenses section" should {
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        |   "ukOtherPropertyExpenses": {
+          |   "RentsRatesAndInsurance": 100,
+          |   "RepairsAndMaintenanceCosts": 200,
+          |   "loanInterest": 300,
+          |   "otherProfessionalFee": 400,
+          |   "costsOfServicesProvide": 500,
+          |   "propertyBusinessTravelCost": 600,
+          |   "otherAllowablePropertyExpenses": 700
+        |   }
+        |}""".stripMargin)
+
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      val saveIncomeRequest = validRequestBody.as[SaveExpense]
+      mockUpdatePeriodicSubmissions(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        "submissionId",
+        Some(Json.toJson(
+          PropertyPeriodicSubmission(
+            None,
+            LocalDate.now(),
+            LocalDate.now(),
+            None,
+            None,
+            None,
+            Some(
+              UkOtherProperty(
+                UkOtherPropertyIncome(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                saveIncomeRequest.ukOtherPropertyExpenses,
+              )
+            )
+          )
+        )
+        ), Right(""))
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.updateExpenses(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
   "create property income section" should {
     val validRequestBody: JsValue = Json.parse(
       """{
@@ -125,10 +247,6 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
                 UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
                   None,
                   None,
                   None,
@@ -215,10 +333,6 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
                 UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
                   None,
                   None,
                   None,
