@@ -47,6 +47,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
   val taxYear: TaxYear = TaxYear(2024)
   val businessId: BusinessId = BusinessId("someBusinessId")
   val incomeSourceId = IncomeSourceId("incomeSourceId")
+  val incomeSubmissionId = SubmissionId("submissionId")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
 
@@ -343,8 +344,51 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         ), Right(PeriodicSubmissionId("submissionId")))
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.saveExpenses(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
       result.header.status shouldBe CREATED
+    }
+
+    "should return no_content for valid request body" in {
+      mockAuthorisation()
+      mockUpdatePeriodicSubmissions(
+        nino.value,
+        incomeSourceId.value,
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(Json.toJson(
+          PropertyPeriodicSubmission(
+            None,
+            LocalDate.now(),
+            LocalDate.now(),
+            None,
+            None,
+            None,
+            Some(
+              UkOtherProperty(
+                UkOtherPropertyIncome(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                UkOtherPropertyExpenses(
+                  RentsRatesAndInsurance = Some(100),
+                  RepairsAndMaintenanceCosts = Some(200),
+                  loanInterest = Some(300),
+                  otherProfessionalFee = Some(400),
+                  costsOfServicesProvided = Some(500),
+                  propertyBusinessTravelCost = Some(600),
+                  otherAllowablePropertyExpenses = Some(700)
+              )
+            )
+          )
+        ))), Right(""))
+
+      val request = fakePutRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe NO_CONTENT
     }
 
     "should return bad request error when request body is empty" in {
