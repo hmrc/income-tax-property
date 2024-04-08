@@ -42,7 +42,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
   ".getAnnualSubmissionData" should {
 
     val annualSubmission = PropertyAnnualSubmission(
-      submittedOn = LocalDateTime.now,
+      submittedOn = Some(LocalDateTime.now),
       Some(AnnualForeignFhlEea(
         ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
@@ -92,7 +92,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return NO_CONTENT when IntegrationFrameworkService returns Right()" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -105,7 +105,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return BAD_REQUEST when AnnualSubmissionService returns Left(ApiServiceError(400))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -118,7 +118,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return UNPROCESSABLE_ENTITY when AnnualSubmissionService returns Left(ApiServiceError(422))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -131,7 +131,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
     "return INTERNAL_SERVER_ERROR when AnnualSubmissionService returns Left(ApiServiceError(500))" in {
       mockAuthorisation()
-      mockDeleteAnnualSubmissions(
+      mockDeleteAnnualSubmission(
         "incomeSourceId",
         "taxableEntityId",
         2024,
@@ -145,7 +145,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
 
   ".createOrUpdateAnnualSubmission" should {
     val validRequestBody = Json.toJson(PropertyAnnualSubmission(
-      submittedOn = LocalDateTime.now,
+      submittedOn = Some(LocalDateTime.now),
       Some(AnnualForeignFhlEea(
         ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
         ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))

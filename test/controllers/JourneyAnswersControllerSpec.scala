@@ -23,6 +23,8 @@ import models.responses.{PeriodicSubmissionId, UkOtherPropertyExpenses, Property
 import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
+import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
+import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
@@ -80,13 +82,13 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     val validRequestBody: JsValue = Json.parse(
       """{
         |   "ukOtherPropertyExpenses": {
-          |   "RentsRatesAndInsurance": 100,
-          |   "RepairsAndMaintenanceCosts": 200,
-          |   "loanInterest": 300,
-          |   "otherProfessionalFee": 400,
-          |   "costsOfServicesProvide": 500,
-          |   "propertyBusinessTravelCost": 600,
-          |   "otherAllowablePropertyExpenses": 700
+        |   "RentsRatesAndInsurance": 100,
+        |   "RepairsAndMaintenanceCosts": 200,
+        |   "loanInterest": 300,
+        |   "otherProfessionalFee": 400,
+        |   "costsOfServicesProvide": 500,
+        |   "propertyBusinessTravelCost": 600,
+        |   "otherAllowablePropertyExpenses": 700
         |   }
         |}""".stripMargin)
 
@@ -140,233 +142,262 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     val validRequestBody: JsValue = Json.parse(
       """{
         |   "ukOtherPropertyExpenses": {
-          |   "RentsRatesAndInsurance": 100,
-          |   "RepairsAndMaintenanceCosts": 200,
-          |   "loanInterest": 300,
-          |   "otherProfessionalFee": 400,
-          |   "costsOfServicesProvide": 500,
-          |   "propertyBusinessTravelCost": 600,
-          |   "otherAllowablePropertyExpenses": 700
+        |   "RentsRatesAndInsurance": 100,
+        |   "RepairsAndMaintenanceCosts": 200,
+        |   "loanInterest": 300,
+        |   "otherProfessionalFee": 400,
+        |   "costsOfServicesProvide": 500,
+        |   "propertyBusinessTravelCost": 600,
+        |   "otherAllowablePropertyExpenses": 700
         |   }
         |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+    "create or update property allowances section" should {
 
-    "should return no_content for valid request body" in {
-
-      mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[SaveExpense]
-      mockUpdatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        "submissionId",
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                UkOtherPropertyIncome(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
-                ),
-                saveIncomeRequest.ukOtherPropertyExpenses,
-              )
-            )
-          )
-        )
-        ), Right(""))
-
-      val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateExpenses(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
-      result.header.status shouldBe NO_CONTENT
-    }
-
-    "should return bad request error when request body is empty" in {
-      mockAuthorisation()
-      val result = underTest.updateExpenses(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
-      status(result) shouldBe BAD_REQUEST
-    }
-  }
-
-  "create property income section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        |   "ukOtherPropertyIncome": {
-        |        "premiumsOfLeaseGrant":52.64,
-        |        "reversePremiums":34,
-        |        "periodAmount":4,
-        |        "otherIncome":76,
-        |        "ukOtherRentARoom": {
-        |          "rentsReceived":45
-        |        }
-        |   },
-        |   "incomeToSave": {
-        |        "isNonUKLandlord" : true,
-        |        "incomeFromPropertyRentals" : 45,
-        |        "leasePremiumPayment" : true,
-        |        "reversePremiumsReceived" : {
-        |            "reversePremiumsReceived" : true
-        |        },
-        |        "calculatedFigureYourself" : {
-        |            "calculatedFigureYourself" : false
-        |        },
-        |        "yearLeaseAmount" : 4
-        |    }
-        |}""".stripMargin)
-
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+      val validRequestBody: JsValue = Json.parse(
+        """
+          |{
+          |  "annualInvestmentAllowance": 11,
+          |  "electricChargePointAllowance": {
+          |    "electricChargePointAllowanceYesNo": true,
+          |    "electricChargePointAllowanceAmount": 11
+          |  },
+          |  "zeroEmissionCarAllowance": 11,
+          |  "zeroEmissionGoodsVehicleAllowance": 11,
+          |  "businessPremisesRenovationController": 11,
+          |  "replacementOfDomesticGoodsController": 11,
+          |  "otherCapitalAllowance": 11
+          |}
+        """.stripMargin)
+      val ctx = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
 
-    "should return created for valid request body" in {
+      "should return no_content for valid request body" in {
 
-      mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[SaveIncome]
-      mockCreatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
+        mockAuthorisation()
+        val saveIncomeRequest = validRequestBody.as[SaveExpense]
+        mockUpdatePeriodicSubmissions(
+          nino.value,
+          "incomeSourceId",
+          taxYear.endYear,
+          "submissionId",
+          Some(Json.toJson(
+            PropertyPeriodicSubmission(
+              None,
+              LocalDate.now(),
+              LocalDate.now(),
+              None,
+              None,
+              None,
+              Some(
+                UkOtherProperty(
+                  UkOtherPropertyIncome(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None
+                  ),
+                  saveIncomeRequest.ukOtherPropertyExpenses,
                 )
               )
             )
           )
-        )
-        ), Right(PeriodicSubmissionId("submissionId")))
+          ), Right(""))
 
-      mockPersistAnswers(ctx, Income(
-        true,
-        50,
-        true,
-        ReversePremiumsReceived(true),
-        Some(DeductingTax(false)),
-        Some(CalculatedFigureYourself(false)),
-        Some(5),
-        Some(PremiumsGrantLease(true))
-      ))
-      val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.saveIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
-      result.header.status shouldBe CREATED
+        mockSavePropertyRentalAllowances(ctx, RentalAllowances(
+          Some(11),
+          ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+          Some(11),
+          Some(11),
+          Some(11),
+          Some(11),
+          Some(11)
+        ))
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.savePropertyRentalAllowances(taxYear, businessId, nino)(request))
+        result.header.status shouldBe NO_CONTENT
+      }
+
+      "should return bad request error when request body is empty" in {
+        mockAuthorisation()
+        val result = underTest.savePropertyAbout(taxYear, businessId, nino)(fakePostRequest)
+        status(result) shouldBe BAD_REQUEST
+      }
     }
 
-    "should return bad request error when request body is empty" in {
-      mockAuthorisation()
-      val result = underTest.saveIncome(taxYear, businessId, nino, IncomeSourceId(""))(fakePostRequest)
-      status(result) shouldBe BAD_REQUEST
-    }
-  }
+    "create property income section" should {
+      val validRequestBody: JsValue = Json.parse(
+        """{
+          |   "ukOtherPropertyIncome": {
+          |        "premiumsOfLeaseGrant":52.64,
+          |        "reversePremiums":34,
+          |        "periodAmount":4,
+          |        "otherIncome":76,
+          |        "ukOtherRentARoom": {
+          |          "rentsReceived":45
+          |        }
+          |   },
+          |   "incomeToSave": {
+          |        "isNonUKLandlord" : true,
+          |        "incomeFromPropertyRentals" : 45,
+          |        "leasePremiumPayment" : true,
+          |        "reversePremiumsReceived" : {
+          |            "reversePremiumsReceived" : true
+          |        },
+          |        "calculatedFigureYourself" : {
+          |            "calculatedFigureYourself" : false
+          |        },
+          |        "yearLeaseAmount" : 4
+          |    }
+          |}""".stripMargin)
 
-  "update property income section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        |   "ukOtherPropertyIncome": {
-        |        "premiumsOfLeaseGrant":52.64,
-        |        "reversePremiums":34,
-        |        "periodAmount":4,
-        |        "otherIncome":76,
-        |        "ukOtherRentARoom": {
-        |          "rentsReceived":45
-        |        }
-        |   },
-        |   "incomeToSave": {
-        |        "isNonUKLandlord" : true,
-        |        "incomeFromPropertyRentals" : 45,
-        |        "leasePremiumPayment" : true,
-        |        "reversePremiumsReceived" : {
-        |            "reversePremiumsReceived" : true
-        |        },
-        |        "calculatedFigureYourself" : {
-        |            "calculatedFigureYourself" : false
-        |        },
-        |        "yearLeaseAmount" : 4
-        |    }
-        |}""".stripMargin)
-
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+      val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
 
 
-    "should return no_content for valid request body" in {
+      "should return created for valid request body" in {
 
-      mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[SaveIncome]
-      mockUpdatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        "submissionId",
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
+        mockAuthorisation()
+        val saveIncomeRequest = validRequestBody.as[SaveIncome]
+        mockCreatePeriodicSubmissions(
+          nino.value,
+          "incomeSourceId",
+          taxYear.endYear,
+          Some(Json.toJson(
+            PropertyPeriodicSubmission(
+              None,
+              LocalDate.now(),
+              LocalDate.now(),
+              None,
+              None,
+              None,
+              Some(
+                UkOtherProperty(
+                  saveIncomeRequest.ukOtherPropertyIncome,
+                  UkOtherPropertyExpenses(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None
+                  )
                 )
               )
             )
           )
-        )
-        ), Right(""))
+          ), Right(PeriodicSubmissionId("submissionId")))
 
-      mockPersistAnswers(ctx, Income(
-        true,
-        50,
-        true,
-        ReversePremiumsReceived(true),
-        Some(DeductingTax(false)),
-        Some(CalculatedFigureYourself(false)),
-        Some(5),
-        Some(PremiumsGrantLease(true))
-      ))
-      val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
-      result.header.status shouldBe NO_CONTENT
+        mockPersistAnswers(ctx, Income(
+          true,
+          50,
+          true,
+          ReversePremiumsReceived(true),
+          Some(DeductingTax(false)),
+          Some(CalculatedFigureYourself(false)),
+          Some(5),
+          Some(PremiumsGrantLease(true))
+        ))
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.saveIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+        result.header.status shouldBe CREATED
+      }
+
+      "should return bad request error when request body is empty" in {
+        mockAuthorisation()
+        val result = underTest.saveIncome(taxYear, businessId, nino, IncomeSourceId(""))(fakePostRequest)
+        status(result) shouldBe BAD_REQUEST
+      }
     }
 
-    "should return bad request error when request body is empty" in {
-      mockAuthorisation()
-      val result = underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
-      status(result) shouldBe BAD_REQUEST
+    "update property income section" should {
+      val validRequestBody: JsValue = Json.parse(
+        """{
+          |   "ukOtherPropertyIncome": {
+          |        "premiumsOfLeaseGrant":52.64,
+          |        "reversePremiums":34,
+          |        "periodAmount":4,
+          |        "otherIncome":76,
+          |        "ukOtherRentARoom": {
+          |          "rentsReceived":45
+          |        }
+          |   },
+          |   "incomeToSave": {
+          |        "isNonUKLandlord" : true,
+          |        "incomeFromPropertyRentals" : 45,
+          |        "leasePremiumPayment" : true,
+          |        "reversePremiumsReceived" : {
+          |            "reversePremiumsReceived" : true
+          |        },
+          |        "calculatedFigureYourself" : {
+          |            "calculatedFigureYourself" : false
+          |        },
+          |        "yearLeaseAmount" : 4
+          |    }
+          |}""".stripMargin)
+
+      val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+
+      "should return no_content for valid request body" in {
+
+        mockAuthorisation()
+        val saveIncomeRequest = validRequestBody.as[SaveIncome]
+        mockUpdatePeriodicSubmissions(
+          nino.value,
+          "incomeSourceId",
+          taxYear.endYear,
+          "submissionId",
+          Some(Json.toJson(
+            PropertyPeriodicSubmission(
+              None,
+              LocalDate.now(),
+              LocalDate.now(),
+              None,
+              None,
+              None,
+              Some(
+                UkOtherProperty(
+                  saveIncomeRequest.ukOtherPropertyIncome,
+                  UkOtherPropertyExpenses(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None
+                  )
+                )
+              )
+            )
+          )
+          ), Right(""))
+
+        mockPersistAnswers(ctx, Income(
+          true,
+          50,
+          true,
+          ReversePremiumsReceived(true),
+          Some(DeductingTax(false)),
+          Some(CalculatedFigureYourself(false)),
+          Some(5),
+          Some(PremiumsGrantLease(true))
+        ))
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
+        result.header.status shouldBe NO_CONTENT
+      }
+
+      "should return bad request error when request body is empty" in {
+        mockAuthorisation()
+        val result = underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
+        status(result) shouldBe BAD_REQUEST
+      }
     }
+
   }
-
 }

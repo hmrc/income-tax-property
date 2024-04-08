@@ -21,6 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 import connectors.IntegrationFrameworkConnector
+import models.common.{BusinessId, Nino, TaxYear}
 import models.errors.ApiError
 import models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission}
 
@@ -112,6 +113,17 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     Future[Either[ApiError, Unit]]] = {
     (mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: Int, _: String, _: String, _: JsValue)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockCreateAnnualSubmission2(taxYear: TaxYear,
+                                 incomeSourceId: BusinessId,
+                                 taxableEntityId: Nino,
+                                 result: Either[ApiError, Unit]
+                                ): CallHandler5[TaxYear, BusinessId, Nino, PropertyAnnualSubmission, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+    (mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: TaxYear, _: BusinessId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
+      .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
       .returning(Future.successful(result))
   }
 }
