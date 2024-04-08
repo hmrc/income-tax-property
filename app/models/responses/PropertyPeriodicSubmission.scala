@@ -204,7 +204,7 @@ case class UkOtherPropertyExpenses(RentsRatesAndInsurance: Option[BigDecimal],
                                    RepairsAndMaintenanceCosts: Option[BigDecimal],
                                    loanInterest: Option[BigDecimal],
                                    otherProfessionalFee: Option[BigDecimal],
-                                   costsOfServicesProvide: Option[BigDecimal],
+                                   costsOfServicesProvided: Option[BigDecimal],
                                    propertyBusinessTravelCost: Option[BigDecimal],
                                    otherAllowablePropertyExpenses: Option[BigDecimal]
                                   )

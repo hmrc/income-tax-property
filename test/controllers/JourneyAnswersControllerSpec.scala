@@ -303,7 +303,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         |     "RepairsAndMaintenanceCosts": 200,
         |     "loanInterest": 300,
         |     "otherProfessionalFee": 400,
-        |     "costsOfServicesProvide": 500,
+        |     "costsOfServicesProvided": 500,
         |     "propertyBusinessTravelCost": 600,
         |     "otherAllowablePropertyExpenses": 700
         |   }
