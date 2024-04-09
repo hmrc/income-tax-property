@@ -20,7 +20,7 @@ import actions.{AuthorisationRequest, AuthorisedAction}
 import models.common._
 import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.Income._
-import models.request.{AnnualPropertySubmission, Income, PropertyAbout, SaveIncome}
+import models.request.{PropertyRentalAdjustment, Income, PropertyAbout, SaveIncome}
 import models.responses.{PropertyPeriodicSubmission, UkOtherPropertyIncome}
 import models.errors.{CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.{PropertyAbout, RentalAllowances}
@@ -55,16 +55,16 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
   }
 
-  def saveAnnualPropertySubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyRentalsAdjustment(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
-    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino).toJourneyContext(JourneyName.AnnualPropertySubmission)
-    val annualPropertySubmissionBody = parseBody[AnnualPropertySubmission](request)
+    val journeyContextWithNino = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino)
+    val annualPropertySubmissionBody = parseBody[PropertyRentalAdjustment](request)
 
     annualPropertySubmissionBody match {
       case Success(validatedRes) =>
         validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
           case JsSuccess(value, _) =>
-            propertyService.persistAnswers(ctx, value).map(_ => NoContent)
+            propertyService.savePropertyRentalsAdjustment(journeyContextWithNino, value).map(_ => NoContent)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
         }
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))

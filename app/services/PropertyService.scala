@@ -17,11 +17,11 @@
 package services
 
 import connectors.IntegrationFrameworkConnector
-import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
-import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, JourneyName, Mtditid, Nino, TaxYear}
+import models.common._
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError}
-import models.request.RentalAllowances
+import models.request.{PropertyRentalAdjustment, RentalAllowances}
 import models.responses._
+import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -120,6 +120,36 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       Left(DataNotFoundError)
     }
   }
+
+  def savePropertyRentalsAdjustment(contextWithNino: JourneyContextWithNino, propertyRentalAdjustment: PropertyRentalAdjustment)
+                                   (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {
+
+    val adjustmentStoreAnswers = AdjustmentStoreAnswers(propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
+      propertyRentalAdjustment.businessPremisesRenovationAllowanceBalancingCharges.renovationAllowanceBalancingChargeYesNo)
+    val ukOtherAdjustments = UkOtherAdjustments(
+      None,
+      propertyRentalAdjustment.balancingCharge.balancingChargeAmount,
+      Some(propertyRentalAdjustment.privateUseAdjustment),
+      propertyRentalAdjustment.businessPremisesRenovationAllowanceBalancingCharges.renovationAllowanceBalancingChargeAmount,
+      None,
+      None)
+
+    val annualUkOtherProperty = AnnualUkOtherProperty(Some(ukOtherAdjustments), None)
+    val propertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+
+
+    for {
+      _ <- createOrUpdateAnnualSubmission(
+        contextWithNino.taxYear,
+        contextWithNino.businessId,
+        contextWithNino.nino,
+        propertyAnnualSubmission)
+
+      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAllowances), adjustmentStoreAnswers).map(Right(_))
+    } yield res
+
+  }
+
 
   def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
                                                          writes: Writes[A]): Future[Boolean] =

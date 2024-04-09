@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package models.responses
 
-package models.common
+import play.api.libs.json.{Json, OFormat}
 
-import enumeratum._
+case class AdjustmentStoreAnswers(
+                              balancingChargeYesNo: Boolean,
+                              renovationAllowanceBalancingChargeYesNo: Boolean
+                            )
 
-sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
-  override def toString: String = entryName
-}
-
-object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
-  val values: IndexedSeq[JourneyName] = findValues
-
-  case object About extends JourneyName("property-about")
-
-  case object Income extends JourneyName("income")
-
-  case object RentalAllowances extends JourneyName("rental-allowances")
-  case object RentalAdjustments extends JourneyName("rentals-adjustments")
-
+object AdjustmentStoreAnswers {
+  implicit val adjustmentAnswersFormat: OFormat[AdjustmentStoreAnswers] = Json.format[AdjustmentStoreAnswers]
 }
