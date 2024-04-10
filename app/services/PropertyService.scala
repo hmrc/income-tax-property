@@ -19,7 +19,7 @@ package services
 import connectors.IntegrationFrameworkConnector
 import models.common._
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError}
-import models.request.{PropertyRentalAdjustment, RentalAllowances}
+import models.request.{PropertyRentalAdjustments, RentalAllowances}
 import models.responses._
 import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -121,7 +121,11 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     }
   }
 
-  def savePropertyRentalsAdjustment(contextWithNino: JourneyContextWithNino, propertyRentalAdjustment: PropertyRentalAdjustment)
+  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
+                                                         writes: Writes[A]): Future[Boolean] =
+    repository.upsertAnswers(ctx, Json.toJson(answers))
+
+  def savePropertyRentalAdjustments(contextWithNino: JourneyContextWithNino, propertyRentalAdjustment: PropertyRentalAdjustments)
                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
@@ -145,15 +149,10 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
         contextWithNino.nino,
         propertyAnnualSubmission)
 
-      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAllowances), adjustmentStoreAnswers).map(Right(_))
+      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers).map(Right(_))
     } yield res
 
   }
-
-
-  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-                                                         writes: Writes[A]): Future[Boolean] =
-    repository.upsertAnswers(ctx, Json.toJson(answers))
 
   def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)
                                   (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {

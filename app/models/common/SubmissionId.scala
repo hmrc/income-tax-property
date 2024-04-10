@@ -16,10 +16,10 @@
 
 package models.common
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 final case class SubmissionId(value: String) extends AnyVal
 
 object SubmissionId {
-  implicit val format = Json.valueFormat[SubmissionId]
+  implicit val format: Format[SubmissionId] = Json.valueFormat[SubmissionId]
 }

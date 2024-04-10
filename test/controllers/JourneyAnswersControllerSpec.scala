@@ -19,13 +19,10 @@ package controllers
 import models.common.JourneyName.About
 import models.common._
 import models.request._
-import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyExpenses}
+import models.responses._
 import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
-import models.common.JourneyName.About
-import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
-import models.common.{BusinessId, JourneyContext, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
@@ -78,6 +75,54 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       status(result) shouldBe BAD_REQUEST
     }
   }
+
+  "create or update property rental adjustments section" should {
+
+    val propertyRentalAdjustmentsJs: JsValue = Json.parse(
+      """
+        |{
+        |  "privateUseAdjustment": 12.34,
+        |  "balancingCharge": {
+        |    "balancingChargeYesNo": true,
+        |    "balancingChargeAmount": 108
+        |  },
+        |  "propertyIncomeAllowance": 34.56,
+        |  "businessPremisesRenovationAllowanceBalancingCharges": {
+        |    "renovationAllowanceBalancingChargeYesNo": true,
+        |    "renovationAllowanceBalancingChargeAmount": 92
+        |  },
+        |  "residentialFinancialCost": 56.78,
+        |  "residentialFinancialCostsCarriedForward": 78.89
+        |}
+        """.stripMargin)
+    val ctx = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockSavePropertyRentalAdjustments(ctx, PropertyRentalAdjustments(
+        BigDecimal(12.34),
+        BalancingCharge(balancingChargeYesNo = true, Some(108)),
+        BigDecimal(34.56),
+        RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true,
+          renovationAllowanceBalancingChargeAmount = Some(92)),
+        BigDecimal(56.78),
+        BigDecimal(78.89)
+      ))
+
+      val request = fakePostRequest.withJsonBody(propertyRentalAdjustmentsJs)
+      val result = await(underTest.savePropertyRentalAdjustments(taxYear, businessId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body does not have property rental adjustments and is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyRentalAdjustments(taxYear, businessId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 
   "create or update property allowances section" should {
 

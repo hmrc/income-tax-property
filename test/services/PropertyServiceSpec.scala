@@ -16,18 +16,18 @@
 
 package services
 
+import config.AppConfig
+import models.PropertyPeriodicSubmissionResponse
+import models.common._
+import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
+import models.request._
+import models.responses._
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import config.AppConfig
-import models.PropertyPeriodicSubmissionResponse
-import models.common.{BusinessId, JourneyContextWithNino, JourneyName, Mtditid, Nino, TaxYear}
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
-import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
-import models.responses._
-import utils.{AppConfigStub, UnitTest}
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
+import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -290,6 +290,33 @@ class PropertyServiceSpec extends UnitTest
       mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
       await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear),
         BusinessId(incomeSourceId), Nino(nino), validRequestBody)) shouldBe Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+    }
+  }
+
+  "save property rental adjustments" should {
+
+    val taxYear = 2024
+    val mtditid = "89787469409"
+    val journeyContextWithNino = JourneyContextWithNino(TaxYear(taxYear), BusinessId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val propertyRentalAdjustments = PropertyRentalAdjustments(
+      BigDecimal(12.34),
+      BalancingCharge(balancingChargeYesNo = true, Some(108)),
+      BigDecimal(34.56),
+      RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true,
+        renovationAllowanceBalancingChargeAmount = Some(92)),
+      BigDecimal(56.78),
+      BigDecimal(78.89)
+    )
+
+    "return a success with no content when the request is valid and data is persisted" in {
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      await(underTest.savePropertyRentalAdjustments(journeyContextWithNino, propertyRentalAdjustments)) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+      val taxYear = 2024
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      await(underTest.savePropertyRentalAdjustments( journeyContextWithNino, propertyRentalAdjustments)) shouldBe Right(true)
     }
   }
 
