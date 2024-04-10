@@ -16,17 +16,11 @@
 
 package utils.mocks
 
-import com.typesafe.config.ConfigFactory
-import models.common.JourneyContext
-import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
-import play.api.Configuration
-import play.api.libs.json.JsValue
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 
 import java.time.Clock
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport {

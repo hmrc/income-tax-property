@@ -16,11 +16,11 @@
 
 package controllers
 
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, UNPROCESSABLE_ENTITY}
-import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.status
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.responses.{AnnualForeignFhlEea, ForeignFhlAdjustments, ForeignFhlAllowances, PropertyAnnualSubmission}
+import models.responses._
+import play.api.http.Status._
+import play.api.libs.json.Json
+import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
