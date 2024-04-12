@@ -18,9 +18,12 @@ package controllers
 
 import models.common.JourneyName.About
 import models.common._
+import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request._
+import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.responses._
-import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
@@ -33,7 +36,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class JourneyAnswersControllerSpec extends ControllerUnitTest
   with MockPropertyService
   with MockAuthorisedAction
-  with FakeRequestProvider {
+  with FakeRequestProvider
+  with ScalaCheckPropertyChecks {
 
 
   private val underTest = new JourneyAnswersController(
@@ -338,6 +342,112 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
       result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "update esba section" should {
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        | "claimEnhancedStructureBuildingAllowance" : true,
+        | "esbas": [
+        |            {
+        |                "esbaQualifyingDate" : "2020-04-04",
+        |                "esbaQualifyingAmount" : 12,
+        |                "esbaClaim" : 43,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "name12",
+        |                    "buildingNumber" : "123",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "esbaQualifyingDate" : "2023-01-22",
+        |                "esbaQualifyingAmount" : 535,
+        |                "esbaClaim" : 54,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "235",
+        |                    "buildingNumber" : "3",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "esbaQualifyingDate" : "2024-02-12",
+        |                "esbaQualifyingAmount" : 22,
+        |                "esbaClaim" : 23,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "12",
+        |                    "buildingNumber" : "2",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            }
+        |        ],
+        |        "esbaClaims" : false
+        |}""".stripMargin)
+
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+    import esba.EsbaInfoExtensions._
+    "return no_content for valid request body" in {
+
+      mockAuthorisation()
+      val esbaInfo = validRequestBody.as[EsbaInfo]
+      mockCreateOrUpdateAnnualSubmissions(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(Json.toJson(
+          PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba)
+        )
+        )
+        , Right(""))
+
+      mockPersistAnswers(ctx, EsbaInfoToSave(
+        ClaimEnhancedStructureBuildingAllowance(true),
+        EsbaClaims(false)
+      ))
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) => {
+        mockAuthorisation()
+        val esbaInfo = validRequestBody.as[EsbaInfo]
+
+        mockCreateOrUpdateAnnualSubmissions(
+          nino.value,
+          "incomeSourceId",
+          taxYear.endYear,
+          Some(Json.toJson(
+            PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba)
+          )
+          )
+          , Left(serviceError))
+
+          mockPersistAnswers(ctx, EsbaInfoToSave(
+            ClaimEnhancedStructureBuildingAllowance(true),
+            EsbaClaims(false)
+          ))
+
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+        result.header.status shouldBe expectedError
+      }
+      }
     }
 
     "should return bad request error when request body is empty" in {

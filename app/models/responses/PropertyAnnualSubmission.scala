@@ -28,6 +28,23 @@ case class PropertyAnnualSubmission(submittedOn: Option[LocalDateTime],
 
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
+
+  def fromEsbas(esbas: List[Esba]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
+    PropertyAnnualSubmission(
+      Some(LocalDateTime.now()),
+      None,
+      None,
+      None,
+      Some(AnnualUkOtherProperty(
+        Some(UkOtherAdjustments(
+          None, None, None, None, None, None
+        )),
+        Some(UkOtherAllowances(
+          None, None, None, None, None, None, None, Some(esbas), None, None
+        ))
+      ))
+    )
+  }
 }
 
 case class AnnualForeignFhlEea(adjustments: ForeignFhlAdjustments,
@@ -144,12 +161,20 @@ case class UkOtherAllowances(annualInvestmentAllowance: Option[BigDecimal],
                              costOfReplacingDomesticGoods: Option[BigDecimal],
                              electricChargePointAllowance: Option[BigDecimal],
                              structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
-                             enhancedStructuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
+                             enhancedStructuredBuildingAllowance: Option[Seq[Esba]],
                              zeroEmissionsCarAllowance: Option[BigDecimal],
                              propertyIncomeAllowance: Option[BigDecimal])
 
 object UkOtherAllowances {
   implicit val format: OFormat[UkOtherAllowances] = Json.format[UkOtherAllowances]
+}
+
+case class Esba(amount: BigDecimal,
+                firstYear: Option[StructuredBuildingAllowanceDate],
+                building: StructuredBuildingAllowanceBuilding)
+
+object Esba {
+  implicit val format: OFormat[Esba] = Json.format[Esba]
 }
 
 case class StructuredBuildingAllowance(amount: BigDecimal,

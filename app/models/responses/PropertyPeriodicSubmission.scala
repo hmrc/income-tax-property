@@ -32,7 +32,7 @@ case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
 
-  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = {
+  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = { //Todo: Validations MUST BE added!!!
     PropertyPeriodicSubmission(
       None,
       LocalDate.now(),

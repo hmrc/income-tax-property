@@ -26,7 +26,7 @@ class AppConfig @Inject()(config: Configuration) {
 
   lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
 
-  lazy val ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+  def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 
   private lazy val authorisationTokenKey: String = "microservice.services.integration-framework.authorisation-token"
 
