@@ -222,10 +222,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
+                UkPropertyExpenses(
                   None,
                   None,
                   None,
@@ -425,10 +422,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
+                UkPropertyExpenses(
                   None,
                   None,
                   None,

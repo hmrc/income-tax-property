@@ -54,6 +54,8 @@ object PropertyAnnualSubmission {
           )
         )
       )
+    )
+  }
       
   def fromEsbas(esbas: List[Esba]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
     PropertyAnnualSubmission(
