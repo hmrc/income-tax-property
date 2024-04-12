@@ -66,6 +66,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     }
   }
 
+  //TODO Use a case class instead of JsValue
   def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
                               (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionId]] = {
 
@@ -75,6 +76,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     }
   }
 
+  //TODO Use a case class instead of JsValue
   def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: Option[JsValue])
                               (implicit hc: HeaderCarrier): Future[Either[ServiceError, String]] = {
 

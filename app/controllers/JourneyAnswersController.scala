@@ -20,7 +20,7 @@ import actions.{AuthorisationRequest, AuthorisedAction}
 import models.common._
 import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.Income._
-import models.request.{PropertyAbout, SaveExpense, SaveIncome}
+import models.request.{PropertyAbout, Expenses, SaveIncome}
 import models.responses.PropertyPeriodicSubmission
 import models.request.RentalAllowances
 import play.api.Logging
@@ -56,7 +56,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveExpense](taxYear, businessId, nino, request) { (_, expenses) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
         for {
           r <- propertyService.createPeriodicSubmission(
             nino.value,
@@ -64,7 +64,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             taxYear.endYear,
             Some(
               Json.toJson(
-                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses.ukOtherPropertyExpenses)
+                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses)
               )
             )
           )
@@ -79,7 +79,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveExpense](taxYear, businessId, nino, request) { (_, expensesToSave) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
         for {
           r <- propertyService.updatePeriodicSubmission(
             nino.value,
@@ -88,7 +88,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             submissionId.value,
             Some(
               Json.toJson(
-                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expensesToSave.ukOtherPropertyExpenses)
+                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses)
               ).as[JsObject] - "fromDate" - "toDate"
             )
           )
@@ -162,7 +162,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def withJourneyContextAndEntity[T](
+  private def withJourneyContextAndEntity[T](
                                       taxYear: TaxYear,
                                       businessId: BusinessId,
                                       nino: Nino,

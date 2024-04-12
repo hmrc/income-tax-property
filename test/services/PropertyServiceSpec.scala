@@ -22,9 +22,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
-import models.common.{BusinessId, JourneyContextWithNino, JourneyName, Mtditid, Nino, TaxYear}
+import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
-import models.request.{ElectricChargePointAllowance, PropertyAbout, RentalAllowances}
+import models.request.{ElectricChargePointAllowance, RentalAllowances}
 import models.responses._
 import utils.{AppConfigStub, UnitTest}
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
@@ -257,9 +257,9 @@ class PropertyServiceSpec extends UnitTest
 
     "return no content for valid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right())
+      mockCreateAnnualSubmission(taxYear, nino, incomeSourceId, Right(()))
       await(underTest.createOrUpdateAnnualSubmission(nino, incomeSourceId, taxYear, Some(validRequestBody))) shouldBe
-        Right()
+        Right(())
     }
 
     "return ApiError for invalid request" in {
@@ -280,9 +280,9 @@ class PropertyServiceSpec extends UnitTest
 
     "return no content for valid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right(()))
       await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), validRequestBody)) shouldBe
-        Right()
+        Right(())
     }
 
     "return ApiError for invalid request" in {
@@ -308,7 +308,7 @@ class PropertyServiceSpec extends UnitTest
       Some(11)
     )
     "return no content for valid request" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right(()))
       await(underTest.savePropertyRentalAllowances(ctx, allowances)) shouldBe Right(true)
     }
 

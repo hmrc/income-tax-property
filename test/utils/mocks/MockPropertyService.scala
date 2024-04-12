@@ -54,6 +54,7 @@ trait MockPropertyService extends MockFactory {
       .returning(Future.successful(result))
   }
 
+  //TODO Replace JsValue with case class - same as the original createPeriodicSubmissions function in IF Connector
   def mockCreatePeriodicSubmissions(taxableEntityId: String,
                                     incomeSourceId: String,
                                     taxYear: Int,
@@ -65,6 +66,7 @@ trait MockPropertyService extends MockFactory {
       .returning(Future.successful(result))
   }
 
+  //TODO Replace JsValue with case class - same as the original updatePeriodicSubmissions function in IF Connector
   def mockUpdatePeriodicSubmissions(taxableEntityId: String,
                                     incomeSourceId: String,
                                     taxYear: Int,

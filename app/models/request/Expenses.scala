@@ -16,11 +16,17 @@
 
 package models.request
 
-import models.responses.UkOtherPropertyExpenses
 import play.api.libs.json.{Json, OFormat}
 
-final case class SaveExpense(ukOtherPropertyExpenses: UkOtherPropertyExpenses)
+final case class Expenses(RentsRatesAndInsurance: Option[BigDecimal],
+                          RepairsAndMaintenanceCosts: Option[BigDecimal],
+                          loanInterest: Option[BigDecimal],
+                          otherProfessionalFee: Option[BigDecimal],
+                          costsOfServicesProvided: Option[BigDecimal],
+                          propertyBusinessTravelCost: Option[BigDecimal],
+                          otherAllowablePropertyExpenses: Option[BigDecimal]
+                         )
 
-object SaveExpense {
-  implicit val format: OFormat[SaveExpense] = Json.format[SaveExpense]
+object Expenses {
+  implicit val format: OFormat[Expenses] = Json.format[Expenses]
 }

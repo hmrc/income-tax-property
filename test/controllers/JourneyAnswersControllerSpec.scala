@@ -19,7 +19,7 @@ package controllers
 import models.common.JourneyName.About
 import models.common._
 import models.request._
-import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome}
+import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome, UkPropertyExpenses}
 import play.api.http.Status.{BAD_REQUEST, CREATED, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
@@ -172,7 +172,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
+                UkPropertyExpenses(
+                  None,
                   None,
                   None,
                   None,
@@ -258,7 +259,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
+                UkPropertyExpenses(
+                  None,
                   None,
                   None,
                   None,
@@ -283,7 +285,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         Some(5),
         Some(PremiumsGrantLease(true))
       ))
-      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val request = fakePutRequest.withJsonBody(validRequestBody)
       val result = await(underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"), SubmissionId("submissionId"))(request))
       result.header.status shouldBe NO_CONTENT
     }
@@ -297,23 +299,23 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
 
   "create or update property expenses section" should {
 
-    val validRequestBody: JsValue = Json.parse(
+    val createOrUpdateUIRequest: JsValue = Json.parse(
       """{
-        |   "ukOtherPropertyExpenses": {
-        |     "RentsRatesAndInsurance": 100,
-        |     "RepairsAndMaintenanceCosts": 200,
-        |     "loanInterest": 300,
-        |     "otherProfessionalFee": 400,
-        |     "costsOfServicesProvided": 500,
-        |     "propertyBusinessTravelCost": 600,
-        |     "otherAllowablePropertyExpenses": 700
-        |   }
+        |    "RentsRatesAndInsurance": 100,
+        |    "RepairsAndMaintenanceCosts": 200,
+        |    "loanInterest": 300,
+        |    "otherProfessionalFee": 400,
+        |    "costsOfServicesProvided": 500,
+        |    "otherAllowablePropertyExpenses": 600,
+        |    "propertyBusinessTravelCost": 700
         |}""".stripMargin)
+
+    val createOrUpdateRequestBody = createOrUpdateUIRequest.as[Expenses]
+    import createOrUpdateRequestBody._
 
     "should return created for valid request body" in {
 
       mockAuthorisation()
-      val saveExpensesRequest = validRequestBody.as[SaveExpense]
       mockCreatePeriodicSubmissions(
         nino.value,
         "incomeSourceId",
@@ -336,14 +338,23 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None,
                   None
                 ),
-                saveExpensesRequest.ukOtherPropertyExpenses
+                UkPropertyExpenses(
+                  premisesRunningCosts = RentsRatesAndInsurance,
+                  repairsAndMaintenance = RepairsAndMaintenanceCosts,
+                  financialCosts = loanInterest,
+                  professionalFees = otherProfessionalFee,
+                  travelCosts = propertyBusinessTravelCost,
+                  costOfServices = costsOfServicesProvided,
+                  other = otherAllowablePropertyExpenses,
+                  None
+                )
               )
             )
           )
         )
         ), Right(PeriodicSubmissionId("submissionId")))
 
-      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
       result.header.status shouldBe CREATED
     }
@@ -373,20 +384,21 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None,
                   None
                 ),
-                UkOtherPropertyExpenses(
-                  RentsRatesAndInsurance = Some(100),
-                  RepairsAndMaintenanceCosts = Some(200),
-                  loanInterest = Some(300),
-                  otherProfessionalFee = Some(400),
-                  costsOfServicesProvided = Some(500),
-                  propertyBusinessTravelCost = Some(600),
-                  otherAllowablePropertyExpenses = Some(700)
-              )
+                UkPropertyExpenses(
+                  premisesRunningCosts = RentsRatesAndInsurance,
+                  repairsAndMaintenance = RepairsAndMaintenanceCosts,
+                  financialCosts = loanInterest,
+                  professionalFees = otherProfessionalFee,
+                  travelCosts = propertyBusinessTravelCost,
+                  costOfServices = costsOfServicesProvided,
+                  other = otherAllowablePropertyExpenses,
+                  None
+                )
             )
           )
         ))), Right(""))
 
-      val request = fakePutRequest.withJsonBody(validRequestBody)
+      val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
       result.header.status shouldBe NO_CONTENT
     }
