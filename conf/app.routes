@@ -23,12 +23,17 @@ PUT        /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceI
 
 POST       /property/:taxYear/:businessId/property-about/:nino/answers                                                         controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST       /property/:taxYear/:businessId/property-rental-adjustments/:nino/answers                                            controllers.JourneyAnswersController.savePropertyRentalAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 POST       /property/:taxYear/:businessId/property-rental-allowances/:nino/answers                                             controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers                                     controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
 
 PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
 
+
 POST         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers                       controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
 
 PUT         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
+
+PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/esba/answers                      controllers.JourneyAnswersController.updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)

@@ -75,7 +75,6 @@ class IntegrationFrameworkServiceSpec extends UnitTest
         BusinessDetailsResponse(Seq(PropertyDetails(Some("uk-property"),Some(tradingStartDate), Some(true)))))
     }
 
-
     "return uk and foreign property details when user has both" in {
       val tradingStartDate = LocalDate.parse("2020-12-10")
       val ukPropertyDetailsModel = PropertyDetailsModel(

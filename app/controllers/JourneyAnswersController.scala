@@ -23,6 +23,13 @@ import models.request.Income._
 import models.request.{PropertyAbout, Expenses, SaveIncome}
 import models.responses.PropertyPeriodicSubmission
 import models.request.RentalAllowances
+import models.request.esba.EsbaInfo
+import models.request.esba.EsbaInfo._
+import models.request.esba.EsbaInfoExtensions.EsbaExtensions
+import models.request.{PropertyAbout, SaveIncome}
+import models.responses._
+import models.request._
+import models.responses.{PropertyPeriodicSubmission, UkOtherPropertyIncome}
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
@@ -101,6 +108,22 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
+  def savePropertyRentalAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+
+    val journeyContextWithNino = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino)
+    val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
+
+    annualPropertyRentalAdjustmentsBody match {
+      case Success(validatedRes) =>
+        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+          case JsSuccess(value, _) =>
+            propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).map(_ => NoContent)
+          case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+        }
+      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+    }
+  }
+
   def saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
@@ -130,6 +153,38 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
         }
       }
     }
+
+  def updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = {
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, request) { (ctx, esbaInfo) =>
+        for {
+          r <- propertyService.createOrUpdateAnnualSubmission(nino.value,
+            incomeSourceId.value,
+            taxYear.endYear,
+            Some(
+              Json.toJson(
+                PropertyAnnualSubmission.fromEsbas(
+                  esbaInfo.toEsba
+                )
+              )
+            )
+          )
+          _ <- propertyService.persistAnswers(ctx, esbaInfo.toEsbaToSave).map(isPersistSuccess =>
+            if (!isPersistSuccess) {
+              logger.error("Could not persist")
+            } else {
+              logger.info("Persist successful")
+            }
+          )
+        } yield r match {
+          case Right(_) => NoContent
+          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+          case Left(ApiServiceError(CONFLICT)) => Conflict
+          case Left(_) => InternalServerError
+        }
+      }
+    }
+  }
 
   def updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>

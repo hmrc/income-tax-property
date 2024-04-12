@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package models.common
+package models.request.esba
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Json
 
-final case class SubmissionId(value: String) extends AnyVal
+final case class ClaimEnhancedStructureBuildingAllowance(value: Boolean) extends AnyVal
 
-object SubmissionId {
-  implicit val format: Format[SubmissionId] = Json.valueFormat[SubmissionId]
+object ClaimEnhancedStructureBuildingAllowance {
+  implicit val format = Json.valueFormat[ClaimEnhancedStructureBuildingAllowance]
 }

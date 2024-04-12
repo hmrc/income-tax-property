@@ -19,8 +19,8 @@ package connectors
 import config.AppConfig
 import connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
 import connectors.response._
-import models.common.{BusinessId, JourneyContext, Mtditid, Nino, TaxYear}
 import models.common.TaxYear.{asTyBefore24, asTys}
+import models.common.{BusinessId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses._
 import play.api.Logging

@@ -16,13 +16,13 @@
 
 package models.common
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
 final case class IncomeSourceId(value: String) extends AnyVal
 
 object IncomeSourceId {
-  implicit val format = Json.valueFormat[IncomeSourceId]
+  implicit val format: Format[IncomeSourceId] = Json.valueFormat[IncomeSourceId]
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
 

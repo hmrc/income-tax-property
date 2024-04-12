@@ -60,7 +60,7 @@ object PropertyPeriodicSubmission {
     )
   }
 
-  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = {
+  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = { //Todo: Validations MUST BE added!!!
     PropertyPeriodicSubmission(
       None,
       LocalDate.now(),
