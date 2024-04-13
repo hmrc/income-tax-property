@@ -33,8 +33,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  private val submittedOn: LocalDateTime = LocalDateTime.now()
-
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,
     LocalDate.now(),
