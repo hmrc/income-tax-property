@@ -30,33 +30,6 @@ case class PropertyAnnualSubmission(submittedOn: Option[LocalDateTime],
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
 
-  def fromUkOtherPropertyExpenses(expenses: Expenses): PropertyPeriodicSubmission = {
-    import expenses._
-    PropertyPeriodicSubmission(
-      None,
-      LocalDate.now(),
-      LocalDate.now(),
-      None,
-      None,
-      None,
-      Some(
-        UkOtherProperty(
-          UkOtherPropertyIncome(Some(0), None, None, None, None, None),
-          UkPropertyExpenses(
-            premisesRunningCosts = RentsRatesAndInsurance,
-            repairsAndMaintenance = RepairsAndMaintenanceCosts,
-            financialCosts = loanInterest,
-            professionalFees = otherProfessionalFee,
-            costOfServices = costsOfServicesProvided,
-            travelCosts = propertyBusinessTravelCost,
-            other = otherAllowablePropertyExpenses,
-            ukFhlRentARoom = None
-          )
-        )
-      )
-    )
-  }
-      
   def fromEsbas(esbas: List[Esba]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
     PropertyAnnualSubmission(
       Some(LocalDateTime.now()),
