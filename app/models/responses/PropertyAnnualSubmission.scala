@@ -16,7 +16,6 @@
 
 package models.responses
 
-import models.request.Expenses
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
