@@ -24,8 +24,8 @@ import java.time.{LocalDate, LocalDateTime}
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses = Expenses(
-    RentsRatesAndInsurance = Some(100),
-    RepairsAndMaintenanceCosts = Some(200),
+    rentsRatesAndInsurance = Some(100),
+    repairsAndMaintenanceCosts = Some(200),
     loanInterest = Some(300),
     otherProfessionalFee = Some(400),
     costsOfServicesProvided = Some(500),

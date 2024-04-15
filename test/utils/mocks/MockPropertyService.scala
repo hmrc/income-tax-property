@@ -100,6 +100,29 @@ trait MockPropertyService extends MockFactory {
       .returning(Future.successful(result))
   }
 
+  def mockCreateOrUpdateAnnualSubmissionsNew2(taxableEntityId: String,
+                                             incomeSourceId: String,
+                                             taxYear: Int,
+                                             incomeSubmissionId: String,
+                                             body: Option[JsValue],
+                                             result: Either[ServiceError, String]
+                                            ): CallHandler6[String, String, Int, String, Option[JsValue], HeaderCarrier, Future[Either[ServiceError, String]]] = {
+    (mockPropertyService.updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: Option[JsValue])(_: HeaderCarrier))
+      .expects(taxableEntityId, incomeSourceId, taxYear, incomeSubmissionId, *, *)
+      .returning(Future.successful(result))
+  }
+
+  def mockCreateOrUpdateAnnualSubmissionsNew(taxableEntityId: String,
+                                          incomeSourceId: String,
+                                          taxYear: Int,
+                                          body: Option[JsValue],
+                                          result: Either[ServiceError, PeriodicSubmissionId]
+                                         ): CallHandler5[String, String, Int, Option[JsValue], HeaderCarrier, Future[Either[ServiceError, PeriodicSubmissionId]]] = {
+    (mockPropertyService.createPeriodicSubmission(_: String, _: String, _: Int, _: Option[JsValue])(_: HeaderCarrier))
+      .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
+      .returning(Future.successful(result))
+  }
+
   def mockPersistAnswers[A](ctx: JourneyContext, answers: A): CallHandler3[JourneyContext, A, Writes[A], Future[Boolean]] = {
     (mockPropertyService.persistAnswers(_: JourneyContext, _: A)(_: Writes[A]))
       .expects(*, *, *)

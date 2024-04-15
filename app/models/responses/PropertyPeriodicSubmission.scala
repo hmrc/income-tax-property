@@ -46,8 +46,8 @@ object PropertyPeriodicSubmission {
         UkOtherProperty(
           UkOtherPropertyIncome(Some(0), None, None, None, None, None),
           UkPropertyExpenses(
-            premisesRunningCosts = RentsRatesAndInsurance,
-            repairsAndMaintenance = RepairsAndMaintenanceCosts,
+            premisesRunningCosts = rentsRatesAndInsurance,
+            repairsAndMaintenance = repairsAndMaintenanceCosts,
             financialCosts = loanInterest,
             professionalFees = otherProfessionalFee,
             costOfServices = costsOfServicesProvided,

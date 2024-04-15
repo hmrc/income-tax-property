@@ -24,7 +24,7 @@ import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims,
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsNull, JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
@@ -273,7 +273,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         |    "propertyBusinessTravelCost": 700
         |}""".stripMargin)
 
-    val createOrUpdateRequestBody = createOrUpdateUIRequest.as[Expenses]
+    val createOrUpdateRequestBody:Expenses = createOrUpdateUIRequest.as[Expenses]
     import createOrUpdateRequestBody._
 
     "should return created for valid request body" in {
@@ -302,8 +302,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None
                 ),
                 UkPropertyExpenses(
-                  premisesRunningCosts = RentsRatesAndInsurance,
-                  repairsAndMaintenance = RepairsAndMaintenanceCosts,
+                  premisesRunningCosts = rentsRatesAndInsurance,
+                  repairsAndMaintenance = repairsAndMaintenanceCosts,
                   financialCosts = loanInterest,
                   professionalFees = otherProfessionalFee,
                   travelCosts = propertyBusinessTravelCost,
@@ -348,8 +348,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None
                 ),
                 UkPropertyExpenses(
-                  premisesRunningCosts = RentsRatesAndInsurance,
-                  repairsAndMaintenance = RepairsAndMaintenanceCosts,
+                  premisesRunningCosts = rentsRatesAndInsurance,
+                  repairsAndMaintenance = repairsAndMaintenanceCosts,
                   financialCosts = loanInterest,
                   professionalFees = otherProfessionalFee,
                   travelCosts = propertyBusinessTravelCost,
@@ -366,10 +366,72 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       result.header.status shouldBe NO_CONTENT
     }
 
-    "should return bad request error when request body is empty" in {
+    "should return bad request error when request body is empty when saving an expense" in {
       mockAuthorisation()
       val result = underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+
+    "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew2(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(CONFLICT))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe CONFLICT
+    }
+
+    "should return internal server error when the downstream API returns internal server error when updating an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew2(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+    }
+
+    "should return a conflict error when the downstream API returns a conflict error when saving an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(CONFLICT))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
+      result.header.status shouldBe CONFLICT
+    }
+
+    "should return internal server error when the downstream API returns internal server error when saving an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 

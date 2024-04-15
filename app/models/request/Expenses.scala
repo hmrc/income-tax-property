@@ -18,8 +18,8 @@ package models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class Expenses(RentsRatesAndInsurance: Option[BigDecimal],
-                          RepairsAndMaintenanceCosts: Option[BigDecimal],
+final case class Expenses(rentsRatesAndInsurance: Option[BigDecimal],
+                          repairsAndMaintenanceCosts: Option[BigDecimal],
                           loanInterest: Option[BigDecimal],
                           otherProfessionalFee: Option[BigDecimal],
                           costsOfServicesProvided: Option[BigDecimal],
