@@ -33,8 +33,7 @@ case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
 
-  def fromUkOtherPropertyExpenses(expenses: Expenses): PropertyPeriodicSubmission = {
-    import expenses._
+  def fromExpenses(expenses: Expenses): PropertyPeriodicSubmission = {
     PropertyPeriodicSubmission(
       None,
       LocalDate.now(),
@@ -45,15 +44,18 @@ object PropertyPeriodicSubmission {
       Some(
         UkOtherProperty(
           UkOtherPropertyIncome(Some(0), None, None, None, None, None),
-          UkPropertyExpenses(
-            premisesRunningCosts = rentsRatesAndInsurance,
-            repairsAndMaintenance = repairsAndMaintenanceCosts,
-            financialCosts = loanInterest,
-            professionalFees = otherProfessionalFee,
-            costOfServices = costsOfServicesProvided,
-            travelCosts = propertyBusinessTravelCost,
-            other = otherAllowablePropertyExpenses,
-            ukFhlRentARoom = None
+          UkOtherPropertyExpenses(
+            premisesRunningCosts = expenses.rentsRatesAndInsurance,
+            repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
+            financialCosts = expenses.loanInterest,
+            professionalFees = expenses.otherProfessionalFee,
+            costOfServices = expenses.costsOfServicesProvided,
+            travelCosts = expenses.propertyBusinessTravelCost,
+            other = expenses.otherAllowablePropertyExpenses,
+            residentialFinancialCostsCarriedForward = None,
+            ukOtherRentARoom = None,
+            consolidatedExpense = None,
+            residentialFinancialCost = None
           )
         )
       )
@@ -71,7 +73,7 @@ object PropertyPeriodicSubmission {
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
-          UkPropertyExpenses(
+          UkOtherPropertyExpenses(
             Some(0), //Todo: This needs to be fetched from request(to be updated with expenses), and needs to be updated when Expenses ticket is implemented!
             None,
             None,
@@ -79,7 +81,11 @@ object PropertyPeriodicSubmission {
             None,
             None,
             None,
-            None)
+            None,
+            None,
+            None,
+            None
+          )
         )
       )
     )
@@ -199,7 +205,7 @@ object UkRentARoomExpense {
 }
 
 case class UkOtherProperty(income: UkOtherPropertyIncome,
-                           expenses: UkPropertyExpenses)
+                           expenses: UkOtherPropertyExpenses)
 
 object UkOtherProperty {
   implicit val format: OFormat[UkOtherProperty] = Json.format[UkOtherProperty]
@@ -216,14 +222,17 @@ object UkOtherPropertyIncome {
   implicit val format: OFormat[UkOtherPropertyIncome] = Json.format[UkOtherPropertyIncome]
 }
 
-case class UkOtherPropertyExpenses(RentsRatesAndInsurance: Option[BigDecimal],
-                                   RepairsAndMaintenanceCosts: Option[BigDecimal],
-                                   loanInterest: Option[BigDecimal],
-                                   otherProfessionalFee: Option[BigDecimal],
-                                   costsOfServicesProvided: Option[BigDecimal],
-                                   propertyBusinessTravelCost: Option[BigDecimal],
-                                   otherAllowablePropertyExpenses: Option[BigDecimal]
-                                  )
+case class UkOtherPropertyExpenses(premisesRunningCosts: Option[BigDecimal],
+                                   repairsAndMaintenance: Option[BigDecimal],
+                                   financialCosts: Option[BigDecimal],
+                                   professionalFees: Option[BigDecimal],
+                                   travelCosts: Option[BigDecimal],
+                                   costOfServices: Option[BigDecimal],
+                                   other: Option[BigDecimal],
+                                   residentialFinancialCost: Option[BigDecimal],
+                                   residentialFinancialCostsCarriedForward: Option[BigDecimal],
+                                   ukOtherRentARoom: Option[UkRentARoomExpense],
+                                   consolidatedExpense: Option[BigDecimal])
 
 object UkOtherPropertyExpenses {
   implicit val format: OFormat[UkOtherPropertyExpenses] = Json.format[UkOtherPropertyExpenses]

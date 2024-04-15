@@ -20,7 +20,7 @@ import models.request.Expenses
 import models.responses._
 import utils.UnitTest
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses = Expenses(
@@ -43,7 +43,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     Some(
       UkOtherProperty(
         UkOtherPropertyIncome(Some(0), None, None, None, None, None),
-        UkPropertyExpenses(
+        UkOtherPropertyExpenses(
           premisesRunningCosts = Some(100),
           repairsAndMaintenance = Some(200),
           financialCosts = Some(300),
@@ -51,7 +51,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           costOfServices = Some(500),
           travelCosts = Some(600),
           other = Some(700),
-          ukFhlRentARoom = None
+          residentialFinancialCost = None,
+          residentialFinancialCostsCarriedForward = None,
+          ukOtherRentARoom = None,
+          consolidatedExpense = None
         )
       )
     )
@@ -59,7 +62,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
-      PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses) shouldBe propertyPeriodicSubmission
+      PropertyPeriodicSubmission.fromExpenses(expenses) shouldBe propertyPeriodicSubmission
     }
   }
 }

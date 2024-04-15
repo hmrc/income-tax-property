@@ -222,7 +222,10 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkPropertyExpenses(
+                UkOtherPropertyExpenses(
+                  None,
+                  None,
+                  None,
                   None,
                   None,
                   None,
@@ -301,7 +304,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None,
                   None
                 ),
-                UkPropertyExpenses(
+                UkOtherPropertyExpenses(
                   premisesRunningCosts = rentsRatesAndInsurance,
                   repairsAndMaintenance = repairsAndMaintenanceCosts,
                   financialCosts = loanInterest,
@@ -309,6 +312,9 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   travelCosts = propertyBusinessTravelCost,
                   costOfServices = costsOfServicesProvided,
                   other = otherAllowablePropertyExpenses,
+                  None,
+                  None,
+                  None,
                   None
                 )
               )
@@ -347,7 +353,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   None,
                   None
                 ),
-                UkPropertyExpenses(
+                UkOtherPropertyExpenses(
                   premisesRunningCosts = rentsRatesAndInsurance,
                   repairsAndMaintenance = repairsAndMaintenanceCosts,
                   financialCosts = loanInterest,
@@ -355,6 +361,9 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
                   travelCosts = propertyBusinessTravelCost,
                   costOfServices = costsOfServicesProvided,
                   other = otherAllowablePropertyExpenses,
+                  None,
+                  None,
+                  None,
                   None
                 )
               )
@@ -380,7 +389,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         taxYear.endYear,
         incomeSubmissionId.value,
         Some(
-          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -396,7 +405,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         taxYear.endYear,
         incomeSubmissionId.value,
         Some(
-          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -411,7 +420,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         taxYear.endYear,
         Some(
-          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -426,7 +435,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         taxYear.endYear,
         Some(
-          Json.toJson(PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(createOrUpdateRequestBody))),
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -484,7 +493,10 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
             Some(
               UkOtherProperty(
                 saveIncomeRequest.ukOtherPropertyIncome,
-                UkPropertyExpenses(
+                UkOtherPropertyExpenses(
+                  None,
+                  None,
+                  None,
                   None,
                   None,
                   None,

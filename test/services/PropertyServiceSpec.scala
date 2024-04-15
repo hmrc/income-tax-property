@@ -18,9 +18,6 @@ package services
 
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
-import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
-import models.request.{ElectricChargePointAllowance, RentalAllowances}
 import models.common._
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request._

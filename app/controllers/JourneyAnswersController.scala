@@ -71,7 +71,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             taxYear.endYear,
             Some(
               Json.toJson(
-                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses)
+                PropertyPeriodicSubmission.fromExpenses(expenses)
               )
             )
           )
@@ -95,7 +95,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             submissionId.value,
             Some(
               Json.toJson(
-                PropertyPeriodicSubmission.fromUkOtherPropertyExpenses(expenses)
+                PropertyPeriodicSubmission.fromExpenses(expenses)
               ).as[JsObject] - "fromDate" - "toDate"
             )
           )
