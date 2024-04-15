@@ -264,8 +264,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
 
     val createOrUpdateUIRequest: JsValue = Json.parse(
       """{
-        |    "RentsRatesAndInsurance": 100,
-        |    "RepairsAndMaintenanceCosts": 200,
+        |    "rentsRatesAndInsurance": 100,
+        |    "repairsAndMaintenanceCosts": 200,
         |    "loanInterest": 300,
         |    "otherProfessionalFee": 400,
         |    "costsOfServicesProvided": 500,
