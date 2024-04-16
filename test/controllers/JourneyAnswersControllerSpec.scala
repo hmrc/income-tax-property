@@ -24,7 +24,7 @@ import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims,
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsNull, JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
@@ -48,6 +48,8 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
 
   val taxYear: TaxYear = TaxYear(2024)
   val businessId: BusinessId = BusinessId("someBusinessId")
+  val incomeSourceId = IncomeSourceId("incomeSourceId")
+  val incomeSubmissionId = SubmissionId("submissionId")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
 
@@ -261,6 +263,187 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     }
   }
 
+  "create or update property expenses section" should {
+
+    val createOrUpdateUIRequest: JsValue = Json.parse(
+      """{
+        |    "rentsRatesAndInsurance": 100,
+        |    "repairsAndMaintenanceCosts": 200,
+        |    "loanInterest": 300,
+        |    "otherProfessionalFee": 400,
+        |    "costsOfServicesProvided": 500,
+        |    "otherAllowablePropertyExpenses": 600,
+        |    "propertyBusinessTravelCost": 700
+        |}""".stripMargin)
+
+    val createOrUpdateRequestBody:Expenses = createOrUpdateUIRequest.as[Expenses]
+    import createOrUpdateRequestBody._
+
+    "should return created for valid request body" in {
+
+      mockAuthorisation()
+      mockCreatePeriodicSubmissions(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(Json.toJson(
+          PropertyPeriodicSubmission(
+            None,
+            LocalDate.now(),
+            LocalDate.now(),
+            None,
+            None,
+            None,
+            Some(
+              UkOtherProperty(
+                UkOtherPropertyIncome(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                UkOtherPropertyExpenses(
+                  premisesRunningCosts = rentsRatesAndInsurance,
+                  repairsAndMaintenance = repairsAndMaintenanceCosts,
+                  financialCosts = loanInterest,
+                  professionalFees = otherProfessionalFee,
+                  travelCosts = propertyBusinessTravelCost,
+                  costOfServices = costsOfServicesProvided,
+                  other = otherAllowablePropertyExpenses,
+                  None,
+                  None,
+                  None,
+                  None
+                )
+              )
+            )
+          )
+        )
+        ), Right(PeriodicSubmissionId("submissionId")))
+
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return no_content for valid request body" in {
+      mockAuthorisation()
+      mockUpdatePeriodicSubmissions(
+        nino.value,
+        incomeSourceId.value,
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(Json.toJson(
+          PropertyPeriodicSubmission(
+            None,
+            LocalDate.now(),
+            LocalDate.now(),
+            None,
+            None,
+            None,
+            Some(
+              UkOtherProperty(
+                UkOtherPropertyIncome(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                UkOtherPropertyExpenses(
+                  premisesRunningCosts = rentsRatesAndInsurance,
+                  repairsAndMaintenance = repairsAndMaintenanceCosts,
+                  financialCosts = loanInterest,
+                  professionalFees = otherProfessionalFee,
+                  travelCosts = propertyBusinessTravelCost,
+                  costOfServices = costsOfServicesProvided,
+                  other = otherAllowablePropertyExpenses,
+                  None,
+                  None,
+                  None,
+                  None
+                )
+              )
+            )
+          ))), Right(""))
+
+      val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty when saving an expense" in {
+      mockAuthorisation()
+      val result = underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew2(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(CONFLICT))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe CONFLICT
+    }
+
+    "should return internal server error when the downstream API returns internal server error when updating an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew2(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        incomeSubmissionId.value,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+    }
+
+    "should return a conflict error when the downstream API returns a conflict error when saving an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(CONFLICT))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
+      result.header.status shouldBe CONFLICT
+    }
+
+    "should return internal server error when the downstream API returns internal server error when saving an expense" in {
+      mockAuthorisation()
+      mockCreateOrUpdateAnnualSubmissionsNew(
+        nino.value,
+        "incomeSourceId",
+        taxYear.endYear,
+        Some(
+          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
+      )
+      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
+      val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   "update property income section" should {
     val validRequestBody: JsValue = Json.parse(
       """{
@@ -438,10 +621,10 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
           )
           , Left(serviceError))
 
-          mockPersistAnswers(ctx, EsbaInfoToSave(
-            ClaimEnhancedStructureBuildingAllowance(true),
-            EsbaClaims(false)
-          ))
+        mockPersistAnswers(ctx, EsbaInfoToSave(
+          ClaimEnhancedStructureBuildingAllowance(true),
+          EsbaClaims(false)
+        ))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
         val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))

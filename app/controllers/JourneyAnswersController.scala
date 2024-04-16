@@ -20,6 +20,9 @@ import actions.{AuthorisationRequest, AuthorisedAction}
 import models.common._
 import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.Income._
+import models.request.{PropertyAbout, Expenses, SaveIncome}
+import models.responses.PropertyPeriodicSubmission
+import models.request.RentalAllowances
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
@@ -57,6 +60,53 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }
   }
+
+  def saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+        for {
+          r <- propertyService.createPeriodicSubmission(
+            nino.value,
+            incomeSourceId.value,
+            taxYear.endYear,
+            Some(
+              Json.toJson(
+                PropertyPeriodicSubmission.fromExpenses(expenses)
+              )
+            )
+          )
+        } yield r match {
+          case Right(periodicSubmissionData) => Created(Json.toJson(periodicSubmissionData))
+          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+          case Left(ApiServiceError(CONFLICT)) => Conflict
+          case Left(_) => InternalServerError
+        }
+      }
+    }
+
+  def updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+        for {
+          r <- propertyService.updatePeriodicSubmission(
+            nino.value,
+            incomeSourceId.value,
+            taxYear.endYear,
+            submissionId.value,
+            Some(
+              Json.toJson(
+                PropertyPeriodicSubmission.fromExpenses(expenses)
+              ).as[JsObject] - "fromDate" - "toDate"
+            )
+          )
+        } yield r match {
+          case Right(_) => NoContent
+          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+          case Left(ApiServiceError(CONFLICT)) => Conflict
+          case Left(_) => InternalServerError
+        }
+      }
+    }
 
   def savePropertyRentalAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
@@ -167,12 +217,12 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def withJourneyContextAndEntity[T](
-                             taxYear: TaxYear,
-                             businessId: BusinessId,
-                             nino: Nino,
-                             authorisationRequest: AuthorisationRequest[AnyContent]
-                           )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
+  private def withJourneyContextAndEntity[T](
+                                      taxYear: TaxYear,
+                                      businessId: BusinessId,
+                                      nino: Nino,
+                                      authorisationRequest: AuthorisationRequest[AnyContent]
+                                    )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
     val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(JourneyName.About)
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
@@ -211,5 +261,4 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
 
   }
-
 }

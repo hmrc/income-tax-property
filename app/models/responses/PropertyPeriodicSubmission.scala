@@ -16,6 +16,7 @@
 
 package models.responses
 
+import models.request.{Expenses}
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
@@ -31,6 +32,35 @@ case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
+
+  def fromExpenses(expenses: Expenses): PropertyPeriodicSubmission = {
+    PropertyPeriodicSubmission(
+      None,
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      None,
+      None,
+      Some(
+        UkOtherProperty(
+          UkOtherPropertyIncome(Some(0), None, None, None, None, None),
+          UkOtherPropertyExpenses(
+            premisesRunningCosts = expenses.rentsRatesAndInsurance,
+            repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
+            financialCosts = expenses.loanInterest,
+            professionalFees = expenses.otherProfessionalFee,
+            costOfServices = expenses.costsOfServicesProvided,
+            travelCosts = expenses.propertyBusinessTravelCost,
+            other = expenses.otherAllowablePropertyExpenses,
+            residentialFinancialCostsCarriedForward = None,
+            ukOtherRentARoom = None,
+            consolidatedExpense = None,
+            residentialFinancialCost = None
+          )
+        )
+      )
+    )
+  }
 
   def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = { //Todo: Validations MUST BE added!!!
     PropertyPeriodicSubmission(
@@ -145,6 +175,11 @@ object UkFhlIncome {
 }
 
 case class RentARoomIncome(rentsReceived: BigDecimal)
+case class UkOtherRoomRent(amountClaimed: BigDecimal)
+
+object UkOtherRoomRent {
+  implicit val format: OFormat[UkOtherRoomRent] = Json.format[UkOtherRoomRent]
+}
 
 object RentARoomIncome {
   implicit val format: OFormat[RentARoomIncome] = Json.format[RentARoomIncome]
