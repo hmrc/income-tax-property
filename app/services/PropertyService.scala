@@ -16,12 +16,16 @@
 
 package services
 
+import cats.data.EitherT
+import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
+import models.ITPEnvelope.ITPEnvelope
 import models.common._
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError}
-import models.request.{PropertyRentalAdjustments, RentalAllowances}
+import models.errors._
+import models.request.{Income, PropertyRentalAdjustments, RentalAllowances}
 import models.responses._
 import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
+import play.api.libs.Files.logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,87 +37,153 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject()(connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)
                                (implicit ec: ExecutionContext) {
 
+  def saveIncome(taxYear: TaxYear,
+                 businessId: BusinessId,
+                 nino: Nino,
+                 incomeSourceId:
+                 IncomeSourceId,
+                 journeyContext: JourneyContext,
+                 incomeToSave: Income,
+                 ukOtherPropertyIncome: UkOtherPropertyIncome)(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+    for {
+      r <- createPeriodicSubmission(
+        nino.value,
+        incomeSourceId.value,
+        taxYear.endYear,
+        PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
+      )
+      _ <- persistAnswers(journeyContext, incomeToSave).map(isPersistSuccess =>
+        if (!isPersistSuccess) {
+          logger.error("Could not persist")
+        } else {
+          logger.info("Persist successful")
+        }
+      )
+    } yield r
+  }
+
+  def updateIncome(
+                    taxYear: TaxYear,
+                    nino: Nino,
+                    incomeSourceId:
+                    IncomeSourceId,
+                    journeyContext: JourneyContext,
+                    incomeToSave: Income,
+                    ukOtherPropertyIncome: UkOtherPropertyIncome,
+                    submissionId: SubmissionId
+                  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, String] = {
+    for {
+      r <- updatePeriodicSubmission(
+        nino.value,
+        incomeSourceId.value,
+        taxYear.endYear,
+        submissionId.value,
+        PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
+      )
+      _ <- persistAnswers(journeyContext, incomeToSave).map(isPersistSuccess =>
+        if (!isPersistSuccess) {
+          logger.error("Could not persist")
+        } else {
+          logger.info("Persist successful")
+        }
+      )
+    } yield r
+  }
+
   def getPropertyPeriodicSubmissions(taxYear: Int,
                                      taxableEntityId: String,
                                      incomeSourceId: String)
-                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyPeriodicSubmissionResponse]] = {
-    connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId).flatMap {
-      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
-      case Right(periodicSubmissionIds) =>
-        val propertyPeriodicSubmissions = getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, periodicSubmissionIds)
-        propertyPeriodicSubmissions.map(transformToResponse)
-    }
+                                    (implicit hc: HeaderCarrier): ITPEnvelope[PropertyPeriodicSubmissionResponse] = {
+
+    val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
+      for {
+        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId))
+          .leftMap(error => ApiServiceError(error.status))
+        propertyPeriodicSubmissions <- getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, periodicSubmissionIds)
+      } yield propertyPeriodicSubmissions
+
+    result.subflatMap(propertyPeriodicSubmissionList => transformToResponse(propertyPeriodicSubmissionList))
   }
 
   def getPropertyAnnualSubmission(taxYear: Int,
                                   taxableEntityId: String,
                                   incomeSourceId: String)
-                                 (implicit hc: HeaderCarrier): Future[Either[ServiceError, PropertyAnnualSubmission]] = {
-    connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId).map {
-      case Left(error) => Left(ApiServiceError(error.status))
-      case Right(annualSubmission) => annualSubmission.map(Right.apply).getOrElse(Left(DataNotFoundError))
-    }
+                                 (implicit hc: HeaderCarrier): ITPEnvelope[PropertyAnnualSubmission] = {
+    EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
+      .leftMap(error => ApiServiceError(error.status))
+      .subflatMap(annualSubmission => {
+        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]](DataNotFoundError.asLeft[PropertyAnnualSubmission])(_.asRight[ServiceError])
+      })
   }
 
   def deletePropertyAnnualSubmission(incomeSourceId: String,
                                      taxableEntityId: String,
                                      taxYear: Int)
-                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
+                                    (implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
 
-    connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).flatMap {
-      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
-      case Right(_) => Future.successful(Right())
-    }
+    EitherT(connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear))
+      .bimap(error => ApiServiceError(error.status),
+        result => result)
   }
 
-  //TODO Use a case class instead of JsValue
-  def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
-                              (implicit hc: HeaderCarrier): Future[Either[ServiceError, PeriodicSubmissionId]] = {
+  def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: PropertyPeriodicSubmissionRequest)
+                              (implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] = {
 
-    connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body.get).flatMap {
-      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
-      case Right(periodicSubmissionId) => Future.successful(Right(periodicSubmissionId.get))
-    }
+    EitherT(connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e => ApiServiceError(e.status))
   }
 
-  //TODO Use a case class instead of JsValue
-  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: Option[JsValue])
-                              (implicit hc: HeaderCarrier): Future[Either[ServiceError, String]] = {
+  def updatePeriodicSubmission(
+                                nino: String,
+                                incomeSourceId: String,
+                                taxYear: Int,
+                                submissionId: String,
+                                propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest
+                              )
+                              (
+                                implicit hc: HeaderCarrier
+                              ): ITPEnvelope[String] = {
 
-    connector.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, body.get).flatMap {
-      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
-      case Right(_) => Future.successful(Right(""))
-    }
+    EitherT(connector.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, propertyPeriodicSubmissionRequest))
+      .bimap(error => ApiServiceError(error.status), _ => "")
   }
 
   @Deprecated
   def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int, body: Option[JsValue])
-                                    (implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] = {
+                                    (implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
 
-    connector.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, body.get).flatMap {
-      case Left(error) => Future.successful(Left(ApiServiceError(error.status)))
-      case Right(_) => Future.successful(Right())
-    }
+    EitherT(connector.createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, body.get))
+      .bimap(error => ApiServiceError(error.status), _ => ())
   }
 
   def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: PropertyAnnualSubmission)
-                                    (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
-    connector.createOrUpdateAnnualSubmission(taxYear, businessId, nino, body)
+                                    (implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
+    EitherT(
+      connector.createOrUpdateAnnualSubmission(taxYear, businessId, nino, body)
+    ).leftMap(e => ApiServiceError(e.status))
   }
 
   private def getPropertySubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String, periodicSubmissionIds: List[PeriodicSubmissionIdModel])
-                                    (implicit hc: HeaderCarrier): Future[List[PropertyPeriodicSubmission]] = {
+                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): ITPEnvelope[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds
       .filter(submissionId => Period.between(submissionId.fromDate, submissionId.toDate).getYears >= 1)
-      .map { submissionId =>
-        // get each of the property periodic submission details
-        connector.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId).map {
-          case Left(_) => None
-          case Right(propertyPeriodicSubmission) => propertyPeriodicSubmission
-        }
+      .map {
+        submissionId =>
+          // get each of the property periodic submission details
+          connector.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)
       }
-    Future.sequence(propertyPeriodicSubmissions).map(_.flatten)
+    val all: Future[List[Either[ApiError, Option[PropertyPeriodicSubmission]]]] = Future.sequence(propertyPeriodicSubmissions) //.map(_.flatten)
+
+    EitherT(
+      all.map(list => {
+        list.foldLeft[Either[ApiError, List[Option[PropertyPeriodicSubmission]]]](
+          List[Option[PropertyPeriodicSubmission]]().asRight[ApiError]
+        )((acc, a) => a match {
+          case Left(e) => e.asLeft[List[Option[PropertyPeriodicSubmission]]]
+          case Right(r) => acc.map(l => r :: l)
+        })
+      })).bimap(l => ApiServiceError(l.status), _.flatten)
   }
+
 
   private def transformToResponse(submissions: List[PropertyPeriodicSubmission]): Either[ServiceError, PropertyPeriodicSubmissionResponse] = {
     if (submissions.nonEmpty) {
@@ -124,11 +194,17 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
   }
 
   def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-                                                         writes: Writes[A]): Future[Boolean] =
-    repository.upsertAnswers(ctx, Json.toJson(answers))
+                                                         writes: Writes[A]): EitherT[Future, ServiceError, Boolean] = {
+    EitherT(
+      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
+        case false => RepositoryError.asLeft[Boolean]
+        case true => true.asRight[ServiceError]
+      }
+    )
+  }
 
   def savePropertyRentalAdjustments(contextWithNino: JourneyContextWithNino, propertyRentalAdjustment: PropertyRentalAdjustments)
-                                   (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {
+                                   (implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
       propertyRentalAdjustment.businessPremisesRenovationAllowanceBalancingCharges.renovationAllowanceBalancingChargeYesNo)
@@ -151,18 +227,18 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
         contextWithNino.nino,
         propertyAnnualSubmission)
 
-      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers).map(Right(_))
+      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers)
     } yield res
 
   }
 
   def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)
-                                  (implicit hc: HeaderCarrier): Future[Either[ServiceError, Boolean]] = {
+                                  (implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     val storeAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(answers)
     val submission: PropertyAnnualSubmission = getPropertySubmission(answers)
     for {
       _ <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.businessId, ctx.nino, submission)
-      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), storeAnswers).map(Right(_))
+      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), storeAnswers)
     } yield res
   }
 

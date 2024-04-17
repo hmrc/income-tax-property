@@ -139,7 +139,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
-  def createPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: JsValue)
+  def createPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, body: PropertyPeriodicSubmissionRequest)
                               (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId""", "1861")
@@ -147,7 +147,9 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId""", "1593")
     }
 
-    httpClient.POSTString[PostPeriodicSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
+    httpClient.POST[PropertyPeriodicSubmissionRequest, PostPeriodicSubmissionResponse](
+      url, body)(
+      implicitly[Writes[PropertyPeriodicSubmissionRequest]],
       implicitly[HttpReads[PostPeriodicSubmissionResponse]],
       ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
       ec).map { response: PostPeriodicSubmissionResponse =>
@@ -160,7 +162,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
-  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, body: JsValue)
+  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String, propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest)
                               (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId""", "1958")
@@ -168,7 +170,8 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId""", "1594")
     }
 
-    httpClient.PUTString[PutPeriodicSubmissionResponse](url, StaticBinding.generateFromJsValue(body, escapeNonASCII = false))(
+    httpClient.PUT[PropertyPeriodicSubmissionRequest, PutPeriodicSubmissionResponse](url, propertyPeriodicSubmissionRequest)(
+      implicitly[Writes[PropertyPeriodicSubmissionRequest]],
       implicitly[HttpReads[PutPeriodicSubmissionResponse]],
       ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
       ec).map { response: PutPeriodicSubmissionResponse =>

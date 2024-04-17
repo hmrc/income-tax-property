@@ -16,12 +16,12 @@
 
 package controllers
 
-import play.api.http.Status.{BAD_REQUEST, CONFLICT, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, UNPROCESSABLE_ENTITY}
-import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.status
 import models.PropertyPeriodicSubmissionResponse
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.responses.{PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyPeriodicSubmission}
+import models.responses._
+import play.api.http.Status._
+import play.api.libs.json.{JsValue, Json}
+import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
@@ -92,21 +92,8 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
   "Create Periodic Submission" should {
 
-     val validRequestBody: JsValue = Json.parse(
-      """
-        |{
-        |   "fromDate": "1933-03-31",
-        |   "toDate": "2000-02-29",
-        |   "foreignFhlEea": {
-        |      "income": {
-        |         "rentAmount": 200.00
-        |      },
-        |      "expenses": {
-        |         "consolidatedExpenseAmount": 1000.99
-        |       }
-        |   }
-        |}
-        |""".stripMargin)
+    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+    val fakePostRequestWithBody = fakePostRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
 
     val periodicSubmissionResponse = PeriodicSubmissionId("submissionId")
     "return a property periodic submission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
@@ -115,10 +102,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        Some(validRequestBody),
-        Right(periodicSubmissionResponse))
+        validPropertyPeriodicSubmissionRequest,
+        Right(Some(periodicSubmissionResponse)))
 
-      val result = await(underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest))
+      val result = await(underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequestWithBody))
 
       result.header.status shouldBe CREATED
       Json.parse(consumeBody(result)) shouldBe Json.toJson(periodicSubmissionResponse)
@@ -130,10 +117,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(409)))
 
-      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequestWithBody)
 
       status(result) shouldBe CONFLICT
     }
@@ -144,10 +131,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(500)))
 
-      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequestWithBody)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
@@ -158,30 +145,18 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(400)))
 
-      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+      val result = underTest.createPeriodicSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequestWithBody)
 
       status(result) shouldBe BAD_REQUEST
     }
   }
 
   "Update Periodic Submission" should {
-
-    val validRequestBody: JsValue = Json.parse(
-      """
-        |{
-        |   "foreignFhlEea": {
-        |      "income": {
-        |         "rentAmount": 200.00
-        |      },
-        |      "expenses": {
-        |         "consolidatedExpense": 1000.99
-        |       }
-        |   }
-        |}
-        |""".stripMargin)
+    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+    val fakePutRequestWithBody = fakePutRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
 
     "return a property periodic submission when IntegrationFrameworkService returns no content" in {
       mockAuthorisation()
@@ -190,10 +165,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         2024,
         "submissionId",
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Right(""))
 
-      val result = await(underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest))
+      val result = await(underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequestWithBody))
 
       result.header.status shouldBe NO_CONTENT
       consumeBody(result) shouldBe empty
@@ -206,10 +181,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         2024,
         "submissionId",
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(422)))
 
-      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest)
+      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequestWithBody)
 
       status(result) shouldBe UNPROCESSABLE_ENTITY
     }
@@ -221,10 +196,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         2024,
         "submissionId",
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(500)))
 
-      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest)
+      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequestWithBody)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
@@ -236,10 +211,10 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         2024,
         "submissionId",
-        Some(validRequestBody),
+        validPropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(400)))
 
-      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequest)
+      val result = underTest.updatePeriodicSubmission("taxableEntityId", "incomeSourceId", 2024, "submissionId")(fakePutRequestWithBody)
 
       status(result) shouldBe BAD_REQUEST
     }
