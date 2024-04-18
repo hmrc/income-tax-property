@@ -39,6 +39,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new IntegrationFrameworkConnector(httpClient, appConfigStub)
+  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
 
   ".getBusinessDetails" when {
     "when we call the IF" should {
@@ -390,8 +391,6 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
      val requestBody: JsValue = Json.parse(
       """
         |{
-        |   "fromDate": "1933-03-31",
-        |   "toDate": "2000-02-29",
         |   "foreignFhlEea": {
         |      "income": {
         |         "rentAmount": 200.00
@@ -410,7 +409,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPostHttpClientCall(s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",requestBody.toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, requestBody)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
+        await(underTest.createPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
 
       "create submissions data for 2024 onwards" in {
@@ -419,7 +418,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
 
       "return Conflict from Upstream" in {
@@ -428,7 +427,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
@@ -436,7 +435,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
       "return Service Unavailable Error from Upstream" in {
@@ -445,7 +444,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPostHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId", requestBody.toString(), httpResponse)
 
-        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, requestBody)(hc)) shouldBe
+        await(underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
     }
@@ -461,7 +460,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         |         "rentAmount": 200.00
         |      },
         |      "expenses": {
-        |         "consolidatedExpense": 1000.99
+        |         "consolidatedExpenseAmount": 1000.99
         |       }
         |   }
         |}
@@ -474,7 +473,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
-        await(underTest.updatePeriodicSubmission(taxableEntityId, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
+        await(underTest.updatePeriodicSubmission(taxableEntityId, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Right(None)
       }
 
       "update submissions data for 2024 onwards" in {
@@ -483,7 +482,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
-        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Right(None)
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Right(None)
       }
 
       "return not found from Upstream" in {
@@ -492,7 +491,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
-        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
       "return unprocessable-entity from Upstream" in {
@@ -501,7 +500,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
-        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
       }
 
       "return Service Unavailable Error from Upstream" in {
@@ -510,7 +509,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
 
         stubPutHttpClientCall(s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId", requestBody.toString(), httpResponse)
 
-        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, requestBody)(hc)) shouldBe
+        await(underTest.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)(hc)) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
     }

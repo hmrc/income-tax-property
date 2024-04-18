@@ -30,6 +30,10 @@ case object DataNotFoundError extends ServiceError {
   override val message: String = "User data could not be found"
 }
 
+case object RepositoryError extends ServiceError {
+  override val message: String = "Received unsuccessful persistence response"
+}
+
 case class InvalidJsonFormatError(expectedCaseClassName: String,
                                   rawJson: String, error: List[(JsPath, scala.collection.Seq[JsonValidationError])]) extends ServiceError {
   val message: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"

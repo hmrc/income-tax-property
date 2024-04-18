@@ -33,6 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
   val appConf: AppConfig = mock[AppConfig]
+  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
 
   val integrationFrameworkConnector = new IntegrationFrameworkConnector(mockHttpClient, appConf)
   "IntegrationFrameworkController" should {
@@ -46,7 +47,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
           |         "rentAmount": 200.00
           |      },
           |      "expenses": {
-          |         "consolidatedExpense": 1000.99
+          |         "consolidatedExpenseAmount": 1000.99
           |       }
           |   }
           |}
@@ -57,12 +58,14 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .POSTString(_: String, _: String, _: Seq[(String, String)])(
+          .POST(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[PropertyPeriodicSubmissionRequest],
             _: HttpReads[PostPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
           )
         ).expects(
+        *,
         *,
         *,
         *,
@@ -81,7 +84,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             2000,
             "",
             "",
-            Json.parse(validRequestBody)
+            validPropertyPeriodicSubmissionRequest
           ))
       returnValue shouldBe Right(Some(PeriodicSubmissionId("124")))
     }
@@ -95,7 +98,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
           |         "rentAmount": 200.00
           |      },
           |      "expenses": {
-          |         "consolidatedExpense": 1000.99
+          |         "consolidatedExpenseAmount": 1000.99
           |       }
           |   }
           |}
@@ -105,12 +108,14 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .PUTString(_: String, _: String, _: Seq[(String, String)])(
+          .PUT(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[PropertyPeriodicSubmissionRequest],
             _: HttpReads[PutPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
           )
         ).expects(
+        *,
         *,
         *,
         *,
@@ -130,7 +135,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             "",
             2000,
             "124",
-            Json.parse(validRequestBody)
+            validPropertyPeriodicSubmissionRequest
           ))
       returnValue shouldBe Right(Some("124"))
     }

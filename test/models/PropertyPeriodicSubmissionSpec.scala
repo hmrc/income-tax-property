@@ -33,10 +33,8 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+  val propertyPeriodicSubmission = PropertyPeriodicSubmissionRequest(
     None,
-    LocalDate.now(),
-    LocalDate.now(),
     None,
     None,
     None,
@@ -62,7 +60,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
-      PropertyPeriodicSubmission.fromExpenses(expenses) shouldBe propertyPeriodicSubmission
+      PropertyPeriodicSubmissionRequest.fromExpenses(expenses) shouldBe propertyPeriodicSubmission
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package controllers
 
+import cats.syntax.either._
 import models.common.JourneyName.About
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
@@ -25,13 +26,12 @@ import models.request.sba._
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
-import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec extends ControllerUnitTest
@@ -204,56 +204,24 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
 
 
-    "should return created for valid request body" in {
+    "return created for valid request body" in {
 
       mockAuthorisation()
       val saveIncomeRequest = validRequestBody.as[SaveIncome]
-      mockCreatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
-                )
-              )
-            )
-          )
-        )
-        ), Right(PeriodicSubmissionId("submissionId")))
+      val incomeSourceId = IncomeSourceId("income-source-id")
+      mockSaveIncome(
+        nino,
+        businessId,
+        incomeSourceId,
+        taxYear,
+        ctx,
+        saveIncomeRequest.incomeToSave,
+        saveIncomeRequest.ukOtherPropertyIncome,
+        Right(Some(PeriodicSubmissionId("submissionId")))
+      )
 
-      mockPersistAnswers(ctx, Income(
-        true,
-        50,
-        true,
-        ReversePremiumsReceived(true),
-        Some(DeductingTax(false)),
-        Some(CalculatedFigureYourself(false)),
-        Some(5),
-        Some(PremiumsGrantLease(true))
-      ))
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.saveIncome(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      val result = await(underTest.saveIncome(taxYear, businessId, nino, incomeSourceId)(request))
       result.header.status shouldBe CREATED
     }
 
@@ -277,7 +245,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         |    "propertyBusinessTravelCost": 700
         |}""".stripMargin)
 
-    val createOrUpdateRequestBody:Expenses = createOrUpdateUIRequest.as[Expenses]
+    val createOrUpdateRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
     import createOrUpdateRequestBody._
 
     "should return created for valid request body" in {
@@ -287,42 +255,38 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                UkOtherPropertyIncome(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
-                ),
-                UkOtherPropertyExpenses(
-                  premisesRunningCosts = rentsRatesAndInsurance,
-                  repairsAndMaintenance = repairsAndMaintenanceCosts,
-                  financialCosts = loanInterest,
-                  professionalFees = otherProfessionalFee,
-                  travelCosts = propertyBusinessTravelCost,
-                  costOfServices = costsOfServicesProvided,
-                  other = otherAllowablePropertyExpenses,
-                  None,
-                  None,
-                  None,
-                  None
-                )
+        PropertyPeriodicSubmissionRequest(
+          None,
+
+          None,
+          None,
+          None,
+          Some(
+            UkOtherProperty(
+              UkOtherPropertyIncome(
+                Some(0),
+                None,
+                None,
+                None,
+                None,
+                None
+              ),
+              UkOtherPropertyExpenses(
+                premisesRunningCosts = rentsRatesAndInsurance,
+                repairsAndMaintenance = repairsAndMaintenanceCosts,
+                financialCosts = loanInterest,
+                professionalFees = otherProfessionalFee,
+                travelCosts = propertyBusinessTravelCost,
+                costOfServices = costsOfServicesProvided,
+                other = otherAllowablePropertyExpenses,
+                None,
+                None,
+                None,
+                None
               )
             )
           )
-        )
-        ), Right(PeriodicSubmissionId("submissionId")))
+        ), Some(PeriodicSubmissionId("submissionId")).asRight[ServiceError])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, businessId, nino, incomeSourceId)(request))
@@ -336,40 +300,35 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         incomeSourceId.value,
         taxYear.endYear,
         incomeSubmissionId.value,
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                UkOtherPropertyIncome(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
-                ),
-                UkOtherPropertyExpenses(
-                  premisesRunningCosts = rentsRatesAndInsurance,
-                  repairsAndMaintenance = repairsAndMaintenanceCosts,
-                  financialCosts = loanInterest,
-                  professionalFees = otherProfessionalFee,
-                  travelCosts = propertyBusinessTravelCost,
-                  costOfServices = costsOfServicesProvided,
-                  other = otherAllowablePropertyExpenses,
-                  None,
-                  None,
-                  None,
-                  None
-                )
+        PropertyPeriodicSubmissionRequest(
+          None,
+          None,
+          None,
+          None,
+          Some(
+            UkOtherProperty(
+              UkOtherPropertyIncome(
+                Some(0),
+                None,
+                None,
+                None,
+                None,
+                None
+              ),
+              UkOtherPropertyExpenses(
+                premisesRunningCosts = rentsRatesAndInsurance,
+                repairsAndMaintenance = repairsAndMaintenanceCosts,
+                financialCosts = loanInterest,
+                professionalFees = otherProfessionalFee,
+                travelCosts = propertyBusinessTravelCost,
+                costOfServices = costsOfServicesProvided,
+                other = otherAllowablePropertyExpenses,
+                None,
+                None,
+                None,
+                None
               )
-            )
-          ))), Right(""))
+            ))), Right(""))
 
       val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.updateExpenses(taxYear, businessId, nino, incomeSourceId, incomeSubmissionId)(request))
@@ -389,8 +348,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         taxYear.endYear,
         incomeSubmissionId.value,
-        Some(
-          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -405,8 +363,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         taxYear.endYear,
         incomeSubmissionId.value,
-        Some(
-          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -420,8 +377,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        Some(
-          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -435,8 +391,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        Some(
-          Json.toJson(PropertyPeriodicSubmission.fromExpenses(createOrUpdateRequestBody))),
+        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -474,7 +429,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
 
 
-    "should return no_content for valid request body" in {
+    "return no_content for valid request body" in {
 
       mockAuthorisation()
       val saveIncomeRequest = validRequestBody.as[SaveIncome]
@@ -483,34 +438,29 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         "incomeSourceId",
         taxYear.endYear,
         "submissionId",
-        Some(Json.toJson(
-          PropertyPeriodicSubmission(
-            None,
-            LocalDate.now(),
-            LocalDate.now(),
-            None,
-            None,
-            None,
-            Some(
-              UkOtherProperty(
-                saveIncomeRequest.ukOtherPropertyIncome,
-                UkOtherPropertyExpenses(
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None,
-                  None
-                )
+        PropertyPeriodicSubmissionRequest(
+          None,
+          None,
+          None,
+          None,
+          Some(
+            UkOtherProperty(
+              saveIncomeRequest.ukOtherPropertyIncome,
+              UkOtherPropertyExpenses(
+                Some(0),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None
               )
             )
           )
-        )
         ), Right(""))
 
       mockPersistAnswers(ctx, Income(
@@ -582,14 +532,11 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       mockAuthorisation()
       val esbaInfo = validRequestBody.as[EsbaInfo]
       mockCreateOrUpdateAnnualSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        Some(Json.toJson(
-          PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba)
-        )
-        )
-        , Right(""))
+        taxYear,
+        businessId,
+        nino,
+        PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba),
+        Right(""))
 
       mockPersistAnswers(ctx, EsbaInfoToSave(
         ClaimEnhancedStructureBuildingAllowance(true),
@@ -613,19 +560,11 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         val esbaInfo = validRequestBody.as[EsbaInfo]
 
         mockCreateOrUpdateAnnualSubmissions(
-          nino.value,
-          "incomeSourceId",
-          taxYear.endYear,
-          Some(Json.toJson(
-            PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba)
-          )
-          )
-          , Left(serviceError))
-
-        mockPersistAnswers(ctx, EsbaInfoToSave(
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(false)
-        ))
+          taxYear,
+          businessId,
+          nino,
+          PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba),
+          Left(serviceError))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
         val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
@@ -688,14 +627,11 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       mockAuthorisation()
       val sbaInfo = validRequestBody.as[SbaInfo]
       mockCreateOrUpdateAnnualSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        Some(Json.toJson(
-          PropertyAnnualSubmission.fromSbas(sbaInfo.toSba)
-        )
-        )
-        , Right(""))
+        taxYear,
+        businessId,
+        nino,
+        PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
+        Right(""))
 
       mockPersistAnswers(ctx, SbaInfoToSave(
         ClaimStructureBuildingAllowance(true),
@@ -719,19 +655,11 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         val sbaInfo = validRequestBody.as[SbaInfo]
 
         mockCreateOrUpdateAnnualSubmissions(
-          nino.value,
-          "incomeSourceId",
-          taxYear.endYear,
-          Some(Json.toJson(
-            PropertyAnnualSubmission.fromSbas(sbaInfo.toSba)
-          )
-          )
-          , Left(serviceError))
-
-        mockPersistAnswers(ctx, SbaInfoToSave(
-          ClaimStructureBuildingAllowance(true),
-          SbaClaims(false)
-        ))
+          taxYear,
+          businessId,
+          nino,
+          PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
+          Left(serviceError))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
         val result = await(underTest.updateSba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
@@ -746,5 +674,4 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
       status(result) shouldBe BAD_REQUEST
     }
   }
-
 }

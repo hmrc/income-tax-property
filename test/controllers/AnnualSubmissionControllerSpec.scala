@@ -16,6 +16,7 @@
 
 package controllers
 
+import models.common.{BusinessId, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
 import models.responses._
 import play.api.http.Status._
@@ -143,6 +144,13 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
     }
   }
 
+  val propertyAnnualSubmission = PropertyAnnualSubmission(
+    submittedOn = Some(LocalDateTime.now),
+    Some(AnnualForeignFhlEea(
+      ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+      ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+    )), None, None, None)
+
   ".createOrUpdateAnnualSubmission" should {
     val validRequestBody = Json.toJson(PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
@@ -152,16 +160,19 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       )), None, None, None))
 
 
-      "creating an annual submission returns no content" in {
+    val fakePutRequestWithJsonBody = fakePutRequest.withJsonBody(Json.toJson(propertyAnnualSubmission))
+    val fakePostRequestWithJsonBody = fakePostRequest.withJsonBody(Json.toJson(propertyAnnualSubmission))
+
+    "creating an annual submission returns no content" in {
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
-          "taxableEntityId",
-          "incomeSourceId",
-          2024,
-          Some(validRequestBody),
+          TaxYear(2024),
+          BusinessId("incomeSourceId"),
+          Nino("nino"),
+          propertyAnnualSubmission,
           Right())
 
-        val result = await(underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePutRequest))
+        val result = await(underTest.createOrUpdateAnnualSubmission("nino", "incomeSourceId", 2024)(fakePutRequestWithJsonBody))
 
         result.header.status shouldBe NO_CONTENT
         consumeBody(result) shouldBe empty
@@ -170,13 +181,13 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       "return unprocessable-entity when AnnualSubmissionService returns conflict error" in {
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
-          "taxableEntityId",
-          "incomeSourceId",
-          2024,
-          Some(validRequestBody),
+          TaxYear(2024),
+          BusinessId("incomeSourceId"),
+          Nino("nino"),
+          propertyAnnualSubmission,
           Left(ApiServiceError(422)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("nino", "incomeSourceId", 2024)(fakePostRequestWithJsonBody)
 
         status(result) shouldBe UNPROCESSABLE_ENTITY
       }
@@ -184,13 +195,13 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       "return internal server error when AnnualSubmissionService returns Left(ApiServiceError)" in {
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
-          "taxableEntityId",
-          "incomeSourceId",
-          2024,
-          Some(validRequestBody),
+          TaxYear(2024),
+          BusinessId("incomeSourceId"),
+          Nino("nino"),
+          propertyAnnualSubmission,
           Left(ApiServiceError(500)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("nino", "incomeSourceId", 2024)(fakePostRequestWithJsonBody)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
@@ -198,13 +209,13 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
       "return bad request error when AnnualSubmissionService returns Left(ApiServiceError)" in {
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
-          "taxableEntityId",
-          "incomeSourceId",
-          2024,
-          Some(validRequestBody),
+          TaxYear(2024),
+          BusinessId("incomeSourceId"),
+          Nino("nino"),
+          propertyAnnualSubmission,
           Left(ApiServiceError(400)))
 
-        val result = underTest.createOrUpdateAnnualSubmission("taxableEntityId", "incomeSourceId", 2024)(fakePostRequest)
+        val result = underTest.createOrUpdateAnnualSubmission("nino", "incomeSourceId", 2024)(fakePostRequestWithJsonBody)
 
         status(result) shouldBe BAD_REQUEST
       }
