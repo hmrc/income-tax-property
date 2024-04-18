@@ -32,65 +32,6 @@ case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
-
-  def fromExpenses(expenses: Expenses): PropertyPeriodicSubmission = {
-    PropertyPeriodicSubmission(
-      None,
-      LocalDate.now(),
-      LocalDate.now(),
-      None,
-      None,
-      None,
-      Some(
-        UkOtherProperty(
-          UkOtherPropertyIncome(Some(0), None, None, None, None, None),
-          UkOtherPropertyExpenses(
-            premisesRunningCosts = expenses.rentsRatesAndInsurance,
-            repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
-            financialCosts = expenses.loanInterest,
-            professionalFees = expenses.otherProfessionalFee,
-            costOfServices = expenses.costsOfServicesProvided,
-            travelCosts = expenses.propertyBusinessTravelCost,
-            other = expenses.otherAllowablePropertyExpenses,
-            residentialFinancialCostsCarriedForward = None,
-            ukOtherRentARoom = None,
-            consolidatedExpense = None,
-            residentialFinancialCost = None
-          )
-        )
-      )
-    )
-  }
-
-  def fromUkOtherPropertyIncome(ukOtherPropertyIncome: UkOtherPropertyIncome): PropertyPeriodicSubmission = { //Todo: Validations MUST BE added!!!
-    PropertyPeriodicSubmission(
-      None,
-      LocalDate.now(),
-      LocalDate.now(),
-      None,
-      None,
-      None,
-      Some(
-        UkOtherProperty(
-          ukOtherPropertyIncome,
-          UkOtherPropertyExpenses(
-            Some(0), //Todo: This needs to be fetched from request(to be updated with expenses), and needs to be updated when Expenses ticket is implemented!
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
-          )
-        )
-      )
-    )
-  }
-
 }
 
 case class ForeignFhlEea(income: ForeignFhlIncome,
@@ -113,7 +54,7 @@ case class ForeignFhlExpenses(premisesRunningCosts: Option[BigDecimal],
                               costOfServices: Option[BigDecimal],
                               travelCosts: Option[BigDecimal],
                               other: Option[BigDecimal],
-                              consolidatedExpense: Option[BigDecimal])
+                              consolidatedExpenseAmount: Option[BigDecimal])
 
 object ForeignFhlExpenses {
   implicit val format: OFormat[ForeignFhlExpenses] = Json.format[ForeignFhlExpenses]
