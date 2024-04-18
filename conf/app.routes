@@ -37,3 +37,5 @@ POST         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answe
 PUT         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
 
 PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/esba/answers                      controllers.JourneyAnswersController.updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+
+PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/sba/answers                      controllers.JourneyAnswersController.updateSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)

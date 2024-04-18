@@ -20,7 +20,7 @@ import actions.{AuthorisationRequest, AuthorisedAction}
 import models.common._
 import models.errors.{ApiServiceError, CannotParseJsonError, CannotReadJsonError, ServiceError}
 import models.request.Income._
-import models.request.{PropertyAbout, Expenses, SaveIncome}
+import models.request.{Expenses, PropertyAbout, SaveIncome}
 import models.responses.PropertyPeriodicSubmission
 import models.request.RentalAllowances
 import models.request.esba.EsbaInfo
@@ -29,6 +29,8 @@ import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.{PropertyAbout, SaveIncome}
 import models.responses._
 import models.request._
+import models.request.sba.SbaInfo
+import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.responses.{PropertyPeriodicSubmission, UkOtherPropertyIncome}
 import play.api.Logging
 import play.api.libs.json._
@@ -170,6 +172,38 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             )
           )
           _ <- propertyService.persistAnswers(ctx, esbaInfo.toEsbaToSave).map(isPersistSuccess =>
+            if (!isPersistSuccess) {
+              logger.error("Could not persist")
+            } else {
+              logger.info("Persist successful")
+            }
+          )
+        } yield r match {
+          case Right(_) => NoContent
+          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+          case Left(ApiServiceError(CONFLICT)) => Conflict
+          case Left(_) => InternalServerError
+        }
+      }
+    }
+  }
+
+  def updateSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = {
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, businessId, nino, request) { (ctx, sbaInfo) =>
+        for {
+          r <- propertyService.createOrUpdateAnnualSubmission(nino.value,
+            incomeSourceId.value,
+            taxYear.endYear,
+            Some(
+              Json.toJson(
+                PropertyAnnualSubmission.fromSbas(
+                  sbaInfo.toSba
+                )
+              )
+            )
+          )
+          _ <- propertyService.persistAnswers(ctx, sbaInfo.toSbaToSave).map(isPersistSuccess =>
             if (!isPersistSuccess) {
               logger.error("Could not persist")
             } else {
