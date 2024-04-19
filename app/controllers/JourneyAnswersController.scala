@@ -16,15 +16,17 @@
 
 package controllers
 
-import actions.{AuthorisationRequest, AuthorisedAction}
-import errorhandling.ErrorHandler
+import actions._
+import errorhandling._
 import models.common._
-import models.errors.{CannotParseJsonError, CannotReadJsonError, ServiceError}
+import models.errors._
 import models.request.Income._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request._
+import models.request.sba.SbaInfo
+import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.responses._
 import play.api.Logging
 import play.api.libs.json._
@@ -35,7 +37,7 @@ import utils.JsonSupport._
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util._
 
 class JourneyAnswersController @Inject()(propertyService: PropertyService,
                                          auth: AuthorisedAction,
@@ -61,7 +63,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino,JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(CREATED) {
           for {
             r <- propertyService.createPeriodicSubmission(
@@ -77,7 +79,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.updatePeriodicSubmission(
@@ -110,7 +112,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
+      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
         handleResponse(CREATED) {
           propertyService.saveIncome(
             taxYear, businessId, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
@@ -119,9 +121,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = {
+  def saveEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
-      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, request) { (ctx, esbaInfo) =>
+      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, JourneyName.RentalESBA, request) { (ctx, esbaInfo) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
@@ -144,9 +146,36 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
   }
 
+  def saveSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = {
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, businessId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
+        handleResponse(NO_CONTENT) {
+          for {
+            r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
+              businessId,
+              nino,
+              PropertyAnnualSubmission.fromSbas(
+                sbaInfo.toSba
+              )
+            )
+            _ <- propertyService.persistAnswers(ctx, sbaInfo.toSbaToSave).map(isPersistSuccess =>
+              if (!isPersistSuccess) {
+                logger.error("Could not persist")
+              } else {
+                logger.info("Persist successful")
+              }
+            )
+          } yield r
+        }
+      }
+    }
+  }
+
+
+
   def updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
+      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
 
         handleResponse(NO_CONTENT) {
           (for {

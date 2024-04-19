@@ -45,6 +45,23 @@ object PropertyAnnualSubmission {
       ))
     )
   }
+
+  def fromSbas(sbas: List[StructuredBuildingAllowance]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
+    PropertyAnnualSubmission(
+      Some(LocalDateTime.now()),
+      None,
+      None,
+      None,
+      Some(AnnualUkOtherProperty(
+        Some(UkOtherAdjustments(
+          None, None, None, None, None, None
+        )),
+        Some(UkOtherAllowances(
+          None, None, None, None, None, None, Some(sbas), None, None, None
+        ))
+      ))
+    )
+  }
 }
 
 case class AnnualForeignFhlEea(adjustments: ForeignFhlAdjustments,

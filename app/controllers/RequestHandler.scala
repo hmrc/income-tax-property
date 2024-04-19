@@ -36,9 +36,10 @@ trait RequestHandler {
                                       taxYear: TaxYear,
                                       businessId: BusinessId,
                                       nino: Nino,
+                                      journeyName: JourneyName,
                                       authorisationRequest: AuthorisationRequest[AnyContent]
                                     )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
-    val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(JourneyName.About)
+    val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(journeyName)
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>

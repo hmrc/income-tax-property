@@ -22,6 +22,7 @@ import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request._
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
+import models.request.sba._
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
@@ -200,7 +201,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         |    }
         |}""".stripMargin)
 
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
 
 
     "return created for valid request body" in {
@@ -542,7 +543,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         EsbaClaims(false)
       ))
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      val result = await(underTest.saveEsba(taxYear, businessId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -566,7 +567,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
           Left(serviceError))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
-        val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+        val result = await(underTest.saveEsba(taxYear, businessId, nino)(request))
         result.header.status shouldBe expectedError
       }
       }
@@ -579,4 +580,98 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
     }
   }
 
+  "update sba section" should {
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        | "claimStructureBuildingAllowance" : true,
+        | "sbas": [
+        |            {
+        |                "sbaQualifyingDate" : "2020-04-04",
+        |                "sbaQualifyingAmount" : 12,
+        |                "sbaClaim" : 43,
+        |                "sbaAddress" : {
+        |                    "buildingName" : "name12",
+        |                    "buildingNumber" : "123",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "sbaQualifyingDate" : "2023-01-22",
+        |                "sbaQualifyingAmount" : 535,
+        |                "sbaClaim" : 54,
+        |                "sbaAddress" : {
+        |                    "buildingName" : "235",
+        |                    "buildingNumber" : "3",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "sbaQualifyingDate" : "2024-02-12",
+        |                "sbaQualifyingAmount" : 22,
+        |                "sbaClaim" : 23,
+        |                "sbaAddress" : {
+        |                    "buildingName" : "12",
+        |                    "buildingNumber" : "2",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            }
+        |        ],
+        |        "sbaClaims" : false
+        |}""".stripMargin)
+
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+
+    import sba.SbaInfoExtensions._
+    "return no_content for valid request body" in {
+
+      mockAuthorisation()
+      val sbaInfo = validRequestBody.as[SbaInfo]
+      mockCreateOrUpdateAnnualSubmissions(
+        taxYear,
+        businessId,
+        nino,
+        PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
+        Right(""))
+
+      mockPersistAnswers(ctx, SbaInfoToSave(
+        ClaimStructureBuildingAllowance(true),
+        SbaClaims(false)
+      ))
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveSba(taxYear, businessId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) => {
+        mockAuthorisation()
+        val sbaInfo = validRequestBody.as[SbaInfo]
+
+        mockCreateOrUpdateAnnualSubmissions(
+          taxYear,
+          businessId,
+          nino,
+          PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
+          Left(serviceError))
+
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.saveSba(taxYear, businessId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.updateIncome(taxYear, businessId, nino, IncomeSourceId(""), SubmissionId(""))(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
 }
