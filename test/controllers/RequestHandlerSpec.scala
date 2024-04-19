@@ -18,7 +18,7 @@ package controllers
 
 import actions.AuthorisationRequest
 import models.User
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{BusinessId, JourneyName, Nino, TaxYear}
 import models.request.{PremiumsGrantLease, SaveIncome}
 import org.apache.pekko.util.ByteString
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -81,6 +81,7 @@ class RequestHandlerSpec extends ControllerUnitTest
           TaxYear(2023),
           BusinessId(""),
           Nino(""),
+          JourneyName.About,
           AuthorisationRequest[AnyContent](User("", None), request)
         ) { (_, _) =>
           Future.successful(Ok("Success"))

@@ -32,10 +32,10 @@ POST        /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers 
 PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
 
 
-POST         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers                       controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+POST        /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers                                    controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
 
 PUT         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
 
-PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/esba/answers                      controllers.JourneyAnswersController.updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+POST         /property/:taxYear/:businessId/allowances/:nino/esba/answers                                                    controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/sba/answers                      controllers.JourneyAnswersController.updateSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+POST         /property/:taxYear/:businessId/allowances/:nino/sba/answers                                                    controllers.JourneyAnswersController.saveSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -201,7 +201,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         |    }
         |}""".stripMargin)
 
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
 
 
     "return created for valid request body" in {
@@ -543,7 +543,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         EsbaClaims(false)
       ))
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      val result = await(underTest.saveEsba(taxYear, businessId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -567,7 +567,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
           Left(serviceError))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
-        val result = await(underTest.updateEsba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+        val result = await(underTest.saveEsba(taxYear, businessId, nino)(request))
         result.header.status shouldBe expectedError
       }
       }
@@ -638,7 +638,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
         SbaClaims(false)
       ))
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateSba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+      val result = await(underTest.saveSba(taxYear, businessId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -662,7 +662,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
           Left(serviceError))
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
-        val result = await(underTest.updateSba(taxYear, businessId, nino, IncomeSourceId("incomeSourceId"))(request))
+        val result = await(underTest.saveSba(taxYear, businessId, nino)(request))
         result.header.status shouldBe expectedError
       }
       }

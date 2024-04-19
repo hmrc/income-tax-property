@@ -63,7 +63,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino,JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(CREATED) {
           for {
             r <- propertyService.createPeriodicSubmission(
@@ -79,7 +79,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, request) { (_, expenses) =>
+      withJourneyContextAndEntity[Expenses](taxYear, businessId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.updatePeriodicSubmission(
@@ -112,7 +112,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
+      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
         handleResponse(CREATED) {
           propertyService.saveIncome(
             taxYear, businessId, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
@@ -121,9 +121,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def updateEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = {
+  def saveEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
-      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, request) { (ctx, esbaInfo) =>
+      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, JourneyName.RentalESBA, request) { (ctx, esbaInfo) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
@@ -146,9 +146,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
   }
 
-  def updateSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = {
+  def saveSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SbaInfo](taxYear, businessId, nino, request) { (ctx, sbaInfo) =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, businessId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
@@ -175,7 +175,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
 
   def updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
+      withJourneyContextAndEntity[SaveIncome](taxYear, businessId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
 
         handleResponse(NO_CONTENT) {
           (for {
