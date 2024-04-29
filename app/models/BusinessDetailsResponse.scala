@@ -26,7 +26,12 @@ object BusinessDetailsResponse {
   implicit val format: OFormat[BusinessDetailsResponse] = Json.format[BusinessDetailsResponse]
 }
 
-case class PropertyDetails(incomeSourceType: Option[String], tradingStartDate: Option[LocalDate], cashOrAccruals: Option[Boolean])
+case class PropertyDetails(
+  incomeSourceType: Option[String],
+  tradingStartDate: Option[LocalDate],
+  cashOrAccruals: Option[Boolean],
+  incomeSourceId: String
+)
 
 object PropertyDetails {
   implicit val format: OFormat[PropertyDetails] = Json.format[PropertyDetails]

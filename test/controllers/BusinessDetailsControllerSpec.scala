@@ -28,10 +28,8 @@ import utils.providers.FakeRequestProvider
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessDetailsControllerSpec extends ControllerUnitTest
-  with MockIntegrationFrameworkService
-  with MockAuthorisedAction
-  with FakeRequestProvider {
+class BusinessDetailsControllerSpec
+    extends ControllerUnitTest with MockIntegrationFrameworkService with MockAuthorisedAction with FakeRequestProvider {
 
   private val underTest = new BusinessDetailsController(
     mockIntegrationFrameworkService,
@@ -41,7 +39,9 @@ class BusinessDetailsControllerSpec extends ControllerUnitTest
 
   ".getBusinessDetailsData" should {
 
-    val businessDetailsResponse = BusinessDetailsResponse(List(PropertyDetails(Some("income-source"), Some(LocalDate.now), Some(true))))
+    val businessDetailsResponse = BusinessDetailsResponse(
+      List(PropertyDetails(Some("income-source"), Some(LocalDate.now), Some(true), "incomeSourceId"))
+    )
 
     "return aBusinessDetails when IntegrationFrameworkService returns Right(aBusinessDetails)" in {
       mockAuthorisation()

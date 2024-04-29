@@ -30,10 +30,7 @@ import utils.mocks.MockIntegrationFrameworkConnector
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IntegrationFrameworkServiceSpec extends UnitTest
-  with MockIntegrationFrameworkConnector
-  with HttpClientSupport
-{
+class IntegrationFrameworkServiceSpec extends UnitTest with MockIntegrationFrameworkConnector with HttpClientSupport {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
@@ -42,12 +39,12 @@ class IntegrationFrameworkServiceSpec extends UnitTest
 
   ".GetBusinessDetails" should {
     "return error when GetBusinessDetails fails" in {
-      mockGetBusinessDetails( "some-nino", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
+      mockGetBusinessDetails("some-nino", Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))))
       await(underTest.getBusinessDetails("some-nino")) shouldBe Left(ApiServiceError(500))
     }
 
     "return error when GetBusinessDetails does not return data" in {
-      val  incomeSourceModel = IncomeSourceDetailsModel(
+      val incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
         TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, None)
       )
@@ -60,35 +57,99 @@ class IntegrationFrameworkServiceSpec extends UnitTest
     "return uk property details when user only has uk property" in {
       val tradingStartDate = LocalDate.parse("2020-12-10")
       val propertyDetailsModel = PropertyDetailsModel(
-        Some("uk-property"), "", LocalDate.now(), LocalDate.now(),
-        Some(tradingStartDate), Some(true),
-        None, None, None, None, None, None, None, None, None, None, None)
+        Some("uk-property"),
+        "incomeSourceId",
+        LocalDate.now(),
+        LocalDate.now(),
+        Some(tradingStartDate),
+        Some(true),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+      )
 
       val incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
-        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, Some(Seq(propertyDetailsModel)))
+        TaxPayerDisplayResponse(
+          "safeID",
+          "Nino",
+          "mtdID",
+          None,
+          propertyIncome = true,
+          None,
+          Some(Seq(propertyDetailsModel))
+        )
       )
 
       mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
 
       await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
-        BusinessDetailsResponse(Seq(PropertyDetails(Some("uk-property"),Some(tradingStartDate), Some(true)))))
+        BusinessDetailsResponse(
+          Seq(PropertyDetails(Some("uk-property"), Some(tradingStartDate), Some(true), "incomeSourceId"))
+        )
+      )
     }
 
     "return uk and foreign property details when user has both" in {
       val tradingStartDate = LocalDate.parse("2020-12-10")
       val ukPropertyDetailsModel = PropertyDetailsModel(
-        Some("uk-property"), "", LocalDate.now(), LocalDate.now(),
-        Some(tradingStartDate), Some(true),
-        None, None, None, None, None, None, None, None, None, None, None)
+        Some("uk-property"),
+        "incomeSourceId",
+        LocalDate.now(),
+        LocalDate.now(),
+        Some(tradingStartDate),
+        Some(true),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+      )
       val foreignPropertyDetailsModel = PropertyDetailsModel(
-        Some("foreign-property"), "", LocalDate.now(), LocalDate.now(),
-        Some(tradingStartDate), Some(false),
-        None, None, None, None, None, None, None, None, None, None, None)
+        Some("foreign-property"),
+        "incomeSourceId",
+        LocalDate.now(),
+        LocalDate.now(),
+        Some(tradingStartDate),
+        Some(false),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+      )
 
-      val  incomeSourceModel = IncomeSourceDetailsModel(
+      val incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
-        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel)))
+        TaxPayerDisplayResponse(
+          "safeID",
+          "Nino",
+          "mtdID",
+          None,
+          propertyIncome = true,
+          None,
+          Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel))
+        )
       )
 
       mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
@@ -96,9 +157,11 @@ class IntegrationFrameworkServiceSpec extends UnitTest
       await(underTest.getBusinessDetails("some-nino")) shouldBe Right(
         BusinessDetailsResponse(
           Seq(
-            PropertyDetails(Some("uk-property"),Some(tradingStartDate), Some(true)),
-            PropertyDetails(Some("foreign-property"),Some(tradingStartDate), Some(false))
-          )))
+            PropertyDetails(Some("uk-property"), Some(tradingStartDate), Some(true), "incomeSourceId"),
+            PropertyDetails(Some("foreign-property"), Some(tradingStartDate), Some(false), "incomeSourceId")
+          )
+        )
+      )
     }
   }
 }
