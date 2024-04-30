@@ -21,28 +21,34 @@ import models.PropertyDetails
 
 import java.time.LocalDate
 
-case class PropertyDetailsModel(incomeSourceType: Option[String],
-                                incomeSourceId: String,
-                                accountingPeriodStartDate: LocalDate,
-                                accountingPeriodEndDate: LocalDate,
-                                tradingStartDate: Option[LocalDate],
-                                cashOrAccruals: Option[Boolean],
-                                numPropRented: Option[Int],
-                                numPropRentedUK: Option[Int],
-                                numPropRentedEEA: Option[Int],
-                                numPropRentedNONEEA: Option[Int],
-                                email: Option[String],
-                                cessationDate: Option[LocalDate],
-                                paperLess: Option[Boolean],
-                                incomeSourceStartDate: Option[LocalDate],
-                                firstAccountingPeriodStartDate: Option[LocalDate],
-                                firstAccountingPeriodEndDate: Option[LocalDate],
-                                latencyDetails: Option[LatencyDetails])
+case class PropertyDetailsModel(
+  incomeSourceType: Option[String],
+  incomeSourceId: String,
+  accountingPeriodStartDate: LocalDate,
+  accountingPeriodEndDate: LocalDate,
+  tradingStartDate: Option[LocalDate],
+  cashOrAccruals: Option[Boolean],
+  numPropRented: Option[Int],
+  numPropRentedUK: Option[Int],
+  numPropRentedEEA: Option[Int],
+  numPropRentedNONEEA: Option[Int],
+  email: Option[String],
+  cessationDate: Option[LocalDate],
+  paperLess: Option[Boolean],
+  incomeSourceStartDate: Option[LocalDate],
+  firstAccountingPeriodStartDate: Option[LocalDate],
+  firstAccountingPeriodEndDate: Option[LocalDate],
+  latencyDetails: Option[LatencyDetails]
+)
 
 object PropertyDetailsModel {
   implicit val format: OFormat[PropertyDetailsModel] = Json.format[PropertyDetailsModel]
 
-  def toResponseModel(propertyDetailsModel: PropertyDetailsModel): PropertyDetails = {
-    PropertyDetails(propertyDetailsModel.incomeSourceType, propertyDetailsModel.tradingStartDate, propertyDetailsModel.cashOrAccruals)
-  }
+  def toResponseModel(propertyDetailsModel: PropertyDetailsModel): PropertyDetails =
+    PropertyDetails(
+      propertyDetailsModel.incomeSourceType,
+      propertyDetailsModel.tradingStartDate,
+      propertyDetailsModel.cashOrAccruals,
+      propertyDetailsModel.incomeSourceId
+    )
 }
