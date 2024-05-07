@@ -16,20 +16,20 @@
 
 package repositories
 
+import models.common.JourneyName.About
+import models.common.JourneyStatus.NotStarted
+import models.common._
+import models.domain.JourneyAnswers
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import models.common.JourneyName.About
-import models.common.JourneyStatus.NotStarted
-import models.common._
-import models.domain.JourneyAnswers
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
-import java.time.{Clock, Instant, ZoneId}
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -41,13 +41,12 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
   override val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
 
   val taxYear: TaxYear = TaxYear(2024)
-  val businessId: BusinessId = BusinessId("someBusinessId")
+  val incomeSourceId: IncomeSourceId = IncomeSourceId("incomeSourceId")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     await(removeAll(repository.collection))
-  }
 
   def removeAll(collection: MongoCollection[_]): Future[Unit] =
     collection
@@ -55,13 +54,12 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
       .toFuture()
       .map(_ => ())
 
-
-  val ctx: JourneyContext = JourneyContextWithNino(taxYear, businessId, mtditid, nino).toJourneyContext(About)
+  val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
   val filters: Bson = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),
     Filters.eq("taxYear", ctx.taxYear.endYear),
-    Filters.eq("businessId", ctx.businessId.value),
+    Filters.eq("incomeSourceId", ctx.incomeSourceId.value),
     Filters.eq("journey", ctx.journey.entryName)
   )
 
@@ -76,14 +74,15 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
       updatedRecord shouldBe JourneyAnswers(
         mtditid,
-        businessId,
+        incomeSourceId,
         taxYear,
         JourneyName.About,
         NotStarted,
         Json.obj("field" -> "value"),
         expectedExpireAt,
         instant,
-        instant)
+        instant
+      )
     }
 
     "update already existing answers (values, updateAt)" in {
@@ -97,14 +96,15 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
 
       result.futureValue shouldBe JourneyAnswers(
         mtditid,
-        businessId,
+        incomeSourceId,
         taxYear,
         JourneyName.About,
         NotStarted,
         Json.obj("field" -> "updated"),
         expectedExpireAt,
         instant,
-        instant)
+        instant
+      )
     }
   }
 }

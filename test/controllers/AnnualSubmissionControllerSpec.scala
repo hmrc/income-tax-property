@@ -16,7 +16,7 @@
 
 package controllers
 
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
 import models.responses._
 import play.api.http.Status._
@@ -167,7 +167,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
           TaxYear(2024),
-          BusinessId("incomeSourceId"),
+          IncomeSourceId("incomeSourceId"),
           Nino("nino"),
           propertyAnnualSubmission,
           Right())
@@ -182,7 +182,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
           TaxYear(2024),
-          BusinessId("incomeSourceId"),
+          IncomeSourceId("incomeSourceId"),
           Nino("nino"),
           propertyAnnualSubmission,
           Left(ApiServiceError(422)))
@@ -196,7 +196,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
           TaxYear(2024),
-          BusinessId("incomeSourceId"),
+          IncomeSourceId("incomeSourceId"),
           Nino("nino"),
           propertyAnnualSubmission,
           Left(ApiServiceError(500)))
@@ -210,7 +210,7 @@ class AnnualSubmissionControllerSpec extends ControllerUnitTest
         mockAuthorisation()
         mockCreateOrUpdateAnnualSubmissions(
           TaxYear(2024),
-          BusinessId("incomeSourceId"),
+          IncomeSourceId("incomeSourceId"),
           Nino("nino"),
           propertyAnnualSubmission,
           Left(ApiServiceError(400)))

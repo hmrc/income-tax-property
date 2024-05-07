@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import connectors.response.{PostPeriodicSubmissionResponse, PutAnnualSubmissionResponse, PutPeriodicSubmissionResponse}
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.responses._
 import org.scalamock.scalatest.MockFactory
@@ -177,7 +177,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
         integrationFrameworkConnector
           .createOrUpdateAnnualSubmission(
             TaxYear(2000),
-            BusinessId(""),
+            IncomeSourceId(""),
             Nino(""),
             validRequestBody
           ))

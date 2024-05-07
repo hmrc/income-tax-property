@@ -17,7 +17,7 @@
 package connectors
 
 
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{IncomeSourceId, Nino, TaxYear}
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
@@ -333,7 +333,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         stubPutHttpClientCall(s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
           Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId),
+        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId),
           Nino(taxableEntityId), aPropertyAnnualSubmission)(hc)) shouldBe Right()
       }
 
@@ -346,7 +346,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
           Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
         await(underTest.createOrUpdateAnnualSubmission(
-          TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), aPropertyAnnualSubmission)(hc)) shouldBe Right()
+          TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), aPropertyAnnualSubmission)(hc)) shouldBe Right()
       }
 
       "return Conflict from Upstream" in {
@@ -356,7 +356,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
           Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId),
+        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId),
           Nino(nino), aPropertyAnnualSubmission)(hc)) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
@@ -366,7 +366,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
           Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId),
+        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId),
           Nino(nino), aPropertyAnnualSubmission)(hc)) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
@@ -377,7 +377,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
         stubPutHttpClientCall(s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
           Json.toJson(aPropertyAnnualSubmission).toString(), httpResponse)
 
-        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId),
+        await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId),
           Nino(nino), aPropertyAnnualSubmission)(hc)) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }

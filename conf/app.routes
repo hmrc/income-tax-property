@@ -1,41 +1,41 @@
 # microservice specific routes
 #API-1711
-GET         /business-details/nino/:nino                                                                                       controllers.BusinessDetailsController.getBusinessDetails(nino: String)
+GET           /business-details/nino/:nino                                                                                         controllers.BusinessDetailsController.getBusinessDetails(nino: String)
 
 #API-1649 and API-1954
-GET         /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                          controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
+GET           /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                            controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
 
 #API-1598 & API-1805
-GET         /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                            controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
+GET           /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                              controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
 
 #API-1596 & API-1863
-DELETE      /property/submissions/annual/taxyear/:taxYear/taxableEntityId/:taxableEntityId/incomesourceid/:incomeSourceId      controllers.AnnualSubmissionController.deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
+DELETE        /property/submissions/annual/taxyear/:taxYear/taxableEntityId/:taxableEntityId/incomesourceid/:incomeSourceId        controllers.AnnualSubmissionController.deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
 
 #API-1593 & #1861
-POST        /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                                   controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+POST          /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                                     controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
 
 #API-1593 & API-1861
-PUT         /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear/submissionId/:submissionId        controllers.PeriodicSubmissionController.updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String)
+PUT           /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear/submissionId/:submissionId          controllers.PeriodicSubmissionController.updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String)
 
 #API-1597 & API-1804
-PUT        /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                             controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
+PUT           /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                              controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
 
 
-POST       /property/:taxYear/:businessId/property-about/:nino/answers                                                         controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/property-about/:nino/answers                                                      controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST       /property/:taxYear/:businessId/property-rental-adjustments/:nino/answers                                            controllers.JourneyAnswersController.savePropertyRentalAdjustments(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/property-rental-adjustments/:nino/answers                                         controllers.JourneyAnswersController.savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST       /property/:taxYear/:businessId/property-rental-allowances/:nino/answers                                             controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/property-rental-allowances/:nino/answers                                          controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST        /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers                                     controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+POST          /property/:taxYear/:incomeSourceId/income/:nino/answers                                                              controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-PUT         /property/:taxYear/:businessId/income/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
+PUT           /property/:taxYear/:incomeSourceId/income/:nino/answers/:submissionId                                                controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId)
 
 
-POST        /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers                                    controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId)
+POST          /property/:taxYear/:incomeSourceId/expenses/:nino/answers                                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-PUT         /property/:taxYear/:businessId/expenses/:nino/:incomeSourceId/answers/:submissionId                       controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: SubmissionId)
+PUT           /property/:taxYear/:incomeSourceId/expenses/:nino/answers/:submissionId                                              controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId)
 
-POST         /property/:taxYear/:businessId/allowances/:nino/esba/answers                                                    controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/allowances/:nino/esba/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST         /property/:taxYear/:businessId/allowances/:nino/sba/answers                                                    controllers.JourneyAnswersController.saveSba(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/allowances/:nino/sba/answers                                                      controllers.JourneyAnswersController.saveSba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

@@ -18,7 +18,7 @@ package controllers
 
 import actions.AuthorisationRequest
 import models.User
-import models.common.{BusinessId, JourneyName, Nino, TaxYear}
+import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.request.{PremiumsGrantLease, SaveIncome}
 import org.apache.pekko.util.ByteString
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -79,7 +79,7 @@ class RequestHandlerSpec extends ControllerUnitTest
 
         val result = requestHandler.withJourneyContextAndEntity[SaveIncome](
           TaxYear(2023),
-          BusinessId(""),
+          IncomeSourceId(""),
           Nino(""),
           JourneyName.About,
           AuthorisationRequest[AnyContent](User("", None), request)

@@ -19,8 +19,6 @@ package controllers
 import actions.AuthorisationRequest
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError, ServiceError}
-import models.request.{Income, SaveIncome}
-import models.responses.UkOtherPropertyIncome
 import play.api.Logging
 import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json._
@@ -34,12 +32,12 @@ trait RequestHandler {
   self: Logging =>
   def withJourneyContextAndEntity[T](
                                       taxYear: TaxYear,
-                                      businessId: BusinessId,
+                                      incomeSourceId: IncomeSourceId,
                                       nino: Nino,
                                       journeyName: JourneyName,
                                       authorisationRequest: AuthorisationRequest[AnyContent]
                                     )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
-    val ctx = JourneyContextWithNino(taxYear, businessId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(journeyName)
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(journeyName)
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>
