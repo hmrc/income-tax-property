@@ -17,7 +17,7 @@
 package controllers
 
 import actions.AuthorisedAction
-import models.common.{BusinessId, JourneyName, Nino, TaxYear}
+import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
 import models.responses.PropertyAnnualSubmission
 import play.api.Logging
@@ -56,8 +56,8 @@ class AnnualSubmissionController @Inject()(propertyService: PropertyService,
 
   def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyAnnualSubmission](TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), JourneyName.About, request) { (_, propertyAnnualSubmission) =>
-        propertyService.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), propertyAnnualSubmission).value.map {
+      withJourneyContextAndEntity[PropertyAnnualSubmission](TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), JourneyName.About, request) { (_, propertyAnnualSubmission) =>
+        propertyService.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), propertyAnnualSubmission).value.map {
           case Right(_) => NoContent
           case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
           case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity

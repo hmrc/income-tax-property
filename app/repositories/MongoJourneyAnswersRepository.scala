@@ -33,32 +33,30 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[JourneyAnswers](
-    collectionName = "journey-answers",
-    mongoComponent = mongo,
-    domainFormat = JourneyAnswers.formats,
-    replaceIndexes = true,
-    indexes = Seq(
-      IndexModel(
-        Indexes.ascending("expireAt"),
-        IndexOptions()
-          .name("expireAt")
-          .expireAfter(0, TimeUnit.SECONDS)
-      ),
-      IndexModel(
-        Indexes.ascending("mtditid", "taxYear", "businessId", "journey"),
-        IndexOptions().name("mtditid_taxYear_businessId_journey")
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[JourneyAnswers](
+      collectionName = "journey-answers",
+      mongoComponent = mongo,
+      domainFormat = JourneyAnswers.formats,
+      replaceIndexes = true,
+      indexes = Seq(
+        IndexModel(
+          Indexes.ascending("expireAt"),
+          IndexOptions()
+            .name("expireAt")
+            .expireAfter(0, TimeUnit.SECONDS)
+        ),
+        IndexModel(
+          Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
+          IndexOptions().name("mtditid_taxYear_incomeSourceId_journey")
+        )
       )
-    )
-  )
-    with Logging {
-
+    ) with Logging {
 
   private def filterJourney(ctx: JourneyContext) = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),
     Filters.eq("taxYear", ctx.taxYear.endYear),
-    Filters.eq("businessId", ctx.businessId.value),
+    Filters.eq("incomeSourceId", ctx.incomeSourceId.value),
     Filters.eq("journey", ctx.journey.entryName)
   )
 
@@ -80,7 +78,7 @@ class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, clock: Cloc
       Updates.set("updatedAt", now),
       Updates.setOnInsert("mtditid", ctx.mtditid.value),
       Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
-      Updates.setOnInsert("businessId", ctx.businessId.value),
+      Updates.setOnInsert("incomeSourceId", ctx.incomeSourceId.value),
       Updates.setOnInsert("status", statusOnInsert.entryName),
       Updates.setOnInsert("journey", ctx.journey.entryName),
       Updates.setOnInsert("createdAt", now),

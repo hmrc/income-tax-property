@@ -69,18 +69,18 @@ trait MockPropertyService extends MockFactory {
   }
 
   def mockSaveIncome(nino: Nino,
-                     businessId: BusinessId,
+                     businessId: IncomeSourceId,
                      incomeSourceId: IncomeSourceId,
                      taxYear: TaxYear,
                      journeyContext: JourneyContext,
                      income: Income,
                      ukOtherPropertyIncome: UkOtherPropertyIncome,
                      result: Either[ServiceError, Option[PeriodicSubmissionId]]
-                    ): CallHandler8[TaxYear, BusinessId, Nino, IncomeSourceId, JourneyContext, Income, UkOtherPropertyIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
+                    ): CallHandler8[TaxYear, IncomeSourceId, Nino, IncomeSourceId, JourneyContext, Income, UkOtherPropertyIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
     (mockPropertyService
       .saveIncome(
         _: TaxYear,
-        _: BusinessId,
+        _: IncomeSourceId,
         _: Nino,
         _: IncomeSourceId,
         _: JourneyContext,
@@ -116,12 +116,12 @@ trait MockPropertyService extends MockFactory {
   }
 
   def mockCreateOrUpdateAnnualSubmissions(taxYear: TaxYear,
-                                          businessId: BusinessId,
+                                          businessId: IncomeSourceId,
                                           nino: Nino,
                                           body: PropertyAnnualSubmission,
                                           result: Either[ServiceError, Unit]
-                                         ): CallHandler5[TaxYear, BusinessId, Nino, PropertyAnnualSubmission, HeaderCarrier, EitherT[Future, ServiceError, Unit]] = {
-    (mockPropertyService.createOrUpdateAnnualSubmission(_: TaxYear, _: BusinessId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
+                                         ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier, EitherT[Future, ServiceError, Unit]] = {
+    (mockPropertyService.createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
       .expects(taxYear, businessId, nino, *, *)
       .returning(EitherT.fromEither(result))
   }

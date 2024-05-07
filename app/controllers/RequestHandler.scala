@@ -34,7 +34,7 @@ trait RequestHandler {
   self: Logging =>
   def withJourneyContextAndEntity[T](
                                       taxYear: TaxYear,
-                                      businessId: BusinessId,
+                                      businessId: IncomeSourceId,
                                       nino: Nino,
                                       journeyName: JourneyName,
                                       authorisationRequest: AuthorisationRequest[AnyContent]

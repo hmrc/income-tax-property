@@ -41,7 +41,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
   override val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
 
   val taxYear: TaxYear = TaxYear(2024)
-  val businessId: BusinessId = BusinessId("someBusinessId")
+  val businessId: IncomeSourceId = IncomeSourceId("someBusinessId")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
 

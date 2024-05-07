@@ -25,7 +25,7 @@ import java.time._
 import scala.reflect.ClassTag
 
 case class JourneyAnswers(mtditid: Mtditid,
-                          businessId: BusinessId,
+                          businessId: IncomeSourceId,
                           taxYear: TaxYear,
                           journey: JourneyName,
                           status: JourneyStatus,

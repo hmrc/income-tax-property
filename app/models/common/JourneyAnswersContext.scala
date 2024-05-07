@@ -16,10 +16,19 @@
 
 package models.common
 
-final case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
-  def toJourneyContext(journeyName: JourneyName): JourneyContext = JourneyContext(taxYear, businessId, mtditid, journeyName)
+final case class JourneyContextWithNino(
+  taxYear: TaxYear,
+  incomeSourceId: IncomeSourceId,
+  mtditid: Mtditid,
+  nino: Nino
+) {
+  def toJourneyContext(journeyName: JourneyName): JourneyContext =
+    JourneyContext(taxYear, incomeSourceId, mtditid, journeyName)
 }
 
-final case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
-
-}
+final case class JourneyContext(
+  taxYear: TaxYear,
+  incomeSourceId: IncomeSourceId,
+  mtditid: Mtditid,
+  journey: JourneyName
+)

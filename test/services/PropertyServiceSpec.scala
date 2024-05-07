@@ -240,17 +240,17 @@ class PropertyServiceSpec extends UnitTest
 
     "return no content for valid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
-      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), validRequest).value) shouldBe
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), validRequest).value) shouldBe
         Right()
     }
 
     "return ApiError for invalid request" in {
       val taxYear = 2024
 
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
 
-      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), validRequest).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), validRequest).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
@@ -265,16 +265,16 @@ class PropertyServiceSpec extends UnitTest
 
     "return no content for valid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
-      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), validRequestBody).value) shouldBe
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+      await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), validRequestBody).value) shouldBe
         Right()
     }
 
     "return ApiError for invalid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
       await(underTest.createOrUpdateAnnualSubmission(TaxYear(taxYear),
-        BusinessId(incomeSourceId), Nino(nino), validRequestBody).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+        IncomeSourceId(incomeSourceId), Nino(nino), validRequestBody).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
@@ -282,7 +282,7 @@ class PropertyServiceSpec extends UnitTest
 
     val taxYear = 2024
     val mtditid = "89787469409"
-    val journeyContextWithNino = JourneyContextWithNino(TaxYear(taxYear), BusinessId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val journeyContextWithNino = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
       BalancingCharge(balancingChargeYesNo = true, Some(108)),
@@ -294,13 +294,13 @@ class PropertyServiceSpec extends UnitTest
     )
 
     "return a success with no content when the request is valid and data is persisted" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
       await(underTest.savePropertyRentalAdjustments(journeyContextWithNino, propertyRentalAdjustments).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
       await(underTest.savePropertyRentalAdjustments( journeyContextWithNino, propertyRentalAdjustments).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
@@ -309,7 +309,7 @@ class PropertyServiceSpec extends UnitTest
 
     val taxYear = 2024
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), BusinessId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
     val allowances = RentalAllowances(
       Some(11),
       ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
@@ -320,12 +320,12 @@ class PropertyServiceSpec extends UnitTest
       Some(11)
     )
     "return no content for valid request" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), BusinessId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
+      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error"))))
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }

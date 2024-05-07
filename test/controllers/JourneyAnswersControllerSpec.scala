@@ -48,7 +48,7 @@ class JourneyAnswersControllerSpec extends ControllerUnitTest
   )
 
   val taxYear: TaxYear = TaxYear(2024)
-  val businessId: BusinessId = BusinessId("someBusinessId")
+  val businessId: IncomeSourceId = IncomeSourceId("someBusinessId")
   val incomeSourceId = IncomeSourceId("incomeSourceId")
   val incomeSubmissionId = SubmissionId("submissionId")
   val nino: Nino = Nino("nino")

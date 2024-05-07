@@ -38,7 +38,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                                (implicit ec: ExecutionContext) {
 
   def saveIncome(taxYear: TaxYear,
-                 businessId: BusinessId,
+                 businessId: IncomeSourceId,
                  nino: Nino,
                  incomeSourceId:
                  IncomeSourceId,
@@ -155,7 +155,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       .bimap(error => ApiServiceError(error.status), _ => ())
   }
 
-  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: PropertyAnnualSubmission)
+  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino, body: PropertyAnnualSubmission)
                                     (implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
     EitherT(
       connector.createOrUpdateAnnualSubmission(taxYear, businessId, nino, body)
@@ -223,7 +223,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     for {
       _ <- createOrUpdateAnnualSubmission(
         contextWithNino.taxYear,
-        contextWithNino.businessId,
+        contextWithNino.incomeSourceId,
         contextWithNino.nino,
         propertyAnnualSubmission)
 
@@ -237,7 +237,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     val storeAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(answers)
     val submission: PropertyAnnualSubmission = getPropertySubmission(answers)
     for {
-      _ <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.businessId, ctx.nino, submission)
+      _ <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.incomeSourceId, ctx.nino, submission)
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), storeAnswers)
     } yield res
   }

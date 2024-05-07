@@ -20,7 +20,7 @@ import config.AppConfig
 import connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
 import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses._
 import play.api.Logging
@@ -206,7 +206,7 @@ class IntegrationFrameworkConnector @Inject()(httpClient: HttpClient, appConf: A
     }
   }
 
-  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: PropertyAnnualSubmission)
+  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino, body: PropertyAnnualSubmission)
                                     (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$businessId""", "1804")
