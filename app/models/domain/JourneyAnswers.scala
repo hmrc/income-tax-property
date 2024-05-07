@@ -24,15 +24,17 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import java.time._
 import scala.reflect.ClassTag
 
-case class JourneyAnswers(mtditid: Mtditid,
-                          businessId: IncomeSourceId,
-                          taxYear: TaxYear,
-                          journey: JourneyName,
-                          status: JourneyStatus,
-                          data: JsObject,
-                          expireAt: Instant,
-                          createdAt: Instant,
-                          updatedAt: Instant) {
+case class JourneyAnswers(
+                           mtditid: Mtditid,
+                           incomeSourceId: IncomeSourceId,
+                           taxYear: TaxYear,
+                           journey: JourneyName,
+                           status: JourneyStatus,
+                           data: JsObject,
+                           expireAt: Instant,
+                           createdAt: Instant,
+                           updatedAt: Instant
+                         ) {
 
   def validatedAs[A: Reads](implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] = jsonAs[A](data)
 }
