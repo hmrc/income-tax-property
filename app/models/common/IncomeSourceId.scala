@@ -30,8 +30,8 @@ object IncomeSourceId {
       override def bind(key: String, value: String): Either[String, IncomeSourceId] =
         strBinder.bind(key, value).map(IncomeSourceId.apply)
 
-      override def unbind(key: String, businessId: IncomeSourceId): String =
-        strBinder.unbind(key, businessId.value)
+      override def unbind(key: String, incomeSourceId: IncomeSourceId): String =
+        strBinder.unbind(key, incomeSourceId.value)
     }
 
   implicit val format: Format[IncomeSourceId] = Json.valueFormat[IncomeSourceId]

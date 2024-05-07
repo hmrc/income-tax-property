@@ -210,7 +210,6 @@ class JourneyAnswersControllerSpec
       mockSaveIncome(
         nino,
         incomeSourceId,
-        incomeSourceId,
         taxYear,
         ctx,
         saveIncomeRequest.incomeToSave,

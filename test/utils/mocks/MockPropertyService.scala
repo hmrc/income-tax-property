@@ -18,14 +18,14 @@ package utils.mocks
 
 import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
-import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import models.common._
-import models.errors.{ApiServiceError, ServiceError}
+import models.errors.ServiceError
 import models.request.{Income, PropertyRentalAdjustments, RentalAllowances}
 import models.responses.{PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmissionRequest, UkOtherPropertyIncome}
+import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.Writes
 import services.PropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -69,24 +69,22 @@ trait MockPropertyService extends MockFactory {
   }
 
   def mockSaveIncome(nino: Nino,
-                     businessId: IncomeSourceId,
                      incomeSourceId: IncomeSourceId,
                      taxYear: TaxYear,
                      journeyContext: JourneyContext,
                      income: Income,
                      ukOtherPropertyIncome: UkOtherPropertyIncome,
                      result: Either[ServiceError, Option[PeriodicSubmissionId]]
-                    ): CallHandler8[TaxYear, IncomeSourceId, Nino, IncomeSourceId, JourneyContext, Income, UkOtherPropertyIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
+                    ): CallHandler7[TaxYear, Nino, IncomeSourceId, JourneyContext, Income, UkOtherPropertyIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
     (mockPropertyService
       .saveIncome(
         _: TaxYear,
-        _: IncomeSourceId,
         _: Nino,
         _: IncomeSourceId,
         _: JourneyContext,
         _: Income,
         _: UkOtherPropertyIncome
-      )(_: HeaderCarrier)).expects(taxYear, businessId, nino, incomeSourceId, journeyContext, income, ukOtherPropertyIncome, *)
+      )(_: HeaderCarrier)).expects(taxYear, nino, incomeSourceId, journeyContext, income, ukOtherPropertyIncome, *)
       .returning(EitherT.fromEither(result))
   }
 
@@ -116,13 +114,13 @@ trait MockPropertyService extends MockFactory {
   }
 
   def mockCreateOrUpdateAnnualSubmissions(taxYear: TaxYear,
-                                          businessId: IncomeSourceId,
+                                          incomeSourceId: IncomeSourceId,
                                           nino: Nino,
                                           body: PropertyAnnualSubmission,
                                           result: Either[ServiceError, Unit]
                                          ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier, EitherT[Future, ServiceError, Unit]] = {
     (mockPropertyService.createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
-      .expects(taxYear, businessId, nino, *, *)
+      .expects(taxYear, incomeSourceId, nino, *, *)
       .returning(EitherT.fromEither(result))
   }
 

@@ -21,10 +21,10 @@ import errorhandling._
 import models.common._
 import models.errors._
 import models.request.Income._
+import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
-import models.request._
 import models.request.sba.SbaInfo
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.responses._
@@ -45,9 +45,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
   extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
 
 
-  def savePropertyAbout(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
-    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino).toJourneyContext(JourneyName.About)
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino).toJourneyContext(JourneyName.About)
     val requestBody = parseBody[PropertyAbout](request)
 
     requestBody match {
@@ -94,9 +94,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def savePropertyRentalAdjustments(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
-    val journeyContextWithNino = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino)
+    val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
     val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
 
     annualPropertyRentalAdjustmentsBody match {
@@ -115,19 +115,19 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
         handleResponse(CREATED) {
           propertyService.saveIncome(
-            taxYear, incomeSourceId, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
+            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
           )
         }
       }
     }
 
-  def saveEsba(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
+  def saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
-      withJourneyContextAndEntity[EsbaInfo](taxYear, businessId, nino, JourneyName.RentalESBA, request) { (ctx, esbaInfo) =>
+      withJourneyContextAndEntity[EsbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalESBA, request) { (ctx, esbaInfo) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
-              businessId,
+              incomeSourceId,
               nino,
               PropertyAnnualSubmission.fromEsbas(
                 esbaInfo.toEsba
@@ -146,13 +146,13 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
   }
 
-  def saveSba(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
+  def saveSba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SbaInfo](taxYear, businessId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
         handleResponse(NO_CONTENT) {
           for {
             r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
-              businessId,
+              incomeSourceId,
               nino,
               PropertyAnnualSubmission.fromSbas(
                 sbaInfo.toSba
@@ -198,9 +198,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
 
-  def savePropertyRentalAllowances(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
-    val ctx = JourneyContextWithNino(taxYear, businessId, request.user.getMtditid, nino)
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
     val requestBody = parseBody[RentalAllowances](request)
 
     requestBody match {

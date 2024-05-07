@@ -38,7 +38,6 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                                (implicit ec: ExecutionContext) {
 
   def saveIncome(taxYear: TaxYear,
-                 businessId: IncomeSourceId,
                  nino: Nino,
                  incomeSourceId:
                  IncomeSourceId,
@@ -155,10 +154,10 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       .bimap(error => ApiServiceError(error.status), _ => ())
   }
 
-  def createOrUpdateAnnualSubmission(taxYear: TaxYear, businessId: IncomeSourceId, nino: Nino, body: PropertyAnnualSubmission)
+  def createOrUpdateAnnualSubmission(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, body: PropertyAnnualSubmission)
                                     (implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
     EitherT(
-      connector.createOrUpdateAnnualSubmission(taxYear, businessId, nino, body)
+      connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
     ).leftMap(e => ApiServiceError(e.status))
   }
 
