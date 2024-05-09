@@ -135,7 +135,7 @@ class JourneyAnswersControllerSpec
         |{
         |  "annualInvestmentAllowance": 11,
         |  "electricChargePointAllowance": {
-        |    "electricChargePointAllowanceYesNo": true,
+        |    "electricChargePointAllowanceYesOrNo": true,
         |    "electricChargePointAllowanceAmount": 11
         |  },
         |  "zeroEmissionCarAllowance": 11,
@@ -154,7 +154,7 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+          ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
           Some(11),
           Some(11),
           Some(11),

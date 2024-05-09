@@ -26,7 +26,7 @@ object CapitalAllowancesForACar {
   implicit val formats: OFormat[CapitalAllowancesForACar] = Json.format[CapitalAllowancesForACar]
 }
 
-case class ElectricChargePointAllowance(electricChargePointAllowanceYesNo: Boolean,
+case class ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo: Boolean,
                                         electricChargePointAllowanceAmount: Option[BigDecimal])
 
 object ElectricChargePointAllowance {
