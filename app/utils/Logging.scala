@@ -14,25 +14,9 @@
  * limitations under the License.
  */
 
-package models
+package utils
 
-import cats.data.EitherT
-import models.errors.{InvalidJsonFormatError, ServiceError}
-import play.api.libs.json.{JsObject, Reads}
-
-import scala.concurrent.Future
-import scala.reflect.ClassTag
-
-package object domain {
-  type ApiResultT[A] = EitherT[Future, ServiceError, A]
-
-  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
-    jsObj
-      .validate[A]
-      .asEither
-      .fold(
-        err => Left(InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList)),
-        answers => Right(answers)
-      )
+import play.api.Logger
+trait Logging {
+  implicit lazy val logger: Logger = Logger(this.getClass)
 }
-

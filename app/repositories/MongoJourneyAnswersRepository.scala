@@ -16,16 +16,21 @@
 
 package repositories
 
+import cats.data.EitherT
+import cats.implicits.toFunctorOps
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.model._
-import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import models.common.{JourneyContext, JourneyStatus}
-import models.domain.JourneyAnswers
+import models.common.{JourneyContext, JourneyContextWithNino, JourneyStatus}
+import models.domain.{ApiResultT, JourneyAnswers}
+import models.errors.ServiceError
+import org.mongodb.scala.result.UpdateResult
+import play.api.Logger
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import utils.Logging
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
@@ -84,5 +89,55 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )
+  }
+
+  private def lala(ctx: JourneyContext)(status: JourneyStatus) = {
+    val now      = Instant.now(clock)
+    val expireAt = calculateExpireAt(now)
+
+    Updates.combine(
+      Updates.set("status", status.entryName),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("expireAt", expireAt)
+    )
+  }
+
+  private[repositories] def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
+    val filter  = filterJourney(ctx)
+    val update  = lala(ctx)(status)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
+    handleUpdateExactlyOne(ctx, updateStatus(ctx, status))
+  }
+
+  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
+                                                                                        logger: Logger,
+                                                                                        ec: ExecutionContext): ApiResultT[Unit] = {
+    def insertedSuccessfully(result: UpdateResult) =
+      result.getModifiedCount == 0 && result.getMatchedCount == 0 && Option(result.getUpsertedId).nonEmpty
+    def updatedSuccessfully(result: UpdateResult) = result.getModifiedCount == 1
+
+    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
+      val notInsertedOne = !insertedSuccessfully(r)
+      val notUpdatedOne  = !updatedSuccessfully(r)
+
+      if (notInsertedOne && notUpdatedOne) {
+        logger.warn(
+          s"Upsert invalid state (this should never happened): getModifiedCount=${r.getModifiedCount}, " +
+            s"getMatchedCount=${r.getMatchedCount}, " +
+            s"getUpsertedId=${r.getUpsertedId}, " +
+            s"notInsertedOne=$notInsertedOne, " +
+            s"notUpdatedOne=$notUpdatedOne, for ctx=${ctx.toString}"
+        )
+      }
+      Right(r)
+    }
+
+    EitherT(futResult).void
   }
 }
