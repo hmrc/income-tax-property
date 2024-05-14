@@ -228,7 +228,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       case Success(validatedRes) =>
         validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
           case JsSuccess(value, _) =>
-            journeyStatusService.set(ctx, value).value.map(_ => NoContent)
+            journeyStatusService.setStatus(ctx, value).value.map(_ => NoContent)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
         }
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))

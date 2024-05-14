@@ -29,6 +29,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
-  def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](repository.setStatus(ctx, status))
 }

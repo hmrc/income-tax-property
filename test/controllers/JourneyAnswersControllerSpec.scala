@@ -40,6 +40,7 @@ class JourneyAnswersControllerSpec
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
+    mockJourneyStatusService,
     mockAuthorisedAction,
     cc
   )
@@ -74,6 +75,48 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       val result = underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "Update journey status for rent-a-room" should {
+
+    val journeyStatusJs: JsValue = Json.parse(
+      """
+        |{
+        | "status": "inProgress"
+        |}
+        |""".stripMargin)
+
+    val journeyStatusErrorJs: JsValue = Json.parse(
+      """
+        |{
+        | "foo": "inProgress"
+        |}
+        |""".stripMargin)
+
+
+    val ctx = JourneyContext(
+      taxYear = TaxYear(2023),
+      incomeSourceId = IncomeSourceId("incomeSourceId"),
+      mtditid = Mtditid("123456789"),
+      journey = JourneyName.RentARoom)
+
+
+    "should return no_content for valid request body where a field named status is present in the body request" in {
+
+      mockAuthorisation()
+
+      mockSaveJourneyStatus(ctx, JourneyStatus.InProgress)
+      val request = fakePostRequest.withJsonBody(journeyStatusJs)
+      val result = await(underTest.setStatus(taxYear, incomeSourceId, JourneyName.RentARoom.toString)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request when a field named status is not present in the request body" in {
+      mockAuthorisation()
+      val errorRequest = fakePostRequest.withJsonBody(journeyStatusErrorJs)
+      val errorResult = await(underTest.setStatus(taxYear, incomeSourceId, JourneyName.RentARoom.toString)(errorRequest))
+      errorResult.header.status shouldBe BAD_REQUEST
     }
   }
 
