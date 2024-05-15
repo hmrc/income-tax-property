@@ -111,6 +111,12 @@ class JourneyAnswersControllerSpec
       result.header.status shouldBe NO_CONTENT
     }
 
+    "should return bad request when a field named status is not present in the request body" in {
+      mockAuthorisation()
+      val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
+      val result = await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room")(request))
+      result.header.status shouldBe BAD_REQUEST
+    }
   }
 
   "create or update property rental adjustments section" should {

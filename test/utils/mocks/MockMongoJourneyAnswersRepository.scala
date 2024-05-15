@@ -20,10 +20,13 @@ import cats.data.EitherT
 import models.ITPEnvelope
 import models.ITPEnvelope.ITPEnvelope
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
+import models.errors.CannotParseJsonError
+import org.eclipse.jetty.http.HttpParser.RequestHandler
 import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
-import play.api.mvc.Results.InternalServerError
+import play.api.libs.json.Json
+import play.api.mvc.Results.{BadRequest, InternalServerError}
 import repositories.MongoJourneyAnswersRepository
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
@@ -67,6 +70,8 @@ trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoColle
           journey = JourneyName.RentARoom
         ),
         JourneyStatusData(JourneyStatus.Completed))
-      .returning(ITPEnvelope.liftPure(BAD_REQUEST))
+      .returning(
+        ITPEnvelope.liftPure(Future.successful(BadRequest(
+          Json.obj("code" -> BAD_REQUEST, "reason" -> "Cannot read JSON: List((/status,List(JsonValidationError(List(error.path.missing),List()))))")))))
   }
 }
