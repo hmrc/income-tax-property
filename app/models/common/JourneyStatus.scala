@@ -17,29 +17,12 @@
 package models.common
 
 import enumeratum.{Enum, EnumEntry}
-import play.api.libs.json._
 
 sealed abstract class JourneyStatus(override val entryName: String) extends EnumEntry {
   override def toString: String = entryName
 }
 
 object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[JourneyStatus] {
-
-  implicit val format: Format[JourneyStatus] = new Format[JourneyStatus] {
-    override def reads(json: JsValue): JsResult[JourneyStatus] = {
-      JsPath.read[JsObject].reads(json).map(_.value.get("status").map(status => JourneyStatus.withName(status.as[String]))) match {
-        case JsSuccess(Some(status), _) => JsSuccess(status)
-        case JsSuccess(None, _) => JsError(s"Unable to find field status in request body")
-        case JsError(errors) => JsError(errors.map{
-          case (_, errors) => errors
-        }.mkString("|"))
-      }
-    }
-
-    override def writes(journeyStatus: JourneyStatus): JsValue = {
-      JsPath.write[String].writes(journeyStatus.entryName)
-    }
-  }
 
   val values: IndexedSeq[JourneyStatus] = findValues
 

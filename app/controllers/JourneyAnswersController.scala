@@ -35,7 +35,6 @@ import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
-
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util._
@@ -222,7 +221,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
                  journeyName: String): Action[AnyContent] = auth.async { implicit request =>
 
     val ctx = JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
-    val requestBody = parseBody[JourneyStatus](request)
+    val requestBody = parseBody[JourneyStatusData](request)
 
     requestBody match {
       case Success(validatedRes) =>

@@ -170,9 +170,9 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.pure(true))
   }
 
-  def mockSaveJourneyStatus[A](ctx: JourneyContext, status: JourneyStatus):
-  CallHandler2[JourneyContext, JourneyStatus, ApiResultT[Unit]] = {
-    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatus))
+  def mockSaveJourneyStatus[A](ctx: JourneyContext, status: JourneyStatusData):
+  CallHandler2[JourneyContext, JourneyStatusData, ApiResultT[Unit]] = {
+    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
       .expects(*, *)
       .returning(EitherT.pure(()))
   }

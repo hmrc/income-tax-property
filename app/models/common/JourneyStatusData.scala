@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers
+package models.common
 
-import cats.data.EitherT
-import cats.implicits._
-import models.common._
-import models.domain.ApiResultT
-import models.errors.ServiceError
-import repositories.MongoJourneyAnswersRepository
+import play.api.libs.json.{Json, OFormat}
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+case class JourneyStatusData (val status: JourneyStatus)
 
-@Singleton
-class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
-
-  def setStatus(ctx: JourneyContext, status: JourneyStatusData): ApiResultT[Unit] =
-    EitherT.rightT[Future, ServiceError](repository.setStatus(ctx, status.status))
+object JourneyStatusData {
+  implicit val format: OFormat[JourneyStatusData] = Json.format
 }

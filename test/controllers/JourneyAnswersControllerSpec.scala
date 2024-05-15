@@ -106,7 +106,7 @@ class JourneyAnswersControllerSpec
 
       mockAuthorisation()
 
-      mockSaveJourneyStatus(ctx, JourneyStatus.InProgress)
+      mockSaveJourneyStatus(ctx, JourneyStatusData(JourneyStatus.InProgress))
       val request = fakePostRequest.withJsonBody(journeyStatusJs)
       val result = await(underTest.setStatus(taxYear, incomeSourceId, JourneyName.RentARoom.toString)(request))
       result.header.status shouldBe NO_CONTENT
