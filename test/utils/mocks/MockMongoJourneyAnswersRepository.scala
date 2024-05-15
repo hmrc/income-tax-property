@@ -16,17 +16,57 @@
 
 package utils.mocks
 
+import cats.data.EitherT
+import models.ITPEnvelope
+import models.ITPEnvelope.ITPEnvelope
+import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
+import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
+import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
+import play.api.mvc.Results.InternalServerError
 import repositories.MongoJourneyAnswersRepository
+import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 
 import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.Failure
 
 trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport {
+
+  protected val mockJourneyStatusService: JourneyStatusService = mock[JourneyStatusService]
 
   protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(
     mongoComponent,
     Clock.systemUTC()
   )
+
+  def mockSaveJourneyStatusNoContent[A](ctx: JourneyContext, status: JourneyStatusData):
+  CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
+    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
+      .expects(
+        JourneyContext(
+          taxYear = TaxYear(2023),
+          incomeSourceId = IncomeSourceId("incomeSourceId"),
+          mtditid = Mtditid("1234567890"),
+          journey = JourneyName.RentARoom
+        ),
+          JourneyStatusData(JourneyStatus.InProgress))
+      .returning(ITPEnvelope.liftPure(NO_CONTENT))
+  }
+
+  def mockSaveJourneyStatusBadRequest[A](ctx: JourneyContext, status: JourneyStatusData):
+  CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
+    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
+      .expects(
+        JourneyContext(
+          taxYear = TaxYear(2023),
+          incomeSourceId = IncomeSourceId("incomeSourceId"),
+          mtditid = Mtditid("1234567890"),
+          journey = JourneyName.RentARoom
+        ),
+        JourneyStatusData(JourneyStatus.Completed))
+      .returning(ITPEnvelope.liftPure(BAD_REQUEST))
+  }
 }

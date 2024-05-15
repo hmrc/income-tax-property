@@ -18,6 +18,8 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
+import models.ITPEnvelope
+import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.domain.ApiResultT
 import models.errors.ServiceError
@@ -29,6 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatusData): ApiResultT[Unit] =
-    EitherT.rightT[Future, ServiceError](repository.setStatus(ctx, status.status))
+  def setStatus(ctx: JourneyContext, status: JourneyStatusData): ITPEnvelope[Unit] = {
+    ITPEnvelope.liftPure(repository.setStatus(ctx, status.status))
+  }
 }

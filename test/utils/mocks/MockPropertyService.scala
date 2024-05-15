@@ -37,7 +37,7 @@ import scala.concurrent.Future
 trait MockPropertyService extends MockFactory {
 
   protected val mockPropertyService: PropertyService = mock[PropertyService]
-  protected val mockJourneyStatusService: JourneyStatusService = mock[JourneyStatusService]
+  //protected val mockJourneyStatusService: JourneyStatusService = mock[JourneyStatusService]
 
   def mockGetAllPeriodicSubmissions(taxYear: Int,
                                     taxableEntityId: String,
@@ -169,12 +169,4 @@ trait MockPropertyService extends MockFactory {
       .expects(*, *, *)
       .returning(EitherT.pure(true))
   }
-
-  def mockSaveJourneyStatus[A](ctx: JourneyContext, status: JourneyStatusData):
-  CallHandler2[JourneyContext, JourneyStatusData, ApiResultT[Unit]] = {
-    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
-      .expects(*, *)
-      .returning(EitherT.pure(()))
-  }
-
 }
