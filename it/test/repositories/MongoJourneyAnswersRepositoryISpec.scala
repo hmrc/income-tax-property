@@ -16,11 +16,13 @@
 
 package repositories
 
+import com.mongodb.client.model
 import models.common.JourneyName.About
 import models.common.JourneyStatus.NotStarted
 import models.common._
 import models.domain.JourneyAnswers
 import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.Json
@@ -62,6 +64,15 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
     Filters.eq("incomeSourceId", ctx.incomeSourceId.value),
     Filters.eq("journey", ctx.journey.entryName)
   )
+
+  "createUpsert status" should {
+    "" in {
+      val bson = BsonDocument(Json.stringify(Json.obj("foo" -> "bar")))
+      val result: BsonDocument = repository.createUpsert(ctx)("data", bson, JourneyStatus.NotStarted).toBsonDocument
+
+      result.getDocument("$set").getDocument("data").getString("foo") shouldBe BsonString("bar")
+    }
+  }
 
   "upsertData" should {
 

@@ -74,7 +74,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
   }
 
-  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+  private[repositories] def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
@@ -91,7 +91,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     )
   }
 
-  private def lala(ctx: JourneyContext)(status: JourneyStatus) = {
+  private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
     val now      = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
@@ -104,7 +104,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   private[repositories] def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
     val filter  = filterJourney(ctx)
-    val update  = lala(ctx)(status)
+    val update  = createUpsertStatus(ctx)(status)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture()
