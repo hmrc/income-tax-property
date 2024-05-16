@@ -31,6 +31,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
   def setStatus(ctx: JourneyContext, status: JourneyStatusData): ITPEnvelope[Unit] = {
-    ITPEnvelope.liftPure(repository.setStatus(ctx, status.status))
+    ITPEnvelope.liftFuture(repository.setStatus(ctx, status.status).map(_ => ().asRight[ServiceError]))
   }
 }

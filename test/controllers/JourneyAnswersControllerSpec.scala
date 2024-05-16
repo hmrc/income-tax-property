@@ -42,7 +42,7 @@ class JourneyAnswersControllerSpec
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
-    mockJourneyStatusService,
+    journeyStatusService,
     mockAuthorisedAction,
     cc
   )

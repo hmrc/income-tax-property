@@ -112,36 +112,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): ITPEnvelope[Unit] = {
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
     val result = updateStatus(ctx, status)
-    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map(Right(_))
-    ITPEnvelope.liftPure(futResult)
-  }
-
-  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
-                                                                                        logger: Logger,
-                                                                                        ec: ExecutionContext): ITPEnvelope[Unit] = {
-    def insertedSuccessfully(result: UpdateResult) =
-      result.getModifiedCount == 0 && result.getMatchedCount == 0 && Option(result.getUpsertedId).nonEmpty
-    def updatedSuccessfully(result: UpdateResult) = result.getModifiedCount == 1
-
-    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
-      val notInsertedOne = !insertedSuccessfully(r)
-      val notUpdatedOne  = !updatedSuccessfully(r)
-
-      if (notInsertedOne && notUpdatedOne) {
-        logger.warn(
-          s"Upsert invalid state (this should never happened): getModifiedCount=${r.getModifiedCount}, " +
-            s"getMatchedCount=${r.getMatchedCount}, " +
-            s"getUpsertedId=${r.getUpsertedId}, " +
-            s"notInsertedOne=$notInsertedOne, " +
-            s"notUpdatedOne=$notUpdatedOne, for ctx=${ctx.toString}"
-        )
-      }
-      Right(r)
-    }
-
-    EitherT(futResult).void
+    //TODO return a more descriptive data type
+    result.map(_ => ())
   }
 }

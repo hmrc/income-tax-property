@@ -16,31 +16,21 @@
 
 package services
 
-import models.ITPEnvelope
+import cats.implicits.catsSyntaxEitherId
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
-import repositories.MongoJourneyAnswersRepository
-import services.journeyAnswers.JourneyStatusService
+import models.errors.ServiceError
 import utils.UnitTest
-import utils.mocks.{MockIntegrationFrameworkConnector, MockJourneyStatusService, MockPropertyService}
+import utils.mocks.MockJourneyStatusService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class JourneyStatusServiceSpec extends UnitTest with MockJourneyStatusService {
 
-
   "JourneyStatusService" should {
     ".setStatus" in {
 
-      mockRepositorySetStatus(JourneyContext(
-        taxYear = TaxYear(2023),
-        incomeSourceId = IncomeSourceId("incomeSourceId"),
-        mtditid = Mtditid("1234567890"),
-        journey = JourneyName.RentARoom
-      ), JourneyStatus.InProgress)
-
       val result = await(
-          mockJourneyStatusService.setStatus(JourneyContext(
+          journeyStatusService.setStatus(JourneyContext(
           taxYear = TaxYear(2023),
           incomeSourceId = IncomeSourceId("incomeSourceId"),
           mtditid = Mtditid("1234567890"),
@@ -50,7 +40,7 @@ class JourneyStatusServiceSpec extends UnitTest with MockJourneyStatusService {
         ).value
       )
 
-      result shouldBe ITPEnvelope.liftPure(())
+      result shouldBe ().asRight[ServiceError]
     }
   }
 }

@@ -29,32 +29,38 @@ import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, MongoSupport}
 
-import java.time.Clock
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockJourneyStatusService extends MockFactory with CleanMongoCollectionSupport{
 
-  val repository = mock[MongoJourneyAnswersRepository]
-  protected val mockJourneyStatusService: JourneyStatusService = new JourneyStatusService(repository)
+  //val repository = mock[MongoJourneyAnswersRepository]
+
+  private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
+  private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
+  val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
+  protected val journeyStatusService: JourneyStatusService = new JourneyStatusService(repository)
 
   def mockRepositorySetStatus[A](ctx: JourneyContext, status: JourneyStatus):
-  CallHandler2[JourneyContext, JourneyStatus, ITPEnvelope[Unit]] = {
+  CallHandler2[JourneyContext, JourneyStatus, Future[Unit]] = {
     (repository.setStatus(_: JourneyContext, _: JourneyStatus))
       .expects(
-        JourneyContext(
+        /*JourneyContext(
           taxYear = TaxYear(2023),
           incomeSourceId = IncomeSourceId("incomeSourceId"),
           mtditid = Mtditid("1234567890"),
           journey = JourneyName.RentARoom
         ),
-        JourneyStatus.InProgress)
-      .returning(ITPEnvelope.liftPure())
+        JourneyStatus.InProgress)*/
+        *, *)
+      .returning(Future.successful(()))
   }
 
   def mockSaveJourneyStatusNoContent[A](ctx: JourneyContext, status: JourneyStatusData):
   CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
-    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
+    (journeyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
       .expects(
         JourneyContext(
           taxYear = TaxYear(2023),
@@ -68,7 +74,7 @@ trait MockJourneyStatusService extends MockFactory with CleanMongoCollectionSupp
 
   def mockSaveJourneyStatusBadRequest[A](ctx: JourneyContext, status: JourneyStatusData):
   CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
-    (mockJourneyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
+    (journeyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
       .expects(
         JourneyContext(
           taxYear = TaxYear(2023),
