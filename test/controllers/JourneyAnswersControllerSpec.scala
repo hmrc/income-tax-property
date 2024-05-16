@@ -17,6 +17,7 @@
 package controllers
 
 import cats.syntax.either._
+import models.ITPEnvelope
 import models.common.JourneyName.About
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
@@ -24,19 +25,20 @@ import models.request._
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.request.sba._
 import models.responses._
+import org.mockito.Mockito.when
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
+import utils.mocks.{MockAuthorisedAction, MockJourneyStatusService, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
   extends ControllerUnitTest with MockPropertyService with MockAuthorisedAction with FakeRequestProvider
-    with ScalaCheckPropertyChecks with MockMongoJourneyAnswersRepository{
+    with ScalaCheckPropertyChecks with MockJourneyStatusService{
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
@@ -106,6 +108,7 @@ class JourneyAnswersControllerSpec
 
       mockAuthorisation()
       mockSaveJourneyStatusNoContent(ctx, JourneyStatusData(JourneyStatus.InProgress))
+
       val request = fakePostRequest.withJsonBody(journeyStatusJs)
       val result = await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room")(request))
       result.header.status shouldBe NO_CONTENT

@@ -18,6 +18,7 @@ package repositories
 
 import cats.data.EitherT
 import cats.implicits.toFunctorOps
+import models.ITPEnvelope
 import models.ITPEnvelope.ITPEnvelope
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
@@ -113,7 +114,9 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ITPEnvelope[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
-    handleUpdateExactlyOne(ctx, updateStatus(ctx, status))
+    val result = updateStatus(ctx, status)
+    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map(Right(_))
+    ITPEnvelope.liftPure(futResult)
   }
 
   private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit

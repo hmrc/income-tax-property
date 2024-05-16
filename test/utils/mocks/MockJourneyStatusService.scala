@@ -16,34 +16,41 @@
 
 package utils.mocks
 
-import cats.data.EitherT
 import models.ITPEnvelope
 import models.ITPEnvelope.ITPEnvelope
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
-import models.errors.CannotParseJsonError
-import org.eclipse.jetty.http.HttpParser.RequestHandler
 import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.Json
 import play.api.mvc.Results.{BadRequest, InternalServerError}
 import repositories.MongoJourneyAnswersRepository
+import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
-import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
+import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, MongoSupport}
 
 import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
 
-trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport {
+trait MockJourneyStatusService extends MockFactory with CleanMongoCollectionSupport{
 
-  protected val mockJourneyStatusService: JourneyStatusService = mock[JourneyStatusService]
+  val repository = mock[MongoJourneyAnswersRepository]
+  protected val mockJourneyStatusService: JourneyStatusService = new JourneyStatusService(repository)
 
-  protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(
-    mongoComponent,
-    Clock.systemUTC()
-  )
+  def mockRepositorySetStatus[A](ctx: JourneyContext, status: JourneyStatus):
+  CallHandler2[JourneyContext, JourneyStatus, ITPEnvelope[Unit]] = {
+    (repository.setStatus(_: JourneyContext, _: JourneyStatus))
+      .expects(
+        JourneyContext(
+          taxYear = TaxYear(2023),
+          incomeSourceId = IncomeSourceId("incomeSourceId"),
+          mtditid = Mtditid("1234567890"),
+          journey = JourneyName.RentARoom
+        ),
+        JourneyStatus.InProgress)
+      .returning(ITPEnvelope.liftPure())
+  }
 
   def mockSaveJourneyStatusNoContent[A](ctx: JourneyContext, status: JourneyStatusData):
   CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {

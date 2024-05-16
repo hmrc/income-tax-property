@@ -37,7 +37,6 @@ import scala.concurrent.Future
 trait MockPropertyService extends MockFactory {
 
   protected val mockPropertyService: PropertyService = mock[PropertyService]
-  //protected val mockJourneyStatusService: JourneyStatusService = mock[JourneyStatusService]
 
   def mockGetAllPeriodicSubmissions(taxYear: Int,
                                     taxableEntityId: String,

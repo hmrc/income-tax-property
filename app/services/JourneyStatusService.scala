@@ -28,7 +28,6 @@ import repositories.MongoJourneyAnswersRepository
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
   def setStatus(ctx: JourneyContext, status: JourneyStatusData): ITPEnvelope[Unit] = {
