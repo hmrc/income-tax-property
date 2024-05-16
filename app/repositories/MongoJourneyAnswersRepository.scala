@@ -18,20 +18,12 @@ package repositories
 
 import models.common.{JourneyContext, JourneyStatus}
 import models.domain.JourneyAnswers
-import cats.data.EitherT
-import cats.implicits.toFunctorOps
-import models.ITPEnvelope
-import models.ITPEnvelope.ITPEnvelope
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
-import play.api.libs.json.{JsValue, Json}
-import models.common.{JourneyContext, JourneyContextWithNino, JourneyStatus}
-import models.domain.{ApiResultT, JourneyAnswers}
-import models.errors.ServiceError
 import org.mongodb.scala.result.UpdateResult
-import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository

@@ -23,27 +23,25 @@ import models.PropertyPeriodicSubmissionResponse
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
+import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request._
 import models.responses._
-import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.{Filters, InsertOneOptions, UpdateOptions, Updates}
+import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsObject, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import uk.gov.hmrc.mongo.play.json.CollectionFactory.collection
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
-import java.time.{Clock, Instant, LocalDate, LocalDateTime}
+import java.time.{Clock, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -341,7 +339,7 @@ class PropertyServiceSpec extends UnitTest
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
     val allowances = RentalAllowances(
       Some(11),
-      ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+      ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
       Some(11),
       Some(11),
       Some(11),
