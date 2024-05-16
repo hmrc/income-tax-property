@@ -107,7 +107,6 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body where a field named status is present in the body request" in {
 
       mockAuthorisation()
-      mockSaveJourneyStatusNoContent(ctx, JourneyStatusData(JourneyStatus.InProgress))
 
       val request = fakePostRequest.withJsonBody(journeyStatusJs)
       val result = await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room")(request))
