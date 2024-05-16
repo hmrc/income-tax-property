@@ -16,17 +16,15 @@
 
 package services.journeyAnswers
 
-import cats.data.EitherT
 import cats.implicits._
 import models.ITPEnvelope
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
-import models.domain.ApiResultT
 import models.errors.ServiceError
 import repositories.MongoJourneyAnswersRepository
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 
 class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 

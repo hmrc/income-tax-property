@@ -17,7 +17,6 @@
 package controllers
 
 import cats.syntax.either._
-import models.ITPEnvelope
 import models.common.JourneyName.About
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
@@ -25,7 +24,6 @@ import models.request._
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.request.sba._
 import models.responses._
-import org.mockito.Mockito.when
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
@@ -37,8 +35,8 @@ import utils.providers.FakeRequestProvider
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockPropertyService with MockAuthorisedAction with FakeRequestProvider
-    with ScalaCheckPropertyChecks with MockJourneyStatusService{
+  extends ControllerUnitTest with MockPropertyService with MockJourneyStatusService with MockAuthorisedAction with FakeRequestProvider
+    with ScalaCheckPropertyChecks {
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,

@@ -22,8 +22,6 @@ import models.errors.ServiceError
 import utils.UnitTest
 import utils.mocks.MockJourneyStatusService
 
-
-
 class JourneyStatusServiceSpec extends UnitTest with MockJourneyStatusService {
 
   "JourneyStatusService" should {

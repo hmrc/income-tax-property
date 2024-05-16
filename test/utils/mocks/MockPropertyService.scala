@@ -19,7 +19,6 @@ package utils.mocks
 import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
-import models.domain.ApiResultT
 import models.errors.ServiceError
 import models.request.{Income, PropertyRentalAdjustments, RentalAllowances}
 import models.responses.{PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmissionRequest, UkOtherPropertyIncome}
@@ -28,7 +27,6 @@ import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.Writes
 import services.PropertyService
-import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global

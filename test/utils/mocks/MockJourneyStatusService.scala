@@ -16,75 +16,19 @@
 
 package utils.mocks
 
-import models.ITPEnvelope
-import models.ITPEnvelope.ITPEnvelope
-import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
-import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
-import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
-import play.api.libs.json.Json
-import play.api.mvc.Results.{BadRequest, InternalServerError}
 import repositories.MongoJourneyAnswersRepository
-import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
-import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, MongoSupport}
+import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 trait MockJourneyStatusService extends MockFactory with CleanMongoCollectionSupport{
 
-  //val repository = mock[MongoJourneyAnswersRepository]
-
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
-  val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
+  protected val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
   protected val journeyStatusService: JourneyStatusService = new JourneyStatusService(repository)
-
-  def mockRepositorySetStatus[A](ctx: JourneyContext, status: JourneyStatus):
-  CallHandler2[JourneyContext, JourneyStatus, Future[Unit]] = {
-    (repository.setStatus(_: JourneyContext, _: JourneyStatus))
-      .expects(
-        /*JourneyContext(
-          taxYear = TaxYear(2023),
-          incomeSourceId = IncomeSourceId("incomeSourceId"),
-          mtditid = Mtditid("1234567890"),
-          journey = JourneyName.RentARoom
-        ),
-        JourneyStatus.InProgress)*/
-        *, *)
-      .returning(Future.successful(()))
-  }
-
-  def mockSaveJourneyStatusNoContent[A](ctx: JourneyContext, status: JourneyStatusData):
-  CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
-    (journeyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
-      .expects(
-        JourneyContext(
-          taxYear = TaxYear(2023),
-          incomeSourceId = IncomeSourceId("incomeSourceId"),
-          mtditid = Mtditid("1234567890"),
-          journey = JourneyName.RentARoom
-        ),
-          JourneyStatusData(JourneyStatus.InProgress))
-      .returning(ITPEnvelope.liftPure(NO_CONTENT))
-  }
-
-  def mockSaveJourneyStatusBadRequest[A](ctx: JourneyContext, status: JourneyStatusData):
-  CallHandler2[JourneyContext, JourneyStatusData, ITPEnvelope[Unit]] = {
-    (journeyStatusService.setStatus(_: JourneyContext, _: JourneyStatusData))
-      .expects(
-        JourneyContext(
-          taxYear = TaxYear(2023),
-          incomeSourceId = IncomeSourceId("incomeSourceId"),
-          mtditid = Mtditid("1234567890"),
-          journey = JourneyName.RentARoom
-        ),
-        JourneyStatusData(JourneyStatus.Completed))
-      .returning(
-        ITPEnvelope.liftPure(Future.successful(BadRequest(
-          Json.obj("code" -> BAD_REQUEST, "reason" -> "Cannot read JSON: List((/status,List(JsonValidationError(List(error.path.missing),List()))))")))))
-  }
 }
