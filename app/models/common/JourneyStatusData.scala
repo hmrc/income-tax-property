@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package utils.mocks
+package models.common
 
-import org.scalamock.scalatest.MockFactory
-import repositories.MongoJourneyAnswersRepository
-import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
+import play.api.libs.json.{Json, OFormat}
 
-import java.time.Clock
-import scala.concurrent.ExecutionContext.Implicits.global
+case class JourneyStatusData (val status: JourneyStatus)
 
-trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport {
-
-  protected val mockMongoJourneyAnswersRepository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(
-    mongoComponent,
-    Clock.systemUTC()
-  )
+object JourneyStatusData {
+  implicit val format: OFormat[JourneyStatusData] = Json.format
 }

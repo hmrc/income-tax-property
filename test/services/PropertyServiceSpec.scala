@@ -23,35 +23,24 @@ import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorB
 import models.request._
 import models.responses._
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
+import utils.mocks.{MockIntegrationFrameworkConnector, MockJourneyStatusService, MockPropertyService}
 import utils.{AppConfigStub, UnitTest}
-import config.AppConfig
-import models.PropertyPeriodicSubmissionResponse
-import models.common._
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request.{ElectricChargePointAllowance, RentalAllowances}
-import models.responses._
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
-import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class PropertyServiceSpec extends UnitTest
   with MockIntegrationFrameworkConnector
-  with MockMongoJourneyAnswersRepository
+  with MockJourneyStatusService
   with MockPropertyService
   with HttpClientSupport {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new PropertyService(mockIntegrationFrameworkConnector, mockMongoJourneyAnswersRepository)
+  private val underTest = new PropertyService(mockIntegrationFrameworkConnector, repository)
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"

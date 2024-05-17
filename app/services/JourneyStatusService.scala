@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package models
+package services.journeyAnswers
 
-import cats.data.EitherT
-import models.errors.{InvalidJsonFormatError, ServiceError}
-import play.api.libs.json.{JsObject, Reads}
+import cats.implicits._
+import models.ITPEnvelope
+import models.ITPEnvelope.ITPEnvelope
+import models.common._
+import models.errors.ServiceError
+import repositories.MongoJourneyAnswersRepository
 
-import scala.concurrent.Future
-import scala.reflect.ClassTag
+import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 
-package object domain {
-  type ApiResultT[A] = EitherT[Future, ServiceError, A]
+class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
-  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
-    jsObj
-      .validate[A]
-      .asEither
-      .fold(
-        err => Left(InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList)),
-        answers => Right(answers)
-      )
+  def setStatus(ctx: JourneyContext, status: JourneyStatusData): ITPEnvelope[Unit] = {
+    ITPEnvelope.liftFuture(repository.setStatus(ctx, status.status).map(_ => ().asRight[ServiceError]))
+  }
 }
-

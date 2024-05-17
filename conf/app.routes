@@ -39,3 +39,5 @@ PUT           /property/:taxYear/:incomeSourceId/expenses/:nino/answers/:submiss
 POST          /property/:taxYear/:incomeSourceId/allowances/:nino/esba/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/allowances/:nino/sba/answers                                                      controllers.JourneyAnswersController.saveSba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+PUT           /completed-section/:incomeSourceId/:journey/:taxYear                                                                 controllers.JourneyAnswersController.setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String)

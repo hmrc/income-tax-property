@@ -29,17 +29,18 @@ import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockPropertyService}
+import utils.mocks.{MockAuthorisedAction, MockJourneyStatusService, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockPropertyService with MockAuthorisedAction with FakeRequestProvider
+  extends ControllerUnitTest with MockPropertyService with MockJourneyStatusService with MockAuthorisedAction with FakeRequestProvider
     with ScalaCheckPropertyChecks {
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
+    journeyStatusService,
     mockAuthorisedAction,
     cc
   )
@@ -74,6 +75,47 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       val result = underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "Update journey status for rent-a-room" should {
+
+    val journeyStatusJs: JsValue = Json.parse(
+      """
+        |{
+        | "status": "inProgress"
+        |}
+        |""".stripMargin)
+
+    val journeyStatusErrorJs: JsValue = Json.parse(
+      """
+        |{
+        | "foo": "completed"
+        |}
+        |""".stripMargin)
+
+
+    val ctx = JourneyContext(
+      taxYear = TaxYear(2023),
+      incomeSourceId = IncomeSourceId("incomeSourceId"),
+      mtditid = Mtditid("1234567890"),
+      journey = JourneyName.RentARoom)
+
+
+    "should return no_content for valid request body where a field named status is present in the body request" in {
+
+      mockAuthorisation()
+
+      val request = fakePostRequest.withJsonBody(journeyStatusJs)
+      val result = await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room")(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request when a field named status is not present in the request body" in {
+      mockAuthorisation()
+      val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
+      val result = await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room")(request))
+      result.header.status shouldBe BAD_REQUEST
     }
   }
 

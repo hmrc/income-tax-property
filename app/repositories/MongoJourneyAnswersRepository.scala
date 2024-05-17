@@ -16,16 +16,23 @@
 
 package repositories
 
+import cats.data.EitherT
+import cats.implicits.toFunctorOps
+import models.ITPEnvelope
+import models.ITPEnvelope.ITPEnvelope
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.model._
-import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import models.common.{JourneyContext, JourneyStatus}
-import models.domain.JourneyAnswers
+import models.common.{JourneyContext, JourneyContextWithNino, JourneyStatus}
+import models.domain.{ApiResultT, JourneyAnswers}
+import models.errors.ServiceError
+import org.mongodb.scala.result.UpdateResult
+import play.api.Logger
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import utils.Logging
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
@@ -69,7 +76,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
   }
 
-  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+  private[repositories] def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
@@ -84,5 +91,31 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )
+  }
+
+  private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
+    val now      = Instant.now(clock)
+    val expireAt = calculateExpireAt(now)
+
+    Updates.combine(
+      Updates.set("status", status.entryName),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("expireAt", expireAt)
+    )
+  }
+
+  private[repositories] def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
+    val filter  = filterJourney(ctx)
+    val update  = createUpsertStatus(ctx)(status)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
+    val result = updateStatus(ctx, status)
+    //TODO return a more descriptive data type
+    result.map(_ => ())
   }
 }

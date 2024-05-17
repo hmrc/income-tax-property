@@ -32,14 +32,15 @@ import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.PropertyService
+import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
-
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util._
 
 class JourneyAnswersController @Inject()(propertyService: PropertyService,
+                                         journeyStatusService: JourneyStatusService,
                                          auth: AuthorisedAction,
                                          cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
@@ -209,6 +210,26 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
           case JsSuccess(value, _) =>
             propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+        }
+      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+    }
+  }
+
+  def setStatus(
+                 taxYear: TaxYear,
+                 incomeSourceId: IncomeSourceId,
+                 journeyName: String): Action[AnyContent] = auth.async { implicit request =>
+
+    val ctx = JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
+    val requestBody = parseBody[JourneyStatusData](request)
+
+    requestBody match {
+      case Success(validatedRes) =>
+        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+          case JsSuccess(value, _) =>
+            journeyStatusService.setStatus(ctx, value).value.map(_ => NoContent)
+          case JsError(err) =>
+            Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
         }
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }

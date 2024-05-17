@@ -166,5 +166,4 @@ trait MockPropertyService extends MockFactory {
       .expects(*, *, *)
       .returning(EitherT.pure(true))
   }
-
 }
