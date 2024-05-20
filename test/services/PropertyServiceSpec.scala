@@ -21,32 +21,29 @@ import cats.syntax.either._
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
 import models.common._
+import models.domain.JourneyAnswers
 import models.errors._
-import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
+import models.request._
 import models.responses._
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.{Filters, InsertOneOptions, UpdateOptions, Updates}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, JsValue, Json}
+import repositories.ExpireAtCalculator.calculateExpireAt
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
+import uk.gov.hmrc.mongo.play.json.CollectionFactory.collection
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
-import models.responses._
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository, MockPropertyService}
-import utils.{AppConfigStub, UnitTest}
-import models.request.{ElectricChargePointAllowance, RentalAllowances}
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{Clock, Instant, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -613,7 +610,61 @@ class PropertyServiceSpec extends UnitTest
       } yield r
 
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
-        Left(ApiServiceError(BAD_REQUEST))
+        response shouldBe Left(ApiServiceError(BAD_REQUEST))
+      }
+    }
+    "return ServiceError when repo has per key more than one entry" in {
+      def testOnlyRemove(mongoJourneyAnswersRepository: MongoJourneyAnswersRepository, ctx: JourneyContext): Future[Unit] = {
+        val filter: Bson = Filters
+          .and(
+            Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
+            Filters.equal("taxYear", ctx.taxYear.endYear),
+            Filters.equal("mtditid", ctx.mtditid.value)
+          )
+        //Todo: How is this indexed?
+        mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
+      }
+
+      def testOnlyAdd(clock: Clock, mongoJourneyAnswersRepository: MongoJourneyAnswersRepository, ctx: JourneyContext, newData: JsObject) = {
+
+        val now = clock.instant()
+        val expireAt = calculateExpireAt(now.plusSeconds(1000))
+
+        mongoJourneyAnswersRepository.collection.insertOne(JourneyAnswers(
+          ctx.mtditid,
+          ctx.incomeSourceId,
+          ctx.taxYear,
+          ctx.journey,
+          JourneyStatus.NotStarted,
+          newData,
+          expireAt,
+          now,
+          now
+        )).toFuture().map(_ => true)
+      }
+
+      val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        "A34324",
+        incomeSourceId,
+        Some(
+          aPropertyAnnualSubmission
+        ).asRight[ApiError]
+      )
+      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+        _ <- EitherT(
+          testOnlyRemove(
+            repository,
+            ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
+        )
+        _ <- EitherT(testOnlyAdd(Clock.systemUTC(), repository, ctx.toJourneyContext(JourneyName.RentalESBA), Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))).map(_.asRight[ServiceError]))
+        _ <- EitherT(testOnlyAdd(Clock.systemUTC(), repository, ctx.toJourneyContext(JourneyName.RentalESBA), Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))).map(_.asRight[ServiceError]))
+        r <- underTest.getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.AllJourneys), Nino(nino), incomeSourceId)
+      } yield r
+
+      whenReady(result.value, Timeout(Span(1500, Millis))) { response =>
+        response shouldBe Left(RepositoryError)
       }
     }
   }
