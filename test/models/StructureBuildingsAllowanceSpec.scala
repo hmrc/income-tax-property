@@ -25,8 +25,8 @@ import utils.UnitTest
 
 import java.time.{LocalDate, LocalDateTime}
 
-class SbaInfoSpec extends UnitTest {
-  val sbaInfo: SbaInfo = SbaInfo(
+class StructureBuildingsAllowanceSpec extends UnitTest {
+  val sbaInfo = SbaInfo(
     ClaimStructureBuildingAllowance(true),
     Array(
       StructureBuildingFormGroup(
@@ -97,7 +97,7 @@ class SbaInfoSpec extends UnitTest {
                                                |        ]
                                                |}""".stripMargin)
 
-  val submission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+  val submission = PropertyAnnualSubmission(
     Some(LocalDateTime.now()),
     None,
     None,
@@ -149,7 +149,7 @@ class SbaInfoSpec extends UnitTest {
       )
     )
   )
-  "SbaInfo" should {
+  "StructureBuildingsAllowance" should {
     "serialise from json" in {
       Json.toJson(sbaInfo) shouldBe validRequestBody
     }
@@ -181,7 +181,7 @@ class SbaInfoSpec extends UnitTest {
       sbaInfo.toSba shouldBe sbas
     }
 
-    "convert to from SbaInfo to SbaInfoToSave" in {
+    "convert to from StructureBuildingsAllowance to SbaInfoToSave" in {
       sbaInfo.toSbaToSave shouldBe SbaInfoToSave(
         sbaInfo.claimStructureBuildingAllowance,
         sbaInfo.structureBuildingFormGroup

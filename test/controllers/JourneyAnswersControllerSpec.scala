@@ -21,6 +21,7 @@ import models.common.JourneyName.About
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
+import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.request.sba._
 import models.responses._
@@ -33,6 +34,7 @@ import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
@@ -626,32 +628,32 @@ class JourneyAnswersControllerSpec
   "update sba section" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimStructureBuildingAllowance" : true,
-                                                 | "sbas": [
+                                                 | "structureBuildingFormGroup": [
                                                  |            {
-                                                 |                "sbaQualifyingDate" : "2020-04-04",
-                                                 |                "sbaQualifyingAmount" : 12,
-                                                 |                "sbaClaim" : 43,
-                                                 |                "sbaAddress" : {
+                                                 |                "structureBuildingQualifyingDate" : "2020-04-04",
+                                                 |                "structureBuildingQualifyingAmount" : 12,
+                                                 |                "structureBuildingAllowanceClaim" : 43,
+                                                 |                "structuredBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "name12",
                                                  |                    "buildingNumber" : "123",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "sbaQualifyingDate" : "2023-01-22",
-                                                 |                "sbaQualifyingAmount" : 535,
-                                                 |                "sbaClaim" : 54,
-                                                 |                "sbaAddress" : {
+                                                 |                "structureBuildingQualifyingDate" : "2023-01-22",
+                                                 |                "structureBuildingQualifyingAmount" : 535,
+                                                 |                "structureBuildingAllowanceClaim" : 54,
+                                                 |                "structuredBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "235",
                                                  |                    "buildingNumber" : "3",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "sbaQualifyingDate" : "2024-02-12",
-                                                 |                "sbaQualifyingAmount" : 22,
-                                                 |                "sbaClaim" : 23,
-                                                 |                "sbaAddress" : {
+                                                 |                "structureBuildingQualifyingDate" : "2024-02-12",
+                                                 |                "structureBuildingQualifyingAmount" : 22,
+                                                 |                "structureBuildingAllowanceClaim" : 23,
+                                                 |                "structuredBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "12",
                                                  |                    "buildingNumber" : "2",
                                                  |                    "postCode" : "XX1 1XX"
@@ -680,7 +682,18 @@ class JourneyAnswersControllerSpec
         ctx,
         SbaInfoToSave(
           ClaimStructureBuildingAllowance(true),
-          SbaClaims(false)
+          Array(
+            StructureBuildingFormGroup(
+              LocalDate.parse("2020-04-04"),
+              12,
+              43,
+              Address(
+                BuildingName("name12"),
+                BuildingNumber("123"),
+                Postcode("XX1 1XX")
+              )
+            )
+          )
         )
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)

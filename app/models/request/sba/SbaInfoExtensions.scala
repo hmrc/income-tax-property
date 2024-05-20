@@ -20,9 +20,9 @@ import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanc
 import play.api.libs.json.Json
 
 final case class SbaInfoToSave(
-                                 claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-                                 sbaClaims: SbaClaims
-                               )
+  claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
+  structureBuildingFormGroup: Array[StructureBuildingFormGroup]
+)
 
 object SbaInfoToSave {
   implicit val format = Json.format[SbaInfoToSave]
@@ -30,20 +30,26 @@ object SbaInfoToSave {
 
 object SbaInfoExtensions {
   implicit class SbaExtensions(sbaInfo: SbaInfo) {
-    def toSbaToSave: SbaInfoToSave = SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.sbaClaims)
+    def toSbaToSave: SbaInfoToSave =
+      SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.structureBuildingFormGroup)
 
-    def toSba: List[StructuredBuildingAllowance] = sbaInfo.sbas.map(sbaInRequest => StructuredBuildingAllowance(
-      sbaInRequest.sbaClaim,
-      Some(StructuredBuildingAllowanceDate(sbaInRequest.sbaQualifyingDate, sbaInRequest.sbaQualifyingAmount)), //Todo: IMPORTANT! Which one?
-      StructuredBuildingAllowanceBuilding(
+    def toSba: Array[StructuredBuildingAllowance] = sbaInfo.structureBuildingFormGroup.map(structureBuildingFormGroup =>
+      StructuredBuildingAllowance(
+        structureBuildingFormGroup.structureBuildingAllowanceClaim,
         Some(
-          sbaInRequest.sbaAddress.buildingName.value),
-        Some(
-          sbaInRequest.sbaAddress.buildingNumber.value
+          StructuredBuildingAllowanceDate(
+            structureBuildingFormGroup.structureBuildingQualifyingDate,
+            structureBuildingFormGroup.structureBuildingQualifyingAmount
+          )
         ),
-        sbaInRequest.sbaAddress.postCode.value
+        StructuredBuildingAllowanceBuilding(
+          Some(structureBuildingFormGroup.structuredBuildingAllowanceAddress.buildingName.value),
+          Some(
+            structureBuildingFormGroup.structuredBuildingAllowanceAddress.buildingNumber.value
+          ),
+          structureBuildingFormGroup.structuredBuildingAllowanceAddress.postCode.value
+        )
       )
-    )
     )
   }
 }

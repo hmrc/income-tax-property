@@ -21,22 +21,21 @@ import play.api.libs.json.Json
 
 import java.time.LocalDate
 
-final case class SbaInRequest(
-                                sbaQualifyingDate: LocalDate,
-                                sbaQualifyingAmount: BigDecimal,
-                                sbaClaim: BigDecimal,
-                                sbaAddress: Address
-                              )
+final case class StructureBuildingFormGroup(
+  structureBuildingQualifyingDate: LocalDate,
+  structureBuildingQualifyingAmount: BigDecimal,
+  structureBuildingAllowanceClaim: BigDecimal,
+  structuredBuildingAllowanceAddress: Address
+)
 
-object SbaInRequest {
-  implicit val format = Json.format[SbaInRequest]
+object StructureBuildingFormGroup {
+  implicit val format = Json.format[StructureBuildingFormGroup]
 }
 
 final case class SbaInfo(
-                           claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-                           sbaClaims: SbaClaims,
-                           sbas: List[SbaInRequest]
-                         )
+  claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
+  structureBuildingFormGroup: Array[StructureBuildingFormGroup]
+)
 
 object SbaInfo {
   implicit val format = Json.format[SbaInfo]
