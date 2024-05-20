@@ -16,12 +16,15 @@
 
 package repositories
 
+import models.common.{JourneyContext, JourneyStatus}
+import models.domain.JourneyAnswers
 import cats.data.EitherT
 import cats.implicits.toFunctorOps
 import models.ITPEnvelope
 import models.ITPEnvelope.ITPEnvelope
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
 import play.api.libs.json.{JsValue, Json}
 import models.common.{JourneyContext, JourneyContextWithNino, JourneyStatus}
@@ -56,7 +59,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         IndexModel(
           Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
           IndexOptions().name("mtditid_taxYear_incomeSourceId_journey")
-        )
+        )// Todo: Uniqueness, unique index should be created
       )
     ) with Logging {
 
@@ -76,6 +79,28 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
   }
 
+  def fetch(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {
+    val filter: Bson = Filters
+      .and(
+        Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
+        Filters.equal("taxYear", ctx.taxYear.endYear),
+        Filters.equal("mtditid", ctx.mtditid.value),
+        Filters.equal("journey", ctx.journey.entryName)
+      )
+    //Todo: How is this indexed?
+    collection.find(filter).toFuture()
+  }
+
+  def fetchAllJourneys(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {
+    val filter: Bson = Filters
+      .and(
+        Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
+        Filters.equal("taxYear", ctx.taxYear.endYear),
+        Filters.equal("mtditid", ctx.mtditid.value)
+      )
+    //Todo: How is this indexed?
+    collection.find(filter).toFuture()
+  }
   private[repositories] def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)

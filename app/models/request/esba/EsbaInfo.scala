@@ -21,21 +21,21 @@ import play.api.libs.json.Json
 
 import java.time.LocalDate
 
-final case class EsbaInRequest(
+final case class EsbaInUpstream(
                                 esbaQualifyingDate: LocalDate,
                                 esbaQualifyingAmount: BigDecimal,
                                 esbaClaim: BigDecimal,
                                 esbaAddress: Address
                               )
 
-object EsbaInRequest {
-  implicit val format = Json.format[EsbaInRequest]
+object EsbaInUpstream {
+  implicit val format = Json.format[EsbaInUpstream]
 }
 
 final case class EsbaInfo(
                            claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
                            esbaClaims: EsbaClaims,
-                           esbas: List[EsbaInRequest]
+                           esbas: List[EsbaInUpstream]
                          )
 
 object EsbaInfo {

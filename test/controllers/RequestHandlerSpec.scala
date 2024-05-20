@@ -81,7 +81,7 @@ class RequestHandlerSpec extends ControllerUnitTest
           TaxYear(2023),
           IncomeSourceId(""),
           Nino(""),
-          JourneyName.About,
+          JourneyName.NoJourney,
           AuthorisationRequest[AnyContent](User("", None), request)
         ) { (_, _) =>
           Future.successful(Ok("Success"))

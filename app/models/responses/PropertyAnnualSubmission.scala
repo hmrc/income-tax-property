@@ -16,9 +16,27 @@
 
 package models.responses
 
+import models.request.esba.EsbaInfo
+import models.request.{CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments}
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
+
+final case class FetchedPropertyData(
+                                      capitalAllowancesForACar: Option[CapitalAllowancesForACar],
+                                      propertyAbout: Option[PropertyAbout],
+                                      adjustments: Option[PropertyRentalAdjustments],
+                                      // Todo: On the relevant ticket to be implemented: allowances: Option[Allowances],
+                                      esbasWithSupportingQuestions: Option[EsbaInfo]
+                                      // Todo: On the relevant ticket to be implemented: Fhl: Option[Fhl],
+                                      // Todo: On the relevant ticket to be implemented: propertyRentals: Option[PropertyRentals],
+                                      // Todo: On the relevant ticket to be implemented: sbasWithSupportingQuestions: Option[SbasWithSupportingQuestions]
+                                    )
+
+
+object FetchedPropertyData {
+  implicit val format = Json.format[FetchedPropertyData]
+}
 
 case class PropertyAnnualSubmission(submittedOn: Option[LocalDateTime],
                                     foreignFhlEea: Option[AnnualForeignFhlEea],
@@ -186,9 +204,11 @@ object UkOtherAllowances {
   implicit val format: OFormat[UkOtherAllowances] = Json.format[UkOtherAllowances]
 }
 
-case class Esba(amount: BigDecimal,
-                firstYear: Option[StructuredBuildingAllowanceDate],
-                building: StructuredBuildingAllowanceBuilding)
+case class Esba(
+                 amount: BigDecimal,
+                 firstYear: Option[StructuredBuildingAllowanceDate],
+                 building: StructuredBuildingAllowanceBuilding
+               )
 
 object Esba {
   implicit val format: OFormat[Esba] = Json.format[Esba]
