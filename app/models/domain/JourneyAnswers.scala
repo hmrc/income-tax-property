@@ -18,6 +18,7 @@ package models.domain
 
 import models.common._
 import models.errors.InvalidJsonFormatError
+import models.request.esba.{EsbaInUpstream, EsbaInfoToSave}
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 

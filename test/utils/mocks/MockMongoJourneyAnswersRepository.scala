@@ -25,7 +25,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockJourneyStatusService extends MockFactory with CleanMongoCollectionSupport{
+trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport{
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)

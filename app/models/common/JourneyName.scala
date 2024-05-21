@@ -25,6 +25,10 @@ sealed abstract class JourneyName(override val entryName: String) extends EnumEn
 object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
   val values: IndexedSeq[JourneyName] = findValues
 
+  case object NoJourney extends JourneyName("no-journey")
+
+  case object AllJourneys extends JourneyName("all-journeys")
+
   case object About extends JourneyName("property-about")
 
   case object RentalIncome extends JourneyName("rental-income")
@@ -39,5 +43,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object RentalExpenses extends JourneyName("rental-expenses")
   case object RentARoom extends JourneyName("rent-a-room")
+
+  case object PropertyRentals extends JourneyName("property-rentals")
 
 }

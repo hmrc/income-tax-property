@@ -46,3 +46,7 @@ final case class CannotReadJsonError(details: List[(JsPath, scala.collection.Seq
 final case class CannotParseJsonError(details: Throwable) extends ServiceError {
   val message: String = s"Cannot parse JSON: ${details.getMessage}"
 }
+
+final case class InternalError(description: String) extends ServiceError {
+  override val message: String = description
+}

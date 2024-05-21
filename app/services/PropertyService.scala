@@ -21,10 +21,13 @@ import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
+import models.domain.JourneyAnswers
 import models.errors._
-import models.request.{Income, PropertyRentalAdjustments, RentalAllowances}
+import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
+import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
+import models.request.{Income, PropertyAbout, PropertyRentalAdjustments, RentalAllowances}
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
+import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.Files.logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -87,6 +90,116 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
         }
       )
     } yield r
+  }
+
+  import models.repository.Merger._
+
+  def getFetchedPropertyDataMerged(
+                                    ctx: JourneyContext,
+                                    nino: Nino,
+                                    incomeSourceId: String
+                                  )(
+                                    implicit ec: ExecutionContext,
+                                    hc: HeaderCarrier
+                                  ): EitherT[Future, ServiceError, FetchedPropertyData] = {
+    val result = getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
+
+    for {
+      resultFromDownstream <- result
+      resultFromRepository <- fetchAllJourneyDataFromRepository(ctx) //ToDo, make a proper repo error?
+    } yield {
+      mergeAll(resultFromDownstream, resultFromRepository)
+    }
+
+  }
+
+  private def fetchAllJourneyDataFromRepository(ctx: JourneyContext): ITPEnvelope[Map[String, JourneyAnswers]] = {
+    val result: Future[Either[ServiceError, Map[String, JourneyAnswers]]] = if (ctx.journey == JourneyName.NoJourney) {
+      Future.successful(InternalError(s"Journey Repo 'should' not be accessed, journey name: ${ctx.journey.entryName}").asLeft[Map[String, JourneyAnswers]])
+    } else {
+      repository
+        .fetchAllJourneys(ctx)
+        .map(ja => getValidJourneysPerJourneyName(ja.toList))
+    }
+    ITPEnvelope.liftFuture(result)
+  }
+
+  private def getValidJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers]): Either[ServiceError, Map[String, JourneyAnswers]] = {
+    val journeyAnswersGrouped = journeyAnswers.toList.groupBy(j => j.journey.entryName)
+    journeyAnswersGrouped.foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError])((acc, kv) => {
+      acc match {
+        case Right(ja) => {
+          val (k, v) = kv
+          val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.size == 1) {
+            (ja + (k -> v(0))).asRight[ServiceError]
+          } else {
+            RepositoryError.asLeft[Map[String, JourneyAnswers]]
+          }
+          r
+        }
+        case left => left
+      }
+    })
+
+  }
+
+  private def mergeAll(resultFromDownstream: PropertyAnnualSubmission, resultFromRepository: Map[String, JourneyAnswers]): FetchedPropertyData = {
+    val esbaInfoMaybe = mergeEsbaInfo(resultFromDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
+    val propertyAboutMaybe = mergePropertyAbout(resultFromRepository.get(JourneyName.About.entryName))
+    val adjustmentsMaybe = mergeAdjustments(resultFromDownstream, resultFromRepository.get(JourneyName.RentalAdjustments.entryName))
+    FetchedPropertyData(None, propertyAboutMaybe, adjustmentsMaybe, esbaInfoMaybe)
+  }
+
+  private def mergePropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyAbout] = {
+    resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyAbout])
+      case None => None
+    }
+  }
+
+  private def mergeAdjustments(resultFromDownstream: PropertyAnnualSubmission, resultFromRepository: Option[JourneyAnswers]): Option[PropertyRentalAdjustments] = {
+
+    //Todo: What to do with None None (In case we do not receive any info from db and downstream?
+    val adjustments: Option[UkOtherAdjustments] = for {
+      uop <- resultFromDownstream.ukOtherProperty
+      uopaa <- uop.ukOtherPropertyAnnualAdjustments
+    } yield uopaa
+
+    val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[AdjustmentStoreAnswers])
+      case None => None
+    }
+    adjustmentStoreAnswers.merge(adjustments)
+  }
+
+  private def mergeEsbaInfo(resultFromDownstream: PropertyAnnualSubmission, resultFromRepository: Option[JourneyAnswers]): Option[EsbaInfo] = {
+    val esbasMaybe: Option[List[Esba]] = for {
+      ukop <- resultFromDownstream.ukOtherProperty
+      ukopaa <- ukop.ukOtherPropertyAnnualAllowances
+      esba <- ukopaa.enhancedStructuredBuildingAllowance
+    } yield esba.toList
+
+    val esbasInRequestMaybe = esbasMaybe.map(_.map(e => EsbaInUpstream(
+      // Todo: Remove .get's, but again, they are mandatory on frontend.
+      // Todo: What to do if None comes from downstream?
+      e.firstYear.get.qualifyingDate,
+      e.firstYear.get.qualifyingAmountExpenditure,
+      e.amount,
+      Address(
+        BuildingName(e.building.name.get),
+        BuildingNumber(e.building.number.get),
+        Postcode(e.building.postCode)
+      ))))
+
+    // Todo: When giving the data back, what to do in case qualifying date and amounts not present?
+    // Todo: They are required on the frontend
+
+    val esbaInfoSavedInRepositoryMaybe: Option[EsbaInfoToSave] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[EsbaInfoToSave])
+      case None => None
+    }
+
+    esbaInfoSavedInRepositoryMaybe.merge(esbasInRequestMaybe)
   }
 
   def getPropertyPeriodicSubmissions(taxYear: Int,
@@ -206,12 +319,12 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                                    (implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
-      propertyRentalAdjustment.businessPremisesRenovationAllowanceBalancingCharges.renovationAllowanceBalancingChargeYesNo)
+      propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo)
     val ukOtherAdjustments = UkOtherAdjustments(
       None,
       propertyRentalAdjustment.balancingCharge.balancingChargeAmount,
       Some(propertyRentalAdjustment.privateUseAdjustment),
-      propertyRentalAdjustment.businessPremisesRenovationAllowanceBalancingCharges.renovationAllowanceBalancingChargeAmount,
+      propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeAmount,
       None,
       None)
 

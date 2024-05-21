@@ -17,19 +17,20 @@
 package models
 
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
-import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInRequest, EsbaInfo, EsbaInfoToSave}
+import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.responses._
 import play.api.libs.json.{JsValue, Json}
 import utils.UnitTest
 
 import java.time.{LocalDate, LocalDateTime}
 import models.request.esba.EsbaInfoExtensions._
+import models.repository.Extractor._
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
     ClaimEnhancedStructureBuildingAllowance(true),
     EsbaClaims(false),
     List(
-      EsbaInRequest(
+      EsbaInUpstream(
         LocalDate.parse("2020-04-04"),
         12,
         43,
@@ -39,7 +40,7 @@ class EsbaInfoSpec extends UnitTest {
           Postcode("XX1 1XX")
         )
       ),
-      EsbaInRequest(
+      EsbaInUpstream(
         LocalDate.parse("2023-01-22"),
         535,
         54,
@@ -49,7 +50,7 @@ class EsbaInfoSpec extends UnitTest {
           Postcode("XX1 1XX")
         )
       ),
-      EsbaInRequest(
+      EsbaInUpstream(
         LocalDate.parse("2024-02-12"),
         22,
         23,
@@ -176,7 +177,7 @@ class EsbaInfoSpec extends UnitTest {
     }
 
     "convert to from EsbaInfo to EsbaInfoToSave" in {
-      esbaInfo.toEsbaToSave shouldBe EsbaInfoToSave(esbaInfo.claimEnhancedStructureBuildingAllowance, esbaInfo.esbaClaims)
+      esbaInfo.extractToSavePart() shouldBe EsbaInfoToSave(esbaInfo.claimEnhancedStructureBuildingAllowance, esbaInfo.esbaClaims)
     }
   }
 

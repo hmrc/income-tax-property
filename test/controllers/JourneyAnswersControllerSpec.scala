@@ -19,23 +19,25 @@ package controllers
 import cats.syntax.either._
 import models.common.JourneyName.About
 import models.common._
-import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.request.sba._
 import models.responses._
+import org.apache.pekko.util.Timeout
+import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockJourneyStatusService, MockPropertyService}
+import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.test.Helpers._
 
 class JourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockPropertyService with MockJourneyStatusService with MockAuthorisedAction with FakeRequestProvider
+  extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction with FakeRequestProvider
     with ScalaCheckPropertyChecks {
 
   private val underTest = new JourneyAnswersController(
@@ -130,17 +132,17 @@ class JourneyAnswersControllerSpec
         |    "balancingChargeAmount": 108
         |  },
         |  "propertyIncomeAllowance": 34.56,
-        |  "businessPremisesRenovationAllowanceBalancingCharges": {
+        |  "renovationAllowanceBalancingCharge": {
         |    "renovationAllowanceBalancingChargeYesNo": true,
         |    "renovationAllowanceBalancingChargeAmount": 92
         |  },
         |  "residentialFinancialCost": 56.78,
-        |  "residentialFinancialCostsCarriedForward": 78.89
+        |  "unusedResidentialFinanceCost": 78.89
         |}
         """.stripMargin)
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
 
-    "should return no_content for valid request body" in {
+    "return no_content for valid request body" in {
 
       mockAuthorisation()
       mockSavePropertyRentalAdjustments(
@@ -242,8 +244,8 @@ class JourneyAnswersControllerSpec
         |    }
         |}""".stripMargin)
 
-    val ctx: JourneyContext =
-      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
+
 
     "return created for valid request body" in {
 
@@ -728,6 +730,35 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       val result = underTest.updateIncome(taxYear, incomeSourceId, nino, SubmissionId(""))(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "fetch merged property data" should {
+    "return success when service returns success " in {
+      mockAuthorisation()
+      val resultFromService = FetchedPropertyData(
+        None,
+        None,
+        None,
+        Some(EsbaInfo(
+          ClaimEnhancedStructureBuildingAllowance(true),
+          EsbaClaims(true),
+          List()
+        ))
+      )
+      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
+      val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
+
+      status(result) shouldBe 200
+
+      val timeout: Timeout = Timeout(Span(250, Millis))
+      contentAsJson(result)(timeout) shouldBe Json.toJson(resultFromService)
+    }
+    "return failure when service returns failure " in {
+      mockAuthorisation()
+      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, RepositoryError.asLeft[FetchedPropertyData])
+      val result = await(underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest))
+      result.header.status shouldBe 500
     }
   }
 }

@@ -30,7 +30,6 @@ object EsbaInfoToSave {
 
 object EsbaInfoExtensions {
   implicit class EsbaExtensions(esbaInfo: EsbaInfo) {
-    def toEsbaToSave: EsbaInfoToSave = EsbaInfoToSave(esbaInfo.claimEnhancedStructureBuildingAllowance, esbaInfo.esbaClaims)
 
     def toEsba: List[Esba] = esbaInfo.esbas.map(esbaInRequest => Esba(
       esbaInRequest.esbaClaim,  //Todo: IMPORTANT! Which one?

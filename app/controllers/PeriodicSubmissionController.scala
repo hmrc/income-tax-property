@@ -46,7 +46,13 @@ class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
 
   def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](TaxYear(taxYear), IncomeSourceId(""), Nino(nino), JourneyName.About, request) { (_, propertyPeriodicSubmissionRequest) =>
+      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        JourneyName.NoJourney,
+        request
+      ) { (_, propertyPeriodicSubmissionRequest) =>
         propertyServices.createPeriodicSubmission(nino, incomeSourceId, taxYear, propertyPeriodicSubmissionRequest).value.map {
           case Right(periodicSubmissionData) => Created(Json.toJson(periodicSubmissionData))
           case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
@@ -58,7 +64,13 @@ class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
 
   def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](TaxYear(taxYear), IncomeSourceId(""), Nino(nino), JourneyName.About, request) { (_, propertyPeriodicSubmissionRequest) =>
+      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        JourneyName.NoJourney,
+        request
+      ) { (_, propertyPeriodicSubmissionRequest) =>
         propertyServices.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, propertyPeriodicSubmissionRequest).value.map {
           case Right(_) => NoContent
           case Left(ApiServiceError(BAD_REQUEST)) => BadRequest

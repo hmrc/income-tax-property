@@ -20,9 +20,9 @@ import cats.implicits.catsSyntaxEitherId
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, JourneyStatus, JourneyStatusData, Mtditid, TaxYear}
 import models.errors.ServiceError
 import utils.UnitTest
-import utils.mocks.MockJourneyStatusService
+import utils.mocks.MockMongoJourneyAnswersRepository
 
-class JourneyStatusServiceSpec extends UnitTest with MockJourneyStatusService {
+class JourneyStatusServiceSpec extends UnitTest with MockMongoJourneyAnswersRepository {
 
   "JourneyStatusService" should {
     ".setStatus" in {
