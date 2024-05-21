@@ -20,13 +20,13 @@ import models.request.RentalAllowances
 import play.api.libs.json.{Json, OFormat}
 
 
-case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesNo: Boolean)
+case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesOrNo: Boolean)
 
 object RentalAllowancesStoreAnswers {
   implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]
 
   def fromJourneyAnswers(answers: RentalAllowances): RentalAllowancesStoreAnswers =
     RentalAllowancesStoreAnswers(
-      answers.electricChargePointAllowance.electricChargePointAllowanceYesNo
+      answers.electricChargePointAllowance.electricChargePointAllowanceYesOrNo
     )
 }

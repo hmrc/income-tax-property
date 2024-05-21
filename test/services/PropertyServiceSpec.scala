@@ -301,7 +301,7 @@ class PropertyServiceSpec extends UnitTest
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
     val allowances = RentalAllowances(
       Some(11),
-      ElectricChargePointAllowance(electricChargePointAllowanceYesNo = true, Some(11)),
+      ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
       Some(11),
       Some(11),
       Some(11),
