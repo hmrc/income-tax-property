@@ -16,17 +16,29 @@
 
 package models
 
-import models.request.RentalAllowances
+import models.request.{ElectricChargePointAllowance, RentalAllowances}
 import play.api.libs.json.{Json, OFormat}
 
 
-case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesOrNo: Boolean)
+case class RentalAllowancesStoreAnswers(annualInvestmentAllowance: Option[BigDecimal],
+                             electricChargePointAllowance: ElectricChargePointAllowance,
+                             zeroEmissionCarAllowance: Option[BigDecimal],
+                             zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
+                             businessPremisesRenovationAllowance: Option[BigDecimal],
+                             replacementOfDomesticGoodsAllowance: Option[BigDecimal],
+                             otherCapitalAllowance: Option[BigDecimal])
 
 object RentalAllowancesStoreAnswers {
   implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]
 
   def fromJourneyAnswers(answers: RentalAllowances): RentalAllowancesStoreAnswers =
     RentalAllowancesStoreAnswers(
-      answers.electricChargePointAllowance.electricChargePointAllowanceYesOrNo
+      annualInvestmentAllowance = answers.annualInvestmentAllowance,
+      electricChargePointAllowance = answers.electricChargePointAllowance,
+      zeroEmissionCarAllowance = answers.zeroEmissionCarAllowance,
+      zeroEmissionGoodsVehicleAllowance = answers.zeroEmissionGoodsVehicleAllowance,
+      businessPremisesRenovationAllowance = answers.businessPremisesRenovationAllowance,
+      replacementOfDomesticGoodsAllowance = answers.replacementOfDomesticGoodsAllowance,
+      otherCapitalAllowance = answers.otherCapitalAllowance
     )
 }
