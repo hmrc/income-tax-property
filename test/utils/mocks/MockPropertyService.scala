@@ -17,7 +17,6 @@
 package utils.mocks
 
 import cats.data.EitherT
-import cats.syntax.either._
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors.ServiceError

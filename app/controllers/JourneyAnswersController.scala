@@ -161,7 +161,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     }
   }
 
-  def saveSba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
+  def savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
     auth.async { implicit request =>
       withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
         handleResponse(NO_CONTENT) {
@@ -175,9 +175,9 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
             )
             _ <- propertyService.persistAnswers(ctx, sbaInfo.toSbaToSave).map(isPersistSuccess =>
               if (!isPersistSuccess) {
-                logger.error("Could not persist")
+                logger.error("SBA Persist failed")
               } else {
-                logger.info("Persist successful")
+                logger.info("SBA Persist successful")
               }
             )
           } yield r

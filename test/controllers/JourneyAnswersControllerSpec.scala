@@ -21,6 +21,7 @@ import models.common.JourneyName.About
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
+import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
 import models.request.sba._
 import models.responses._
@@ -28,17 +29,17 @@ import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.status
+import play.api.test.Helpers._
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.test.Helpers._
 
 class JourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction with FakeRequestProvider
-    with ScalaCheckPropertyChecks {
+    extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction
+    with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
@@ -55,13 +56,12 @@ class JourneyAnswersControllerSpec
 
   "create or update property about section" should {
 
-    val validRequestBody: JsValue = Json.parse(
-      """
-        |{
-        |   "totalIncome": "over",
-        |   "ukProperty": ["property.rentals"]
-        |}
-        |""".stripMargin)
+    val validRequestBody: JsValue = Json.parse("""
+                                                 |{
+                                                 |   "totalIncome": "over",
+                                                 |   "ukProperty": ["property.rentals"]
+                                                 |}
+                                                 |""".stripMargin)
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
     "should return no_content for valid request body" in {
@@ -82,27 +82,24 @@ class JourneyAnswersControllerSpec
 
   "Update journey status for rent-a-room" should {
 
-    val journeyStatusJs: JsValue = Json.parse(
-      """
-        |{
-        | "status": "inProgress"
-        |}
-        |""".stripMargin)
+    val journeyStatusJs: JsValue = Json.parse("""
+                                                |{
+                                                | "status": "inProgress"
+                                                |}
+                                                |""".stripMargin)
 
-    val journeyStatusErrorJs: JsValue = Json.parse(
-      """
-        |{
-        | "foo": "completed"
-        |}
-        |""".stripMargin)
-
+    val journeyStatusErrorJs: JsValue = Json.parse("""
+                                                     |{
+                                                     | "foo": "completed"
+                                                     |}
+                                                     |""".stripMargin)
 
     val ctx = JourneyContext(
       taxYear = TaxYear(2023),
       incomeSourceId = IncomeSourceId("incomeSourceId"),
       mtditid = Mtditid("1234567890"),
-      journey = JourneyName.RentARoom)
-
+      journey = JourneyName.RentARoom
+    )
 
     "should return no_content for valid request body where a field named status is present in the body request" in {
 
@@ -123,22 +120,21 @@ class JourneyAnswersControllerSpec
 
   "create or update property rental adjustments section" should {
 
-    val propertyRentalAdjustmentsJs: JsValue = Json.parse(
-      """
-        |{
-        |  "privateUseAdjustment": 12.34,
-        |  "balancingCharge": {
-        |    "balancingChargeYesNo": true,
-        |    "balancingChargeAmount": 108
-        |  },
-        |  "propertyIncomeAllowance": 34.56,
-        |  "renovationAllowanceBalancingCharge": {
-        |    "renovationAllowanceBalancingChargeYesNo": true,
-        |    "renovationAllowanceBalancingChargeAmount": 92
-        |  },
-        |  "residentialFinancialCost": 56.78,
-        |  "unusedResidentialFinanceCost": 78.89
-        |}
+    val propertyRentalAdjustmentsJs: JsValue = Json.parse("""
+                                                            |{
+                                                            |  "privateUseAdjustment": 12.34,
+                                                            |  "balancingCharge": {
+                                                            |    "balancingChargeYesNo": true,
+                                                            |    "balancingChargeAmount": 108
+                                                            |  },
+                                                            |  "propertyIncomeAllowance": 34.56,
+                                                            |  "renovationAllowanceBalancingCharge": {
+                                                            |    "renovationAllowanceBalancingChargeYesNo": true,
+                                                            |    "renovationAllowanceBalancingChargeAmount": 92
+                                                            |  },
+                                                            |  "residentialFinancialCost": 56.78,
+                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |}
         """.stripMargin)
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
 
@@ -174,20 +170,19 @@ class JourneyAnswersControllerSpec
 
   "create or update property allowances section" should {
 
-    val validRequestBody: JsValue = Json.parse(
-      """
-        |{
-        |  "annualInvestmentAllowance": 11,
-        |  "electricChargePointAllowance": {
-        |    "electricChargePointAllowanceYesOrNo": true,
-        |    "electricChargePointAllowanceAmount": 11
-        |  },
-        |  "zeroEmissionCarAllowance": 11,
-        |  "zeroEmissionGoodsVehicleAllowance": 11,
-        |  "businessPremisesRenovationController": 11,
-        |  "replacementOfDomesticGoodsController": 11,
-        |  "otherCapitalAllowance": 11
-        |}
+    val validRequestBody: JsValue = Json.parse("""
+                                                 |{
+                                                 |  "annualInvestmentAllowance": 11,
+                                                 |  "electricChargePointAllowance": {
+                                                 |    "electricChargePointAllowanceYesOrNo": true,
+                                                 |    "electricChargePointAllowanceAmount": 11
+                                                 |  },
+                                                 |  "zeroEmissionCarAllowance": 11,
+                                                 |  "zeroEmissionGoodsVehicleAllowance": 11,
+                                                 |  "businessPremisesRenovationController": 11,
+                                                 |  "replacementOfDomesticGoodsController": 11,
+                                                 |  "otherCapitalAllowance": 11
+                                                 |}
         """.stripMargin)
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
 
@@ -219,33 +214,32 @@ class JourneyAnswersControllerSpec
   }
 
   "create property income section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        |   "ukOtherPropertyIncome": {
-        |        "premiumsOfLeaseGrant":52.64,
-        |        "reversePremiums":34,
-        |        "periodAmount":4,
-        |        "otherIncome":76,
-        |        "ukOtherRentARoom": {
-        |          "rentsReceived":45
-        |        }
-        |   },
-        |   "incomeToSave": {
-        |        "isNonUKLandlord" : true,
-        |        "incomeFromPropertyRentals" : 45,
-        |        "leasePremiumPayment" : true,
-        |        "reversePremiumsReceived" : {
-        |            "reversePremiumsReceived" : true
-        |        },
-        |        "calculatedFigureYourself" : {
-        |            "calculatedFigureYourself" : false
-        |        },
-        |        "yearLeaseAmount" : 4
-        |    }
-        |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |   "ukOtherPropertyIncome": {
+                                                 |        "premiumsOfLeaseGrant":52.64,
+                                                 |        "reversePremiums":34,
+                                                 |        "periodAmount":4,
+                                                 |        "otherIncome":76,
+                                                 |        "ukOtherRentARoom": {
+                                                 |          "rentsReceived":45
+                                                 |        }
+                                                 |   },
+                                                 |   "incomeToSave": {
+                                                 |        "isNonUKLandlord" : true,
+                                                 |        "incomeFromPropertyRentals" : 45,
+                                                 |        "leasePremiumPayment" : true,
+                                                 |        "reversePremiumsReceived" : {
+                                                 |            "reversePremiumsReceived" : true
+                                                 |        },
+                                                 |        "calculatedFigureYourself" : {
+                                                 |            "calculatedFigureYourself" : false
+                                                 |        },
+                                                 |        "yearLeaseAmount" : 4
+                                                 |    }
+                                                 |}""".stripMargin)
 
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
-
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
 
     "return created for valid request body" in {
 
@@ -275,16 +269,15 @@ class JourneyAnswersControllerSpec
 
   "create or update property expenses section" should {
 
-    val createOrUpdateUIRequest: JsValue = Json.parse(
-      """{
-        |    "rentsRatesAndInsurance": 100,
-        |    "repairsAndMaintenanceCosts": 200,
-        |    "loanInterest": 300,
-        |    "otherProfessionalFee": 400,
-        |    "costsOfServicesProvided": 500,
-        |    "otherAllowablePropertyExpenses": 600,
-        |    "propertyBusinessTravelCost": 700
-        |}""".stripMargin)
+    val createOrUpdateUIRequest: JsValue = Json.parse("""{
+                                                        |    "rentsRatesAndInsurance": 100,
+                                                        |    "repairsAndMaintenanceCosts": 200,
+                                                        |    "loanInterest": 300,
+                                                        |    "otherProfessionalFee": 400,
+                                                        |    "costsOfServicesProvided": 500,
+                                                        |    "otherAllowablePropertyExpenses": 600,
+                                                        |    "propertyBusinessTravelCost": 700
+                                                        |}""".stripMargin)
 
     val createOrUpdateRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
     import createOrUpdateRequestBody._
@@ -447,30 +440,29 @@ class JourneyAnswersControllerSpec
   }
 
   "update property income section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        |   "ukOtherPropertyIncome": {
-        |        "premiumsOfLeaseGrant":52.64,
-        |        "reversePremiums":34,
-        |        "periodAmount":4,
-        |        "otherIncome":76,
-        |        "ukOtherRentARoom": {
-        |          "rentsReceived":45
-        |        }
-        |   },
-        |   "incomeToSave": {
-        |        "isNonUKLandlord" : true,
-        |        "incomeFromPropertyRentals" : 45,
-        |        "leasePremiumPayment" : true,
-        |        "reversePremiumsReceived" : {
-        |            "reversePremiumsReceived" : true
-        |        },
-        |        "calculatedFigureYourself" : {
-        |            "calculatedFigureYourself" : false
-        |        },
-        |        "yearLeaseAmount" : 4
-        |    }
-        |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |   "ukOtherPropertyIncome": {
+                                                 |        "premiumsOfLeaseGrant":52.64,
+                                                 |        "reversePremiums":34,
+                                                 |        "periodAmount":4,
+                                                 |        "otherIncome":76,
+                                                 |        "ukOtherRentARoom": {
+                                                 |          "rentsReceived":45
+                                                 |        }
+                                                 |   },
+                                                 |   "incomeToSave": {
+                                                 |        "isNonUKLandlord" : true,
+                                                 |        "incomeFromPropertyRentals" : 45,
+                                                 |        "leasePremiumPayment" : true,
+                                                 |        "reversePremiumsReceived" : {
+                                                 |            "reversePremiumsReceived" : true
+                                                 |        },
+                                                 |        "calculatedFigureYourself" : {
+                                                 |            "calculatedFigureYourself" : false
+                                                 |        },
+                                                 |        "yearLeaseAmount" : 4
+                                                 |    }
+                                                 |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
@@ -536,43 +528,42 @@ class JourneyAnswersControllerSpec
   }
 
   "update esba section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        | "claimEnhancedStructureBuildingAllowance" : true,
-        | "esbas": [
-        |            {
-        |                "esbaQualifyingDate" : "2020-04-04",
-        |                "esbaQualifyingAmount" : 12,
-        |                "esbaClaim" : 43,
-        |                "esbaAddress" : {
-        |                    "buildingName" : "name12",
-        |                    "buildingNumber" : "123",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            },
-        |            {
-        |                "esbaQualifyingDate" : "2023-01-22",
-        |                "esbaQualifyingAmount" : 535,
-        |                "esbaClaim" : 54,
-        |                "esbaAddress" : {
-        |                    "buildingName" : "235",
-        |                    "buildingNumber" : "3",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            },
-        |            {
-        |                "esbaQualifyingDate" : "2024-02-12",
-        |                "esbaQualifyingAmount" : 22,
-        |                "esbaClaim" : 23,
-        |                "esbaAddress" : {
-        |                    "buildingName" : "12",
-        |                    "buildingNumber" : "2",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            }
-        |        ],
-        |        "esbaClaims" : false
-        |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 | "claimEnhancedStructureBuildingAllowance" : true,
+                                                 | "esbas": [
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2020-04-04",
+                                                 |                "esbaQualifyingAmount" : 12,
+                                                 |                "esbaClaim" : 43,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "name12",
+                                                 |                    "buildingNumber" : "123",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2023-01-22",
+                                                 |                "esbaQualifyingAmount" : 535,
+                                                 |                "esbaClaim" : 54,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "235",
+                                                 |                    "buildingNumber" : "3",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2024-02-12",
+                                                 |                "esbaQualifyingAmount" : 22,
+                                                 |                "esbaClaim" : 23,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "12",
+                                                 |                    "buildingNumber" : "2",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            }
+                                                 |        ],
+                                                 |        "esbaClaims" : false
+                                                 |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
@@ -635,43 +626,42 @@ class JourneyAnswersControllerSpec
   }
 
   "update sba section" should {
-    val validRequestBody: JsValue = Json.parse(
-      """{
-        | "claimStructureBuildingAllowance" : true,
-        | "sbas": [
-        |            {
-        |                "sbaQualifyingDate" : "2020-04-04",
-        |                "sbaQualifyingAmount" : 12,
-        |                "sbaClaim" : 43,
-        |                "sbaAddress" : {
-        |                    "buildingName" : "name12",
-        |                    "buildingNumber" : "123",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            },
-        |            {
-        |                "sbaQualifyingDate" : "2023-01-22",
-        |                "sbaQualifyingAmount" : 535,
-        |                "sbaClaim" : 54,
-        |                "sbaAddress" : {
-        |                    "buildingName" : "235",
-        |                    "buildingNumber" : "3",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            },
-        |            {
-        |                "sbaQualifyingDate" : "2024-02-12",
-        |                "sbaQualifyingAmount" : 22,
-        |                "sbaClaim" : 23,
-        |                "sbaAddress" : {
-        |                    "buildingName" : "12",
-        |                    "buildingNumber" : "2",
-        |                    "postCode" : "XX1 1XX"
-        |                }
-        |            }
-        |        ],
-        |        "sbaClaims" : false
-        |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 | "claimStructureBuildingAllowance" : true,
+                                                 | "structureBuildingFormGroup": [
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2020-04-04",
+                                                 |                "structureBuildingQualifyingAmount" : 12,
+                                                 |                "structureBuildingAllowanceClaim" : 43,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "name12",
+                                                 |                    "buildingNumber" : "123",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2023-01-22",
+                                                 |                "structureBuildingQualifyingAmount" : 535,
+                                                 |                "structureBuildingAllowanceClaim" : 54,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "235",
+                                                 |                    "buildingNumber" : "3",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2024-02-12",
+                                                 |                "structureBuildingQualifyingAmount" : 22,
+                                                 |                "structureBuildingAllowanceClaim" : 23,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "12",
+                                                 |                    "buildingNumber" : "2",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            }
+                                                 |        ],
+                                                 |        "sbaClaims" : false
+                                                 |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
@@ -692,11 +682,22 @@ class JourneyAnswersControllerSpec
         ctx,
         SbaInfoToSave(
           ClaimStructureBuildingAllowance(true),
-          SbaClaims(false)
+          Array(
+            StructureBuildingFormGroup(
+              LocalDate.parse("2020-04-04"),
+              12,
+              43,
+              Address(
+                BuildingName("name12"),
+                BuildingNumber("123"),
+                Postcode("XX1 1XX")
+              )
+            )
+          )
         )
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.saveSba(taxYear, incomeSourceId, nino)(request))
+      val result = await(underTest.savePropertyRentalSBA(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -721,7 +722,7 @@ class JourneyAnswersControllerSpec
         )
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
-        val result = await(underTest.saveSba(taxYear, incomeSourceId, nino)(request))
+        val result = await(underTest.savePropertyRentalSBA(taxYear, incomeSourceId, nino)(request))
         result.header.status shouldBe expectedError
       }
     }
@@ -740,11 +741,13 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
-        Some(EsbaInfo(
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(true),
-          List()
-        ))
+        Some(
+          EsbaInfo(
+            ClaimEnhancedStructureBuildingAllowance(true),
+            EsbaClaims(true),
+            List()
+          )
+        )
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

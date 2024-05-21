@@ -64,7 +64,7 @@ object PropertyAnnualSubmission {
     )
   }
 
-  def fromSbas(sbas: List[StructuredBuildingAllowance]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
+  def fromSbas(sbas: Array[StructuredBuildingAllowance]): PropertyAnnualSubmission = { //Todo: Validations MUST BE added!!!
     PropertyAnnualSubmission(
       Some(LocalDateTime.now()),
       None,
