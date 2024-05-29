@@ -76,36 +76,6 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     } yield r
   }
 
-  def updateIncome(
-                    taxYear: TaxYear,
-                    nino: Nino,
-                    incomeSourceId:
-                    IncomeSourceId,
-                    journeyContext: JourneyContext,
-                    incomeToSave: Income,
-                    saveIncome: SaveIncome,
-                    submissionId: SubmissionId
-                  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, String] = {
-    for {
-      psr <- getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
-      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(psr, saveIncome))
-      r <- updatePeriodicSubmission(
-        nino.value,
-        incomeSourceId.value,
-        taxYear.endYear,
-        submissionId.value,
-        ppsr
-      )
-      _ <- persistAnswers(journeyContext, incomeToSave).map(isPersistSuccess =>
-        if (!isPersistSuccess) {
-          logger.error("Could not persist")
-        } else {
-          logger.info("Persist successful")
-        }
-      )
-    } yield r
-  }
-
   import models.repository.Merger._
 
   def getFetchedPropertyDataMerged(
@@ -235,11 +205,40 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
   // AnnualSubmissions(taxYear)
   // getPeriodicSubmissions() //Sub-ids of fromDate toDate
   // taxYear == toDate
+  def saveExpenses(
+                    taxYear: TaxYear,
+                    incomeSourceId: IncomeSourceId,
+                    nino: Nino,
+                    expenses: Expenses
+                  )(
+                    implicit hc: HeaderCarrier
+                  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+    for {
+      psr <- getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
+      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(psr, expenses))
+      r <- psr match {
+        case None => createPeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          ppsr
+        )
+        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) => updatePeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          submissionId.submissionId,
+          ppsr
+        ).map(_ => Some(submissionId))
+        case _ => ITPEnvelope.liftEither(InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]])
+      }
+    } yield r
+  }
 
   def getCurrentPeriodicSubmission(taxYear: Int,
-                                           taxableEntityId: String, //Nino?
-                                           incomeSourceId: String) // businessId
-                                          (implicit hc: HeaderCarrier): ITPEnvelope[Option[PropertyPeriodicSubmission]] = {
+                                   taxableEntityId: String, //Nino?
+                                   incomeSourceId: String) // businessId
+                                  (implicit hc: HeaderCarrier): ITPEnvelope[Option[PropertyPeriodicSubmission]] = {
 
     (for {
       sIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)).leftMap(l => ApiServiceError(l.status))

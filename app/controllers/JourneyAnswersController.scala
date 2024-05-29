@@ -79,39 +79,11 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     auth.async { implicit request =>
       withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(CREATED) {
-          for {
-            psr <- propertyService.getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value) //.getPropertyPeriodicSubmissions(taxYear, incomeSourceId)
-            ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(psr, expenses))
-            r <- propertyService.createPeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              ppsr
-            )
-          } yield r
+          propertyService.saveExpenses(taxYear, incomeSourceId, nino, expenses)
         }
       }
     }
 
-  def updateExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
-        handleResponse(NO_CONTENT) {
-
-          for {
-            currentPeriodicSubmission <- propertyService.getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
-            propertyPeriodicSubmissionRequest <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(currentPeriodicSubmission, expenses))
-            r <- propertyService.updatePeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              submissionId.value,
-              propertyPeriodicSubmissionRequest
-            )
-          } yield r
-        }
-      }
-    }
 
   def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 

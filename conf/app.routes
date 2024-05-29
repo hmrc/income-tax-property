@@ -33,8 +33,6 @@ POST          /property/:taxYear/:incomeSourceId/income/:nino/answers           
 
 POST          /property/:taxYear/:incomeSourceId/expenses/:nino/answers                                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-PUT           /property/:taxYear/:incomeSourceId/expenses/:nino/answers/:submissionId                                              controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId)
-
 POST          /property/:taxYear/:incomeSourceId/allowances/:nino/esba/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 PUT           /property/:taxYear/:nino/:incomeSourceId/esba/answers                                                                controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

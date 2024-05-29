@@ -299,30 +299,8 @@ class JourneyAnswersControllerSpec
         None,
         None
       )
-      val date = LocalDate.now()
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None, None, date, date, None, None, None, Some(
-          UkOtherProperty(
-            ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-          ))
-      )
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        incomeSourceId.value,
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
-      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
 
-      mockCreatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        propertyPeriodicSubmissionRequest,
-        Some(PeriodicSubmissionId("submissionId")).asRight[ServiceError]
-      )
+      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
@@ -331,44 +309,12 @@ class JourneyAnswersControllerSpec
 
     "should return no_content for valid request body" in {
       mockAuthorisation()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(
-        Some(0),
-        None,
-        None,
-        None,
-        None,
-        None
-      )
-      val date = LocalDate.now()
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None, None, date, date, None, None, None, Some(
-          UkOtherProperty(
-            ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-          ))
-      )
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        incomeSourceId.value,
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
 
-      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
-
-      mockUpdatePeriodicSubmissions(
-        nino.value,
-        incomeSourceId.value,
-        taxYear.endYear,
-        incomeSubmissionId.value,
-        propertyPeriodicSubmissionRequest,
-        Right("")
-      )
+      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
-      val result = await(underTest.updateExpenses(taxYear, incomeSourceId, nino, incomeSubmissionId)(request))
-      result.header.status shouldBe NO_CONTENT
+      val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe CREATED
     }
 
     "should return bad request error when request body is empty when saving an expense" in {
@@ -378,142 +324,22 @@ class JourneyAnswersControllerSpec
     }
 
     "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
-      val date = LocalDate.now()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
       mockAuthorisation()
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-        ukOtherPropertyIncome,
-        UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-      )))
+      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, ApiServiceError(CONFLICT).asLeft[Option[PeriodicSubmissionId]])
 
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        "incomeSourceId",
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
-      val Right(ppsr) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
-      mockCreateOrUpdateAnnualSubmissionsNew2(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        incomeSubmissionId.value,
-        ppsr,
-        Left(ApiServiceError(CONFLICT))
-      )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
-      val result = await(underTest.updateExpenses(taxYear, incomeSourceId, nino, incomeSubmissionId)(request))
+      val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe CONFLICT
     }
-
     "should return internal server error when the downstream API returns internal server error when updating an expense" in {
       mockAuthorisation()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
-      val date = LocalDate.now()
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-        ukOtherPropertyIncome,
-        UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-      )))
-      val Right(ppsr) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
+      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, ApiServiceError(INTERNAL_SERVER_ERROR).asLeft[Option[PeriodicSubmissionId]])
 
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        incomeSourceId.value,
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
-      mockCreateOrUpdateAnnualSubmissionsNew2(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        incomeSubmissionId.value,
-        ppsr,
-        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
-      )
-      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
-      val result = await(underTest.updateExpenses(taxYear, incomeSourceId, nino, incomeSubmissionId)(request))
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-    }
-
-    "should return a conflict error when the downstream API returns a conflict error when saving an expense" in {
-      mockAuthorisation()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(
-        Some(0),
-        None,
-        None,
-        None,
-        None,
-        None
-      )
-      val date = LocalDate.now()
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None, None, date, date, None, None, None, Some(
-          UkOtherProperty(
-            ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-          ))
-      )
-
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        incomeSourceId.value,
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
-      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
-      mockCreateOrUpdateAnnualSubmissionsNew(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        propertyPeriodicSubmissionRequest,
-        Left(ApiServiceError(CONFLICT))
-      )
-      val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
-      val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
-      result.header.status shouldBe CONFLICT
-    }
-
-    "should return internal server error when the downstream API returns internal server error when saving an expense" in {
-      mockAuthorisation()
-      val date = LocalDate.now()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(
-        Some(0),
-        None,
-        None,
-        None,
-        None,
-        None
-      )
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None, None, date, date, None, None, None, Some(
-          UkOtherProperty(
-            ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
-          ))
-      )
-      mockGetCurrentPeriodicSubmission(
-        taxYear.endYear,
-        nino.value,
-        nino.value,
-        incomeSourceId.value,
-        Some(propertyPeriodicSubmission).asRight[ServiceError]
-      )
-      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
-
-      mockCreateOrUpdateAnnualSubmissionsNew(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        propertyPeriodicSubmissionRequest,
-        Left(ApiServiceError(INTERNAL_SERVER_ERROR))
-      )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
+
   }
 
   "update esba section" should {
