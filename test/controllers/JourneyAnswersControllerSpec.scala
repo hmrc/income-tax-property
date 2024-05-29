@@ -610,7 +610,7 @@ class JourneyAnswersControllerSpec
 
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
-      val result = underTest.updateIncome(taxYear, incomeSourceId, nino, SubmissionId(""))(fakePostRequest)
+      val result = underTest.saveEsba(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }
@@ -720,7 +720,7 @@ class JourneyAnswersControllerSpec
 
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
-      val result = underTest.updateIncome(taxYear, incomeSourceId, nino, SubmissionId(""))(fakePostRequest)
+      val result = underTest.savePropertyRentalSBA(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }

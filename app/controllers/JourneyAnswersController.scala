@@ -22,7 +22,6 @@ import models.ITPEnvelope
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.repository.Extractor._
-import models.request.Income._
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._

@@ -33,7 +33,10 @@ final case class PropertyPeriodicSubmissionRequest(submittedOn: Option[LocalDate
 object PropertyPeriodicSubmissionRequest {
   implicit val format: OFormat[PropertyPeriodicSubmissionRequest] = Json.format[PropertyPeriodicSubmissionRequest]
 
-  def fromExpenses(periodicSubmissionMaybe: Option[PropertyPeriodicSubmission], expenses: Expenses): Either[ServiceError, PropertyPeriodicSubmissionRequest] = {
+  def fromExpenses(
+                    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+                    expenses: Expenses
+                  ): Either[ServiceError, PropertyPeriodicSubmissionRequest] = {
 
     val ukOtherPropertyIncomeWithPeriodicSubmission = for {
       periodicSubmission <- periodicSubmissionMaybe
@@ -62,10 +65,10 @@ object PropertyPeriodicSubmissionRequest {
               costOfServices = expenses.costsOfServicesProvided,
               travelCosts = expenses.propertyBusinessTravelCost,
               other = expenses.otherAllowablePropertyExpenses,
-              residentialFinancialCostsCarriedForward = None,
-              ukOtherRentARoom = None,
-              consolidatedExpense = None,
-              residentialFinancialCost = None
+              residentialFinancialCostsCarriedForward = periodicSubmission.ukOtherProperty.flatMap(_.expenses.residentialFinancialCostsCarriedForward),
+              ukOtherRentARoom = periodicSubmission.ukOtherProperty.flatMap(_.expenses.ukOtherRentARoom),
+              consolidatedExpense = periodicSubmission.ukOtherProperty.flatMap(_.expenses.consolidatedExpense),
+              residentialFinancialCost = periodicSubmission.ukOtherProperty.flatMap(_.expenses.residentialFinancialCost)
             )
           )
         )
