@@ -44,6 +44,7 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
     val periodicSubmissionResponse = PropertyPeriodicSubmissionResponse(List(
       PropertyPeriodicSubmission(
+        None,
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,

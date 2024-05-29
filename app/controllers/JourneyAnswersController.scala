@@ -18,6 +18,7 @@ package controllers
 
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
+import models.ITPEnvelope
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.repository.Extractor._
@@ -36,6 +37,7 @@ import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
+
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -79,11 +81,13 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(CREATED) {
           for {
+            psr <- propertyService.getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value) //.getPropertyPeriodicSubmissions(taxYear, incomeSourceId)
+            ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(psr, expenses))
             r <- propertyService.createPeriodicSubmission(
               nino.value,
               incomeSourceId.value,
               taxYear.endYear,
-              PropertyPeriodicSubmissionRequest.fromExpenses(expenses)
+              ppsr
             )
           } yield r
         }
@@ -94,13 +98,16 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     auth.async { implicit request =>
       withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(NO_CONTENT) {
+
           for {
+            currentPeriodicSubmission <- propertyService.getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
+            propertyPeriodicSubmissionRequest <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(currentPeriodicSubmission, expenses))
             r <- propertyService.updatePeriodicSubmission(
               nino.value,
               incomeSourceId.value,
               taxYear.endYear,
               submissionId.value,
-              PropertyPeriodicSubmissionRequest.fromExpenses(expenses)
+              propertyPeriodicSubmissionRequest
             )
           } yield r
         }
@@ -128,7 +135,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
         handleResponse(CREATED) {
           propertyService.saveIncome(
-            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
+            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome
           )
         }
       }
@@ -185,32 +192,6 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
   }
-
-
-  def updateIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
-
-        handleResponse(NO_CONTENT) {
-          for {
-            r <- propertyService.updatePeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              submissionId.value,
-              PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome)
-            )
-            _ <- propertyService.persistAnswers(ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave).map(isPersistSuccess =>
-              if (!isPersistSuccess) {
-                logger.error("Could not persist")
-              } else {
-                logger.info("Persist successful")
-              }
-            )
-          } yield r
-        }
-      }
-    }
 
   def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 

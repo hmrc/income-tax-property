@@ -16,11 +16,13 @@
 
 package models
 
+import models.errors.ServiceError
 import models.request.Expenses
 import models.responses._
 import utils.UnitTest
 
 import java.time.LocalDate
+import cats.syntax.either._
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses = Expenses(
@@ -33,14 +35,20 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val propertyPeriodicSubmission = PropertyPeriodicSubmissionRequest(
+  val date = LocalDate.now()
+  val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
+    ukOtherPropertyIncome,
+    UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+  )))
+  val propertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
     None,
     None,
     None,
     Some(
       UkOtherProperty(
-        UkOtherPropertyIncome(Some(0), None, None, None, None, None),
+        ukOtherPropertyIncome,
         UkOtherPropertyExpenses(
           premisesRunningCosts = Some(100),
           repairsAndMaintenance = Some(200),
@@ -60,7 +68,8 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
-      PropertyPeriodicSubmissionRequest.fromExpenses(expenses) shouldBe propertyPeriodicSubmission
+
+      PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses) shouldBe propertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
   }
 }

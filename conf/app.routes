@@ -31,8 +31,6 @@ POST          /property/:taxYear/:incomeSourceId/property-rental-sba/:nino/answe
 
 POST          /property/:taxYear/:incomeSourceId/income/:nino/answers                                                              controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-PUT           /property/:taxYear/:incomeSourceId/income/:nino/answers/:submissionId                                                controllers.JourneyAnswersController.updateIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId)
-
 POST          /property/:taxYear/:incomeSourceId/expenses/:nino/answers                                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 PUT           /property/:taxYear/:incomeSourceId/expenses/:nino/answers/:submissionId                                              controllers.JourneyAnswersController.updateExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId)

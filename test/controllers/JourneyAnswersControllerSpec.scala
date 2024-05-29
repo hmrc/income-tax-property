@@ -38,7 +38,7 @@ import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
-    extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction
+  extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction
     with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   private val underTest = new JourneyAnswersController(
@@ -56,12 +56,13 @@ class JourneyAnswersControllerSpec
 
   "create or update property about section" should {
 
-    val validRequestBody: JsValue = Json.parse("""
-                                                 |{
-                                                 |   "totalIncome": "over",
-                                                 |   "ukProperty": ["property.rentals"]
-                                                 |}
-                                                 |""".stripMargin)
+    val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "totalIncome": "over",
+        |   "ukProperty": ["property.rentals"]
+        |}
+        |""".stripMargin)
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
     "should return no_content for valid request body" in {
@@ -82,17 +83,19 @@ class JourneyAnswersControllerSpec
 
   "Update journey status for rent-a-room" should {
 
-    val journeyStatusJs: JsValue = Json.parse("""
-                                                |{
-                                                | "status": "inProgress"
-                                                |}
-                                                |""".stripMargin)
+    val journeyStatusJs: JsValue = Json.parse(
+      """
+        |{
+        | "status": "inProgress"
+        |}
+        |""".stripMargin)
 
-    val journeyStatusErrorJs: JsValue = Json.parse("""
-                                                     |{
-                                                     | "foo": "completed"
-                                                     |}
-                                                     |""".stripMargin)
+    val journeyStatusErrorJs: JsValue = Json.parse(
+      """
+        |{
+        | "foo": "completed"
+        |}
+        |""".stripMargin)
 
     val ctx = JourneyContext(
       taxYear = TaxYear(2023),
@@ -120,21 +123,22 @@ class JourneyAnswersControllerSpec
 
   "create or update property rental adjustments section" should {
 
-    val propertyRentalAdjustmentsJs: JsValue = Json.parse("""
-                                                            |{
-                                                            |  "privateUseAdjustment": 12.34,
-                                                            |  "balancingCharge": {
-                                                            |    "balancingChargeYesNo": true,
-                                                            |    "balancingChargeAmount": 108
-                                                            |  },
-                                                            |  "propertyIncomeAllowance": 34.56,
-                                                            |  "renovationAllowanceBalancingCharge": {
-                                                            |    "renovationAllowanceBalancingChargeYesNo": true,
-                                                            |    "renovationAllowanceBalancingChargeAmount": 92
-                                                            |  },
-                                                            |  "residentialFinancialCost": 56.78,
-                                                            |  "unusedResidentialFinanceCost": 78.89
-                                                            |}
+    val propertyRentalAdjustmentsJs: JsValue = Json.parse(
+      """
+        |{
+        |  "privateUseAdjustment": 12.34,
+        |  "balancingCharge": {
+        |    "balancingChargeYesNo": true,
+        |    "balancingChargeAmount": 108
+        |  },
+        |  "propertyIncomeAllowance": 34.56,
+        |  "renovationAllowanceBalancingCharge": {
+        |    "renovationAllowanceBalancingChargeYesNo": true,
+        |    "renovationAllowanceBalancingChargeAmount": 92
+        |  },
+        |  "residentialFinancialCost": 56.78,
+        |  "unusedResidentialFinanceCost": 78.89
+        |}
         """.stripMargin)
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
 
@@ -170,19 +174,20 @@ class JourneyAnswersControllerSpec
 
   "create or update property allowances section" should {
 
-    val validRequestBody: JsValue = Json.parse("""
-                                                 |{
-                                                 |  "annualInvestmentAllowance": 11,
-                                                 |  "electricChargePointAllowance": {
-                                                 |    "electricChargePointAllowanceYesOrNo": true,
-                                                 |    "electricChargePointAllowanceAmount": 11
-                                                 |  },
-                                                 |  "zeroEmissionCarAllowance": 11,
-                                                 |  "zeroEmissionGoodsVehicleAllowance": 11,
-                                                 |  "businessPremisesRenovationController": 11,
-                                                 |  "replacementOfDomesticGoodsController": 11,
-                                                 |  "otherCapitalAllowance": 11
-                                                 |}
+    val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |  "annualInvestmentAllowance": 11,
+        |  "electricChargePointAllowance": {
+        |    "electricChargePointAllowanceYesOrNo": true,
+        |    "electricChargePointAllowanceAmount": 11
+        |  },
+        |  "zeroEmissionCarAllowance": 11,
+        |  "zeroEmissionGoodsVehicleAllowance": 11,
+        |  "businessPremisesRenovationController": 11,
+        |  "replacementOfDomesticGoodsController": 11,
+        |  "otherCapitalAllowance": 11
+        |}
         """.stripMargin)
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
 
@@ -214,29 +219,30 @@ class JourneyAnswersControllerSpec
   }
 
   "create property income section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 |   "ukOtherPropertyIncome": {
-                                                 |        "premiumsOfLeaseGrant":52.64,
-                                                 |        "reversePremiums":34,
-                                                 |        "periodAmount":4,
-                                                 |        "otherIncome":76,
-                                                 |        "ukOtherRentARoom": {
-                                                 |          "rentsReceived":45
-                                                 |        }
-                                                 |   },
-                                                 |   "incomeToSave": {
-                                                 |        "isNonUKLandlord" : true,
-                                                 |        "incomeFromPropertyRentals" : 45,
-                                                 |        "leasePremiumPayment" : true,
-                                                 |        "reversePremiumsReceived" : {
-                                                 |            "reversePremiumsReceived" : true
-                                                 |        },
-                                                 |        "calculatedFigureYourself" : {
-                                                 |            "calculatedFigureYourself" : false
-                                                 |        },
-                                                 |        "yearLeaseAmount" : 4
-                                                 |    }
-                                                 |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        |   "ukOtherPropertyIncome": {
+        |        "premiumsOfLeaseGrant":52.64,
+        |        "reversePremiums":34,
+        |        "periodAmount":4,
+        |        "otherIncome":76,
+        |        "ukOtherRentARoom": {
+        |          "rentsReceived":45
+        |        }
+        |   },
+        |   "incomeToSave": {
+        |        "isNonUKLandlord" : true,
+        |        "incomeFromPropertyRentals" : 45,
+        |        "leasePremiumPayment" : true,
+        |        "reversePremiumsReceived" : {
+        |            "reversePremiumsReceived" : true
+        |        },
+        |        "calculatedFigureYourself" : {
+        |            "calculatedFigureYourself" : false
+        |        },
+        |        "yearLeaseAmount" : 4
+        |    }
+        |}""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
@@ -251,7 +257,7 @@ class JourneyAnswersControllerSpec
         taxYear,
         ctx,
         saveIncomeRequest.incomeToSave,
-        saveIncomeRequest.ukOtherPropertyIncome,
+        saveIncomeRequest,
         Right(Some(PeriodicSubmissionId("submissionId")))
       )
 
@@ -269,57 +275,52 @@ class JourneyAnswersControllerSpec
 
   "create or update property expenses section" should {
 
-    val createOrUpdateUIRequest: JsValue = Json.parse("""{
-                                                        |    "rentsRatesAndInsurance": 100,
-                                                        |    "repairsAndMaintenanceCosts": 200,
-                                                        |    "loanInterest": 300,
-                                                        |    "otherProfessionalFee": 400,
-                                                        |    "costsOfServicesProvided": 500,
-                                                        |    "otherAllowablePropertyExpenses": 600,
-                                                        |    "propertyBusinessTravelCost": 700
-                                                        |}""".stripMargin)
+    val createOrUpdateUIRequest: JsValue = Json.parse(
+      """{
+        |    "rentsRatesAndInsurance": 100,
+        |    "repairsAndMaintenanceCosts": 200,
+        |    "loanInterest": 300,
+        |    "otherProfessionalFee": 400,
+        |    "costsOfServicesProvided": 500,
+        |    "otherAllowablePropertyExpenses": 600,
+        |    "propertyBusinessTravelCost": 700
+        |}""".stripMargin)
 
     val createOrUpdateRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
-    import createOrUpdateRequestBody._
 
-    "should return created for valid request body" in {
+    "return created for valid request body" in {
 
       mockAuthorisation()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val date = LocalDate.now()
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, date, date, None, None, None, Some(
+          UkOtherProperty(
+            ukOtherPropertyIncome,
+            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+          ))
+      )
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        incomeSourceId.value,
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
+      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
+
       mockCreatePeriodicSubmissions(
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        PropertyPeriodicSubmissionRequest(
-          None,
-          None,
-          None,
-          None,
-          Some(
-            UkOtherProperty(
-              UkOtherPropertyIncome(
-                Some(0),
-                None,
-                None,
-                None,
-                None,
-                None
-              ),
-              UkOtherPropertyExpenses(
-                premisesRunningCosts = rentsRatesAndInsurance,
-                repairsAndMaintenance = repairsAndMaintenanceCosts,
-                financialCosts = loanInterest,
-                professionalFees = otherProfessionalFee,
-                travelCosts = propertyBusinessTravelCost,
-                costOfServices = costsOfServicesProvided,
-                other = otherAllowablePropertyExpenses,
-                None,
-                None,
-                None,
-                None
-              )
-            )
-          )
-        ),
+        propertyPeriodicSubmissionRequest,
         Some(PeriodicSubmissionId("submissionId")).asRight[ServiceError]
       )
 
@@ -330,42 +331,38 @@ class JourneyAnswersControllerSpec
 
     "should return no_content for valid request body" in {
       mockAuthorisation()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val date = LocalDate.now()
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, date, date, None, None, None, Some(
+          UkOtherProperty(
+            ukOtherPropertyIncome,
+            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+          ))
+      )
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        incomeSourceId.value,
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
+
+      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
+
       mockUpdatePeriodicSubmissions(
         nino.value,
         incomeSourceId.value,
         taxYear.endYear,
         incomeSubmissionId.value,
-        PropertyPeriodicSubmissionRequest(
-          None,
-          None,
-          None,
-          None,
-          Some(
-            UkOtherProperty(
-              UkOtherPropertyIncome(
-                Some(0),
-                None,
-                None,
-                None,
-                None,
-                None
-              ),
-              UkOtherPropertyExpenses(
-                premisesRunningCosts = rentsRatesAndInsurance,
-                repairsAndMaintenance = repairsAndMaintenanceCosts,
-                financialCosts = loanInterest,
-                professionalFees = otherProfessionalFee,
-                travelCosts = propertyBusinessTravelCost,
-                costOfServices = costsOfServicesProvided,
-                other = otherAllowablePropertyExpenses,
-                None,
-                None,
-                None,
-                None
-              )
-            )
-          )
-        ),
+        propertyPeriodicSubmissionRequest,
         Right("")
       )
 
@@ -381,13 +378,28 @@ class JourneyAnswersControllerSpec
     }
 
     "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
+      val date = LocalDate.now()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
       mockAuthorisation()
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
+        ukOtherPropertyIncome,
+        UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+      )))
+
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        "incomeSourceId",
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
+      val Right(ppsr) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
       mockCreateOrUpdateAnnualSubmissionsNew2(
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
         incomeSubmissionId.value,
-        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
+        ppsr,
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -397,12 +409,27 @@ class JourneyAnswersControllerSpec
 
     "should return internal server error when the downstream API returns internal server error when updating an expense" in {
       mockAuthorisation()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
+      val date = LocalDate.now()
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
+        ukOtherPropertyIncome,
+        UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+      )))
+      val Right(ppsr) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
+
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        incomeSourceId.value,
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
       mockCreateOrUpdateAnnualSubmissionsNew2(
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
         incomeSubmissionId.value,
-        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
+        ppsr,
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -412,11 +439,36 @@ class JourneyAnswersControllerSpec
 
     "should return a conflict error when the downstream API returns a conflict error when saving an expense" in {
       mockAuthorisation()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val date = LocalDate.now()
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, date, date, None, None, None, Some(
+          UkOtherProperty(
+            ukOtherPropertyIncome,
+            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+          ))
+      )
+
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        incomeSourceId.value,
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
+      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
       mockCreateOrUpdateAnnualSubmissionsNew(
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
+        propertyPeriodicSubmissionRequest,
         Left(ApiServiceError(CONFLICT))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -426,11 +478,36 @@ class JourneyAnswersControllerSpec
 
     "should return internal server error when the downstream API returns internal server error when saving an expense" in {
       mockAuthorisation()
+      val date = LocalDate.now()
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, date, date, None, None, None, Some(
+          UkOtherProperty(
+            ukOtherPropertyIncome,
+            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+          ))
+      )
+      mockGetCurrentPeriodicSubmission(
+        taxYear.endYear,
+        nino.value,
+        nino.value,
+        incomeSourceId.value,
+        Some(propertyPeriodicSubmission).asRight[ServiceError]
+      )
+      val Right(propertyPeriodicSubmissionRequest) = PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), createOrUpdateRequestBody)
+
       mockCreateOrUpdateAnnualSubmissionsNew(
         nino.value,
         "incomeSourceId",
         taxYear.endYear,
-        PropertyPeriodicSubmissionRequest.fromExpenses(createOrUpdateRequestBody),
+        propertyPeriodicSubmissionRequest,
         Left(ApiServiceError(INTERNAL_SERVER_ERROR))
       )
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
@@ -439,131 +516,44 @@ class JourneyAnswersControllerSpec
     }
   }
 
-  "update property income section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 |   "ukOtherPropertyIncome": {
-                                                 |        "premiumsOfLeaseGrant":52.64,
-                                                 |        "reversePremiums":34,
-                                                 |        "periodAmount":4,
-                                                 |        "otherIncome":76,
-                                                 |        "ukOtherRentARoom": {
-                                                 |          "rentsReceived":45
-                                                 |        }
-                                                 |   },
-                                                 |   "incomeToSave": {
-                                                 |        "isNonUKLandlord" : true,
-                                                 |        "incomeFromPropertyRentals" : 45,
-                                                 |        "leasePremiumPayment" : true,
-                                                 |        "reversePremiumsReceived" : {
-                                                 |            "reversePremiumsReceived" : true
-                                                 |        },
-                                                 |        "calculatedFigureYourself" : {
-                                                 |            "calculatedFigureYourself" : false
-                                                 |        },
-                                                 |        "yearLeaseAmount" : 4
-                                                 |    }
-                                                 |}""".stripMargin)
-
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
-
-    "return no_content for valid request body" in {
-
-      mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[SaveIncome]
-      mockUpdatePeriodicSubmissions(
-        nino.value,
-        "incomeSourceId",
-        taxYear.endYear,
-        "submissionId",
-        PropertyPeriodicSubmissionRequest(
-          None,
-          None,
-          None,
-          None,
-          Some(
-            UkOtherProperty(
-              saveIncomeRequest.ukOtherPropertyIncome,
-              UkOtherPropertyExpenses(
-                Some(0),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None
-              )
-            )
-          )
-        ),
-        Right("")
-      )
-
-      mockPersistAnswers(
-        ctx,
-        Income(
-          isNonUKLandlord = true,
-          50,
-          leasePremiumPayment = true,
-          ReversePremiumsReceived(true),
-          Some(DeductingTax(false)),
-          Some(CalculatedFigureYourself(false)),
-          Some(5),
-          Some(PremiumsGrantLease(true))
-        )
-      )
-      val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.updateIncome(taxYear, incomeSourceId, nino, SubmissionId("submissionId"))(request))
-      result.header.status shouldBe NO_CONTENT
-    }
-
-    "should return bad request error when request body is empty" in {
-      mockAuthorisation()
-      val result = underTest.updateIncome(taxYear, incomeSourceId, nino, SubmissionId(""))(fakePostRequest)
-      status(result) shouldBe BAD_REQUEST
-    }
-  }
-
   "update esba section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimEnhancedStructureBuildingAllowance" : true,
-                                                 | "esbas": [
-                                                 |            {
-                                                 |                "esbaQualifyingDate" : "2020-04-04",
-                                                 |                "esbaQualifyingAmount" : 12,
-                                                 |                "esbaClaim" : 43,
-                                                 |                "esbaAddress" : {
-                                                 |                    "buildingName" : "name12",
-                                                 |                    "buildingNumber" : "123",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "esbaQualifyingDate" : "2023-01-22",
-                                                 |                "esbaQualifyingAmount" : 535,
-                                                 |                "esbaClaim" : 54,
-                                                 |                "esbaAddress" : {
-                                                 |                    "buildingName" : "235",
-                                                 |                    "buildingNumber" : "3",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "esbaQualifyingDate" : "2024-02-12",
-                                                 |                "esbaQualifyingAmount" : 22,
-                                                 |                "esbaClaim" : 23,
-                                                 |                "esbaAddress" : {
-                                                 |                    "buildingName" : "12",
-                                                 |                    "buildingNumber" : "2",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            }
-                                                 |        ],
-                                                 |        "esbaClaims" : false
-                                                 |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        | "claimEnhancedStructureBuildingAllowance" : true,
+        | "esbas": [
+        |            {
+        |                "esbaQualifyingDate" : "2020-04-04",
+        |                "esbaQualifyingAmount" : 12,
+        |                "esbaClaim" : 43,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "name12",
+        |                    "buildingNumber" : "123",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "esbaQualifyingDate" : "2023-01-22",
+        |                "esbaQualifyingAmount" : 535,
+        |                "esbaClaim" : 54,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "235",
+        |                    "buildingNumber" : "3",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "esbaQualifyingDate" : "2024-02-12",
+        |                "esbaQualifyingAmount" : 22,
+        |                "esbaClaim" : 23,
+        |                "esbaAddress" : {
+        |                    "buildingName" : "12",
+        |                    "buildingNumber" : "2",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            }
+        |        ],
+        |        "esbaClaims" : false
+        |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
@@ -626,42 +616,43 @@ class JourneyAnswersControllerSpec
   }
 
   "update sba section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimStructureBuildingAllowance" : true,
-                                                 | "structureBuildingFormGroup": [
-                                                 |            {
-                                                 |                "structureBuildingQualifyingDate" : "2020-04-04",
-                                                 |                "structureBuildingQualifyingAmount" : 12,
-                                                 |                "structureBuildingAllowanceClaim" : 43,
-                                                 |                "structuredBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "name12",
-                                                 |                    "buildingNumber" : "123",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "structureBuildingQualifyingDate" : "2023-01-22",
-                                                 |                "structureBuildingQualifyingAmount" : 535,
-                                                 |                "structureBuildingAllowanceClaim" : 54,
-                                                 |                "structuredBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "235",
-                                                 |                    "buildingNumber" : "3",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "structureBuildingQualifyingDate" : "2024-02-12",
-                                                 |                "structureBuildingQualifyingAmount" : 22,
-                                                 |                "structureBuildingAllowanceClaim" : 23,
-                                                 |                "structuredBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "12",
-                                                 |                    "buildingNumber" : "2",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            }
-                                                 |        ],
-                                                 |        "sbaClaims" : false
-                                                 |}""".stripMargin)
+    val validRequestBody: JsValue = Json.parse(
+      """{
+        | "claimStructureBuildingAllowance" : true,
+        | "structureBuildingFormGroup": [
+        |            {
+        |                "structureBuildingQualifyingDate" : "2020-04-04",
+        |                "structureBuildingQualifyingAmount" : 12,
+        |                "structureBuildingAllowanceClaim" : 43,
+        |                "structuredBuildingAllowanceAddress" : {
+        |                    "buildingName" : "name12",
+        |                    "buildingNumber" : "123",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "structureBuildingQualifyingDate" : "2023-01-22",
+        |                "structureBuildingQualifyingAmount" : 535,
+        |                "structureBuildingAllowanceClaim" : 54,
+        |                "structuredBuildingAllowanceAddress" : {
+        |                    "buildingName" : "235",
+        |                    "buildingNumber" : "3",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            },
+        |            {
+        |                "structureBuildingQualifyingDate" : "2024-02-12",
+        |                "structureBuildingQualifyingAmount" : 22,
+        |                "structureBuildingAllowanceClaim" : 23,
+        |                "structuredBuildingAllowanceAddress" : {
+        |                    "buildingName" : "12",
+        |                    "buildingNumber" : "2",
+        |                    "postCode" : "XX1 1XX"
+        |                }
+        |            }
+        |        ],
+        |        "sbaClaims" : false
+        |}""".stripMargin)
 
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 

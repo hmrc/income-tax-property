@@ -16,10 +16,11 @@
 
 package models.request
 
-import models.responses.UkOtherPropertyIncome
+import models.responses.{UkOtherPropertyExpenses, UkOtherPropertyIncome}
 import play.api.libs.json.Json
 
-final case class SaveIncome(ukOtherPropertyIncome: UkOtherPropertyIncome,
+final case class SaveIncome(ukOtherPropertyExpenses: Option[UkOtherPropertyExpenses],
+                            ukOtherPropertyIncome: UkOtherPropertyIncome,
                             incomeToSave: Income)
 
 object SaveIncome {
