@@ -126,6 +126,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   ".getPropertyPeriodicSubmission" when {
 
     val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
+      None,
       submittedOn = Some(LocalDateTime.now),
       fromDate = LocalDate.now.minusDays(1),
       toDate = LocalDate.now,
