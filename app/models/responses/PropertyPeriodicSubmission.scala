@@ -16,13 +16,13 @@
 
 package models.responses
 
-import models.request.{Expenses}
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
 
 //
-case class PropertyPeriodicSubmission(submittedOn: Option[LocalDateTime],
+case class PropertyPeriodicSubmission(submissionId: Option[PeriodicSubmissionId] = None,
+                                      submittedOn: Option[LocalDateTime],
                                       fromDate: LocalDate,
                                       toDate: LocalDate,
                                       foreignFhlEea: Option[ForeignFhlEea],
@@ -116,6 +116,7 @@ object UkFhlIncome {
 }
 
 case class RentARoomIncome(rentsReceived: BigDecimal)
+
 case class UkOtherRoomRent(amountClaimed: BigDecimal)
 
 object UkOtherRoomRent {
@@ -145,8 +146,8 @@ object UkRentARoomExpense {
   implicit val format: OFormat[UkRentARoomExpense] = Json.format[UkRentARoomExpense]
 }
 
-case class UkOtherProperty(income: UkOtherPropertyIncome,
-                           expenses: UkOtherPropertyExpenses)
+case class UkOtherProperty(income: Option[UkOtherPropertyIncome],
+                           expenses: Option[UkOtherPropertyExpenses])
 
 object UkOtherProperty {
   implicit val format: OFormat[UkOtherProperty] = Json.format[UkOtherProperty]

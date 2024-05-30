@@ -23,9 +23,9 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
+import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
-import models.request.{Income, PropertyAbout, PropertyRentalAdjustments, RentalAllowances}
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.Files.logger
@@ -46,42 +46,28 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                  IncomeSourceId,
                  journeyContext: JourneyContext,
                  incomeToSave: Income,
-                 ukOtherPropertyIncome: UkOtherPropertyIncome)(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+                 saveIncome: SaveIncome)(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
     for {
-      r <- createPeriodicSubmission(
-        nino.value,
-        incomeSourceId.value,
-        taxYear.endYear,
-        PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
-      )
-      _ <- persistAnswers(journeyContext, incomeToSave).map(isPersistSuccess =>
-        if (!isPersistSuccess) {
-          logger.error("Could not persist")
-        } else {
-          logger.info("Persist successful")
-        }
-      )
-    } yield r
-  }
 
-  def updateIncome(
-                    taxYear: TaxYear,
-                    nino: Nino,
-                    incomeSourceId:
-                    IncomeSourceId,
-                    journeyContext: JourneyContext,
-                    incomeToSave: Income,
-                    ukOtherPropertyIncome: UkOtherPropertyIncome,
-                    submissionId: SubmissionId
-                  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, String] = {
-    for {
-      r <- updatePeriodicSubmission(
-        nino.value,
-        incomeSourceId.value,
-        taxYear.endYear,
-        submissionId.value,
-        PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(ukOtherPropertyIncome)
-      )
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
+      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(currentPeriodicSubmission, saveIncome))
+
+      r <- currentPeriodicSubmission match {
+        case None => createPeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          ppsr
+        )
+        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) => updatePeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          submissionId.submissionId,
+          ppsr
+        ).map(_ => Some(submissionId))
+        case _ => ITPEnvelope.liftEither(InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]])
+      }
       _ <- persistAnswers(journeyContext, incomeToSave).map(isPersistSuccess =>
         if (!isPersistSuccess) {
           logger.error("Could not persist")
@@ -217,6 +203,68 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
     result.subflatMap(propertyPeriodicSubmissionList => transformToResponse(propertyPeriodicSubmissionList))
   }
 
+  // PeriodicSubmissions (submissionId)
+  // AnnualSubmissions(taxYear)
+  // getPeriodicSubmissions() //Sub-ids of fromDate toDate
+  // taxYear == toDate
+  def saveExpenses(
+                    taxYear: TaxYear,
+                    incomeSourceId: IncomeSourceId,
+                    nino: Nino,
+                    expenses: Expenses
+                  )(
+                    implicit hc: HeaderCarrier
+                  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+    for {
+      psr <- getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
+      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(psr, expenses))
+      r <- psr match {
+        case None => createPeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          ppsr
+        )
+        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) => updatePeriodicSubmission(
+          nino.value,
+          incomeSourceId.value,
+          taxYear.endYear,
+          submissionId.submissionId,
+          ppsr
+        ).map(_ => Some(submissionId))
+        case _ => ITPEnvelope.liftEither(InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]])
+      }
+    } yield r
+  }
+
+  def getCurrentPeriodicSubmission(taxYear: Int,
+                                   taxableEntityId: String, //Nino?
+                                   incomeSourceId: String) // businessId
+                                  (implicit hc: HeaderCarrier): ITPEnvelope[Option[PropertyPeriodicSubmission]] = {
+
+    (for {
+      sIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)).leftMap(l => ApiServiceError(l.status))
+      submissions <- getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, sIds)
+    } yield submissions
+      )
+      .map(
+        x => {
+          x.sortBy(_.toDate).reverse
+        }
+      )
+      .flatMap(x => {
+        x.headOption match {
+          case Some(newest) =>
+            if (newest.toDate.getYear == taxYear) {
+              ITPEnvelope.liftPure(Some(newest))
+            } else {
+              ITPEnvelope.liftEither(InternalError("latest submission does not match tax year").asLeft[Option[PropertyPeriodicSubmission]])
+            }
+          case None => ITPEnvelope.liftPure(None)
+        }
+      })
+  }
+
   def getPropertyAnnualSubmission(taxYear: Int,
                                   taxableEntityId: String,
                                   incomeSourceId: String)
@@ -281,7 +329,15 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       .map {
         submissionId =>
           // get each of the property periodic submission details
-          connector.getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)
+          connector
+            .getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)
+            .map(r => r match {
+              case Right(Some(submission)) => Some(submission.copy(submissionId = Some(
+                PeriodicSubmissionId(submissionId.submissionId)
+              ))).asRight[ApiError]
+              case Right(None) => None.asRight[ApiError]
+              case Left(e) => e.asLeft[Option[PropertyPeriodicSubmission]]
+            })
       }
     val all: Future[List[Either[ApiError, Option[PropertyPeriodicSubmission]]]] = Future.sequence(propertyPeriodicSubmissions) //.map(_.flatten)
 

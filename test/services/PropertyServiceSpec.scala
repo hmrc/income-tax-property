@@ -30,6 +30,7 @@ import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
@@ -62,10 +63,12 @@ class PropertyServiceSpec extends UnitTest
   ".getAllPropertyPeriodicSubmissions" should {
 
     "return data when GetPeriodicSubmission has ids and the period is for a year" in {
+      val periodicSubmissionId = "1"
       val periodicSubmissionIds = List(
-        PeriodicSubmissionIdModel("1", LocalDate.parse("2023-01-01"), LocalDate.parse("2024-01-02"))
+        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-01-01"), LocalDate.parse("2024-01-02"))
       )
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        Some(PeriodicSubmissionId(periodicSubmissionId)),
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
@@ -172,7 +175,7 @@ class PropertyServiceSpec extends UnitTest
     }
   }
 
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
 
   "create periodic submission" should {
 
@@ -356,7 +359,6 @@ class PropertyServiceSpec extends UnitTest
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
-
   "save income" should {
 
     val taxYear = 2024
@@ -377,7 +379,15 @@ class PropertyServiceSpec extends UnitTest
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
       None, None, None, None, None, None
     )
+
+    val ukOtherPropertyExpenses = UkOtherPropertyExpenses(Some(100), None, None, None, None, None, None, None, None, None, None)
+    val saveIncome = SaveIncome(ukOtherPropertyIncome, incomeToSave)
+    //Todo: Property Based Test Required for Update Case
     "return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError])
+
       mockCreatePeriodicSubmission(
         taxYear,
         nino,
@@ -386,17 +396,157 @@ class PropertyServiceSpec extends UnitTest
         ).asRight[ApiError]
       )
 
-      await(underTest.saveIncome(TaxYear(taxYear), Nino(nino), IncomeSourceId(incomeSourceId), ctx.toJourneyContext(JourneyName.RentalIncome), incomeToSave, ukOtherPropertyIncome).value) shouldBe Right(Some(PeriodicSubmissionId("")))
+
+      await(
+        underTest.saveIncome(
+          TaxYear(taxYear),
+          Nino(nino),
+          IncomeSourceId(incomeSourceId),
+          ctx.toJourneyContext(JourneyName.RentalIncome),
+          incomeToSave,
+          saveIncome
+        ).value) shouldBe Right(Some(PeriodicSubmissionId("")))
     }
 
     "return ApiError for invalid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError])
+
       mockCreatePeriodicSubmission(
         taxYear,
         nino,
         incomeSourceId,
         ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Option[PeriodicSubmissionId]]
       )
-      await(underTest.saveIncome(TaxYear(taxYear), Nino(nino), IncomeSourceId(incomeSourceId), ctx.toJourneyContext(JourneyName.RentalIncome), incomeToSave, ukOtherPropertyIncome).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      await(underTest.saveIncome(TaxYear(taxYear), Nino(nino), IncomeSourceId(incomeSourceId), ctx.toJourneyContext(JourneyName.RentalIncome), incomeToSave, saveIncome).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "save expenses" should {
+    //Todo: Property Based Test Required for Create Case
+    val taxYear = 2024
+    "return submissionId" in {
+
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
+          UkOtherProperty(
+            Some(ukOtherPropertyIncome),
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+          ))
+      )
+      val fromDate = LocalDate.now().minusYears(2)
+      val toDate = fromDate.plusYears(3)
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("1", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+
+      mockUpdatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some("1").asRight[ApiError]
+      )
+
+      val result = underTest.saveExpenses(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino),
+        Expenses(Some(200), None, None, None, None, None, None))
+      whenReady(result.value) { r =>
+        r mustBe Some(PeriodicSubmissionId("1")).asRight[ServiceError]
+      }
+    }
+
+    "downstream error when getAllPeriodicSubmission call fails" in {
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, ApiError(500, SingleErrorBody("500", "")).asLeft[List[PeriodicSubmissionIdModel]])
+
+      val result = underTest.saveExpenses(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino),
+        Expenses(Some(200), None, None, None, None, None, None))
+      whenReady(result.value) { r =>
+        r mustBe ApiServiceError(500).asLeft[Option[SubmissionId]]
+      }
+    }
+    "downstream error when getPropertyPeriodicSubmission call fails" in {
+      val fromDate = LocalDate.now().minusYears(2)
+      val toDate = fromDate.plusYears(3)
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, List(PeriodicSubmissionIdModel("1", fromDate, toDate)).asRight[ApiError])
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        ApiError(500, SingleErrorBody("500", "")).asLeft[Option[PropertyPeriodicSubmission]]
+      )
+      val result = underTest.saveExpenses(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino),
+        Expenses(Some(200), None, None, None, None, None, None))
+      whenReady(result.value) { r =>
+        r mustBe ApiServiceError(500).asLeft[Option[SubmissionId]]
+      }
+    }
+    //Todo: PropertyTests for CreatePeriodicSubmission case too.
+    "downstream error when create call fails" in {
+      val fromDate = LocalDate.now().minusYears(2)
+      val toDate = fromDate.plusYears(3)
+      val ukOtherPropertyIncome = UkOtherPropertyIncome(
+        Some(0),
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
+          UkOtherProperty(
+            Some(ukOtherPropertyIncome),
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+          ))
+      )
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, List(PeriodicSubmissionIdModel("1", fromDate, toDate)).asRight[ApiError])
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+
+      mockUpdatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        ApiError(500, SingleErrorBody("500", "reason")
+        ).asLeft[Option[String]]
+      )
+
+      val result = underTest.saveExpenses(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino),
+        Expenses(Some(200), None, None, None, None, None, None))
+      whenReady(result.value) { r =>
+        r mustBe ApiServiceError(500).asLeft[Option[SubmissionId]]
+      }
     }
   }
   "fetch" should {

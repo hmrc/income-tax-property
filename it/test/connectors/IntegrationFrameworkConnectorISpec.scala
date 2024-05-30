@@ -39,7 +39,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new IntegrationFrameworkConnector(httpClient, appConfigStub)
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
 
   ".getBusinessDetails" when {
     "when we call the IF" should {
@@ -126,6 +126,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest
   ".getPropertyPeriodicSubmission" when {
 
     val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
+      None,
       submittedOn = Some(LocalDateTime.now),
       fromDate = LocalDate.now.minusDays(1),
       toDate = LocalDate.now,

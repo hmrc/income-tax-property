@@ -44,6 +44,7 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
     val periodicSubmissionResponse = PropertyPeriodicSubmissionResponse(List(
       PropertyPeriodicSubmission(
+        None,
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
@@ -92,7 +93,7 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
 
   "Create Periodic Submission" should {
 
-    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
     val fakePostRequestWithBody = fakePostRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
 
     val periodicSubmissionResponse = PeriodicSubmissionId("submissionId")
@@ -155,7 +156,7 @@ class PeriodicSubmissionControllerSpec extends ControllerUnitTest
   }
 
   "Update Periodic Submission" should {
-    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
     val fakePutRequestWithBody = fakePutRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
 
     "return a property periodic submission when IntegrationFrameworkService returns no content" in {

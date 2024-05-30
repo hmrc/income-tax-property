@@ -40,6 +40,7 @@ class GetPropertyPeriodicSubmissionResponseSpec extends UnitTest {
 
       "status is OK and valid jsValue" in {
         val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+          None,
           submittedOn = Some(LocalDateTime.now),
           fromDate = LocalDate.now.minusDays(1),
           toDate = LocalDate.now,

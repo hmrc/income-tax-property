@@ -16,6 +16,8 @@
 
 package models
 
+import cats.syntax.either._
+import models.errors.ServiceError
 import models.request.Expenses
 import models.responses._
 import utils.UnitTest
@@ -33,15 +35,20 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val propertyPeriodicSubmission = PropertyPeriodicSubmissionRequest(
-    None,
+  val date = LocalDate.now()
+  val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
+    Some(ukOtherPropertyIncome),
+    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+  )))
+  val propertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
     None,
     None,
     Some(
       UkOtherProperty(
-        UkOtherPropertyIncome(Some(0), None, None, None, None, None),
-        UkOtherPropertyExpenses(
+        Some(ukOtherPropertyIncome),
+        Some(UkOtherPropertyExpenses(
           premisesRunningCosts = Some(100),
           repairsAndMaintenance = Some(200),
           financialCosts = Some(300),
@@ -54,13 +61,15 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           ukOtherRentARoom = None,
           consolidatedExpense = None
         )
+        )
       )
     )
   )
 
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
-      PropertyPeriodicSubmissionRequest.fromExpenses(expenses) shouldBe propertyPeriodicSubmission
+
+      PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses) shouldBe propertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
   }
 }

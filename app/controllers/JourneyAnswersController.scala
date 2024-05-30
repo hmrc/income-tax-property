@@ -18,10 +18,10 @@ package controllers
 
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
+import models.ITPEnvelope
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.repository.Extractor._
-import models.request.Income._
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
@@ -36,6 +36,7 @@ import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
+
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -78,31 +79,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
     auth.async { implicit request =>
       withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
         handleResponse(CREATED) {
-          for {
-            r <- propertyService.createPeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              PropertyPeriodicSubmissionRequest.fromExpenses(expenses)
-            )
-          } yield r
-        }
-      }
-    }
-
-  def updateExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
-        handleResponse(NO_CONTENT) {
-          for {
-            r <- propertyService.updatePeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              submissionId.value,
-              PropertyPeriodicSubmissionRequest.fromExpenses(expenses)
-            )
-          } yield r
+          propertyService.saveExpenses(taxYear, incomeSourceId, nino, expenses)
         }
       }
     }
@@ -128,7 +105,7 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
         handleResponse(CREATED) {
           propertyService.saveIncome(
-            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome
+            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome
           )
         }
       }
@@ -185,32 +162,6 @@ class JourneyAnswersController @Inject()(propertyService: PropertyService,
       }
     }
   }
-
-
-  def updateIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, submissionId: SubmissionId): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
-
-        handleResponse(NO_CONTENT) {
-          for {
-            r <- propertyService.updatePeriodicSubmission(
-              nino.value,
-              incomeSourceId.value,
-              taxYear.endYear,
-              submissionId.value,
-              PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(incomeToSaveWithUkOtherPropertyIncome.ukOtherPropertyIncome)
-            )
-            _ <- propertyService.persistAnswers(ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave).map(isPersistSuccess =>
-              if (!isPersistSuccess) {
-                logger.error("Could not persist")
-              } else {
-                logger.info("Persist successful")
-              }
-            )
-          } yield r
-        }
-      }
-    }
 
   def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
 
