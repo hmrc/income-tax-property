@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
   val appConf: AppConfig = mock[AppConfig]
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(None, Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
 
   val integrationFrameworkConnector = new IntegrationFrameworkConnector(mockHttpClient, appConf)
   "IntegrationFrameworkController" should {

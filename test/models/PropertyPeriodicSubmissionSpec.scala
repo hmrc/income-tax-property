@@ -45,7 +45,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     None,
     None,
     None,
-    None,
     Some(
       UkOtherProperty(
         ukOtherPropertyIncome,
