@@ -48,8 +48,10 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
                  incomeToSave: Income,
                  saveIncome: SaveIncome)(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
     for {
-      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(None, saveIncome))
+
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(taxYear.endYear, nino.value, incomeSourceId.value)
+      ppsr <- ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(currentPeriodicSubmission, saveIncome))
+
       r <- currentPeriodicSubmission match {
         case None => createPeriodicSubmission(
           nino.value,

@@ -20,11 +20,12 @@ import cats.implicits.catsSyntaxEitherId
 import models.errors.{InternalError, ServiceError}
 import models.request.{Expenses, SaveIncome}
 import play.api.libs.json.{Json, OFormat}
-
+import monocle.Lens
+import monocle.macros.GenLens
 import java.time.LocalDateTime
 
 //
-final case class PropertyPeriodicSubmissionRequest(submittedOn: Option[LocalDateTime],
+final case class PropertyPeriodicSubmissionRequest(//submittedOn: Option[LocalDateTime],
                                                    foreignFhlEea: Option[ForeignFhlEea],
                                                    foreignProperty: Option[Seq[ForeignProperty]],
                                                    ukFhlProperty: Option[UkFhlProperty],
@@ -43,14 +44,17 @@ object PropertyPeriodicSubmissionRequest {
       ukOtherPropertyIncome <- periodicSubmission.ukOtherProperty.map(_.income)
     } yield (periodicSubmission, ukOtherPropertyIncome)
 
+
     ukOtherPropertyIncomeWithPeriodicSubmission.fold[Either[ServiceError, PropertyPeriodicSubmissionRequest]](
       //Todo: Maybe elaborate each
       InternalError("No periodicSubmission / uk other property income is present, should be together with expenses").asLeft[PropertyPeriodicSubmissionRequest]
     )(result => {
 
       val (periodicSubmission, ukOtherPropertyIncome) = result
+      val ppsrLens = GenLens[PropertyPeriodicSubmissionRequest](_.ukOtherProperty)
+
       PropertyPeriodicSubmissionRequest(
-        periodicSubmission.submittedOn, //Todo: Change to now?
+        //periodicSubmission.submittedOn, //Todo: Change to now?
         periodicSubmission.foreignFhlEea,
         periodicSubmission.foreignProperty,
         periodicSubmission.ukFhlProperty,
@@ -99,7 +103,7 @@ object PropertyPeriodicSubmissionRequest {
 
       val (periodicSubmission, ukOtherPropertyExpenses) = result
       PropertyPeriodicSubmissionRequest(
-        periodicSubmission.flatMap(_.submittedOn), //Todo: Change to now?
+        //periodicSubmission.flatMap(_.submittedOn), //Todo: Change to now?
         periodicSubmission.flatMap(_.foreignFhlEea),
         periodicSubmission.flatMap(_.foreignProperty),
         periodicSubmission.flatMap(_.ukFhlProperty),
@@ -110,7 +114,7 @@ object PropertyPeriodicSubmissionRequest {
               saveIncome.ukOtherPropertyIncome.periodAmount, saveIncome.ukOtherPropertyIncome.taxDeducted,
               saveIncome.ukOtherPropertyIncome.otherIncome, saveIncome.ukOtherPropertyIncome.ukOtherRentARoom
             ),
-            ukOtherPropertyExpenses
+            ukOtherPropertyExpenses.copy(consolidatedExpense = None)//Todo: Change here, move consolidated to separate part!
           )
         )
       ).asRight[ServiceError]

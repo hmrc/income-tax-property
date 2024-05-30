@@ -4,7 +4,7 @@ object AppDependencies {
 
   private val bootstrapVersion = "8.4.0"
   private val hmrcMongoVersion = "1.7.0"
-
+  private val monocleVersion = "2.0.1"
   val jacksonAndPlayExclusions: Seq[ExclusionRule] = Seq(
     ExclusionRule(organization = "com.fasterxml.jackson.core"),
     ExclusionRule(organization = "com.fasterxml.jackson.datatype"),
@@ -19,6 +19,8 @@ object AppDependencies {
     "org.typelevel"                 %% "cats-core"                    % "2.9.0",
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.14.2",
     "com.beachape"                  %% "enumeratum"                 % "1.7.3",
+    "com.github.julien-truffaut" %% "monocle-core" % monocleVersion,
+    "com.github.julien-truffaut" %% "monocle-macro" % monocleVersion,
     "com.beachape"                  %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *)
   )
 
