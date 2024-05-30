@@ -146,7 +146,7 @@ object UkRentARoomExpense {
   implicit val format: OFormat[UkRentARoomExpense] = Json.format[UkRentARoomExpense]
 }
 
-case class UkOtherProperty(income: UkOtherPropertyIncome,
+case class UkOtherProperty(income: Option[UkOtherPropertyIncome],
                            expenses: Option[UkOtherPropertyExpenses])
 
 object UkOtherProperty {

@@ -17,19 +17,16 @@
 package models.responses
 
 import cats.implicits.catsSyntaxEitherId
-import models.errors.{InternalError, ServiceError}
+import models.errors.ServiceError
 import models.request.{Expenses, SaveIncome}
 import play.api.libs.json.{Json, OFormat}
-import monocle.Lens
-import monocle.macros.GenLens
-import java.time.LocalDateTime
 
 //
-final case class PropertyPeriodicSubmissionRequest(//submittedOn: Option[LocalDateTime],
-                                                   foreignFhlEea: Option[ForeignFhlEea],
-                                                   foreignProperty: Option[Seq[ForeignProperty]],
-                                                   ukFhlProperty: Option[UkFhlProperty],
-                                                   ukOtherProperty: Option[UkOtherProperty])
+final case class PropertyPeriodicSubmissionRequest( //submittedOn: Option[LocalDateTime],
+                                                    foreignFhlEea: Option[ForeignFhlEea],
+                                                    foreignProperty: Option[Seq[ForeignProperty]],
+                                                    ukFhlProperty: Option[UkFhlProperty],
+                                                    ukOtherProperty: Option[UkOtherProperty])
 
 object PropertyPeriodicSubmissionRequest {
   implicit val format: OFormat[PropertyPeriodicSubmissionRequest] = Json.format[PropertyPeriodicSubmissionRequest]
@@ -39,46 +36,50 @@ object PropertyPeriodicSubmissionRequest {
                     expenses: Expenses
                   ): Either[ServiceError, PropertyPeriodicSubmissionRequest] = {
 
-    val ukOtherPropertyIncomeWithPeriodicSubmission = for {
-      periodicSubmission <- periodicSubmissionMaybe
-      ukOtherPropertyIncome <- periodicSubmission.ukOtherProperty.map(_.income)
-    } yield (periodicSubmission, ukOtherPropertyIncome)
-
-
-    ukOtherPropertyIncomeWithPeriodicSubmission.fold[Either[ServiceError, PropertyPeriodicSubmissionRequest]](
-      //Todo: Maybe elaborate each
-      InternalError("No periodicSubmission / uk other property income is present, should be together with expenses").asLeft[PropertyPeriodicSubmissionRequest]
-    )(result => {
-
-      val (periodicSubmission, ukOtherPropertyIncome) = result
-      val ppsrLens = GenLens[PropertyPeriodicSubmissionRequest](_.ukOtherProperty)
-
-      PropertyPeriodicSubmissionRequest(
-        //periodicSubmission.submittedOn, //Todo: Change to now?
-        periodicSubmission.foreignFhlEea,
-        periodicSubmission.foreignProperty,
-        periodicSubmission.ukFhlProperty,
-        Some(
-          UkOtherProperty(
-            ukOtherPropertyIncome,
-            Some(UkOtherPropertyExpenses(
-              premisesRunningCosts = expenses.rentsRatesAndInsurance,
-              repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
-              financialCosts = expenses.loanInterest,
-              professionalFees = expenses.otherProfessionalFee,
-              costOfServices = expenses.costsOfServicesProvided,
-              travelCosts = expenses.propertyBusinessTravelCost,
-              other = expenses.otherAllowablePropertyExpenses,
-              residentialFinancialCostsCarriedForward = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward)),
-              ukOtherRentARoom = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom)),
-              consolidatedExpense = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense)),
-              residentialFinancialCost = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost))
-            ))
-          )
-        )
-      ).asRight[ServiceError]
+    //    val ukOtherPropertyIncomeWithPeriodicSubmission = for {
+    //      periodicSubmission <- periodicSubmissionMaybe
+    //      ukOtherPropertyIncome <- periodicSubmission.ukOtherProperty.map(_.income)
+    //    } yield (periodicSubmission, ukOtherPropertyIncome)
+    //
+    //
+    //    ukOtherPropertyIncomeWithPeriodicSubmission.fold[Either[ServiceError, PropertyPeriodicSubmissionRequest]](
+    //      //Todo: Maybe elaborate each
+    //      InternalError("No periodicSubmission / uk other property income is present, should be together with expenses").asLeft[PropertyPeriodicSubmissionRequest]
+    //    )(result => {
+    //
+    //      val (periodicSubmission, ukOtherPropertyIncome) = result
+    //      val ppsrLens = GenLens[PropertyPeriodicSubmissionRequest](_.ukOtherProperty)
+    val (periodicSubmission, ukOtherPropertyIncome): (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
+    periodicSubmissionMaybe match {
+      case Some(pps@PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+        (Some(pps), Some(income))
+      case Some(pps) => (Some(pps), None)
+      case _ => (None, None)
     }
-    )
+    PropertyPeriodicSubmissionRequest(
+      periodicSubmission.flatMap(_.foreignFhlEea),
+      periodicSubmission.flatMap(_.foreignProperty),
+      periodicSubmission.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          ukOtherPropertyIncome,
+          Some(UkOtherPropertyExpenses(
+            premisesRunningCosts = expenses.rentsRatesAndInsurance,
+            repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
+            financialCosts = expenses.loanInterest,
+            professionalFees = expenses.otherProfessionalFee,
+            costOfServices = expenses.costsOfServicesProvided,
+            travelCosts = expenses.propertyBusinessTravelCost,
+            other = expenses.otherAllowablePropertyExpenses,
+            residentialFinancialCostsCarriedForward = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))),
+            ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom))),
+            consolidatedExpense = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense))),
+            residentialFinancialCost = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost)))
+          ))
+        )
+      )
+    ).asRight[ServiceError]
+
   }
 
   def fromUkOtherPropertyIncome(
@@ -89,26 +90,25 @@ object PropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyExpenses): (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
       periodicSubmissionMaybe match {
         case Some(pps@PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
-          ((Some(pps), Some(expenses)))
+          (Some(pps), Some(expenses))
         case Some(pps) => ((Some(pps), None))
         case _ => (None, None)
       }
 
-      PropertyPeriodicSubmissionRequest(
-        //periodicSubmission.flatMap(_.submittedOn), //Todo: Change to now?
-        periodicSubmission.flatMap(_.foreignFhlEea),
-        periodicSubmission.flatMap(_.foreignProperty),
-        periodicSubmission.flatMap(_.ukFhlProperty),
-        Some(
-          UkOtherProperty(
-            UkOtherPropertyIncome(
-              saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant, saveIncome.ukOtherPropertyIncome.reversePremiums,
-              saveIncome.ukOtherPropertyIncome.periodAmount, saveIncome.ukOtherPropertyIncome.taxDeducted,
-              saveIncome.ukOtherPropertyIncome.otherIncome, saveIncome.ukOtherPropertyIncome.ukOtherRentARoom
-            ),
-            ukOtherPropertyExpenses.map(_.copy(consolidatedExpense = None))//Todo: Change here, move consolidated to separate part!
-          )
+    PropertyPeriodicSubmissionRequest(
+      periodicSubmission.flatMap(_.foreignFhlEea),
+      periodicSubmission.flatMap(_.foreignProperty),
+      periodicSubmission.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          Some(UkOtherPropertyIncome(
+            saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant, saveIncome.ukOtherPropertyIncome.reversePremiums,
+            saveIncome.ukOtherPropertyIncome.periodAmount, saveIncome.ukOtherPropertyIncome.taxDeducted,
+            saveIncome.ukOtherPropertyIncome.otherIncome, saveIncome.ukOtherPropertyIncome.ukOtherRentARoom
+          )),
+          ukOtherPropertyExpenses.map(_.copy(consolidatedExpense = None)) //Todo: Change here, move consolidated to separate part!
         )
-      ).asRight[ServiceError]
+      )
+    ).asRight[ServiceError]
   }
 }

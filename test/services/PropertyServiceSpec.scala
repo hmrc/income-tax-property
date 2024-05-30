@@ -439,7 +439,7 @@ class PropertyServiceSpec extends UnitTest
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
         None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
           UkOtherProperty(
-            ukOtherPropertyIncome,
+            Some(ukOtherPropertyIncome),
             Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
           ))
       )
@@ -519,7 +519,7 @@ class PropertyServiceSpec extends UnitTest
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
         None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
           UkOtherProperty(
-            ukOtherPropertyIncome,
+            Some(ukOtherPropertyIncome),
             Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
           ))
       )

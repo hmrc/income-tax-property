@@ -38,7 +38,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   val date = LocalDate.now()
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-    ukOtherPropertyIncome,
+    Some(ukOtherPropertyIncome),
     Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
   )))
   val propertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
@@ -47,7 +47,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     None,
     Some(
       UkOtherProperty(
-        ukOtherPropertyIncome,
+        Some(ukOtherPropertyIncome),
         Some(UkOtherPropertyExpenses(
           premisesRunningCosts = Some(100),
           repairsAndMaintenance = Some(200),
