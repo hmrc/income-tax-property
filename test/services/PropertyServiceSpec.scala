@@ -381,7 +381,7 @@ class PropertyServiceSpec extends UnitTest
     )
 
     val ukOtherPropertyExpenses = UkOtherPropertyExpenses(Some(100), None, None, None, None, None, None, None, None, None, None)
-    val saveIncome = SaveIncome(Some(ukOtherPropertyExpenses), ukOtherPropertyIncome, incomeToSave)
+    val saveIncome = SaveIncome(ukOtherPropertyIncome, incomeToSave)
     //Todo: Property Based Test Required for Update Case
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
@@ -440,7 +440,7 @@ class PropertyServiceSpec extends UnitTest
         None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
           UkOtherProperty(
             ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
           ))
       )
       val fromDate = LocalDate.now().minusYears(2)
@@ -520,7 +520,7 @@ class PropertyServiceSpec extends UnitTest
         None, None, LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), None, None, None, Some(
           UkOtherProperty(
             ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
           ))
       )
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, List(PeriodicSubmissionIdModel("1", fromDate, toDate)).asRight[ApiError])

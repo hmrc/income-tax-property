@@ -61,7 +61,7 @@ object PropertyPeriodicSubmissionRequest {
         Some(
           UkOtherProperty(
             ukOtherPropertyIncome,
-            UkOtherPropertyExpenses(
+            Some(UkOtherPropertyExpenses(
               premisesRunningCosts = expenses.rentsRatesAndInsurance,
               repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
               financialCosts = expenses.loanInterest,
@@ -69,11 +69,11 @@ object PropertyPeriodicSubmissionRequest {
               costOfServices = expenses.costsOfServicesProvided,
               travelCosts = expenses.propertyBusinessTravelCost,
               other = expenses.otherAllowablePropertyExpenses,
-              residentialFinancialCostsCarriedForward = periodicSubmission.ukOtherProperty.flatMap(_.expenses.residentialFinancialCostsCarriedForward),
-              ukOtherRentARoom = periodicSubmission.ukOtherProperty.flatMap(_.expenses.ukOtherRentARoom),
-              consolidatedExpense = periodicSubmission.ukOtherProperty.flatMap(_.expenses.consolidatedExpense),
-              residentialFinancialCost = periodicSubmission.ukOtherProperty.flatMap(_.expenses.residentialFinancialCost)
-            )
+              residentialFinancialCostsCarriedForward = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward)),
+              ukOtherRentARoom = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom)),
+              consolidatedExpense = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense)),
+              residentialFinancialCost = periodicSubmission.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost))
+            ))
           )
         )
       ).asRight[ServiceError]
@@ -86,22 +86,14 @@ object PropertyPeriodicSubmissionRequest {
                                  saveIncome: SaveIncome
                                ): Either[ServiceError, PropertyPeriodicSubmissionRequest] = {
 
-    val ukOtherPropertyExpensesWithPeriodicSubmission: Option[(Option[PropertyPeriodicSubmission], UkOtherPropertyExpenses)] = (
-      periodicSubmissionMaybe, saveIncome.ukOtherPropertyExpenses
-    ) match {
-      case (Some(pps@PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(_, expenses)))), None) =>
-        Some((Some(pps), expenses))
-      case (None, Some(expenses)) => Some((None, expenses))
-      case (Some(periodicSubmission), Some(expenses)) => Some((Some(periodicSubmission), expenses))
-      case _ => None
-    }
+    val (periodicSubmission, ukOtherPropertyExpenses): (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
+      periodicSubmissionMaybe match {
+        case Some(pps@PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
+          ((Some(pps), Some(expenses)))
+        case Some(pps) => ((Some(pps), None))
+        case _ => (None, None)
+      }
 
-    ukOtherPropertyExpensesWithPeriodicSubmission.fold[Either[ServiceError, PropertyPeriodicSubmissionRequest]](
-      //Todo: Maybe elaborate each
-      InternalError("No periodicSubmission / uk other property expenses is present, should be together with expenses").asLeft[PropertyPeriodicSubmissionRequest]
-    )(result => {
-
-      val (periodicSubmission, ukOtherPropertyExpenses) = result
       PropertyPeriodicSubmissionRequest(
         //periodicSubmission.flatMap(_.submittedOn), //Todo: Change to now?
         periodicSubmission.flatMap(_.foreignFhlEea),
@@ -114,10 +106,9 @@ object PropertyPeriodicSubmissionRequest {
               saveIncome.ukOtherPropertyIncome.periodAmount, saveIncome.ukOtherPropertyIncome.taxDeducted,
               saveIncome.ukOtherPropertyIncome.otherIncome, saveIncome.ukOtherPropertyIncome.ukOtherRentARoom
             ),
-            ukOtherPropertyExpenses.copy(consolidatedExpense = None)//Todo: Change here, move consolidated to separate part!
+            ukOtherPropertyExpenses.map(_.copy(consolidatedExpense = None))//Todo: Change here, move consolidated to separate part!
           )
         )
       ).asRight[ServiceError]
-    })
   }
 }

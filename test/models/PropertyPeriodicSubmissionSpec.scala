@@ -16,13 +16,13 @@
 
 package models
 
+import cats.syntax.either._
 import models.errors.ServiceError
 import models.request.Expenses
 import models.responses._
 import utils.UnitTest
 
 import java.time.LocalDate
-import cats.syntax.either._
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses = Expenses(
@@ -39,7 +39,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
     ukOtherPropertyIncome,
-    UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
   )))
   val propertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
@@ -48,7 +48,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     Some(
       UkOtherProperty(
         ukOtherPropertyIncome,
-        UkOtherPropertyExpenses(
+        Some(UkOtherPropertyExpenses(
           premisesRunningCosts = Some(100),
           repairsAndMaintenance = Some(200),
           financialCosts = Some(300),
@@ -60,6 +60,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           residentialFinancialCostsCarriedForward = None,
           ukOtherRentARoom = None,
           consolidatedExpense = None
+        )
         )
       )
     )

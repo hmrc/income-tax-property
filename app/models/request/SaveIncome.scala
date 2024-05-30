@@ -16,12 +16,13 @@
 
 package models.request
 
-import models.responses.{UkOtherPropertyExpenses, UkOtherPropertyIncome}
+import models.responses.UkOtherPropertyIncome
 import play.api.libs.json.Json
 
-final case class SaveIncome(ukOtherPropertyExpenses: Option[UkOtherPropertyExpenses],
-                            ukOtherPropertyIncome: UkOtherPropertyIncome,
-                            incomeToSave: Income)
+final case class SaveIncome(
+                             ukOtherPropertyIncome: UkOtherPropertyIncome,
+                             incomeToSave: Income
+                           )
 
 object SaveIncome {
   implicit val format = Json.format[SaveIncome]
