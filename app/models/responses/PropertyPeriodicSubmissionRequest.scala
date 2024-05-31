@@ -35,20 +35,6 @@ object PropertyPeriodicSubmissionRequest {
                     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
                     expenses: Expenses
                   ): Either[ServiceError, PropertyPeriodicSubmissionRequest] = {
-
-    //    val ukOtherPropertyIncomeWithPeriodicSubmission = for {
-    //      periodicSubmission <- periodicSubmissionMaybe
-    //      ukOtherPropertyIncome <- periodicSubmission.ukOtherProperty.map(_.income)
-    //    } yield (periodicSubmission, ukOtherPropertyIncome)
-    //
-    //
-    //    ukOtherPropertyIncomeWithPeriodicSubmission.fold[Either[ServiceError, PropertyPeriodicSubmissionRequest]](
-    //      //Todo: Maybe elaborate each
-    //      InternalError("No periodicSubmission / uk other property income is present, should be together with expenses").asLeft[PropertyPeriodicSubmissionRequest]
-    //    )(result => {
-    //
-    //      val (periodicSubmission, ukOtherPropertyIncome) = result
-    //      val ppsrLens = GenLens[PropertyPeriodicSubmissionRequest](_.ukOtherProperty)
     val (periodicSubmission, ukOtherPropertyIncome): (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
     periodicSubmissionMaybe match {
       case Some(pps@PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
