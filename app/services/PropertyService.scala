@@ -306,16 +306,15 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
       .filter(submissionId => Period.between(submissionId.fromDate, submissionId.toDate).getYears >= 1)
       .map {
         submissionId =>
-          // get each of the property periodic submission details
           connector
             .getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)
-            .map(r => r match {
+            .map {
               case Right(Some(submission)) => Some(submission.copy(submissionId = Some(
                 PeriodicSubmissionId(submissionId.submissionId)
               ))).asRight[ApiError]
               case Right(None) => None.asRight[ApiError]
               case Left(e) => e.asLeft[Option[PropertyPeriodicSubmission]]
-            })
+            }
       }
     val all: Future[List[Either[ApiError, Option[PropertyPeriodicSubmission]]]] = Future.sequence(propertyPeriodicSubmissions) //.map(_.flatten)
 
@@ -332,11 +331,7 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
 
 
   private def transformToResponse(submissions: List[PropertyPeriodicSubmission]): Either[ServiceError, PropertyPeriodicSubmissionResponse] = {
-    if (submissions.nonEmpty) {
       Right(PropertyPeriodicSubmissionResponse(submissions))
-    } else {
-      Left(DataNotFoundError)
-    }
   }
 
   def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit

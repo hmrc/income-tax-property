@@ -17,7 +17,7 @@
 package models.request
 
 import models.responses.UkOtherPropertyIncome
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 final case class SaveIncome(
                              ukOtherPropertyIncome: UkOtherPropertyIncome,
@@ -25,5 +25,5 @@ final case class SaveIncome(
                            )
 
 object SaveIncome {
-  implicit val format = Json.format[SaveIncome]
+  implicit val format: OFormat[SaveIncome] = Json.format[SaveIncome]
 }
