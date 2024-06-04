@@ -18,7 +18,6 @@ package controllers
 
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
-import models.ITPEnvelope
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.repository.Extractor._
@@ -41,161 +40,190 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class JourneyAnswersController @Inject()(propertyService: PropertyService,
-                                         journeyStatusService: JourneyStatusService,
-                                         auth: AuthorisedAction,
-                                         cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
+class JourneyAnswersController @Inject() (
+  propertyService: PropertyService,
+  journeyStatusService: JourneyStatusService,
+  auth: AuthorisedAction,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
 
   def fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = auth.async {
-    implicit request => {
-      //Todo: Which taxyear, let's say for 23-24, do we have to send 2024 here?
-      //Todo: incomeSourceId vs mtdid
+    implicit request =>
+      // Todo: Which taxyear, let's say for 23-24, do we have to send 2024 here?
+      // Todo: incomeSourceId vs mtdid
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.AllJourneys, request) { ctx =>
         handleResponse(OK) {
           propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId.value)
         }
       }
-    }
   }
 
-  def savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async {
+    implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+        .toJourneyContext(JourneyName.About)
+      val requestBody = parseBody[PropertyAbout](request)
 
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino).toJourneyContext(JourneyName.About)
-    val requestBody = parseBody[PropertyAbout](request)
-
-    requestBody match {
-      case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-          case JsSuccess(value, _) =>
-            propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
-          case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-        }
-      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
-    }
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
   }
+
+  def savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+        .toJourneyContext(JourneyName.RentalAbout)
+      val requestBody = parseBody[PropertyRentalsAbout](request)
+
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
 
   def saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) { (_, expenses) =>
-        handleResponse(CREATED) {
-          propertyService.saveExpenses(taxYear, incomeSourceId, nino, expenses)
-        }
+      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalExpenses, request) {
+        (_, expenses) =>
+          handleResponse(CREATED) {
+            propertyService.saveExpenses(taxYear, incomeSourceId, nino, expenses)
+          }
       }
     }
 
-  def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
 
-    val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-    val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
-
-    annualPropertyRentalAdjustmentsBody match {
-      case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-          case JsSuccess(value, _) =>
-            propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).value.map(_ => NoContent)
-          case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-        }
-      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      annualPropertyRentalAdjustmentsBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
     }
-  }
 
   def saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) { (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
-        handleResponse(CREATED) {
-          propertyService.saveIncome(
-            taxYear, nino, incomeSourceId, ctx, incomeToSaveWithUkOtherPropertyIncome.incomeToSave, incomeToSaveWithUkOtherPropertyIncome
-          )
-        }
+      withJourneyContextAndEntity[SaveIncome](taxYear, incomeSourceId, nino, JourneyName.RentalIncome, request) {
+        (ctx, incomeToSaveWithUkOtherPropertyIncome) =>
+          handleResponse(CREATED) {
+            propertyService.saveIncome(
+              taxYear,
+              nino,
+              incomeSourceId,
+              ctx,
+              incomeToSaveWithUkOtherPropertyIncome.incomeToSave,
+              incomeToSaveWithUkOtherPropertyIncome
+            )
+          }
       }
     }
 
-  def saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
+  def saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.RentalESBA, request) { ctx =>
         withEntity[EsbaInfo](request) { esbaInfo =>
           handleResponse(NO_CONTENT) {
             for {
-              r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
-                incomeSourceId,
-                nino,
-                PropertyAnnualSubmission.fromEsbas(
-                  esbaInfo.toEsba
-                )
-              )
-              _ <- propertyService.persistAnswers(ctx, esbaInfo.extractToSavePart()).map(isPersistSuccess =>
-                if (!isPersistSuccess) {
-                  logger.error("Could not persist")
-                } else {
-                  logger.info("Persist successful")
-                }
-              )
+              r <- propertyService.createOrUpdateAnnualSubmission(
+                     taxYear,
+                     incomeSourceId,
+                     nino,
+                     PropertyAnnualSubmission.fromEsbas(
+                       esbaInfo.toEsba
+                     )
+                   )
+              _ <- propertyService
+                     .persistAnswers(ctx, esbaInfo.extractToSavePart())
+                     .map(isPersistSuccess =>
+                       if (!isPersistSuccess) {
+                         logger.error("Could not persist")
+                       } else {
+                         logger.info("Persist successful")
+                       }
+                     )
             } yield r
           }
         }
       }
     }
-  }
 
-  def savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = {
+  def savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) { (ctx, sbaInfo) =>
-        handleResponse(NO_CONTENT) {
-          for {
-            r <- propertyService.createOrUpdateAnnualSubmission(taxYear,
-              incomeSourceId,
-              nino,
-              PropertyAnnualSubmission.fromSbas(
-                sbaInfo.toSba
-              )
-            )
-            _ <- propertyService.persistAnswers(ctx, sbaInfo.toSbaToSave).map(isPersistSuccess =>
-              if (!isPersistSuccess) {
-                logger.error("SBA Persist failed")
-              } else {
-                logger.info("SBA Persist successful")
-              }
-            )
-          } yield r
-        }
+      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
+        (ctx, sbaInfo) =>
+          handleResponse(NO_CONTENT) {
+            for {
+              r <- propertyService.createOrUpdateAnnualSubmission(
+                     taxYear,
+                     incomeSourceId,
+                     nino,
+                     PropertyAnnualSubmission.fromSbas(
+                       sbaInfo.toSba
+                     )
+                   )
+              _ <- propertyService
+                     .persistAnswers(ctx, sbaInfo.toSbaToSave)
+                     .map(isPersistSuccess =>
+                       if (!isPersistSuccess) {
+                         logger.error("SBA Persist failed")
+                       } else {
+                         logger.info("SBA Persist successful")
+                       }
+                     )
+            } yield r
+          }
       }
     }
-  }
 
-  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val requestBody = parseBody[RentalAllowances](request)
 
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-    val requestBody = parseBody[RentalAllowances](request)
-
-    requestBody match {
-      case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-          case JsSuccess(value, _) =>
-            propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
-          case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-        }
-      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
     }
-  }
 
-  def setStatus(
-                 taxYear: TaxYear,
-                 incomeSourceId: IncomeSourceId,
-                 journeyName: String): Action[AnyContent] = auth.async { implicit request =>
+  def setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx =
+        JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
+      val requestBody = parseBody[JourneyStatusData](request)
 
-    val ctx = JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
-    val requestBody = parseBody[JourneyStatusData](request)
-
-    requestBody match {
-      case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-          case JsSuccess(value, _) =>
-            journeyStatusService.setStatus(ctx, value).value.map(_ => NoContent)
-          case JsError(err) =>
-            Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-        }
-      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              journeyStatusService.setStatus(ctx, value).value.map(_ => NoContent)
+            case JsError(err) =>
+              Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
     }
-  }
 }

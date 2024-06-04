@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package models.request.sba
+package models.request
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-final case class SbaClaims(value: Boolean) extends AnyVal
+case class PropertyRentalsAbout(toexpensesLessThan1000: Boolean, claimPropertyIncomeAllowance: Boolean)
 
-object SbaClaims {
-  implicit val format: Format[SbaClaims] = Json.valueFormat[SbaClaims]
+object PropertyRentalsAbout {
+  implicit val formats: OFormat[PropertyRentalsAbout] = Json.format[PropertyRentalsAbout]
 }
