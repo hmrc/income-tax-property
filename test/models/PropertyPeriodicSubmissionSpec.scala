@@ -18,14 +18,15 @@ package models
 
 import cats.syntax.either._
 import models.errors.ServiceError
-import models.request.Expenses
+import models.request.{ConsolidatedExpenses, Expenses}
 import models.responses._
 import utils.UnitTest
 
 import java.time.LocalDate
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
-  val expenses = Expenses(
+  val expenses: Expenses = Expenses(
+    consolidatedExpenses = ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
     rentsRatesAndInsurance = Some(100),
     repairsAndMaintenanceCosts = Some(200),
     loanInterest = Some(300),
@@ -35,32 +36,45 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val date = LocalDate.now()
-  val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-    Some(ukOtherPropertyIncome),
-    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-  )))
-  val propertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val date: LocalDate = LocalDate.now()
+  val ukOtherPropertyIncome: UkOtherPropertyIncome =
+    UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
+  val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    date,
+    date,
     None,
     None,
     None,
     Some(
       UkOtherProperty(
         Some(ukOtherPropertyIncome),
-        Some(UkOtherPropertyExpenses(
-          premisesRunningCosts = Some(100),
-          repairsAndMaintenance = Some(200),
-          financialCosts = Some(300),
-          professionalFees = Some(400),
-          costOfServices = Some(500),
-          travelCosts = Some(600),
-          other = Some(700),
-          residentialFinancialCost = None,
-          residentialFinancialCostsCarriedForward = None,
-          ukOtherRentARoom = None,
-          consolidatedExpense = None
-        )
+        Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+      )
+    )
+  )
+  val propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    None,
+    None,
+    None,
+    Some(
+      UkOtherProperty(
+        Some(ukOtherPropertyIncome),
+        Some(
+          UkOtherPropertyExpenses(
+            premisesRunningCosts = Some(100),
+            repairsAndMaintenance = Some(200),
+            financialCosts = Some(300),
+            professionalFees = Some(400),
+            costOfServices = Some(500),
+            travelCosts = Some(600),
+            other = Some(700),
+            residentialFinancialCost = None,
+            residentialFinancialCostsCarriedForward = None,
+            ukOtherRentARoom = None,
+            consolidatedExpense = None
+          )
         )
       )
     )
@@ -69,7 +83,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
 
-      PropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses) shouldBe propertyPeriodicSubmissionRequest.asRight[ServiceError]
+      PropertyPeriodicSubmissionRequest.fromExpenses(
+        Some(propertyPeriodicSubmission),
+        expenses
+      ) shouldBe propertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
   }
 }

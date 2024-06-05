@@ -302,15 +302,20 @@ class JourneyAnswersControllerSpec
 
   "create or update property expenses section" should {
 
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalExpenses)
+
     val createOrUpdateUIRequest: JsValue = Json.parse(
       """{
-        |    "rentsRatesAndInsurance": 100,
-        |    "repairsAndMaintenanceCosts": 200,
-        |    "loanInterest": 300,
-        |    "otherProfessionalFee": 400,
-        |    "costsOfServicesProvided": 500,
-        |    "otherAllowablePropertyExpenses": 600,
-        |    "propertyBusinessTravelCost": 700
+        |  "consolidatedExpenses": {
+        |    "consolidatedExpensesYesOrNo": false
+        |  },
+        |  "rentsRatesAndInsurance": 100,
+        |  "repairsAndMaintenanceCosts": 200,
+        |  "loanInterest": 300,
+        |  "otherProfessionalFee": 400,
+        |  "costsOfServicesProvided": 500,
+        |  "otherAllowablePropertyExpenses": 600,
+        |  "propertyBusinessTravelCost": 700
         |}""".stripMargin)
 
     val createOrUpdateRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
@@ -318,16 +323,8 @@ class JourneyAnswersControllerSpec
     "return created for valid request body" in {
 
       mockAuthorisation()
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(
-        Some(0),
-        None,
-        None,
-        None,
-        None,
-        None
-      )
 
-      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
+      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
@@ -337,7 +334,7 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
       mockAuthorisation()
 
-      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
+      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
@@ -352,7 +349,7 @@ class JourneyAnswersControllerSpec
 
     "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
       mockAuthorisation()
-      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, ApiServiceError(CONFLICT).asLeft[Option[PeriodicSubmissionId]])
+      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, ApiServiceError(CONFLICT).asLeft[Option[PeriodicSubmissionId]])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))
@@ -360,7 +357,7 @@ class JourneyAnswersControllerSpec
     }
     "should return internal server error when the downstream API returns internal server error when updating an expense" in {
       mockAuthorisation()
-      mockSaveExpenses(nino, incomeSourceId, taxYear, createOrUpdateRequestBody, ApiServiceError(INTERNAL_SERVER_ERROR).asLeft[Option[PeriodicSubmissionId]])
+      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, ApiServiceError(INTERNAL_SERVER_ERROR).asLeft[Option[PeriodicSubmissionId]])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino)(request))

@@ -28,6 +28,8 @@ lazy val coverageSettings: Seq[Setting[?]] = {
   )
 }
 
+Global / scalacOptions += "-Ymacro-annotations"
+
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.12"
 

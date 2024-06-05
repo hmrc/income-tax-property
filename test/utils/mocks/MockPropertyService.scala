@@ -20,7 +20,7 @@ import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors.ServiceError
-import models.request.{Expenses, Income, PropertyRentalAdjustments, RentalAllowances, SaveIncome}
+import models.request._
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import org.scalamock.handlers._
@@ -80,21 +80,20 @@ trait MockPropertyService extends MockFactory {
   }
 
   def mockSaveExpenses(
+                        ctx: JourneyContext,
                         nino: Nino,
-                        incomeSourceId: IncomeSourceId,
-                        taxYear: TaxYear,
                         expenses: Expenses,
                         result: Either[ServiceError, Option[PeriodicSubmissionId]]
-                      ): CallHandler5[TaxYear, IncomeSourceId, Nino, Expenses, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
+                      ): CallHandler4[JourneyContext, Nino, Expenses, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
     (mockPropertyService
       .saveExpenses(
-        _: TaxYear,
-        _: IncomeSourceId,
+        _: JourneyContext,
         _: Nino,
         _: Expenses
-      )(_: HeaderCarrier)).expects(taxYear, incomeSourceId, nino, expenses, *)
+      )(_: HeaderCarrier)).expects(ctx, nino, expenses, *)
       .returning(EitherT.fromEither(result))
   }
+
   def mockSaveIncome(nino: Nino,
                      incomeSourceId: IncomeSourceId,
                      taxYear: TaxYear,
