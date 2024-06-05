@@ -81,6 +81,33 @@ class JourneyAnswersControllerSpec
     }
   }
 
+  "create or update property rentals about section" should {
+
+    val validRequestBody: JsValue = Json.parse(
+      """
+        |{
+        |   "toexpensesLessThan1000": true,
+        |   "claimPropertyIncomeAllowance": true
+        |}
+        |""".stripMargin)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockPersistAnswers(ctx, PropertyRentalsAbout(true, true))
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
   "Update journey status for rent-a-room" should {
 
     val journeyStatusJs: JsValue = Json.parse(

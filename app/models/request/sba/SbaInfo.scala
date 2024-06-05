@@ -17,7 +17,7 @@
 package models.request.sba
 
 import models.request.common.Address
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
@@ -29,7 +29,7 @@ final case class StructureBuildingFormGroup(
 )
 
 object StructureBuildingFormGroup {
-  implicit val format = Json.format[StructureBuildingFormGroup]
+  implicit val format: Format[StructureBuildingFormGroup] = Json.format[StructureBuildingFormGroup]
 }
 
 final case class SbaInfo(
