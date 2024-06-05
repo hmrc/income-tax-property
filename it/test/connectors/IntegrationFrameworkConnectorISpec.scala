@@ -23,6 +23,7 @@ import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import models.errors.{ApiError, SingleErrorBody}
+import models.request.PropertyPeriodicSubmissionRequest
 import models.responses._
 import utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
