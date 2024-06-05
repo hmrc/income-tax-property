@@ -19,7 +19,7 @@ package controllers
 import actions.AuthorisedAction
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.responses.PropertyPeriodicSubmissionRequest
+import models.request.PropertyPeriodicSubmissionRequest
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}

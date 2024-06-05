@@ -18,6 +18,7 @@ package controllers
 
 import models.PropertyPeriodicSubmissionResponse
 import models.errors.{ApiServiceError, DataNotFoundError}
+import models.request.PropertyPeriodicSubmissionRequest
 import models.responses._
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}

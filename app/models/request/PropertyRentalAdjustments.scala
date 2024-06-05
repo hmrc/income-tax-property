@@ -21,10 +21,10 @@ import play.api.libs.json.{Json, OFormat}
 final case class PropertyRentalAdjustments(
                                             privateUseAdjustment: BigDecimal,
                                             balancingCharge: BalancingCharge,
-                                            propertyIncomeAllowance: BigDecimal, //Where is this used?
+                                            propertyIncomeAllowance: BigDecimal, //ToDo: Where is this used?
                                             renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
-                                            residentialFinancialCost: BigDecimal,
-                                            unusedResidentialFinanceCost: BigDecimal)
+                                            residentialFinanceCost: BigDecimal, //ToDo: From Frontend but Where is this used?
+                                            unusedResidentialFinanceCost: BigDecimal) //ToDo: From Frontend but Where is this used?
 
 object PropertyRentalAdjustments {
   implicit val format: OFormat[PropertyRentalAdjustments] = Json.format[PropertyRentalAdjustments]

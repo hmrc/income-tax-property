@@ -22,6 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
+import models.request.PropertyPeriodicSubmissionRequest
 import models.responses._
 import play.api.Logging
 import play.api.libs.json.{JsValue, StaticBinding, Writes}

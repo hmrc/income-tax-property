@@ -47,7 +47,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
-  extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository
     with HttpClientSupport with ScalaCheckPropertyChecks {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
@@ -406,7 +406,27 @@ class PropertyServiceSpec
     )
 
     "return a success with no content when the request is valid and data is persisted" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+      val annualUkOtherProperty =
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None)), None)
+
+      val annualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+      val updatedAnnualSubmission = PropertyAnnualSubmission(
+        None,
+        None,
+        None,
+        None,
+        Some(
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None)), None)
+        )
+      )
+      mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(updatedAnnualSubmission),
+        Right()
+      )
       await(
         underTest.savePropertyRentalAdjustments(journeyContextWithNino, propertyRentalAdjustments).value
       ) shouldBe Right(true)
@@ -414,10 +434,25 @@ class PropertyServiceSpec
 
     "return ApiError for invalid request" in {
       val taxYear = 2024
-      mockCreateAnnualSubmission2(
+
+      val annualUkOtherProperty =
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None)), None)
+      val annualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+      val updatedAnnualSubmission = PropertyAnnualSubmission(
+        None,
+        None,
+        None,
+        None,
+        Some(
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None)), None)
+        )
+      )
+      mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
+      mockCreateAnnualSubmission(
         TaxYear(taxYear),
         IncomeSourceId(incomeSourceId),
         Nino(nino),
+        Some(updatedAnnualSubmission),
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
@@ -511,6 +546,8 @@ class PropertyServiceSpec
       None
     )
 
+    val ukOtherPropertyExpenses =
+      UkOtherPropertyExpenses(Some(100), None, None, None, None, None, None, None, None, None, None)
     val saveIncome = SaveIncome(ukOtherPropertyIncome, incomeToSave)
     // Todo: Property Based Test Required for Update Case
     "return no content for valid request" in {
@@ -533,10 +570,8 @@ class PropertyServiceSpec
       await(
         underTest
           .saveIncome(
-            TaxYear(taxYear),
-            Nino(nino),
-            IncomeSourceId(incomeSourceId),
             ctx.toJourneyContext(JourneyName.RentalIncome),
+            Nino(nino),
             incomeToSave,
             saveIncome
           )
@@ -563,10 +598,8 @@ class PropertyServiceSpec
       await(
         underTest
           .saveIncome(
-            TaxYear(taxYear),
-            Nino(nino),
-            IncomeSourceId(incomeSourceId),
             ctx.toJourneyContext(JourneyName.RentalIncome),
+            Nino(nino),
             incomeToSave,
             saveIncome
           )
@@ -837,9 +870,9 @@ class PropertyServiceSpec
       val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
 
       def generateEsbaInfo(
-                            claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-                            esbaClaims: EsbaClaims
-                          ): EsbaInfo =
+        claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
+        esbaClaims: EsbaClaims
+      ): EsbaInfo =
         EsbaInfo(
           claimEnhancedStructureBuildingAllowance,
           esbaClaims,
@@ -924,28 +957,28 @@ class PropertyServiceSpec
 
           val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
             _ <- if (isJourneyPresentInDb) {
-              EitherT(
-                repository
-                  .upsertAnswers(
-                    ctx.toJourneyContext(JourneyName.RentalESBA),
-                    Json.toJson(
-                      EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
-                    )
-                  )
-                  .map(_.asRight[ServiceError])
-              )
-            } else {
-              EitherT(
-                testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
-                  .map(_.asRight[ServiceError])
-              )
-            }
+                   EitherT(
+                     repository
+                       .upsertAnswers(
+                         ctx.toJourneyContext(JourneyName.RentalESBA),
+                         Json.toJson(
+                           EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
+                         )
+                       )
+                       .map(_.asRight[ServiceError])
+                   )
+                 } else {
+                   EitherT(
+                     testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
+                       .map(_.asRight[ServiceError])
+                   )
+                 }
 
             r <- underTest.getFetchedPropertyDataMerged(
-              ctx.toJourneyContext(JourneyName.AllJourneys),
-              Nino(nino),
-              incomeSourceId
-            )
+                   ctx.toJourneyContext(JourneyName.AllJourneys),
+                   Nino(nino),
+                   incomeSourceId
+                 )
           } yield r
           whenReady(result.value, Timeout(Span(500, Millis))) { response =>
             response shouldBe FetchedPropertyData(None, None, None, esbaInfoRetrieved).asRight[ServiceError]
@@ -953,9 +986,9 @@ class PropertyServiceSpec
       }
 
       def testOnlyRemove(
-                          mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-                          ctx: JourneyContext
-                        ): Future[Unit] = {
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext
+      ): Future[Unit] = {
         val filter: Bson = Filters
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
@@ -982,15 +1015,15 @@ class PropertyServiceSpec
 
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
         _ <- EitherT(
-          repository
-            .upsertAnswers(
-              ctx.toJourneyContext(JourneyName.RentalESBA),
-              Json.toJson(
-                EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
-              )
-            )
-            .map(_.asRight[ServiceError])
-        )
+               repository
+                 .upsertAnswers(
+                   ctx.toJourneyContext(JourneyName.RentalESBA),
+                   Json.toJson(
+                     EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
+                   )
+                 )
+                 .map(_.asRight[ServiceError])
+             )
         r <-
           underTest
             .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.NoJourney), Nino(nino), incomeSourceId)
@@ -1012,13 +1045,13 @@ class PropertyServiceSpec
       )
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
         _ <- EitherT(
-          repository
-            .upsertAnswers(
-              ctx.toJourneyContext(JourneyName.RentalESBA),
-              Json.toJson(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
-            )
-            .map(_.asRight[ServiceError])
-        )
+               repository
+                 .upsertAnswers(
+                   ctx.toJourneyContext(JourneyName.RentalESBA),
+                   Json.toJson(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+                 )
+                 .map(_.asRight[ServiceError])
+             )
         r <-
           underTest
             .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.RentalESBA), Nino(nino), incomeSourceId)
@@ -1030,9 +1063,9 @@ class PropertyServiceSpec
     }
     "return ServiceError when repo has per key more than one entry" in {
       def testOnlyRemove(
-                          mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-                          ctx: JourneyContext
-                        ): Future[Unit] = {
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext
+      ): Future[Unit] = {
         val filter: Bson = Filters
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
@@ -1044,11 +1077,11 @@ class PropertyServiceSpec
       }
 
       def testOnlyAdd(
-                       clock: Clock,
-                       mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-                       ctx: JourneyContext,
-                       newData: JsObject
-                     ) = {
+        clock: Clock,
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext,
+        newData: JsObject
+      ) = {
 
         val now = clock.instant()
         val expireAt = calculateExpireAt(now.plusSeconds(1000))
@@ -1082,24 +1115,24 @@ class PropertyServiceSpec
       )
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
         _ <- EitherT(
-          testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
-        )
+               testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
+             )
         _ <- EitherT(
-          testOnlyAdd(
-            Clock.systemUTC(),
-            repository,
-            ctx.toJourneyContext(JourneyName.RentalESBA),
-            Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
-          ).map(_.asRight[ServiceError])
-        )
+               testOnlyAdd(
+                 Clock.systemUTC(),
+                 repository,
+                 ctx.toJourneyContext(JourneyName.RentalESBA),
+                 Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+               ).map(_.asRight[ServiceError])
+             )
         _ <- EitherT(
-          testOnlyAdd(
-            Clock.systemUTC(),
-            repository,
-            ctx.toJourneyContext(JourneyName.RentalESBA),
-            Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
-          ).map(_.asRight[ServiceError])
-        )
+               testOnlyAdd(
+                 Clock.systemUTC(),
+                 repository,
+                 ctx.toJourneyContext(JourneyName.RentalESBA),
+                 Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+               ).map(_.asRight[ServiceError])
+             )
         r <-
           underTest
             .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.AllJourneys), Nino(nino), incomeSourceId)

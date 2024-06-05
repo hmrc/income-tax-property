@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package models.common
+package models.request
 
-final case class JourneyContextWithNino(
-  taxYear: TaxYear,
-  incomeSourceId: IncomeSourceId,
-  mtditid: Mtditid,
-  nino: Nino
-) {
-  def toJourneyContext(journeyName: JourneyName): JourneyContext =
-    JourneyContext(taxYear, incomeSourceId, mtditid, journeyName)
-  
+import play.api.libs.json.{Json, OFormat}
+
+case class PropertyPeriodicSubmissionIdRequest(taxableEntityId: String,
+                                               incomeSourceId: String,
+                                               taxYear: String)
+
+object PropertyPeriodicSubmissionIdRequest {
+  implicit val format: OFormat[PropertyPeriodicSubmissionIdRequest] = Json.format[PropertyPeriodicSubmissionIdRequest]
 }
-
-final case class JourneyContext(
-  taxYear: TaxYear,
-  incomeSourceId: IncomeSourceId,
-  mtditid: Mtditid,
-  journey: JourneyName
-)

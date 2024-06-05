@@ -16,14 +16,15 @@
 
 package utils.mocks
 
+import connectors.IntegrationFrameworkConnector
+import models.common.{IncomeSourceId, Nino, TaxYear}
+import models.errors.ApiError
+import models.request.PropertyPeriodicSubmissionRequest
+import models.responses._
 import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
-import connectors.IntegrationFrameworkConnector
-import models.common.{IncomeSourceId, Nino, TaxYear}
-import models.errors.ApiError
-import models.responses.{IncomeSourceDetailsModel, PeriodicSubmissionId, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission, PropertyPeriodicSubmissionRequest}
 
 import scala.concurrent.Future
 
@@ -106,10 +107,10 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
   }
 
   def mockCreateAnnualSubmission(taxYear: Int,
-                                   taxableEntityId: String,
-                                   incomeSourceId: String,
-                                 result: Either[ApiError,Unit]
-                                  ): CallHandler5[Int, String, String, JsValue, HeaderCarrier,
+                                 taxableEntityId: String,
+                                 incomeSourceId: String,
+                                 result: Either[ApiError, Unit]
+                                ): CallHandler5[Int, String, String, JsValue, HeaderCarrier,
     Future[Either[ApiError, Unit]]] = {
     (mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: Int, _: String, _: String, _: JsValue)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
@@ -120,10 +121,28 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
                                   incomeSourceId: IncomeSourceId,
                                   taxableEntityId: Nino,
                                   result: Either[ApiError, Unit]
-                                ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier,
+                                 ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier,
     Future[Either[ApiError, Unit]]] = {
     (mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
       .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
       .returning(Future.successful(result))
+  }
+
+  def mockCreateAnnualSubmission(taxYear: TaxYear,
+                                 incomeSourceId: IncomeSourceId,
+                                 taxableEntityId: Nino,
+                                 propertyAnnualSubmission: Option[PropertyAnnualSubmission],
+                                 result: Either[ApiError, Unit]
+                                ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+
+    propertyAnnualSubmission match {
+      case Some(pas) => (
+        mockIntegrationFrameworkConnector.createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(_: HeaderCarrier))
+        .expects(taxYear, incomeSourceId, taxableEntityId, pas, *)
+        .returning(Future.successful(result)
+        )
+      case _ => mockCreateAnnualSubmission2(taxYear, incomeSourceId, taxableEntityId, result)
+    }
   }
 }

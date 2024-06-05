@@ -20,6 +20,7 @@ import config.AppConfig
 import connectors.response.{PostPeriodicSubmissionResponse, PutAnnualSubmissionResponse, PutPeriodicSubmissionResponse}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
+import models.request.PropertyPeriodicSubmissionRequest
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.{Json, Writes}

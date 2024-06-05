@@ -163,7 +163,7 @@ class JourneyAnswersControllerSpec
         |    "renovationAllowanceBalancingChargeYesNo": true,
         |    "renovationAllowanceBalancingChargeAmount": 92
         |  },
-        |  "residentialFinancialCost": 56.78,
+        |  "residentialFinanceCost": 56.78,
         |  "unusedResidentialFinanceCost": 78.89
         |}
         """.stripMargin)
