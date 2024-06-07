@@ -32,7 +32,7 @@ final case class PropertyPeriodicSubmissionRequest(
 object PropertyPeriodicSubmissionRequest {
   implicit val format: OFormat[PropertyPeriodicSubmissionRequest] = Json.format[PropertyPeriodicSubmissionRequest]
 
-  private def createNewUkPropertyExpenses(
+  def createNewUkPropertyExpenses(
            periodicSubmission: Option[PropertyPeriodicSubmission],
            expenses: Expenses,
            consolidatedExpenses: Option[ConsolidatedExpenses]): UkOtherPropertyExpenses = {

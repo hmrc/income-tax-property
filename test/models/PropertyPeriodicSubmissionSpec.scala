@@ -36,13 +36,27 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val saveIncome = SaveIncome(UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None), Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None))
+  val saveIncome = SaveIncome(
+    UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
+    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None)
+  )
   val date = LocalDate.now()
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-    Some(ukOtherPropertyIncome),
-    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-  )))
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    date,
+    date,
+    None,
+    None,
+    None,
+    Some(
+      UkOtherProperty(
+        Some(ukOtherPropertyIncome),
+        Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+      )
+    )
+  )
   val propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
     None,
@@ -69,11 +83,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     )
   )
 
-
   def propertyPeriodicSubmissionRequest(
-                                         ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
-                                         ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-                                       ) = PropertyPeriodicSubmissionRequest(
+    ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
+    ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
+  ) = PropertyPeriodicSubmissionRequest(
     None,
     None,
     None,
@@ -86,6 +99,32 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   )
 
   "PropertyPeriodicSubmission" should {
+    "should create an expense with a consolidated amount when consolidatedExpensesYesOrNo == true and an expenses amount is included" in {
+      PropertyPeriodicSubmissionRequest.createNewUkPropertyExpenses(
+        Some(propertyPeriodicSubmission),
+        expenses,
+        Some(ConsolidatedExpenses(true, Some(1000)))
+      ) shouldBe UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, Some(1000))
+    }
+
+    "should create an expense without a consolidated value when no consolidated value is passed due to total income > 85K" in {
+      PropertyPeriodicSubmissionRequest.createNewUkPropertyExpenses(
+        Some(propertyPeriodicSubmission),
+        expenses,
+        None
+      ) shouldBe UkOtherPropertyExpenses(Some(100), Some(200), Some(300), Some(400), Some(600), Some(500), Some(700), None, None, None, None)
+    }
+
+    "should create an expense with a consolidated value where the user has total income < 85K and they have selected to post individual expenses" in {
+      PropertyPeriodicSubmissionRequest.createNewUkPropertyExpenses(
+        Some(propertyPeriodicSubmission),
+        expenses,
+        None
+      ) shouldBe UkOtherPropertyExpenses(Some(100), Some(200), Some(300), Some(400), Some(600), Some(500), Some(700), None, None, None, None)
+    }
+  }
+
+  "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
 
       PropertyPeriodicSubmissionRequest.fromExpenses(
@@ -96,13 +135,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
     "be generated from income" in {
 
-      PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
-        Some(propertyPeriodicSubmission), saveIncome) shouldBe
+      PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(Some(propertyPeriodicSubmission), saveIncome) shouldBe
         propertyPeriodicSubmissionRequest(
-
           Some(saveIncome.ukOtherPropertyIncome),
           propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
-
         ).asRight[ServiceError]
     }
   }
