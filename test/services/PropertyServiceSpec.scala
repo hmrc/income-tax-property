@@ -671,7 +671,7 @@ class PropertyServiceSpec
             ctx,
             Nino(nino),
             Expenses(
-              ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+              None,
               Some(200),
               None,
               None,
@@ -699,7 +699,7 @@ class PropertyServiceSpec
         ctx,
         Nino(nino),
         Expenses(
-          ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+          None,
           Some(200),
           None,
           None,
@@ -734,7 +734,7 @@ class PropertyServiceSpec
         ctx,
         Nino(nino),
         Expenses(
-          ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+          None,
           Some(200),
           None,
           None,
@@ -802,7 +802,7 @@ class PropertyServiceSpec
         ctx,
         Nino(nino),
         Expenses(
-          ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+          None,
           Some(200),
           None,
           None,

@@ -26,13 +26,13 @@ import java.time.LocalDate
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses: Expenses = Expenses(
-    consolidatedExpenses = ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+    consolidatedExpenses = None,
     rentsRatesAndInsurance = Some(100),
     repairsAndMaintenanceCosts = Some(200),
-    loanInterest = Some(300),
-    otherProfessionalFee = Some(400),
+    loanInterestOrOtherFinancialCost = Some(300),
+    otherProfessionalFees = Some(400),
     costsOfServicesProvided = Some(500),
-    propertyBusinessTravelCost = Some(600),
+    propertyBusinessTravelCosts = Some(600),
     otherAllowablePropertyExpenses = Some(700)
   )
 

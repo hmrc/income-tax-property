@@ -231,7 +231,12 @@ class PropertyService @Inject()(connector: IntegrationFrameworkConnector, reposi
         ).map(_ => Some(submissionId))
         case _ => ITPEnvelope.liftEither(InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]])
       }
-      _ <- persistAnswers(ctx, ExpensesStoreAnswers(expenses.consolidatedExpenses.consolidatedExpensesYesOrNo))
+      _ <- expenses.consolidatedExpenses match {
+        case Some(consolidatedExpenses) =>
+          persistAnswers(ctx, ExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
+        case None =>
+          ITPEnvelope.liftPure(None)
+      }
     } yield submissionResponse
   }
 
