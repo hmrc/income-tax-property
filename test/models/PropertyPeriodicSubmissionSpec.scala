@@ -86,7 +86,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   def propertyPeriodicSubmissionRequest(
     ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
     ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-  ) = PropertyPeriodicSubmissionRequest(
+  ): PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
     None,
     None,
