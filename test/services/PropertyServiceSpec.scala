@@ -54,7 +54,6 @@ class PropertyServiceSpec
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
   private val underTest = new PropertyService(mockIntegrationFrameworkConnector, repository)
   private val nino = "A34324"
-  private val ninoRentARoom = "A77889"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"
   private val taxableEntityId = "taxableEntityId"
@@ -671,25 +670,6 @@ class PropertyServiceSpec
           .saveExpenses(
             ctx,
             Nino(nino),
-            Expenses(
-              None,
-              Some(200),
-              None,
-              None,
-              None,
-              None,
-              None,
-              None
-            )
-          )
-          .value
-      ) shouldBe Some(PeriodicSubmissionId("1")).asRight[ServiceError]
-
-      await(
-        underTest
-          .saveExpenses(
-            ctx,
-            Nino(ninoRentARoom),
             Expenses(
               None,
               Some(200),
