@@ -18,30 +18,17 @@ package models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ConsolidatedExpenses(
-  consolidatedExpensesYesOrNo: Boolean,
-  consolidatedExpensesAmount: Option[BigDecimal]
-)
-
-object ConsolidatedExpenses {
-  implicit val format: OFormat[ConsolidatedExpenses] = Json.format
-}
-
-final case class Expenses(
+final case class RentARoomExpenses(
   consolidatedExpenses: Option[ConsolidatedExpenses],
   rentsRatesAndInsurance: Option[BigDecimal],
   repairsAndMaintenanceCosts: Option[BigDecimal],
-  loanInterest: Option[BigDecimal],
-  otherProfessionalFee: Option[BigDecimal],
-  costsOfServicesProvided: Option[BigDecimal],
-  propertyBusinessTravelCost: Option[BigDecimal],
-  otherAllowablePropertyExpenses: Option[BigDecimal],
   legalManagementOtherFee: Option[BigDecimal],
+  costOfServicesProvided: Option[BigDecimal],
   residentialPropertyFinanceCosts: Option[BigDecimal],
   unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal],
   otherPropertyExpenses: Option[BigDecimal]
 )
 
-object Expenses {
-  implicit val format: OFormat[Expenses] = Json.format[Expenses]
+object RentARoomExpenses {
+  implicit val format: OFormat[RentARoomExpenses] = Json.format[RentARoomExpenses]
 }
