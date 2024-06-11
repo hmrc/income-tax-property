@@ -315,7 +315,10 @@ class JourneyAnswersControllerSpec
         |  "costsOfServicesProvided": 45,
         |  "residentialPropertyFinanceCosts": 56,
         |  "unusedResidentialPropertyFinanceCostsBroughtFwd": 67,
-        |  "otherPropertyExpenses": 78
+        |  "otherPropertyExpenses": 78,
+        |  "propertyBusinessTravelCosts": 89,
+        |  "loanInterestOrOtherFinancialCost": 90,
+        |  "otherAllowablePropertyExpenses": 100
         |}
         |""".stripMargin
     )
