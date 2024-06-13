@@ -17,7 +17,6 @@
 package controllers
 
 import actions.AuthorisedAction
-import models.common.{JourneyName, Nino, TaxYear}
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
 import models.responses.PropertyAnnualSubmission
@@ -31,39 +30,55 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class AnnualSubmissionController @Inject()(propertyService: PropertyService,
-                                           authorisedAction: AuthorisedAction,
-                                           cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends BackendController(cc) with RequestHandler with Logging {
+class AnnualSubmissionController @Inject() (
+  propertyService: PropertyService,
+  authorisedAction: AuthorisedAction,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) with RequestHandler with Logging {
 
   def getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String): Action[AnyContent] =
     authorisedAction.async { implicit request =>
       propertyService.getPropertyAnnualSubmission(taxYear, nino, incomeSourceId).value.map {
         case Right(annualSubmissionData) => Ok(Json.toJson(annualSubmissionData))
-        case Left(DataNotFoundError) => NotFound
-        case Left(_) => InternalServerError
+        case Left(DataNotFoundError)     => NotFound
+        case Left(_)                     => InternalServerError
       }
     }
 
   def deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
       propertyService.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).value.map {
-        case Right(_) => NoContent
-        case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+        case Right(_)                                    => NoContent
+        case Left(ApiServiceError(BAD_REQUEST))          => BadRequest
         case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
-        case Left(_) => InternalServerError
+        case Left(_)                                     => InternalServerError
       }
     }
 
   def createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyAnnualSubmission](TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), JourneyName.NoJourney, request) { (_, propertyAnnualSubmission) =>
-        propertyService.createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), propertyAnnualSubmission).value.map {
-          case Right(_) => NoContent
-          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
-          case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
-          case Left(_) => InternalServerError
-        }
+      withJourneyContextAndEntity[PropertyAnnualSubmission](
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        JourneyName.NoJourney,
+        request
+      ) { (_, propertyAnnualSubmission) =>
+        propertyService
+          .createOrUpdateAnnualSubmission(
+            TaxYear(taxYear),
+            IncomeSourceId(incomeSourceId),
+            Nino(nino),
+            propertyAnnualSubmission
+          )
+          .value
+          .map {
+            case Right(_)                                    => NoContent
+            case Left(ApiServiceError(BAD_REQUEST))          => BadRequest
+            case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
+            case Left(_)                                     => InternalServerError
+          }
       }
     }
 }

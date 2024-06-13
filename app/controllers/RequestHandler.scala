@@ -19,8 +19,6 @@ package controllers
 import actions.AuthorisationRequest
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError, ServiceError}
-import models.request.{Income, SaveIncome}
-import models.responses.UkOtherPropertyIncome
 import play.api.Logging
 import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json._
@@ -33,12 +31,12 @@ import scala.util.{Failure, Success, Try}
 trait RequestHandler {
   self: Logging =>
   def withJourneyContext(
-                          taxYear: TaxYear,
-                          incomeSourceId: IncomeSourceId,
-                          nino: Nino,
-                          journeyName: JourneyName,
-                          authorisationRequest: AuthorisationRequest[AnyContent]
-                        )(block: JourneyContext => Future[Result]): Future[Result] = {
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    journeyName: JourneyName,
+    authorisationRequest: AuthorisationRequest[AnyContent]
+  )(block: JourneyContext => Future[Result]): Future[Result] = {
     val ctx = JourneyContextWithNino(
       taxYear,
       incomeSourceId,
@@ -50,16 +48,16 @@ trait RequestHandler {
   }
 
   def withEntity[T](
-                     authorisationRequest: AuthorisationRequest[AnyContent]
-                   )(
-                     block: T => Future[Result]
-                   )(implicit reads: Reads[T]): Future[Result] = {
+    authorisationRequest: AuthorisationRequest[AnyContent]
+  )(
+    block: T => Future[Result]
+  )(implicit reads: Reads[T]): Future[Result] = {
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]]({
+        validatedRes.fold[Future[Result]] {
           Future.successful(BadRequest)
-        }) {
+        } {
           case JsSuccess(value, _) =>
             block(value)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
@@ -69,13 +67,14 @@ trait RequestHandler {
   }
 
   def withJourneyContextAndEntity[T](
-                                      taxYear: TaxYear,
-                                      incomeSourceId: IncomeSourceId,
-                                      nino: Nino,
-                                      journeyName: JourneyName,
-                                      authorisationRequest: AuthorisationRequest[AnyContent]
-                                    )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(authorisationRequest.user.mtditid), nino).toJourneyContext(journeyName)
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    journeyName: JourneyName,
+    authorisationRequest: AuthorisationRequest[AnyContent]
+  )(block: (JourneyContext, T) => Future[Result])(implicit reads: Reads[T]): Future[Result] = {
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(authorisationRequest.user.mtditid), nino)
+      .toJourneyContext(journeyName)
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>
@@ -93,8 +92,7 @@ trait RequestHandler {
     BadRequest(Json.obj("code" -> BAD_REQUEST, "reason" -> error.message))
   }
 
-  protected def parseBody[A: Reads](request: AuthorisationRequest[AnyContent]): Try[Option[JsResult[A]]] = {
+  protected def parseBody[A: Reads](request: AuthorisationRequest[AnyContent]): Try[Option[JsResult[A]]] =
     Try(request.body.asJson.map(_.validate[A]))
-  }
 
 }

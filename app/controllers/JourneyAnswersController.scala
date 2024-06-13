@@ -76,7 +76,6 @@ class JourneyAnswersController @Inject() (
       }
   }
 
-
   def savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
@@ -94,7 +93,12 @@ class JourneyAnswersController @Inject() (
       }
     }
 
-  def saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String): Action[AnyContent] =
+  def saveExpenses(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    journeyName: String
+  ): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.withName(journeyName), request) {
         (ctx, expenses) =>
