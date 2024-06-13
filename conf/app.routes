@@ -33,7 +33,9 @@ POST          /property/:taxYear/:incomeSourceId/property-rental-sba/:nino/answe
 
 POST          /property/:taxYear/:incomeSourceId/income/:nino/answers                                                              controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST        /property/:taxYear/:incomeSourceId/property-rental-expenses/:nino/answers        controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/property-rental-expenses/:nino/answers                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rental-expenses")
+
+POST          /property/:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answers                                                controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rent-a-room-expenses")
 
 POST          /property/:taxYear/:incomeSourceId/allowances/:nino/esba/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 

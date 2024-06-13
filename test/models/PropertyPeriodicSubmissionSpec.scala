@@ -26,14 +26,19 @@ import java.time.LocalDate
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses: Expenses = Expenses(
-    consolidatedExpenses = ConsolidatedExpenses(consolidatedExpensesYesOrNo = false, None),
+    consolidatedExpenses = None,
     rentsRatesAndInsurance = Some(100),
     repairsAndMaintenanceCosts = Some(200),
     loanInterest = Some(300),
     otherProfessionalFee = Some(400),
     costsOfServicesProvided = Some(500),
     propertyBusinessTravelCost = Some(600),
-    otherAllowablePropertyExpenses = Some(700)
+
+    otherAllowablePropertyExpenses = Some(700),
+    legalManagementOtherFee = None,
+    residentialPropertyFinanceCosts = None,
+    unusedResidentialPropertyFinanceCostsBroughtFwd = None,
+    otherPropertyExpenses = None
   )
 
   val saveIncome = SaveIncome(UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None), Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None))
@@ -73,7 +78,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   def propertyPeriodicSubmissionRequest(
                                          ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
                                          ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-                                       ) = PropertyPeriodicSubmissionRequest(
+                                       ): PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     None,
     None,
     None,

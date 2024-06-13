@@ -32,7 +32,7 @@ class JourneyStatusServiceSpec extends UnitTest with MockMongoJourneyAnswersRepo
           taxYear = TaxYear(2023),
           incomeSourceId = IncomeSourceId("incomeSourceId"),
           mtditid = Mtditid("1234567890"),
-          journey = JourneyName.RentARoom
+          journey = JourneyName.RentARoomExpenses
         ),
           JourneyStatusData(JourneyStatus.InProgress)
         ).value
