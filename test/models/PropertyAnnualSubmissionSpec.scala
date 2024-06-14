@@ -16,8 +16,9 @@
 
 package models
 
+import models.request.{ClaimExpensesOrRRR, RaRAbout}
 import models.request.common.Postcode
-import models.responses.{AnnualUkOtherProperty, Esba, PropertyAnnualSubmission, StructuredBuildingAllowanceBuilding, UkOtherAdjustments, UkOtherAllowances}
+import models.responses.{AnnualUkOtherProperty, Esba, PropertyAnnualSubmission, StructuredBuildingAllowanceBuilding, UkOtherAdjustments, UkOtherAllowances, UkRentARoom}
 import utils.UnitTest
 
 import java.time.LocalDateTime
@@ -32,19 +33,65 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     None,
     None,
     None,
-    Some(AnnualUkOtherProperty(
-      Some(UkOtherAdjustments(
-        None, None, None, None, None, None
-      )),
-      Some(UkOtherAllowances(
-        None, None, None, None, None, None, None, Some(esbas), None, None
-      ))
-    ))
+    Some(
+      AnnualUkOtherProperty(
+        Some(
+          UkOtherAdjustments(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None
+          )
+        ),
+        Some(
+          UkOtherAllowances(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(esbas),
+            None,
+            None
+          )
+        )
+      )
+    )
   )
 
   "PropertyAnnualSubmission" should {
     "be generated from esba list" in {
-      PropertyAnnualSubmission.fromEsbas(esbas).copy(submittedOn = None) shouldBe propertyAnnualSubmission.copy(submittedOn = None)
+      PropertyAnnualSubmission.fromEsbas(esbas).copy(submittedOn = None) shouldBe propertyAnnualSubmission
+        .copy(submittedOn = None)
+    }
+
+    "be generated from uk rent a room about" in {
+      val ukRaRAbout = RaRAbout(
+        true,
+        12.34,
+        ClaimExpensesOrRRR(
+          true,
+          Some(56.78)
+        )
+      )
+      PropertyAnnualSubmission
+        .fromUkRentARoomAbout(ukRaRAbout, propertyAnnualSubmission)
+        .copy(submittedOn = None) shouldBe propertyAnnualSubmission
+        .copy(ukOtherProperty =
+          propertyAnnualSubmission.ukOtherProperty.map(
+            _.copy(ukOtherPropertyAnnualAdjustments =
+              propertyAnnualSubmission.ukOtherProperty.flatMap(
+                _.ukOtherPropertyAnnualAdjustments
+                  .map(_.copy(ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.ukRentARoomJointlyLet))))
+              )
+            )
+          )
+        )
+        .copy(submittedOn = None)
     }
   }
 }
