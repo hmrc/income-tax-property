@@ -580,18 +580,20 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   "Given a need to create Periodic Submission Data" when {
 
     val aPeriodicSubmissionModel = PeriodicSubmissionId("1")
-    val requestBody: JsValue = Json.parse("""
-                                            |{
-                                            |   "foreignFhlEea": {
-                                            |      "income": {
-                                            |         "rentAmount": 200.00
-                                            |      },
-                                            |      "expenses": {
-                                            |         "consolidatedExpenseAmount": 1000.99
-                                            |       }
-                                            |   }
-                                            |}
-                                            |""".stripMargin)
+    val requestBody: JsValue = Json.parse(s"""
+                                             |{
+                                             |   "fromDate": "${LocalDate.now()}",
+                                             |   "toDate": "${LocalDate.now()}",
+                                             |   "foreignFhlEea": {
+                                             |      "income": {
+                                             |         "rentAmount": 200.00
+                                             |      },
+                                             |      "expenses": {
+                                             |         "consolidatedExpenseAmount": 1000.99
+                                             |       }
+                                             |   }
+                                             |}
+                                             |""".stripMargin)
 
     "create periodic submission" should {
       "create submissions data for the APIs used before 2024" in {
@@ -679,18 +681,20 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
   "Given a need to update Periodic Submission Data" when {
 
-    val requestBody: JsValue = Json.parse("""
-                                            |{
-                                            |   "foreignFhlEea": {
-                                            |      "income": {
-                                            |         "rentAmount": 200.00
-                                            |      },
-                                            |      "expenses": {
-                                            |         "consolidatedExpenseAmount": 1000.99
-                                            |       }
-                                            |   }
-                                            |}
-                                            |""".stripMargin)
+    val requestBody: JsValue = Json.parse(s"""
+                                             |{
+                                             |   "fromDate": "${LocalDate.now()}",
+                                             |   "toDate": "${LocalDate.now()}",
+                                             |   "foreignFhlEea": {
+                                             |      "income": {
+                                             |         "rentAmount": 200.00
+                                             |      },
+                                             |      "expenses": {
+                                             |         "consolidatedExpenseAmount": 1000.99
+                                             |       }
+                                             |   }
+                                             |}
+                                             |""".stripMargin)
 
     "update periodic submission" should {
       "update submissions data for the APIs used before 2024" in {
