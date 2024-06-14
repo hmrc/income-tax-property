@@ -578,12 +578,14 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   }
 
   "Given a need to create Periodic Submission Data" when {
+    val fromDate = LocalDate.now()
+    val toDate = LocalDate.now()
 
     val aPeriodicSubmissionModel = PeriodicSubmissionId("1")
     val requestBody: JsValue = Json.parse(s"""
                                              |{
-                                             |   "fromDate": "${LocalDate.now()}",
-                                             |   "toDate": "${LocalDate.now()}",
+                                             |   "fromDate": "$fromDate",
+                                             |   "toDate": "$toDate",
                                              |   "foreignFhlEea": {
                                              |      "income": {
                                              |         "rentAmount": 200.00
@@ -681,10 +683,13 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
   "Given a need to update Periodic Submission Data" when {
 
+    val fromDate = LocalDate.now()
+    val toDate = LocalDate.now()
+
     val requestBody: JsValue = Json.parse(s"""
                                              |{
-                                             |   "fromDate": "${LocalDate.now()}",
-                                             |   "toDate": "${LocalDate.now()}",
+                                             |   "fromDate": "$fromDate",
+                                             |   "toDate": "$toDate",
                                              |   "foreignFhlEea": {
                                              |      "income": {
                                              |         "rentAmount": 200.00
