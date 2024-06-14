@@ -98,12 +98,13 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, FetchedPropertyData] = {
-    val result = getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
-
+    val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
+    val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
     for {
-      resultFromDownstream <- result
-      resultFromRepository <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
-    } yield mergeAll(resultFromDownstream, resultFromRepository)
+      resultFromDownstreamAnnual        <- resultAnnual
+      resultFromDownstreamPeriodicMaybe <- resultPeriodic
+      resultFromRepository              <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
+    } yield mergeAll(resultFromDownstreamAnnual, resultFromDownstreamPeriodicMaybe, resultFromRepository)
 
   }
 
@@ -142,13 +143,19 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
   }
 
   private def mergeAll(
-    resultFromDownstream: PropertyAnnualSubmission,
+    resultFromAnnualDownstream: PropertyAnnualSubmission,
+    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
     resultFromRepository: Map[String, JourneyAnswers]
   ): FetchedPropertyData = {
-    val esbaInfoMaybe = mergeEsbaInfo(resultFromDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
+    val esbaInfoMaybe =
+      mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
     val propertyAboutMaybe = mergePropertyAbout(resultFromRepository.get(JourneyName.About.entryName))
     val adjustmentsMaybe =
-      mergeAdjustments(resultFromDownstream, resultFromRepository.get(JourneyName.RentalAdjustments.entryName))
+      mergeAdjustments(
+        resultFromAnnualDownstream,
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalAdjustments.entryName)
+      )
     FetchedPropertyData(None, propertyAboutMaybe, adjustmentsMaybe, esbaInfoMaybe)
   }
 
@@ -160,20 +167,25 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
 
   private def mergeAdjustments(
     resultFromDownstream: PropertyAnnualSubmission,
+    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
     resultFromRepository: Option[JourneyAnswers]
   ): Option[PropertyRentalAdjustments] = {
 
     // Todo: What to do with None None (In case we do not receive any info from db and downstream?
-    val adjustments: Option[UkOtherAdjustments] = for {
-      uop   <- resultFromDownstream.ukOtherProperty
-      uopaa <- uop.ukOtherPropertyAnnualAdjustments
-    } yield uopaa
+    val adjustmentsAndPeriodicExpenses: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)] = for {
+      uopAnnual                    <- resultFromDownstream.ukOtherProperty
+      resultFromDownstreamPeriodic <- resultFromPeriodicDownstreamMaybe // revisit. None Periodic what to do
+      uopPeriodic                  <- resultFromDownstreamPeriodic.ukOtherProperty
+      expensesPeriodic             <- uopPeriodic.expenses
+      uopaa                        <- uopAnnual.ukOtherPropertyAnnualAdjustments
+    } yield (uopaa, expensesPeriodic)
 
     val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[AdjustmentStoreAnswers])
       case None                 => None
     }
-    adjustmentStoreAnswers.merge(adjustments)
+
+    adjustmentStoreAnswers.merge(adjustmentsAndPeriodicExpenses)
   }
 
   private def mergeEsbaInfo(
@@ -283,35 +295,39 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
 
   def saveExpenses(ctx: JourneyContext, nino: Nino, expenses: Expenses)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
       periodicSubmissionRequest <-
         ITPEnvelope.liftEither(PropertyPeriodicSubmissionRequest.fromExpenses(maybePeriodicSubmission, expenses))
       submissionResponse <- maybePeriodicSubmission match {
-        case None => createPeriodicSubmission(
-          nino.value,
-          ctx.incomeSourceId.value,
-          ctx.taxYear.endYear,
-          periodicSubmissionRequest
-        )
-        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) => updatePeriodicSubmission(
-          nino.value,
-          ctx.incomeSourceId.value,
-          ctx.taxYear.endYear,
-          submissionId.submissionId,
-          periodicSubmissionRequest
-        ).map(_ => Some(submissionId))
-        case _ => ITPEnvelope.liftEither(InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]])
-      }
+                              case None =>
+                                createPeriodicSubmission(
+                                  nino.value,
+                                  ctx.incomeSourceId.value,
+                                  ctx.taxYear.endYear,
+                                  periodicSubmissionRequest
+                                )
+                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) =>
+                                updatePeriodicSubmission(
+                                  nino.value,
+                                  ctx.incomeSourceId.value,
+                                  ctx.taxYear.endYear,
+                                  submissionId.submissionId,
+                                  periodicSubmissionRequest
+                                ).map(_ => Some(submissionId))
+                              case _ =>
+                                ITPEnvelope.liftEither(
+                                  InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
+                                )
+                            }
       _ <- expenses.consolidatedExpenses match {
-        case Some(consolidatedExpenses) =>
-          persistAnswers(ctx, ExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
-        case None =>
-          ITPEnvelope.liftPure(None)
-      }
+             case Some(consolidatedExpenses) =>
+               persistAnswers(ctx, ExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
+             case None =>
+               ITPEnvelope.liftPure(None)
+           }
     } yield submissionResponse
-  }
 
   def getCurrentPeriodicSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
     hc: HeaderCarrier

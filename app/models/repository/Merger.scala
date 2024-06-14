@@ -18,7 +18,7 @@ package models.repository
 
 import models.request.esba._
 import models.request.{BalancingCharge, PropertyRentalAdjustments, RenovationAllowanceBalancingCharge}
-import models.responses.{AdjustmentStoreAnswers, UkOtherAdjustments}
+import models.responses.{AdjustmentStoreAnswers, UkOtherAdjustments, UkOtherPropertyExpenses}
 
 // T: to return (merge into)
 // U: saved (extract from)
@@ -29,61 +29,88 @@ trait Merger[T, U, X] {
 
 object Merger {
 
-  implicit object AdjustmentsMerger extends Merger[Option[PropertyRentalAdjustments], Option[AdjustmentStoreAnswers], Option[UkOtherAdjustments]] {
-    override def merge(extractedMaybe: Option[AdjustmentStoreAnswers], fromDownstreamMaybe: Option[UkOtherAdjustments]): Option[PropertyRentalAdjustments] = {
+  implicit object AdjustmentsMerger
+      extends Merger[Option[PropertyRentalAdjustments], Option[AdjustmentStoreAnswers], Option[
+        (UkOtherAdjustments, UkOtherPropertyExpenses)
+      ]] {
+    override def merge(
+      extractedMaybe: Option[AdjustmentStoreAnswers],
+      fromDownstreamMaybe: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)]
+    ): Option[PropertyRentalAdjustments] =
       (extractedMaybe, fromDownstreamMaybe) match {
-        case (Some(extracted), Some(fromDownstream)) =>
+        case (
+              Some(extracted),
+              Some(
+                (
+                  fromDownstreamAdjustment,
+                  UkOtherPropertyExpenses(
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    Some(residentialFinanceCost),
+                    Some(residentialFinanceCostCarriedForward),
+                    _,
+                    _
+                  )
+                )
+              )
+            ) =>
           Some(
             PropertyRentalAdjustments(
-              fromDownstream.privateUseAdjustment.get,
-              BalancingCharge(extracted.balancingChargeYesNo, fromDownstream.balancingCharge),
-              0, //Todo: fromWhere?
-              RenovationAllowanceBalancingCharge(extracted.renovationAllowanceBalancingChargeYesNo, fromDownstream.businessPremisesRenovationAllowanceBalancingCharges),
-              0, //Todo: fromWhere?
-              0 //Todo: fromWhere?
+              fromDownstreamAdjustment.privateUseAdjustment.get,
+              BalancingCharge(extracted.balancingChargeYesNo, fromDownstreamAdjustment.balancingCharge),
+              0, // Todo: fromWhere?
+              RenovationAllowanceBalancingCharge(
+                extracted.renovationAllowanceBalancingChargeYesNo,
+                fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
+              ),
+              residentialFinanceCost,
+              residentialFinanceCostCarriedForward
             )
           )
         case _ => None
       }
-    }
   }
 
   implicit object EsbaMerger extends Merger[Option[EsbaInfo], Option[EsbaInfoToSave], Option[List[EsbaInUpstream]]] {
 
     override def merge(
-                        extractedMaybe: Option[EsbaInfoToSave],
-                        fromDownstreamMaybe: Option[List[EsbaInUpstream]]
-                      ): Option[EsbaInfo] = {
+      extractedMaybe: Option[EsbaInfoToSave],
+      fromDownstreamMaybe: Option[List[EsbaInUpstream]]
+    ): Option[EsbaInfo] =
       (extractedMaybe, fromDownstreamMaybe) match {
-        case (Some(extracted), Some(fromDownstream)) => {
+        case (Some(extracted), Some(fromDownstream)) =>
           Some(
             EsbaInfo(
               extracted.claimEnhancedStructureBuildingAllowance,
               extracted.esbaClaims,
               fromDownstream
-            ))
-        }
-        case (None, Some(fromDownstream)) => { //Todo: How to act here???
+            )
+          )
+        case (None, Some(fromDownstream)) => // Todo: How to act here???
           Some(
             EsbaInfo(
               ClaimEnhancedStructureBuildingAllowance(true),
               EsbaClaims(false),
               fromDownstream
-            ))
-        }
+            )
+          )
         case _ => None
       }
 
-      //Todo: Change Above after asking questiins!!!!
+    // Todo: Change Above after asking questiins!!!!
 
-    }
   }
 
   implicit class GeneralMerger[T, U, X](extracted: U) {
 
     def merge(
-               fromDownstream: X
-             )(implicit Merger: Merger[T, U, X]): T =
+      fromDownstream: X
+    )(implicit Merger: Merger[T, U, X]): T =
       Merger.merge(extracted, fromDownstream)
   }
 
