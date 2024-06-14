@@ -31,11 +31,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import java.time.{LocalDate, LocalDateTime}
 import support.stubs.AuthStub._
 class JourneyAnswersIntegrationSpec
-  extends AnyWordSpec
-    with Matchers
-    with ScalaFutures
-    with IntegrationPatience
-    with GuiceOneServerPerSuite
+    extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
     with ConnectorIntegrationTest {
 
   private val nino = "some-nino"
@@ -44,8 +40,9 @@ class JourneyAnswersIntegrationSpec
   private val submissionId = "some-submission-id"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-
   val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    LocalDate.now(),
+    LocalDate.now(),
     None,
     None,
     None,
@@ -60,28 +57,41 @@ class JourneyAnswersIntegrationSpec
   val postcode = "AB1 XY2"
   val aPropertyAnnualSubmission = PropertyAnnualSubmission(
     submittedOn = Some(LocalDateTime.now),
-    None, None, None, Some(AnnualUkOtherProperty(None, Some(UkOtherAllowances(
-      None, None, None, None, None, None, None, Some(
-        Seq(
-          Esba(
-            amount,
+    None,
+    None,
+    None,
+    Some(
+      AnnualUkOtherProperty(
+        None,
+        Some(
+          UkOtherAllowances(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
             Some(
-              StructuredBuildingAllowanceDate(esbaDate, qualifyingAmountExpenditure)
+              Seq(
+                Esba(
+                  amount,
+                  Some(
+                    StructuredBuildingAllowanceDate(esbaDate, qualifyingAmountExpenditure)
+                  ),
+                  StructuredBuildingAllowanceBuilding(
+                    Some(address1),
+                    Some(address2),
+                    postcode
+                  )
+                )
+              )
             ),
-
-            StructuredBuildingAllowanceBuilding(
-              Some(address1),
-              Some(address2),
-              postcode
-            )
+            None,
+            None
           )
         )
-      ),
-      None,
-      None
-    )
-    )
-    )
+      )
     )
   )
 
@@ -98,7 +108,7 @@ class JourneyAnswersIntegrationSpec
     .configure("integration-framework.port" -> wiremockPort)
     .build()
 
-  private val baseUrl  = s"http://localhost:$port/income-tax-property/property/2024/income/AC180000A/income-source-1"
+  private val baseUrl = s"http://localhost:$port/income-tax-property/property/2024/income/AC180000A/income-source-1"
   val NinoUser =
     """
       |{
@@ -130,10 +140,14 @@ class JourneyAnswersIntegrationSpec
   "Income Tax Property" should {
     "get error when downstream returns error" in {
       userLoggedInITPUser(NinoUser)
-      stubGetHttpClientCall(s"/income-tax/business/property/annual\\?" +
-        s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId", httpResponse)
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/annual\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
+        httpResponse
+      )
       val wsClient = app.injector.instanceOf[WSClient]
-      val requestHeaders  = Map("Content-Type" -> "application/json", "Authorization" -> "Bearer 123", "mtditid" -> "1234567890")
+      val requestHeaders =
+        Map("Content-Type" -> "application/json", "Authorization" -> "Bearer 123", "mtditid" -> "1234567890")
 
       val response =
         wsClient

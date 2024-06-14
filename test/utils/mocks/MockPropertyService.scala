@@ -74,7 +74,6 @@ trait MockPropertyService extends MockFactory {
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
-  // TODO Replace JsValue with case class - same as the original createPeriodicSubmissions function in IF Connector
   def mockCreatePeriodicSubmissions(
     taxableEntityId: String,
     incomeSourceId: String,
@@ -129,7 +128,6 @@ trait MockPropertyService extends MockFactory {
       .expects(journeyContext, nino, income, saveIncome, *)
       .returning(EitherT.fromEither(result))
 
-  // TODO Replace JsValue with case class - same as the original updatePeriodicSubmissions function in IF Connector
   def mockUpdatePeriodicSubmissions(
     taxableEntityId: String,
     incomeSourceId: String,

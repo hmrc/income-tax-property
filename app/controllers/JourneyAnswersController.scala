@@ -50,8 +50,6 @@ class JourneyAnswersController @Inject() (
 
   def fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = auth.async {
     implicit request =>
-      // Todo: Which taxyear, let's say for 23-24, do we have to send 2024 here?
-      // Todo: incomeSourceId vs mtdid
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.AllJourneys, request) { ctx =>
         handleResponse(OK) {
           propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId.value)

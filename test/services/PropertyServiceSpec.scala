@@ -210,12 +210,12 @@ class PropertyServiceSpec
   val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
-      Some (
-        ForeignFhlEea(
-          ForeignFhlIncome(200.00),
-          ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
-        )
-      ),
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
     None,
     None,
     None
@@ -1025,9 +1025,9 @@ class PropertyServiceSpec
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
             Filters.equal("taxYear", ctx.taxYear.endYear),
-            Filters.equal("mtditid", ctx.mtditid.value)
+            Filters.equal("mtditid", ctx.mtditid.value),
+            Filters.equal("journey", ctx.journey.entryName)
           )
-        // Todo: How is this indexed?
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
     }
@@ -1102,9 +1102,9 @@ class PropertyServiceSpec
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
             Filters.equal("taxYear", ctx.taxYear.endYear),
-            Filters.equal("mtditid", ctx.mtditid.value)
+            Filters.equal("mtditid", ctx.mtditid.value),
+            Filters.equal("journey", ctx.journey.entryName)
           )
-        // Todo: How is this indexed?
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
 
