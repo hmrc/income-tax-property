@@ -220,6 +220,21 @@ class PropertyServiceSpec
     None,
     None
   )
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    LocalDate.now(),
+    LocalDate.now(),
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
 
   "create periodic submission" should {
 
@@ -980,13 +995,27 @@ class PropertyServiceSpec
         ) =>
           mockGetPropertyAnnualSubmission(
             taxYear,
-            "A34324",
+            nino,
             incomeSourceId,
             Some(
               aPropertyAnnualSubmission
             ).asRight[ApiError]
           )
+          mockGetAllPeriodicSubmission(
+            taxYear,
+            nino,
+            incomeSourceId,
+            List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+              .asRight[ApiError]
+          )
 
+          mockGetPropertyPeriodicSubmission(
+            taxYear,
+            nino,
+            incomeSourceId,
+            "1",
+            Some(propertyPeriodicSubmission).asRight[ApiError]
+          )
           val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
             _ <- if (isJourneyPresentInDb) {
                    EitherT(
@@ -1011,6 +1040,10 @@ class PropertyServiceSpec
                    Nino(nino),
                    incomeSourceId
                  )
+            _ <- EitherT(
+                   testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
+                     .map(_.asRight[ServiceError])
+                 )
           } yield r
           whenReady(result.value, Timeout(Span(500, Millis))) { response =>
             response shouldBe FetchedPropertyData(None, None, None, esbaInfoRetrieved).asRight[ServiceError]
@@ -1030,8 +1063,20 @@ class PropertyServiceSpec
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
     }
-    "return Repo Error for wrong Journey Type" in {
 
+    "return Repo Error for wrong Journey Type" in {
+      def testOnlyRemove(
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext
+      ): Future[Unit] = {
+        val filter: Bson = Filters
+          .and(
+            Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
+            Filters.equal("taxYear", ctx.taxYear.endYear),
+            Filters.equal("mtditid", ctx.mtditid.value)
+          )
+        mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
+      }
       val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
 
       val claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true)
@@ -1043,8 +1088,26 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(aPropertyAnnualSubmission).asRight[ApiError]
       )
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+          .asRight[ApiError]
+      )
 
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+        _ <- EitherT(
+               testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
+                 .map(_.asRight[ServiceError])
+             )
         _ <- EitherT(
                repository
                  .upsertAnswers(
@@ -1073,6 +1136,21 @@ class PropertyServiceSpec
         "A34324",
         incomeSourceId,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+      )
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+          .asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
       )
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
         _ <- EitherT(
@@ -1143,6 +1221,23 @@ class PropertyServiceSpec
           aPropertyAnnualSubmission
         ).asRight[ApiError]
       )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+          .asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "1",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+
       val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
         _ <- EitherT(
                testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
