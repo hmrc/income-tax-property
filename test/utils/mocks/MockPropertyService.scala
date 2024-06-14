@@ -92,21 +92,24 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockSaveExpenses(
-                        ctx: JourneyContext,
+    ctx: JourneyContext,
     nino: Nino,
-                        expenses: Expenses,
-                        result: Either[ServiceError, Option[PeriodicSubmissionId]]
-                      ): CallHandler4[JourneyContext, Nino, Expenses, HeaderCarrier, EitherT[Future, ServiceError, Option[PeriodicSubmissionId]]] = {
+    expenses: Expenses,
+    result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler4[JourneyContext, Nino, Expenses, HeaderCarrier, EitherT[Future, ServiceError, Option[
+    PeriodicSubmissionId
+  ]]] =
     (mockPropertyService
       .saveExpenses(
         _: JourneyContext,
         _: Nino,
         _: Expenses
-      )(_: HeaderCarrier)).expects(ctx, nino, expenses, *)
+      )(_: HeaderCarrier))
+      .expects(ctx, nino, expenses, *)
       .returning(EitherT.fromEither(result))
-  }
 
-  def mockSaveIncome(nino: Nino,
+  def mockSaveIncome(
+    nino: Nino,
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
     journeyContext: JourneyContext,
@@ -146,15 +149,16 @@ trait MockPropertyService extends MockFactory {
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, body, *)
       .returning(EitherT.fromEither(result))
 
-  def mockDeleteAnnualSubmission(incomeSourceId: String,
-                                 taxableEntityId: String,
-                                 taxYear: Int,
-                                 result: Either[ServiceError, Unit]
-                                ): CallHandler4[String, String, Int, HeaderCarrier, EitherT[Future, ServiceError, Unit]] = {
-    (mockPropertyService.deletePropertyAnnualSubmission(_: String, _: String, _: Int)(_: HeaderCarrier))
+  def mockDeleteAnnualSubmission(
+    incomeSourceId: String,
+    taxableEntityId: String,
+    taxYear: Int,
+    result: Either[ServiceError, Unit]
+  ): CallHandler4[String, String, Int, HeaderCarrier, EitherT[Future, ServiceError, Unit]] =
+    (mockPropertyService
+      .deletePropertyAnnualSubmission(_: String, _: String, _: Int)(_: HeaderCarrier))
       .expects(incomeSourceId, taxableEntityId, taxYear, *)
       .returning(EitherT.fromEither[Future](result))
-  }
 
   def mockCreateOrUpdateAnnualSubmissions(
     taxYear: TaxYear,
@@ -250,4 +254,19 @@ trait MockPropertyService extends MockFactory {
       .savePropertyRentalAdjustments(_: JourneyContextWithNino, _: PropertyRentalAdjustments)(_: HeaderCarrier))
       .expects(*, *, *)
       .returning(EitherT.pure(true))
+
+  def mockSaveUkRentARoomAbout[A](
+    journeyContext: JourneyContext,
+    nino: Nino,
+    ukRaRAbout: RaRAbout,
+    result: Boolean
+  ): CallHandler4[JourneyContext, Nino, RaRAbout, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockPropertyService
+      .saveRaRAbout(_: JourneyContext, _: Nino, _: RaRAbout)(_: HeaderCarrier))
+      .expects(journeyContext, nino, ukRaRAbout, *)
+      .returning(EitherT.pure(result))
 }

@@ -93,7 +93,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
     }
 
     "return DataNotFoundError when GetPeriodicSubmission has ids and there is no submission" in {
@@ -103,7 +105,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
     }
 
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
@@ -111,7 +115,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
 
     }
 
@@ -160,7 +166,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
     }
 
     "return DataNotFoundError when GetPeriodicSubmission has ids and there is no submission" in {
@@ -170,7 +178,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
     }
 
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
@@ -178,7 +188,9 @@ class PropertyServiceSpec
 
       mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(PropertyPeriodicSubmissionResponse(List()))
+      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
 
     }
 
@@ -196,12 +208,14 @@ class PropertyServiceSpec
   }
 
   val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
-    Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
-      )
-    ),
+    LocalDate.now(),
+    LocalDate.now(),
+      Some (
+        ForeignFhlEea(
+          ForeignFhlIncome(200.00),
+          ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+        )
+      ),
     None,
     None,
     None
@@ -520,6 +534,7 @@ class PropertyServiceSpec
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
+
   "save income" should {
 
     val taxYear = 2024
@@ -833,6 +848,7 @@ class PropertyServiceSpec
       }
     }
   }
+
   "fetch" should {
     val taxYear = 2024
     val mtditid = "1234567890"
@@ -1157,6 +1173,117 @@ class PropertyServiceSpec
       whenReady(result.value, Timeout(Span(1500, Millis))) { response =>
         response shouldBe Left(RepositoryError)
       }
+    }
+  }
+
+  "save uk rent a room about" should {
+
+    val taxYear = 2024
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+
+    val ukRaRAbout = RaRAbout(
+      true,
+      55.22,
+      ClaimExpensesOrRRR(
+        true,
+        Some(22.55)
+      )
+    )
+    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    // Todo: Property Based Test Required for Update Case
+    "return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(PeriodicSubmissionId("")).asRight[ApiError]
+      )
+
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(
+          annualSubmission.copy(ukOtherProperty =
+            Some(
+              AnnualUkOtherProperty(
+                Some(
+                  UkOtherAdjustments(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(UkRentARoom(ukRaRAbout.ukRentARoomJointlyLet))
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        ().asRight[ApiError]
+      )
+      await(
+        underTest
+          .saveRaRAbout(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            Nino(nino),
+            ukRaRAbout
+          )
+          .value
+      ) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Option[PeriodicSubmissionId]]
+      )
+      await(
+        underTest
+          .saveRaRAbout(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            Nino(nino),
+            ukRaRAbout
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 }

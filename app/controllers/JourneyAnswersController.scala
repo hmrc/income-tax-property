@@ -108,6 +108,15 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RaRAbout](taxYear, incomeSourceId, nino, JourneyName.RentARoomAbout, request) {
+        (ctx, rarAbout) =>
+          handleResponse(CREATED) {
+            propertyService.saveRaRAbout(ctx, nino, rarAbout)
+          }
+      }
+    }
   def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)

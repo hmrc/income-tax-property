@@ -33,7 +33,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherProfessionalFee = Some(400),
     costsOfServicesProvided = Some(500),
     propertyBusinessTravelCost = Some(600),
-
     otherAllowablePropertyExpenses = Some(700),
     legalManagementOtherFee = None,
     residentialPropertyFinanceCosts = None,
@@ -41,14 +40,30 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherPropertyExpenses = None
   )
 
-  val saveIncome = SaveIncome(UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None), Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None))
+  val saveIncome = SaveIncome(
+    UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
+    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None)
+  )
   val date = LocalDate.now()
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-    Some(ukOtherPropertyIncome),
-    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-  )))
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    date,
+    date,
+    None,
+    None,
+    None,
+    Some(
+      UkOtherProperty(
+        Some(ukOtherPropertyIncome),
+        Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+      )
+    )
+  )
   val propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    LocalDate.now(),
+    LocalDate.now(),
     None,
     None,
     None,
@@ -74,11 +89,12 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     )
   )
 
-
   def propertyPeriodicSubmissionRequest(
-                                         ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
-                                         ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-                                       ): PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
+    ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
+  ): PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    LocalDate.now(),
+    LocalDate.now(),
     None,
     None,
     None,
@@ -101,13 +117,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
     "be generated from income" in {
 
-      PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
-        Some(propertyPeriodicSubmission), saveIncome) shouldBe
+      PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(Some(propertyPeriodicSubmission), saveIncome) shouldBe
         propertyPeriodicSubmissionRequest(
-
           Some(saveIncome.ukOtherPropertyIncome),
           propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
-
         ).asRight[ServiceError]
     }
   }
