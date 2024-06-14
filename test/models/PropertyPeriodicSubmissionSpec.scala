@@ -123,5 +123,24 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
         ).asRight[ServiceError]
     }
+
+    "be generated from uk rent a room" in {
+      val ukRaRAbout = RaRAbout(
+        true,
+        1.23,
+        ClaimExpensesOrRRR(true, Some(4.56))
+      )
+      PropertyPeriodicSubmissionRequest.fromUkRaRAbout(Some(propertyPeriodicSubmission), ukRaRAbout) shouldBe
+        propertyPeriodicSubmissionRequest(
+          propertyPeriodicSubmission.ukOtherProperty.flatMap(
+            _.income.map(_.copy(ukOtherRentARoom = Some(RentARoomIncome(ukRaRAbout.totalIncomeAmount))))
+          ),
+          propertyPeriodicSubmission.ukOtherProperty.flatMap(
+            _.expenses.map(
+              _.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_)))
+            )
+          )
+        ).asRight[ServiceError]
+    }
   }
 }

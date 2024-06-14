@@ -1025,8 +1025,7 @@ class PropertyServiceSpec
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
             Filters.equal("taxYear", ctx.taxYear.endYear),
-            Filters.equal("mtditid", ctx.mtditid.value),
-            Filters.equal("journey", ctx.journey.entryName)
+            Filters.equal("mtditid", ctx.mtditid.value)
           )
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
@@ -1102,8 +1101,7 @@ class PropertyServiceSpec
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
             Filters.equal("taxYear", ctx.taxYear.endYear),
-            Filters.equal("mtditid", ctx.mtditid.value),
-            Filters.equal("journey", ctx.journey.entryName)
+            Filters.equal("mtditid", ctx.mtditid.value)
           )
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
