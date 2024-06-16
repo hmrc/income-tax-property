@@ -18,7 +18,7 @@ package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
@@ -38,9 +38,20 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new IntegrationFrameworkConnector(httpClient, appConfigStub)
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
+  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
     Some(
       ForeignFhlEea(
         ForeignFhlIncome(200.00),
@@ -613,7 +624,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             taxYear,
             taxableEntityId,
             incomeSourceId,
-            validPropertyPeriodicSubmissionRequest
+            validCreatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
@@ -629,7 +640,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         )
 
         await(
-          underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)
+          underTest
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
 
@@ -644,7 +656,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         )
 
         await(
-          underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)
+          underTest
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
@@ -658,7 +671,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         )
 
         await(
-          underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)
+          underTest
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
@@ -674,7 +688,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         )
 
         await(
-          underTest.createPeriodicSubmission(taxYear, nino, incomeSourceId, validPropertyPeriodicSubmissionRequest)(hc)
+          underTest
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
@@ -683,13 +698,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
   "Given a need to update Periodic Submission Data" when {
 
-    val fromDate = LocalDate.now()
-    val toDate = LocalDate.now()
-
     val requestBody: JsValue = Json.parse(s"""
                                              |{
-                                             |   "fromDate": "$fromDate",
-                                             |   "toDate": "$toDate",
                                              |   "foreignFhlEea": {
                                              |      "income": {
                                              |         "rentAmount": 200.00
@@ -718,7 +728,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             incomeSourceId,
             taxYear,
             submissionId,
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(None)
       }
@@ -739,7 +749,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             incomeSourceId,
             taxYear,
             submissionId,
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(None)
       }
@@ -760,7 +770,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             incomeSourceId,
             taxYear,
             submissionId,
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
@@ -784,7 +794,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             incomeSourceId,
             taxYear,
             submissionId,
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
       }
@@ -806,7 +816,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             incomeSourceId,
             taxYear,
             submissionId,
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))

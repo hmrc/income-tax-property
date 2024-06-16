@@ -18,7 +18,7 @@ package controllers
 
 import models.PropertyPeriodicSubmissionResponse
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
@@ -88,7 +88,7 @@ class PeriodicSubmissionControllerSpec
 
   "Create Periodic Submission" should {
 
-    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
       Some(
@@ -101,7 +101,8 @@ class PeriodicSubmissionControllerSpec
       None,
       None
     )
-    val fakePostRequestWithBody = fakePostRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
+    val fakePostRequestWithBody =
+      fakePostRequest.withJsonBody(Json.toJson(validCreatePropertyPeriodicSubmissionRequest))
 
     val periodicSubmissionResponse = PeriodicSubmissionId("submissionId")
     "return a property periodic submission when IntegrationFrameworkService returns Right(aPeriodicSubmission)" in {
@@ -110,7 +111,7 @@ class PeriodicSubmissionControllerSpec
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        validPropertyPeriodicSubmissionRequest,
+        validCreatePropertyPeriodicSubmissionRequest,
         Right(Some(periodicSubmissionResponse))
       )
 
@@ -127,7 +128,7 @@ class PeriodicSubmissionControllerSpec
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        validPropertyPeriodicSubmissionRequest,
+        validCreatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(409))
       )
 
@@ -143,7 +144,7 @@ class PeriodicSubmissionControllerSpec
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        validPropertyPeriodicSubmissionRequest,
+        validCreatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(500))
       )
 
@@ -159,7 +160,7 @@ class PeriodicSubmissionControllerSpec
         "taxableEntityId",
         "incomeSourceId",
         2024,
-        validPropertyPeriodicSubmissionRequest,
+        validCreatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(400))
       )
 
@@ -171,9 +172,7 @@ class PeriodicSubmissionControllerSpec
   }
 
   "Update Periodic Submission" should {
-    val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
-      LocalDate.now(),
-      LocalDate.now(),
+    val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
       Some(
         ForeignFhlEea(
           ForeignFhlIncome(200.00),
@@ -184,7 +183,7 @@ class PeriodicSubmissionControllerSpec
       None,
       None
     )
-    val fakePutRequestWithBody = fakePutRequest.withJsonBody(Json.toJson(validPropertyPeriodicSubmissionRequest))
+    val fakePutRequestWithBody = fakePutRequest.withJsonBody(Json.toJson(validUpdatePropertyPeriodicSubmissionRequest))
 
     "return a property periodic submission when IntegrationFrameworkService returns no content" in {
       mockAuthorisation()
@@ -193,7 +192,7 @@ class PeriodicSubmissionControllerSpec
         "incomeSourceId",
         2024,
         "submissionId",
-        validPropertyPeriodicSubmissionRequest,
+        validUpdatePropertyPeriodicSubmissionRequest,
         Right("")
       )
 
@@ -214,7 +213,7 @@ class PeriodicSubmissionControllerSpec
         "incomeSourceId",
         2024,
         "submissionId",
-        validPropertyPeriodicSubmissionRequest,
+        validUpdatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(422))
       )
 
@@ -232,7 +231,7 @@ class PeriodicSubmissionControllerSpec
         "incomeSourceId",
         2024,
         "submissionId",
-        validPropertyPeriodicSubmissionRequest,
+        validUpdatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(500))
       )
 
@@ -250,7 +249,7 @@ class PeriodicSubmissionControllerSpec
         "incomeSourceId",
         2024,
         "submissionId",
-        validPropertyPeriodicSubmissionRequest,
+        validUpdatePropertyPeriodicSubmissionRequest,
         Left(ApiServiceError(400))
       )
 

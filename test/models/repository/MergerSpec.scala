@@ -183,8 +183,6 @@ class MergerSpec extends UnitTest {
     val esbasInRequestMaybe = esbasMaybe.map(
       _.map(e =>
         EsbaInUpstream(
-          // Todo: Remove .get's, but again, they are mandatory on frontend.
-          // Todo: What to do if None comes from downstream?
           e.firstYear.get.qualifyingDate,
           e.firstYear.get.qualifyingAmountExpenditure,
           e.amount,

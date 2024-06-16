@@ -25,7 +25,10 @@ import models.domain.JourneyAnswers
 import models.errors._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
+import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
+import models.request.sba.SbaInfoExtensions.SbaExtensions
+import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
 import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -207,7 +210,7 @@ class PropertyServiceSpec
     }
   }
 
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
     Some(
@@ -220,6 +223,18 @@ class PropertyServiceSpec
     None,
     None
   )
+  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
+
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,
     None,
@@ -245,7 +260,9 @@ class PropertyServiceSpec
       mockCreatePeriodicSubmission(taxYear, nino, incomeSourceId, Right(Some(periodicSubmissionId)))
 
       await(
-        underTest.createPeriodicSubmission(nino, incomeSourceId, taxYear, validPropertyPeriodicSubmissionRequest).value
+        underTest
+          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .value
       ) shouldBe
         Right(Some(periodicSubmissionId))
     }
@@ -259,7 +276,9 @@ class PropertyServiceSpec
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
-        underTest.createPeriodicSubmission(nino, incomeSourceId, taxYear, validPropertyPeriodicSubmissionRequest).value
+        underTest
+          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
 
@@ -274,7 +293,13 @@ class PropertyServiceSpec
 
       await(
         underTest
-          .updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)
+          .updatePeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            submissionId,
+            validUpdatePropertyPeriodicSubmissionRequest
+          )
           .value
       ) shouldBe
         Right("")
@@ -291,7 +316,13 @@ class PropertyServiceSpec
       )
       await(
         underTest
-          .updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, validPropertyPeriodicSubmissionRequest)
+          .updatePeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            submissionId,
+            validUpdatePropertyPeriodicSubmissionRequest
+          )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
@@ -520,33 +551,139 @@ class PropertyServiceSpec
     }
   }
 
-  "save esba" should {
-
-    val taxYear = 2024
-    val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
-    val allowances = RentalAllowances(
-      Some(11),
-      ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
-      Some(11),
-      Some(11),
-      Some(11),
-      Some(11),
-      Some(11)
+  def createAnnualSubmission(sbasMaybe: Option[List[StructuredBuildingAllowance]], esbasMaybe: Option[List[Esba]]) =
+    PropertyAnnualSubmission(
+      None,
+      None,
+      None,
+      None,
+      Some(
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(
+              Some(12.34),
+              None,
+              None,
+              None,
+              None,
+              None
+            )
+          ),
+          Some(
+            UkOtherAllowances(
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              sbasMaybe,
+              esbasMaybe,
+              Some(34.56),
+              None
+            )
+          )
+        )
+      )
     )
-    "return no content for valid request" in {
-      mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
-    }
 
-    "return ApiError for invalid request" in {
-      mockCreateAnnualSubmission2(
+  "save esbas" should {
+    "" in {
+
+      val taxYear = 2024
+      val mtditid = "1234567890"
+      val ctx =
+        JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
+
+      val esbasToBeAdded = List(
+        EsbaInUpstream(
+          LocalDate.now(),
+          12.34,
+          56.78,
+          Address(
+            BuildingName("Building Name"),
+            BuildingNumber("12"),
+            Postcode("AB1 2CD")
+          )
+        )
+      )
+
+      val esbaInfo = EsbaInfo(
+        ClaimEnhancedStructureBuildingAllowance(true),
+        EsbaClaims(true),
+        esbasToBeAdded
+      )
+      val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
+
+      val annualSubmissionAfterAdditionOfEsbas = createAnnualSubmission(None, Some(esbaInfo.toEsba))
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmissionWithoutEsbas).asRight[ApiError]
+      )
+
+      mockCreateAnnualSubmission(
         TaxYear(taxYear),
         IncomeSourceId(incomeSourceId),
         Nino(nino),
-        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+        Some(annualSubmissionAfterAdditionOfEsbas),
+        ().asRight[ApiError]
       )
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+
+      await(underTest.saveEsbas(ctx, Nino(nino), esbaInfo).value) shouldBe Right(())
+
+    }
+  }
+
+  "save sbas" should {
+    "" in {
+
+      val taxYear = 2024
+      val mtditid = "1234567890"
+      val ctx =
+        JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
+
+      val sbasToBeAdded = List(
+        StructureBuildingFormGroup(
+          LocalDate.now(),
+          12.34,
+          56.78,
+          Address(
+            BuildingName("Building Name"),
+            BuildingNumber("12"),
+            Postcode("AB1 2CD")
+          )
+        )
+      )
+
+      val sbaInfo = SbaInfo(
+        ClaimStructureBuildingAllowance(true),
+        sbasToBeAdded
+      )
+
+      val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
+
+      val annualSubmissionAfterAdditionOfEsbas =
+        createAnnualSubmission(Some(sbaInfo.toSba.toList), None)
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmissionWithoutEsbas).asRight[ApiError]
+      )
+
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(annualSubmissionAfterAdditionOfEsbas),
+        ().asRight[ApiError]
+      )
+
+      await(underTest.saveSbas(ctx, Nino(nino), sbaInfo).value) shouldBe Right(())
+
     }
   }
 
@@ -579,7 +716,7 @@ class PropertyServiceSpec
     val ukOtherPropertyExpenses =
       UkOtherPropertyExpenses(Some(100), None, None, None, None, None, None, None, None, None, None)
     val saveIncome = SaveIncome(ukOtherPropertyIncome, incomeToSave)
-    // Todo: Property Based Test Required for Update Case
+
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
@@ -639,7 +776,7 @@ class PropertyServiceSpec
   }
 
   "save expenses" should {
-    // Todo: Property Based Test Required for Create Case
+
     val taxYear = 2024
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid("mtditid"), Nino(nino))
       .toJourneyContext(JourneyName.RentalExpenses)
@@ -790,7 +927,7 @@ class PropertyServiceSpec
         r mustBe ApiServiceError(500).asLeft[Option[SubmissionId]]
       }
     }
-    // Todo: PropertyTests for CreatePeriodicSubmission case too.
+
     "downstream error when create call fails" in {
       val fromDate = LocalDate.now().minusYears(2)
       val toDate = fromDate.plusYears(3)
@@ -1046,7 +1183,14 @@ class PropertyServiceSpec
                  )
           } yield r
           whenReady(result.value, Timeout(Span(500, Millis))) { response =>
-            response shouldBe FetchedPropertyData(None, None, None, esbaInfoRetrieved).asRight[ServiceError]
+            response shouldBe FetchedPropertyData(
+              None,
+              None,
+              None,
+              Some(RentalAllowances(None, ElectricChargePointAllowance(false, None), None, None, None, None, None)),
+              esbaInfoRetrieved,
+              None
+            ).asRight[ServiceError]
           }
       }
 
@@ -1284,7 +1428,7 @@ class PropertyServiceSpec
       )
     )
     val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
-    // Todo: Property Based Test Required for Update Case
+
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)

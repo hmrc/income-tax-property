@@ -17,7 +17,8 @@
 package models.responses
 
 import models.request.esba.EsbaInfo
-import models.request.{CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments, RaRAbout}
+import models.request.sba.SbaInfo
+import models.request.{CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments, RaRAbout, RentalAllowances}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -28,11 +29,9 @@ final case class FetchedPropertyData(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   propertyAbout: Option[PropertyAbout],
   adjustments: Option[PropertyRentalAdjustments],
-  // Todo: On the relevant ticket to be implemented: allowances: Option[Allowances],
-  esbasWithSupportingQuestions: Option[EsbaInfo]
-  // Todo: On the relevant ticket to be implemented: Fhl: Option[Fhl],
-  // Todo: On the relevant ticket to be implemented: propertyRentals: Option[PropertyRentals],
-  // Todo: On the relevant ticket to be implemented: sbasWithSupportingQuestions: Option[SbasWithSupportingQuestions]
+  allowances: Option[RentalAllowances],
+  esbasWithSupportingQuestions: Option[EsbaInfo],
+  sbasWithSupportingQuestions: Option[SbaInfo]
 )
 
 object FetchedPropertyData {
@@ -49,80 +48,69 @@ case class PropertyAnnualSubmission(
 
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
+  val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
 
-  def fromEsbas(esbas: List[Esba]): PropertyAnnualSubmission = // Todo: Validations MUST BE added!!!
-    PropertyAnnualSubmission(
-      Some(LocalDateTime.now()),
-      None,
-      None,
-      None,
-      Some(
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(
-              None,
-              None,
-              None,
-              None,
-              None,
-              None
-            )
-          ),
-          Some(
-            UkOtherAllowances(
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              Some(esbas),
-              None,
-              None
-            )
-          )
-        )
-      )
-    )
+  def fromEsbas(
+    propertyAnnualSubmission: PropertyAnnualSubmission,
+    esbas: List[Esba]
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(_, None) =>
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa) => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
+
+    val esbasLens = GenLens[UkOtherAllowances](_.enhancedStructuredBuildingAllowance)
+
+    val focusFromAnnualSubmissionOnEsbasLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(esbasLens)
+
+    val resultWithEsbas: PropertyAnnualSubmission =
+      focusFromAnnualSubmissionOnEsbasLens.replace(Some(esbas))(propertyAnnualSubmission)
+
+    resultWithEsbas
+  }
 
   def fromSbas(
-    sbas: Array[StructuredBuildingAllowance]
-  ): PropertyAnnualSubmission = // Todo: Validations MUST BE added!!!
-    PropertyAnnualSubmission(
-      Some(LocalDateTime.now()),
-      None,
-      None,
-      None,
-      Some(
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(
-              None,
-              None,
-              None,
-              None,
-              None,
-              None
-            )
-          ),
-          Some(
-            UkOtherAllowances(
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              Some(sbas),
-              None,
-              None,
-              None
-            )
-          )
-        )
-      )
-    )
+    propertyAnnualSubmission: PropertyAnnualSubmission,
+    sbas: List[StructuredBuildingAllowance]
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(_, None) =>
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa) => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
+
+    val sbasLens = GenLens[UkOtherAllowances](_.structuredBuildingAllowance)
+
+    val focusFromAnnualSubmissionOnSbasLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(sbasLens)
+
+    val resultWithSbas: PropertyAnnualSubmission =
+      focusFromAnnualSubmissionOnSbasLens.replace(Some(sbas))(propertyAnnualSubmission)
+
+    resultWithSbas
+  }
 
   def fromUkRentARoomAbout(
     ukRaRAbout: RaRAbout,

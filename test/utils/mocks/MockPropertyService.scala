@@ -21,6 +21,8 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors.ServiceError
 import models.request._
+import models.request.esba.EsbaInfo
+import models.request.sba.SbaInfo
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import org.scalamock.handlers._
@@ -78,15 +80,17 @@ trait MockPropertyService extends MockFactory {
     taxableEntityId: String,
     incomeSourceId: String,
     taxYear: Int,
-    body: PropertyPeriodicSubmissionRequest,
+    body: CreatePropertyPeriodicSubmissionRequest,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[String, String, Int, PropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
+  ): CallHandler5[String, String, Int, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Option[PeriodicSubmissionId]
   ]] =
     (mockPropertyService
-      .createPeriodicSubmission(_: String, _: String, _: Int, _: PropertyPeriodicSubmissionRequest)(_: HeaderCarrier))
+      .createPeriodicSubmission(_: String, _: String, _: Int, _: CreatePropertyPeriodicSubmissionRequest)(
+        _: HeaderCarrier
+      ))
       .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
       .returning(EitherT.fromEither(result))
 
@@ -105,6 +109,36 @@ trait MockPropertyService extends MockFactory {
         _: Expenses
       )(_: HeaderCarrier))
       .expects(ctx, nino, expenses, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveEsbas(
+    ctx: JourneyContext,
+    nino: Nino,
+    esbaInfo: EsbaInfo,
+    result: Either[ServiceError, Unit]
+  ): CallHandler4[JourneyContext, Nino, EsbaInfo, HeaderCarrier, ITPEnvelope[Unit]] =
+    (mockPropertyService
+      .saveEsbas(
+        _: JourneyContext,
+        _: Nino,
+        _: EsbaInfo
+      )(_: HeaderCarrier))
+      .expects(ctx, nino, esbaInfo, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveSbas(
+    ctx: JourneyContext,
+    nino: Nino,
+    sbaInfo: SbaInfo,
+    result: Either[ServiceError, Unit]
+  ): CallHandler4[JourneyContext, Nino, SbaInfo, HeaderCarrier, ITPEnvelope[Unit]] =
+    (mockPropertyService
+      .saveSbas(
+        _: JourneyContext,
+        _: Nino,
+        _: SbaInfo
+      )(_: HeaderCarrier))
+      .expects(ctx, nino, sbaInfo, *)
       .returning(EitherT.fromEither(result))
 
   def mockSaveIncome(
@@ -133,15 +167,15 @@ trait MockPropertyService extends MockFactory {
     incomeSourceId: String,
     taxYear: Int,
     submissionId: String,
-    body: PropertyPeriodicSubmissionRequest,
+    body: UpdatePropertyPeriodicSubmissionRequest,
     result: Either[ServiceError, String]
-  ): CallHandler6[String, String, Int, String, PropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
+  ): CallHandler6[String, String, Int, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     String
   ]] =
     (mockPropertyService
-      .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: PropertyPeriodicSubmissionRequest)(
+      .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, body, *)
@@ -192,35 +226,6 @@ trait MockPropertyService extends MockFactory {
       .expects(ctx, *, incomeSourceId.value, *, *)
       .returning(ITPEnvelope.liftEither(result))
   }
-
-  def mockCreateOrUpdateAnnualSubmissionsNew2(
-    taxableEntityId: String,
-    incomeSourceId: String,
-    taxYear: Int,
-    incomeSubmissionId: String,
-    body: PropertyPeriodicSubmissionRequest,
-    result: Either[ServiceError, String]
-  ): CallHandler6[String, String, Int, String, PropertyPeriodicSubmissionRequest, HeaderCarrier, ITPEnvelope[String]] =
-    (mockPropertyService
-      .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: PropertyPeriodicSubmissionRequest)(
-        _: HeaderCarrier
-      ))
-      .expects(taxableEntityId, incomeSourceId, taxYear, incomeSubmissionId, *, *)
-      .returning(ITPEnvelope.liftEither(result))
-
-  def mockCreateOrUpdateAnnualSubmissionsNew(
-    taxableEntityId: String,
-    incomeSourceId: String,
-    taxYear: Int,
-    body: PropertyPeriodicSubmissionRequest,
-    result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[String, String, Int, PropertyPeriodicSubmissionRequest, HeaderCarrier, ITPEnvelope[
-    Option[PeriodicSubmissionId]
-  ]] =
-    (mockPropertyService
-      .createPeriodicSubmission(_: String, _: String, _: Int, _: PropertyPeriodicSubmissionRequest)(_: HeaderCarrier))
-      .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
-      .returning(ITPEnvelope.liftEither(result))
 
   def mockPersistAnswers[A](
     ctx: JourneyContext,

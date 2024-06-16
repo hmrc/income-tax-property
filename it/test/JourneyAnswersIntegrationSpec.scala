@@ -15,8 +15,8 @@
  */
 
 import connectors.ConnectorIntegrationTest
-import models.request.PropertyPeriodicSubmissionRequest
-import models.responses.{AnnualUkOtherProperty, Esba, PropertyAnnualSubmission, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkOtherAllowances}
+import models.request.CreatePropertyPeriodicSubmissionRequest
+import models.responses.{AnnualUkOtherProperty, Esba, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission, RentARoomIncome, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkOtherAdjustments, UkOtherAllowances, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome, UkRentARoom, UkRentARoomExpense}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -38,9 +38,11 @@ class JourneyAnswersIntegrationSpec
   private val taxableEntityId = "some-taxable-entity-id"
   private val incomeSourceId = "some-income-source-id"
   private val submissionId = "some-submission-id"
+  private val submissionId1 = "some-submission-id-1"
+  private val submissionId2 = "some-submission-id-2"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
     None,
@@ -62,15 +64,24 @@ class JourneyAnswersIntegrationSpec
     None,
     Some(
       AnnualUkOtherProperty(
-        None,
+        Some(
+          UkOtherAdjustments(
+            Some(41),
+            Some(32),
+            Some(23),
+            Some(14),
+            Some(true),
+            Some(UkRentARoom(true))
+          )
+        ),
         Some(
           UkOtherAllowances(
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+            Some(1),
+            Some(2),
+            Some(3),
+            Some(4),
+            Some(5),
+            Some(6),
             None,
             Some(
               Seq(
@@ -87,8 +98,8 @@ class JourneyAnswersIntegrationSpec
                 )
               )
             ),
-            None,
-            None
+            Some(7),
+            Some(8)
           )
         )
       )
@@ -96,6 +107,7 @@ class JourneyAnswersIntegrationSpec
   )
 
   val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
+  val httpResponsePeriod = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
 
   val taxYear = 2021
   private val wiremockPort = 11111
@@ -108,11 +120,12 @@ class JourneyAnswersIntegrationSpec
     .configure("integration-framework.port" -> wiremockPort)
     .build()
 
-  private val baseUrl = s"http://localhost:$port/income-tax-property/property/2024/income/AC180000A/income-source-1"
+  private val baseUrl =
+    s"http://localhost:$port/income-tax-property/property/2021/income/$taxableEntityId/$incomeSourceId"
   val NinoUser =
     """
       |{
-      |	"nino": "AC100000B",
+      |	"nino": "taxableEntityId",
       |	"affinityGroup": "Individual",
       |	"internalId": "Int-8612ba91-5581-411d-9d32-fb2de937a565",
       | "confidenceLevel": 250,
@@ -145,6 +158,70 @@ class JourneyAnswersIntegrationSpec
           s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
         httpResponse
       )
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-01-01"), LocalDate.parse("2021-11-11")),
+        PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-02-02"), LocalDate.parse("2022-12-12"))
+      )
+
+      val httpResponsePeriodicSubmissionIdModel = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
+
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/$taxableEntityId/$incomeSourceId/period\\?taxYear=2020-21",
+        httpResponsePeriodicSubmissionIdModel
+      )
+      val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None,
+        submittedOn = Some(LocalDateTime.now),
+        fromDate = LocalDate.now.minusDays(1),
+        toDate = LocalDate.now,
+        None,
+        None,
+        None,
+        Some(
+          UkOtherProperty(
+            Some(
+              UkOtherPropertyIncome(
+                Some(1),
+                Some(2),
+                Some(3),
+                Some(11),
+                Some(12),
+                Some(
+                  RentARoomIncome(
+                    7
+                  )
+                )
+              )
+            ),
+            Some(
+              UkOtherPropertyExpenses(
+                Some(1),
+                Some(2),
+                Some(3),
+                Some(11),
+                Some(12),
+                Some(13),
+                Some(14),
+                Some(21),
+                Some(22),
+                Some(
+                  UkRentARoomExpense(
+                    44
+                  )
+                ),
+                Some(25)
+              )
+            )
+          )
+        )
+      )
+      val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
+
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/periodic\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId1",
+        httpResponsePeriodicSubmission
+      )
       val wsClient = app.injector.instanceOf[WSClient]
       val requestHeaders =
         Map("Content-Type" -> "application/json", "Authorization" -> "Bearer 123", "mtditid" -> "1234567890")
@@ -156,7 +233,7 @@ class JourneyAnswersIntegrationSpec
           .get()
           .futureValue
 
-      response.status shouldBe 500
+      response.status shouldBe 200
     }
   }
 }

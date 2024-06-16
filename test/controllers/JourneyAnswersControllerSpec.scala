@@ -22,7 +22,7 @@ import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
-import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo, EsbaInfoToSave}
+import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo}
 import models.request.sba._
 import models.responses._
 import org.apache.pekko.util.Timeout
@@ -568,28 +568,21 @@ class JourneyAnswersControllerSpec
                                                  |        "esbaClaims" : false
                                                  |}""".stripMargin)
 
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalESBA)
 
     import esba.EsbaInfoExtensions._
     "return no_content for valid request body" in {
-
-      mockAuthorisation()
       val esbaInfo = validRequestBody.as[EsbaInfo]
-      mockCreateOrUpdateAnnualSubmissions(
-        taxYear,
-        incomeSourceId,
+      mockAuthorisation()
+
+      mockSaveEsbas(
+        ctx,
         nino,
-        PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba),
-        Right("")
+        esbaInfo,
+        ().asRight[ServiceError]
       )
 
-      mockPersistAnswers(
-        ctx,
-        EsbaInfoToSave(
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(false)
-        )
-      )
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.saveEsba(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
@@ -607,14 +600,12 @@ class JourneyAnswersControllerSpec
         mockAuthorisation()
         val esbaInfo = validRequestBody.as[EsbaInfo]
 
-        mockCreateOrUpdateAnnualSubmissions(
-          taxYear,
-          incomeSourceId,
+        mockSaveEsbas(
+          ctx,
           nino,
-          PropertyAnnualSubmission.fromEsbas(esbaInfo.toEsba),
+          esbaInfo,
           Left(serviceError)
         )
-
         val request = fakePostRequest.withJsonBody(validRequestBody)
         val result = await(underTest.saveEsba(taxYear, incomeSourceId, nino)(request))
         result.header.status shouldBe expectedError
@@ -666,39 +657,17 @@ class JourneyAnswersControllerSpec
                                                  |        "sbaClaims" : false
                                                  |}""".stripMargin)
 
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalSBA)
 
     import sba.SbaInfoExtensions._
     "return no_content for valid request body" in {
+      val sbaInfo = validRequestBody.as[SbaInfo]
 
       mockAuthorisation()
-      val sbaInfo = validRequestBody.as[SbaInfo]
-      mockCreateOrUpdateAnnualSubmissions(
-        taxYear,
-        incomeSourceId,
-        nino,
-        PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
-        Right("")
-      )
 
-      mockPersistAnswers(
-        ctx,
-        SbaInfoToSave(
-          ClaimStructureBuildingAllowance(true),
-          Array(
-            StructureBuildingFormGroup(
-              LocalDate.parse("2020-04-04"),
-              12,
-              43,
-              Address(
-                BuildingName("name12"),
-                BuildingNumber("123"),
-                Postcode("XX1 1XX")
-              )
-            )
-          )
-        )
-      )
+      mockSaveSbas(ctx, nino, sbaInfo, ().asRight[ServiceError])
+
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalSBA(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
@@ -716,11 +685,10 @@ class JourneyAnswersControllerSpec
         mockAuthorisation()
         val sbaInfo = validRequestBody.as[SbaInfo]
 
-        mockCreateOrUpdateAnnualSubmissions(
-          taxYear,
-          incomeSourceId,
+        mockSaveSbas(
+          ctx,
           nino,
-          PropertyAnnualSubmission.fromSbas(sbaInfo.toSba),
+          sbaInfo,
           Left(serviceError)
         )
 
@@ -744,13 +712,15 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
+        None,
         Some(
           EsbaInfo(
             ClaimEnhancedStructureBuildingAllowance(true),
             EsbaClaims(true),
             List()
           )
-        )
+        ),
+        None
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

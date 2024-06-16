@@ -19,7 +19,7 @@ package controllers
 import actions.AuthorisedAction
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -30,53 +30,66 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class PeriodicSubmissionController @Inject()(propertyServices: PropertyService,
-                                             authorisedAction: AuthorisedAction,
-                                             cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends BackendController(cc) with RequestHandler with Logging {
+class PeriodicSubmissionController @Inject() (
+  propertyServices: PropertyService,
+  authorisedAction: AuthorisedAction,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) with RequestHandler with Logging {
 
   def getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String): Action[AnyContent] =
     authorisedAction.async { implicit request =>
       propertyServices.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value.map {
         case Right(periodicSubmissionData) => Ok(Json.toJson(periodicSubmissionData))
-        case Left(DataNotFoundError) => NotFound
-        case Left(_) => InternalServerError
+        case Left(DataNotFoundError)       => NotFound
+        case Left(_)                       => InternalServerError
       }
     }
 
   def createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](
+      withJourneyContextAndEntity[CreatePropertyPeriodicSubmissionRequest](
         TaxYear(taxYear),
         IncomeSourceId(incomeSourceId),
         Nino(nino),
         JourneyName.NoJourney,
         request
       ) { (_, propertyPeriodicSubmissionRequest) =>
-        propertyServices.createPeriodicSubmission(nino, incomeSourceId, taxYear, propertyPeriodicSubmissionRequest).value.map {
-          case Right(periodicSubmissionData) => Created(Json.toJson(periodicSubmissionData))
-          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
-          case Left(ApiServiceError(CONFLICT)) => Conflict
-          case Left(_) => InternalServerError
-        }
+        propertyServices
+          .createPeriodicSubmission(nino, incomeSourceId, taxYear, propertyPeriodicSubmissionRequest)
+          .value
+          .map {
+            case Right(periodicSubmissionData)      => Created(Json.toJson(periodicSubmissionData))
+            case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
+            case Left(ApiServiceError(CONFLICT))    => Conflict
+            case Left(_)                            => InternalServerError
+          }
       }
     }
 
-  def updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String): Action[AnyContent] =
+  def updatePeriodicSubmission(
+    nino: String,
+    incomeSourceId: String,
+    taxYear: Int,
+    submissionId: String
+  ): Action[AnyContent] =
     authorisedAction.async { implicit request =>
-      withJourneyContextAndEntity[PropertyPeriodicSubmissionRequest](
+      withJourneyContextAndEntity[UpdatePropertyPeriodicSubmissionRequest](
         TaxYear(taxYear),
         IncomeSourceId(incomeSourceId),
         Nino(nino),
         JourneyName.NoJourney,
         request
       ) { (_, propertyPeriodicSubmissionRequest) =>
-        propertyServices.updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, propertyPeriodicSubmissionRequest).value.map {
-          case Right(_) => NoContent
-          case Left(ApiServiceError(BAD_REQUEST)) => BadRequest
-          case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
-          case Left(_) => InternalServerError
-        }
+        propertyServices
+          .updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, propertyPeriodicSubmissionRequest)
+          .value
+          .map {
+            case Right(_)                                    => NoContent
+            case Left(ApiServiceError(BAD_REQUEST))          => BadRequest
+            case Left(ApiServiceError(UNPROCESSABLE_ENTITY)) => UnprocessableEntity
+            case Left(_)                                     => InternalServerError
+          }
       }
 
     }

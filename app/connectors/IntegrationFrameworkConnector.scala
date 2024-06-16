@@ -22,7 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json, StaticBinding, Writes}
@@ -208,7 +208,7 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     taxYear: Int,
     nino: String,
     incomeSourceId: String,
-    body: PropertyPeriodicSubmissionRequest
+    body: CreatePropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
@@ -227,8 +227,8 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     }
 
     httpClient
-      .POST[PropertyPeriodicSubmissionRequest, PostPeriodicSubmissionResponse](url, body)(
-        implicitly[Writes[PropertyPeriodicSubmissionRequest]],
+      .POST[CreatePropertyPeriodicSubmissionRequest, PostPeriodicSubmissionResponse](url, body)(
+        implicitly[Writes[CreatePropertyPeriodicSubmissionRequest]],
         implicitly[HttpReads[PostPeriodicSubmissionResponse]],
         ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
         ec
@@ -251,7 +251,7 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     incomeSourceId: String,
     taxYear: Int,
     submissionId: String,
-    propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest
+    propertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
@@ -270,8 +270,11 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     }
 
     httpClient
-      .PUT[PropertyPeriodicSubmissionRequest, PutPeriodicSubmissionResponse](url, propertyPeriodicSubmissionRequest)(
-        implicitly[Writes[PropertyPeriodicSubmissionRequest]],
+      .PUT[UpdatePropertyPeriodicSubmissionRequest, PutPeriodicSubmissionResponse](
+        url,
+        propertyPeriodicSubmissionRequest
+      )(
+        implicitly[Writes[UpdatePropertyPeriodicSubmissionRequest]],
         implicitly[HttpReads[PutPeriodicSubmissionResponse]],
         ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
         ec

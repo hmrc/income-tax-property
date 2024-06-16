@@ -20,7 +20,7 @@ import config.AppConfig
 import connectors.response.{PostPeriodicSubmissionResponse, PutAnnualSubmissionResponse, PutPeriodicSubmissionResponse}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.{Json, Writes}
@@ -34,9 +34,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
   val appConf: AppConfig = mock[AppConfig]
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
+  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
     Some(
       ForeignFhlEea(
         ForeignFhlIncome(200.00),
@@ -74,8 +85,8 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .POST(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
-            _: Writes[PropertyPeriodicSubmissionRequest],
+          .POST(_: String, _: CreatePropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[CreatePropertyPeriodicSubmissionRequest],
             _: HttpReads[PostPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -107,7 +118,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             2000,
             "",
             "",
-            validPropertyPeriodicSubmissionRequest
+            validCreatePropertyPeriodicSubmissionRequest
           )
       )
       returnValue shouldBe Right(Some(PeriodicSubmissionId("124")))
@@ -132,8 +143,8 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .PUT(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
-            _: Writes[PropertyPeriodicSubmissionRequest],
+          .PUT(_: String, _: UpdatePropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[UpdatePropertyPeriodicSubmissionRequest],
             _: HttpReads[PutPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -161,7 +172,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             "",
             2000,
             "124",
-            validPropertyPeriodicSubmissionRequest
+            validUpdatePropertyPeriodicSubmissionRequest
           )
       )
       returnValue shouldBe Right(Some("124"))
