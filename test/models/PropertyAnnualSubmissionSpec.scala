@@ -16,8 +16,9 @@
 
 package models
 
+import models.request.{ClaimExpensesOrRRR, RaRAbout}
 import models.request.common.Postcode
-import models.responses.{AnnualUkOtherProperty, Esba, PropertyAnnualSubmission, StructuredBuildingAllowanceBuilding, UkOtherAdjustments, UkOtherAllowances}
+import models.responses.{AnnualUkOtherProperty, Esba, PropertyAnnualSubmission, StructuredBuildingAllowanceBuilding, UkOtherAdjustments, UkOtherAllowances, UkRentARoom}
 import utils.UnitTest
 
 import java.time.LocalDateTime
@@ -27,24 +28,78 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     Esba(24, None, StructuredBuildingAllowanceBuilding(Some("test"), Some("123"), "XX1 XYZ")),
     Esba(24, None, StructuredBuildingAllowanceBuilding(Some("test"), Some("123"), "XX1 XYZ"))
   )
-  val propertyAnnualSubmission = PropertyAnnualSubmission(
-    Some(LocalDateTime.now()),
-    None,
-    None,
-    None,
-    Some(AnnualUkOtherProperty(
-      Some(UkOtherAdjustments(
-        None, None, None, None, None, None
-      )),
-      Some(UkOtherAllowances(
-        None, None, None, None, None, None, None, Some(esbas), None, None
-      ))
-    ))
-  )
+
+  val annualSubmissionWithoutEsbas = createAnnualSubmission(None)
+
+  val annualSubmissionAfterAdditionOfEsbas = createAnnualSubmission(Some(esbas))
+
+  def createAnnualSubmission(esbasMaybe: Option[List[Esba]]) =
+    PropertyAnnualSubmission(
+      None,
+      None,
+      None,
+      None,
+      Some(
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(
+              Some(12.34),
+              None,
+              None,
+              None,
+              None,
+              None
+            )
+          ),
+          Some(
+            UkOtherAllowances(
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              esbasMaybe,
+              Some(34.56),
+              None
+            )
+          )
+        )
+      )
+    )
 
   "PropertyAnnualSubmission" should {
     "be generated from esba list" in {
-      PropertyAnnualSubmission.fromEsbas(esbas).copy(submittedOn = None) shouldBe propertyAnnualSubmission.copy(submittedOn = None)
+      PropertyAnnualSubmission
+        .fromEsbas(annualSubmissionWithoutEsbas, esbas)
+        .copy(submittedOn = None) shouldBe annualSubmissionAfterAdditionOfEsbas
+        .copy(submittedOn = None)
+    }
+
+    "be generated from uk rent a room about" in {
+      val ukRaRAbout = RaRAbout(
+        true,
+        12.34,
+        ClaimExpensesOrRRR(
+          true,
+          Some(56.78)
+        )
+      )
+      PropertyAnnualSubmission
+        .fromUkRentARoomAbout(ukRaRAbout, annualSubmissionAfterAdditionOfEsbas)
+        .copy(submittedOn = None) shouldBe annualSubmissionAfterAdditionOfEsbas
+        .copy(ukOtherProperty =
+          annualSubmissionAfterAdditionOfEsbas.ukOtherProperty.map(
+            _.copy(ukOtherPropertyAnnualAdjustments =
+              annualSubmissionAfterAdditionOfEsbas.ukOtherProperty.flatMap(
+                _.ukOtherPropertyAnnualAdjustments
+                  .map(_.copy(ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.ukRentARoomJointlyLet))))
+              )
+            )
+          )
+        )
+        .copy(submittedOn = None)
     }
   }
 }

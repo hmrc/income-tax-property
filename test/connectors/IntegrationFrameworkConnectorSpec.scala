@@ -20,21 +20,44 @@ import config.AppConfig
 import connectors.response.{PostPeriodicSubmissionResponse, PutAnnualSubmissionResponse, PutPeriodicSubmissionResponse}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.PropertyPeriodicSubmissionRequest
+import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import utils.UnitTest
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
   val appConf: AppConfig = mock[AppConfig]
-  val validPropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(Some(ForeignFhlEea(ForeignFhlIncome(200.00), ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99)))), None, None, None)
+  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
+    LocalDate.now(),
+    LocalDate.now(),
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
+  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+    Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(200.00),
+        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      )
+    ),
+    None,
+    None,
+    None
+  )
 
   val integrationFrameworkConnector = new IntegrationFrameworkConnector(mockHttpClient, appConf)
   "IntegrationFrameworkController" should {
@@ -54,28 +77,38 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
           |}
           |""".stripMargin
 
-      (appConf.baseUrl(_: String)).expects("integration-framework").returning("http://something:1234/integration-framework/some-endpoint/")
+      (appConf
+        .baseUrl(_: String))
+        .expects("integration-framework")
+        .returning("http://something:1234/integration-framework/some-endpoint/")
       (appConf.authorisationTokenFor(_: String)).expects(*).returning("1234")
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .POST(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
-            _: Writes[PropertyPeriodicSubmissionRequest],
+          .POST(_: String, _: CreatePropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[CreatePropertyPeriodicSubmissionRequest],
             _: HttpReads[PostPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
           )
-        ).expects(
-        *,
-        *,
-        *,
-        *,
-        *,
-        *,
-        *
-      )
-        .returning(Future.successful(PostPeriodicSubmissionResponse(
-          HttpResponse(204, validRequestBody), Right(Some(PeriodicSubmissionId("124"))))))
+        )
+        .expects(
+          *,
+          *,
+          *,
+          *,
+          *,
+          *,
+          *
+        )
+        .returning(
+          Future.successful(
+            PostPeriodicSubmissionResponse(
+              HttpResponse(204, validRequestBody),
+              Right(Some(PeriodicSubmissionId("124")))
+            )
+          )
+        )
         .once()
 
       implicit val hc = HeaderCarrier()
@@ -85,8 +118,9 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             2000,
             "",
             "",
-            validPropertyPeriodicSubmissionRequest
-          ))
+            validCreatePropertyPeriodicSubmissionRequest
+          )
+      )
       returnValue shouldBe Right(Some(PeriodicSubmissionId("124")))
     }
     "update periodic submission" in {
@@ -109,23 +143,25 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
       (appConf.ifEnvironment _).expects().returning("abcd")
       (
         mockHttpClient
-          .PUT(_: String, _: PropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
-            _: Writes[PropertyPeriodicSubmissionRequest],
+          .PUT(_: String, _: UpdatePropertyPeriodicSubmissionRequest, _: Seq[(String, String)])(
+            _: Writes[UpdatePropertyPeriodicSubmissionRequest],
             _: HttpReads[PutPeriodicSubmissionResponse],
             _: HeaderCarrier,
             _: ExecutionContext
           )
-        ).expects(
-        *,
-        *,
-        *,
-        *,
-        *,
-        *,
-        *
-      )
-        .returning(Future.successful(PutPeriodicSubmissionResponse(
-          HttpResponse(204, validRequestBody), Right(Some("124")))))
+        )
+        .expects(
+          *,
+          *,
+          *,
+          *,
+          *,
+          *,
+          *
+        )
+        .returning(
+          Future.successful(PutPeriodicSubmissionResponse(HttpResponse(204, validRequestBody), Right(Some("124"))))
+        )
         .once()
 
       implicit val hc = HeaderCarrier()
@@ -136,40 +172,51 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             "",
             2000,
             "124",
-            validPropertyPeriodicSubmissionRequest
-          ))
+            validUpdatePropertyPeriodicSubmissionRequest
+          )
+      )
       returnValue shouldBe Right(Some("124"))
     }
     "create or update annual submission" in {
 
       val validRequestBody = PropertyAnnualSubmission(
         submittedOn = Some(LocalDateTime.now),
-        Some(AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )), None, None, None)
+        Some(
+          AnnualForeignFhlEea(
+            ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
+            ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
+          )
+        ),
+        None,
+        None,
+        None
+      )
 
       (appConf.authorisationTokenFor(_: String)).expects(*).returning("1234")
       (appConf.ifEnvironment _).expects().returning("abcd")
-      (
-        mockHttpClient.PUT(_: String, _: PropertyAnnualSubmission, _: Seq[(String, String)])(
+      (mockHttpClient
+        .PUT(_: String, _: PropertyAnnualSubmission, _: Seq[(String, String)])(
           _: Writes[PropertyAnnualSubmission],
           _: HttpReads[PutAnnualSubmissionResponse],
           _: HeaderCarrier,
           _: ExecutionContext
-        )).expects(
-        *,
-        *,
-        *,
-        *,
-        *,
-        *,
-        *
-      )
-        .returning(Future.successful(PutAnnualSubmissionResponse(
-          HttpResponse(204, Json.toJson(validRequestBody).toString()), Right(())
+        ))
+        .expects(
+          *,
+          *,
+          *,
+          *,
+          *,
+          *,
+          *
         )
-        )
+        .returning(
+          Future.successful(
+            PutAnnualSubmissionResponse(
+              HttpResponse(204, Json.toJson(validRequestBody).toString()),
+              Right(())
+            )
+          )
         )
         .once()
 
@@ -181,7 +228,8 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
             IncomeSourceId(""),
             Nino(""),
             validRequestBody
-          ))
+          )
+      )
       returnValue shouldBe Right(())
     }
   }

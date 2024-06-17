@@ -33,6 +33,7 @@ import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
 
@@ -50,8 +51,6 @@ class JourneyAnswersController @Inject() (
 
   def fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = auth.async {
     implicit request =>
-      // Todo: Which taxyear, let's say for 23-24, do we have to send 2024 here?
-      // Todo: incomeSourceId vs mtdid
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.AllJourneys, request) { ctx =>
         handleResponse(OK) {
           propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId.value)
@@ -108,6 +107,16 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RaRAbout](taxYear, incomeSourceId, nino, JourneyName.RentARoomAbout, request) {
+        (ctx, rarAbout) =>
+          handleResponse(CREATED) {
+            propertyService.saveRaRAbout(ctx, nino, rarAbout)
+          }
+      }
+    }
+
   def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
@@ -144,25 +153,7 @@ class JourneyAnswersController @Inject() (
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.RentalESBA, request) { ctx =>
         withEntity[EsbaInfo](request) { esbaInfo =>
           handleResponse(NO_CONTENT) {
-            for {
-              r <- propertyService.createOrUpdateAnnualSubmission(
-                     taxYear,
-                     incomeSourceId,
-                     nino,
-                     PropertyAnnualSubmission.fromEsbas(
-                       esbaInfo.toEsba
-                     )
-                   )
-              _ <- propertyService
-                     .persistAnswers(ctx, esbaInfo.extractToSavePart())
-                     .map(isPersistSuccess =>
-                       if (!isPersistSuccess) {
-                         logger.error("Could not persist")
-                       } else {
-                         logger.info("Persist successful")
-                       }
-                     )
-            } yield r
+            propertyService.saveEsbas(ctx, nino, esbaInfo)
           }
         }
       }
@@ -173,25 +164,7 @@ class JourneyAnswersController @Inject() (
       withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
         (ctx, sbaInfo) =>
           handleResponse(NO_CONTENT) {
-            for {
-              r <- propertyService.createOrUpdateAnnualSubmission(
-                     taxYear,
-                     incomeSourceId,
-                     nino,
-                     PropertyAnnualSubmission.fromSbas(
-                       sbaInfo.toSba
-                     )
-                   )
-              _ <- propertyService
-                     .persistAnswers(ctx, sbaInfo.toSbaToSave)
-                     .map(isPersistSuccess =>
-                       if (!isPersistSuccess) {
-                         logger.error("SBA Persist failed")
-                       } else {
-                         logger.info("SBA Persist successful")
-                       }
-                     )
-            } yield r
+            propertyService.saveSbas(ctx, nino, sbaInfo)
           }
       }
     }

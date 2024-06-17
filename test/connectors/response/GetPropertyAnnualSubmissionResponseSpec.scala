@@ -42,10 +42,14 @@ class GetPropertyAnnualSubmissionResponseSpec extends UnitTest {
       "status is OK and valid jsValue" in {
         val propertyAnnualSubmission = PropertyAnnualSubmission(
           submittedOn = Some(LocalDateTime.now),
-          None, None, None, None
+          None,
+          None,
+          None,
+          None
         )
 
-        val httpResponse: HttpResponse = HttpResponse.apply(OK, Json.toJson(propertyAnnualSubmission).toString, anyHeaders)
+        val httpResponse: HttpResponse =
+          HttpResponse.apply(OK, Json.toJson(propertyAnnualSubmission).toString, anyHeaders)
 
         underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetPropertyAnnualSubmissionResponse(
           httpResponse,
@@ -53,15 +57,13 @@ class GetPropertyAnnualSubmissionResponseSpec extends UnitTest {
         )
       }
 
-
-      //TODO
-      "status is OK and invalid jsValue" ignore  {
-        val jsValue: JsValue = Json.parse(
-          """
-            |{
-            |   "PropertyAnnualSubmission": {"value": []}
-            |}
-            |""".stripMargin)
+      // TODO
+      "status is OK and invalid jsValue" ignore {
+        val jsValue: JsValue = Json.parse("""
+                                            |{
+                                            |   "PropertyAnnualSubmission": {"value": []}
+                                            |}
+                                            |""".stripMargin)
 
         val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
 
@@ -72,10 +74,9 @@ class GetPropertyAnnualSubmissionResponseSpec extends UnitTest {
       }
 
       "status is NOT_FOUND and any jsValue" in {
-        val jsValue: JsValue = Json.parse(
-          """
-            |{}
-            |""".stripMargin)
+        val jsValue: JsValue = Json.parse("""
+                                            |{}
+                                            |""".stripMargin)
 
         val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
 

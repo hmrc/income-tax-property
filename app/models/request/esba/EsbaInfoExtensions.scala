@@ -20,9 +20,9 @@ import models.responses.{Esba, StructuredBuildingAllowanceBuilding, StructuredBu
 import play.api.libs.json.Json
 
 final case class EsbaInfoToSave(
-                                 claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-                                 esbaClaims: EsbaClaims
-                               )
+  claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
+  esbaClaims: EsbaClaims
+)
 
 object EsbaInfoToSave {
   implicit val format = Json.format[EsbaInfoToSave]
@@ -31,18 +31,20 @@ object EsbaInfoToSave {
 object EsbaInfoExtensions {
   implicit class EsbaExtensions(esbaInfo: EsbaInfo) {
 
-    def toEsba: List[Esba] = esbaInfo.esbas.map(esbaInRequest => Esba(
-      esbaInRequest.esbaClaim,  //Todo: IMPORTANT! Which one?
-      Some(StructuredBuildingAllowanceDate(esbaInRequest.esbaQualifyingDate, esbaInRequest.esbaQualifyingAmount)), //Todo: IMPORTANT! Which one?
-      StructuredBuildingAllowanceBuilding(
+    def toEsba: List[Esba] = esbaInfo.esbas.map(esbaInRequest =>
+      Esba(
+        esbaInRequest.esbaClaim,
         Some(
-          esbaInRequest.esbaAddress.buildingName.value),
-        Some(
-          esbaInRequest.esbaAddress.buildingNumber.value
+          StructuredBuildingAllowanceDate(esbaInRequest.esbaQualifyingDate, esbaInRequest.esbaQualifyingAmount)
         ),
-        esbaInRequest.esbaAddress.postCode.value
+        StructuredBuildingAllowanceBuilding(
+          Some(esbaInRequest.esbaAddress.buildingName.value),
+          Some(
+            esbaInRequest.esbaAddress.buildingNumber.value
+          ),
+          esbaInRequest.esbaAddress.postCode.value
+        )
       )
-    )
     )
   }
 }
