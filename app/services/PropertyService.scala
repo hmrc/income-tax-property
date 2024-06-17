@@ -199,7 +199,6 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     resultFromRepository: Option[JourneyAnswers]
   ): Option[PropertyRentalAdjustments] = {
 
-    // Todo: What to do with None None (In case we do not receive any info from db and downstream?
     val adjustmentsAndPeriodicExpenses: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)] = for {
       uopAnnual                    <- resultFromDownstream.ukOtherProperty
       resultFromDownstreamPeriodic <- resultFromPeriodicDownstreamMaybe // revisit. None Periodic what to do
@@ -226,25 +225,9 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
       esba   <- ukopaa.enhancedStructuredBuildingAllowance
     } yield esba.toList
 
-    val esbasInRequestMaybe = esbasMaybe.map(
-      _.map(e =>
-        EsbaInUpstream(
-          // Todo: Remove .get's, but again, they are mandatory on frontend.
-          // Todo: What to do if None comes from downstream?
-          e.firstYear.get.qualifyingDate,
-          e.firstYear.get.qualifyingAmountExpenditure,
-          e.amount,
-          Address(
-            BuildingName(e.building.name.get),
-            BuildingNumber(e.building.number.get),
-            Postcode(e.building.postCode)
-          )
-        )
-      )
+    val esbasInRequestMaybe: Option[List[EsbaInUpstream]] = esbasMaybe.flatMap(
+      EsbaInUpstream.fromEsbasToEsbasInUpstream(_)
     )
-
-    // Todo: When giving the data back, what to do in case qualifying date and amounts not present?
-    // Todo: They are required on the frontend
 
     val esbaInfoSavedInRepositoryMaybe: Option[EsbaInfoToSave] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[EsbaInfoToSave])

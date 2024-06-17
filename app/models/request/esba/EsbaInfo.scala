@@ -16,27 +16,57 @@
 
 package models.request.esba
 
-import models.request.common.Address
+import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
+import models.responses.Esba
 import play.api.libs.json.Json
 
 import java.time.LocalDate
 
 final case class EsbaInUpstream(
-                                esbaQualifyingDate: LocalDate,
-                                esbaQualifyingAmount: BigDecimal,
-                                esbaClaim: BigDecimal,
-                                esbaAddress: Address
-                              )
+  esbaQualifyingDate: LocalDate,
+  esbaQualifyingAmount: BigDecimal,
+  esbaClaim: BigDecimal,
+  esbaAddress: Address
+)
 
 object EsbaInUpstream {
   implicit val format = Json.format[EsbaInUpstream]
+
+  def fromEsbasToEsbasInUpstream(esbas: List[Esba]): Option[List[EsbaInUpstream]] =
+    toNoneIfAnyFirstYearIsNone(esbas)
+
+  private def toNoneIfAnyFirstYearIsNone(esbas: List[Esba]): Option[List[EsbaInUpstream]] = {
+    val r: List[Option[EsbaInUpstream]] = esbas.map(e =>
+      e.firstYear.map(firstYear =>
+        EsbaInUpstream(
+          firstYear.qualifyingDate,
+          firstYear.qualifyingAmountExpenditure,
+          e.amount,
+          Address(
+            BuildingName(e.building.name.getOrElse("")),
+            BuildingNumber(e.building.number.getOrElse("")),
+            Postcode(e.building.postCode)
+          )
+        )
+      )
+    )
+
+    val esbasOnlyWithFirstYear: Option[List[EsbaInUpstream]] =
+      r.foldLeft[Option[List[EsbaInUpstream]]](Some(List()))((acc, a) =>
+        (acc, a) match {
+          case (Some(list), Some(esba)) => Some(esba :: list)
+          case _                        => None
+        }
+      )
+    esbasOnlyWithFirstYear
+  }
 }
 
 final case class EsbaInfo(
-                           claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-                           esbaClaims: EsbaClaims,
-                           esbas: List[EsbaInUpstream]
-                         )
+  claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
+  esbaClaims: EsbaClaims,
+  esbas: List[EsbaInUpstream]
+)
 
 object EsbaInfo {
   implicit val format = Json.format[EsbaInfo]
