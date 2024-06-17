@@ -65,7 +65,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[Boolean] = {
     val filter = filterJourney(ctx)
     val bson = BsonDocument(Json.stringify(newData))
-    val update = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
+    val update = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture().map(_ => true)

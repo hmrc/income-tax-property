@@ -18,7 +18,7 @@ package repositories
 
 import com.mongodb.client.model
 import models.common.JourneyName.About
-import models.common.JourneyStatus.NotStarted
+import models.common.JourneyStatus.{InProgress, NotStarted}
 import models.common._
 import models.domain.JourneyAnswers
 import org.mongodb.scala.MongoCollection
@@ -88,7 +88,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         incomeSourceId,
         taxYear,
         JourneyName.About,
-        NotStarted,
+        InProgress,
         Json.obj("field" -> "value"),
         expectedExpireAt,
         instant,
@@ -110,7 +110,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         incomeSourceId,
         taxYear,
         JourneyName.About,
-        NotStarted,
+        InProgress,
         Json.obj("field" -> "updated"),
         expectedExpireAt,
         instant,
