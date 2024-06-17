@@ -31,6 +31,7 @@ import models.request.esba.EsbaInfoExtensions._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{SbaInfo, SbaInfoToSave}
+import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
 import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.Files.logger
@@ -46,6 +47,12 @@ final case class ClaimExpensesOrRRRYesNo(claimExpensesOrRRR: Boolean)
 
 object ClaimExpensesOrRRRYesNo {
   implicit val format = Json.format[ClaimExpensesOrRRRYesNo]
+}
+
+final case class RaRBalancingChargeYesNo(raRBalancingChargeYesNo: Boolean)
+
+object RaRBalancingChargeYesNo {
+  implicit val format = Json.format[RaRBalancingChargeYesNo]
 }
 
 class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)(
@@ -592,6 +599,43 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
       res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers)
     } yield res
 
+  }
+
+  def saveRaRAdjustments(ctx: JourneyContext, nino: Nino, raRAdjustments: RaRAdjustments)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ServiceError, Boolean] = {
+
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+
+    for {
+      propertyAnnualSubmissionFromDownstream <-
+        this
+          .getPropertyAnnualSubmission(
+            ctx.taxYear.endYear,
+            nino.value,
+            ctx.incomeSourceId.value
+          )
+          .leftFlatMap(e =>
+            e match {
+              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+            }
+          )
+      _ <- createOrUpdateAnnualSubmission(
+             ctx.taxYear,
+             ctx.incomeSourceId,
+             nino,
+             PropertyAnnualSubmission
+               .fromRaRAdjustments(propertyAnnualSubmissionFromDownstream, raRAdjustments)
+           )
+      res <- {
+        raRAdjustments.raRBalancingCharge match {
+          case Some(RaRBalancingCharge(raRbalancingChargeYesNo, _)) =>
+            persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
+          case _ => ITPEnvelope.liftPure(true)
+        }
+      }
+    } yield res
   }
 
   def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)(implicit

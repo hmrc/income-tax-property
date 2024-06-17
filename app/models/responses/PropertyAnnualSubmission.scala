@@ -18,6 +18,7 @@ package models.responses
 
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
+import models.request.ukrentaroom.RaRAdjustments
 import models.request.{CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments, RaRAbout, RentalAllowances}
 import monocle.Optional
 import monocle.macros.GenLens
@@ -186,6 +187,38 @@ object PropertyAnnualSubmission {
 
     resultWithAllThree
   }
+
+  def fromRaRAdjustments(
+    propertyAnnualSubmission: PropertyAnnualSubmission,
+    raRAdjustments: RaRAdjustments
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
+      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(uoa, _)  => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
+      }
+
+    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
+
+    val focusFromRequestOnToBalancingChargeLens =
+      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
+
+    val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
+      raRAdjustments.raRBalancingCharge.flatMap(_.raRbalancingChargeAmount)
+    )(propertyAnnualSubmission)
+
+    resultWithBalancingCharge
+  }
+
 }
 
 case class AnnualForeignFhlEea(adjustments: ForeignFhlAdjustments, allowances: ForeignFhlAllowances)
