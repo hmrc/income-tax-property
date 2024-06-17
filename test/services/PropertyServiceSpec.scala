@@ -702,6 +702,7 @@ class PropertyServiceSpec
       None,
       None,
       None,
+      None,
       None
     )
 
@@ -1190,6 +1191,8 @@ class PropertyServiceSpec
               None,
               Some(RentalAllowances(None, ElectricChargePointAllowance(false, None), None, None, None, None, None)),
               esbaInfoRetrieved,
+              None,
+              None,
               None
             ).asRight[ServiceError]
           }

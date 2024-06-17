@@ -42,7 +42,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
   val saveIncome = SaveIncome(
     UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
-    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None)
+    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None, None)
   )
   val date = LocalDate.now()
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)

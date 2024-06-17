@@ -16,7 +16,7 @@
 
 package models.repository
 
-import models.RentalAllowancesStoreAnswers
+import models.{ExpensesStoreAnswers, RentalAllowancesStoreAnswers}
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, StructureBuildingFormGroup}
@@ -33,6 +33,70 @@ trait Merger[T, U, X] {
 }
 
 object Merger {
+
+  implicit object RentalsExpensesMerger
+      extends Merger[Option[PropertyRentalsExpense], Option[ExpensesStoreAnswers], Option[UkOtherPropertyExpenses]] {
+    override def merge(
+      extractedMaybe: Option[ExpensesStoreAnswers],
+      fromDownstreamMaybe: Option[UkOtherPropertyExpenses]
+    ): Option[PropertyRentalsExpense] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsExpense(
+              fromDownstream.consolidatedExpense.map(ce =>
+                ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
+              ),
+              fromDownstream.premisesRunningCosts,
+              fromDownstream.repairsAndMaintenance,
+              fromDownstream.financialCosts,
+              fromDownstream.professionalFees,
+              fromDownstream.costOfServices,
+              fromDownstream.travelCosts,
+              fromDownstream.other
+            )
+          )
+        case (_, Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsExpense(
+              fromDownstream.consolidatedExpense.map(ce => ConsolidatedExpenses(true, Some(ce))),
+              fromDownstream.premisesRunningCosts,
+              fromDownstream.repairsAndMaintenance,
+              fromDownstream.financialCosts,
+              fromDownstream.professionalFees,
+              fromDownstream.costOfServices,
+              fromDownstream.travelCosts,
+              fromDownstream.other
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RentalsIncomeMerger
+      extends Merger[Option[PropertyRentalsIncome], Option[Income], Option[UkOtherPropertyIncome]] {
+    override def merge(
+      extractedMaybe: Option[Income],
+      fromDownstreamMaybe: Option[UkOtherPropertyIncome]
+    ): Option[PropertyRentalsIncome] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsIncome(
+              extracted.isNonUKLandlord,
+              fromDownstream.periodAmount.getOrElse(0),
+              fromDownstream.otherIncome.getOrElse(0),
+              fromDownstream.taxDeducted.map(_ => DeductingTax(true)),
+              extracted.calculatedFigureYourself,
+              extracted.yearLeaseAmount,
+              extracted.receivedGrantLeaseAmount,
+              fromDownstream.premiumsOfLeaseGrant.map(_ => PremiumsGrantLease(true)),
+              fromDownstream.reversePremiums.map(_ => ReversePremiumsReceived(true))
+            )
+          )
+        case _ => None
+      }
+  }
   implicit object AllowancesMerger
       extends Merger[Option[RentalAllowances], Option[RentalAllowancesStoreAnswers], Option[UkOtherAllowances]] {
     override def merge(

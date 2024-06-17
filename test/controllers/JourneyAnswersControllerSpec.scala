@@ -769,6 +769,8 @@ class JourneyAnswersControllerSpec
             List()
           )
         ),
+        None,
+        None,
         None
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])

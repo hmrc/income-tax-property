@@ -19,7 +19,7 @@ package models.responses
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments, RaRAbout, RentalAllowances}
+import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances, SaveIncome}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -32,7 +32,9 @@ final case class FetchedPropertyData(
   adjustments: Option[PropertyRentalAdjustments],
   allowances: Option[RentalAllowances],
   esbasWithSupportingQuestions: Option[EsbaInfo],
-  sbasWithSupportingQuestions: Option[SbaInfo]
+  sbasWithSupportingQuestions: Option[SbaInfo],
+  propertyRentalsIncome: Option[PropertyRentalsIncome],
+  propertyRentalsExpenses: Option[PropertyRentalsExpense]
 )
 
 object FetchedPropertyData {
