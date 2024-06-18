@@ -215,7 +215,7 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
 
     val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
-      raRAdjustments.raRBalancingCharge.flatMap(_.raRbalancingChargeAmount)
+      raRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount)
     )(propertyAnnualSubmission)
 
     resultWithBalancingCharge

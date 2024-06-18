@@ -677,7 +677,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
                .fromRaRAdjustments(propertyAnnualSubmissionFromDownstream, raRAdjustments)
            )
       res <- {
-        raRAdjustments.raRBalancingCharge match {
+        raRAdjustments.balancingCharge match {
           case Some(RaRBalancingCharge(raRbalancingChargeYesNo, _)) =>
             persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
           case _ => ITPEnvelope.liftPure(true)

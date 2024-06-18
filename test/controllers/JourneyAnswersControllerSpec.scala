@@ -116,7 +116,7 @@ class JourneyAnswersControllerSpec
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAdjustments)
 
     val validRequestBody: JsValue = Json.parse("""{
-                                                 |    "raRBalancingCharge" : {
+                                                 |    "balancingCharge" : {
                                                  |        "raRbalancingChargeYesNo" : true,
                                                  |        "raRbalancingChargeAmount" : 12.34
                                                  |    }

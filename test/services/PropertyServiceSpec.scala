@@ -1566,7 +1566,7 @@ class PropertyServiceSpec
                 Some(
                   UkOtherAdjustments(
                     None,
-                    ukRaRAdjustments.raRBalancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
                     None,
                     None,
                     None,
@@ -1610,7 +1610,7 @@ class PropertyServiceSpec
                 Some(
                   UkOtherAdjustments(
                     None,
-                    ukRaRAdjustments.raRBalancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
                     None,
                     None,
                     None,

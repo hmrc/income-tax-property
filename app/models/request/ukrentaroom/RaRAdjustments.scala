@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import RaRBalancingCharge._
 
 final case class RaRAdjustments(
-  raRBalancingCharge: Option[RaRBalancingCharge]
+  balancingCharge: Option[RaRBalancingCharge]
 )
 
 object RaRAdjustments {
