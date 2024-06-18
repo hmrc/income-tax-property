@@ -19,12 +19,13 @@ package models.request
 import play.api.libs.json.{Json, OFormat}
 
 final case class PropertyRentalAdjustments(
-                                            privateUseAdjustment: BigDecimal,
-                                            balancingCharge: BalancingCharge,
-                                            propertyIncomeAllowance: BigDecimal, //ToDo: Where is this used?
-                                            renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
-                                            residentialFinanceCost: BigDecimal, //ToDo: From Frontend but Where is this used?
-                                            unusedResidentialFinanceCost: BigDecimal) //ToDo: From Frontend but Where is this used?
+  privateUseAdjustment: BigDecimal,
+  balancingCharge: BalancingCharge,
+  propertyIncomeAllowance: BigDecimal, // ToDo: Where is this used?
+  renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
+  residentialFinanceCost: BigDecimal,
+  unusedResidentialFinanceCost: BigDecimal
+)
 
 object PropertyRentalAdjustments {
   implicit val format: OFormat[PropertyRentalAdjustments] = Json.format[PropertyRentalAdjustments]
@@ -36,11 +37,11 @@ object BalancingCharge {
   implicit val format: OFormat[BalancingCharge] = Json.format
 }
 
-final case class RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo: Boolean,
-                                                    renovationAllowanceBalancingChargeAmount: Option[BigDecimal])
+final case class RenovationAllowanceBalancingCharge(
+  renovationAllowanceBalancingChargeYesNo: Boolean,
+  renovationAllowanceBalancingChargeAmount: Option[BigDecimal]
+)
 
 object RenovationAllowanceBalancingCharge {
   implicit val format: OFormat[RenovationAllowanceBalancingCharge] = Json.format
 }
-
-

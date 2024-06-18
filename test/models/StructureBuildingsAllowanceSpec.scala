@@ -28,7 +28,7 @@ import java.time.{LocalDate, LocalDateTime}
 class StructureBuildingsAllowanceSpec extends UnitTest {
   val sbaInfo = SbaInfo(
     ClaimStructureBuildingAllowance(true),
-    Array(
+    List(
       StructureBuildingFormGroup(
         LocalDate.parse("2020-04-04"),
         12,

@@ -48,6 +48,9 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   case object RentARoomExpenses extends JourneyName("rent-a-room-expenses")
 
   case object RentARoomAllowances extends JourneyName("rent-a-room-allowances")
+  case object RentARoom extends JourneyName("rent-a-room")
+
+  case object RentARoomAbout extends JourneyName("rent-a-room-about")
 
   case object PropertyRentals extends JourneyName("property-rentals")
 

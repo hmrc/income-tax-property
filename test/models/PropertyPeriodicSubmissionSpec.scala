@@ -33,7 +33,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherProfessionalFee = Some(400),
     costsOfServicesProvided = Some(500),
     propertyBusinessTravelCost = Some(600),
-
     otherAllowablePropertyExpenses = Some(700),
     legalManagementOtherFee = None,
     residentialPropertyFinanceCosts = None,
@@ -41,44 +40,89 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherPropertyExpenses = None
   )
 
-  val saveIncome = SaveIncome(UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None), Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None))
+  val saveIncome = SaveIncome(
+    UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
+    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None)
+  )
   val date = LocalDate.now()
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(None, None, date, date, None, None, None, Some(UkOtherProperty(
-    Some(ukOtherPropertyIncome),
-    Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-  )))
-  val propertyPeriodicSubmissionRequest: PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    date,
+    date,
     None,
     None,
     None,
     Some(
       UkOtherProperty(
         Some(ukOtherPropertyIncome),
-        Some(
-          UkOtherPropertyExpenses(
-            premisesRunningCosts = Some(100),
-            repairsAndMaintenance = Some(200),
-            financialCosts = Some(300),
-            professionalFees = Some(400),
-            costOfServices = Some(500),
-            travelCosts = Some(600),
-            other = Some(700),
-            residentialFinancialCost = None,
-            residentialFinancialCostsCarriedForward = None,
-            ukOtherRentARoom = None,
-            consolidatedExpense = None
+        Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+      )
+    )
+  )
+  val createPropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
+    CreatePropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      None,
+      None,
+      Some(
+        UkOtherProperty(
+          Some(ukOtherPropertyIncome),
+          Some(
+            UkOtherPropertyExpenses(
+              premisesRunningCosts = Some(100),
+              repairsAndMaintenance = Some(200),
+              financialCosts = Some(300),
+              professionalFees = Some(400),
+              costOfServices = Some(500),
+              travelCosts = Some(600),
+              other = Some(700),
+              residentialFinancialCost = None,
+              residentialFinancialCostsCarriedForward = None,
+              ukOtherRentARoom = None,
+              consolidatedExpense = None
+            )
           )
         )
       )
     )
-  )
 
+  val updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
+    UpdatePropertyPeriodicSubmissionRequest(
+      None,
+      None,
+      None,
+      Some(
+        UkOtherProperty(
+          Some(ukOtherPropertyIncome),
+          Some(
+            UkOtherPropertyExpenses(
+              premisesRunningCosts = Some(100),
+              repairsAndMaintenance = Some(200),
+              financialCosts = Some(300),
+              professionalFees = Some(400),
+              costOfServices = Some(500),
+              travelCosts = Some(600),
+              other = Some(700),
+              residentialFinancialCost = None,
+              residentialFinancialCostsCarriedForward = None,
+              ukOtherRentARoom = None,
+              consolidatedExpense = None
+            )
+          )
+        )
+      )
+    )
 
   def propertyPeriodicSubmissionRequest(
-                                         ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
-                                         ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-                                       ): PropertyPeriodicSubmissionRequest = PropertyPeriodicSubmissionRequest(
+    ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
+    ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
+  ): CreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
+    LocalDate.now(),
+    LocalDate.now(),
     None,
     None,
     None,
@@ -93,21 +137,40 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
 
-      PropertyPeriodicSubmissionRequest.fromExpenses(
+      CreatePropertyPeriodicSubmissionRequest.fromExpenses(
         Some(propertyPeriodicSubmission),
         expenses
-      ) shouldBe propertyPeriodicSubmissionRequest.asRight[ServiceError]
+      ) shouldBe createPropertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
 
     "be generated from income" in {
 
-      PropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
-        Some(propertyPeriodicSubmission), saveIncome) shouldBe
+      CreatePropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
+        Some(propertyPeriodicSubmission),
+        saveIncome
+      ) shouldBe
         propertyPeriodicSubmissionRequest(
-
           Some(saveIncome.ukOtherPropertyIncome),
           propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
+        ).asRight[ServiceError]
+    }
 
+    "be generated from uk rent a room" in {
+      val ukRaRAbout = RaRAbout(
+        true,
+        1.23,
+        ClaimExpensesOrRRR(true, Some(4.56))
+      )
+      CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(Some(propertyPeriodicSubmission), ukRaRAbout) shouldBe
+        propertyPeriodicSubmissionRequest(
+          propertyPeriodicSubmission.ukOtherProperty.flatMap(
+            _.income.map(_.copy(ukOtherRentARoom = Some(RentARoomIncome(ukRaRAbout.totalIncomeAmount))))
+          ),
+          propertyPeriodicSubmission.ukOtherProperty.flatMap(
+            _.expenses.map(
+              _.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_)))
+            )
+          )
         ).asRight[ServiceError]
     }
   }

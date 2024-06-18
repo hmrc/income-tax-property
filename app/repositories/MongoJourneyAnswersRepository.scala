@@ -50,8 +50,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         ),
         IndexModel(
           Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
-          IndexOptions().name("mtditid_taxYear_incomeSourceId_journey")
-        )// Todo: Uniqueness, unique index should be created
+          IndexOptions().name("mtditid_taxYear_incomeSourceId_journey").unique(true)
+        )
       )
     ) with Logging {
 
@@ -65,7 +65,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[Boolean] = {
     val filter = filterJourney(ctx)
     val bson = BsonDocument(Json.stringify(newData))
-    val update = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
+    val update = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
@@ -79,7 +79,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         Filters.equal("mtditid", ctx.mtditid.value),
         Filters.equal("journey", ctx.journey.entryName)
       )
-    //Todo: How is this indexed?
+
     collection.find(filter).toFuture()
   }
 
@@ -90,10 +90,12 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         Filters.equal("taxYear", ctx.taxYear.endYear),
         Filters.equal("mtditid", ctx.mtditid.value)
       )
-    //Todo: How is this indexed?
+
     collection.find(filter).toFuture()
   }
-  private[repositories] def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+  private[repositories] def createUpsert(
+    ctx: JourneyContext
+  )(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
@@ -111,7 +113,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   }
 
   private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
-    val now      = Instant.now(clock)
+    val now = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
     Updates.combine(
@@ -122,8 +124,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   }
 
   private[repositories] def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
-    val filter  = filterJourney(ctx)
-    val update  = createUpsertStatus(ctx)(status)
+    val filter = filterJourney(ctx)
+    val update = createUpsertStatus(ctx)(status)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture()
@@ -132,7 +134,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
     val result = updateStatus(ctx, status)
-    //TODO return a more descriptive data type
+    // TODO return a more descriptive data type
     result.map(_ => ())
   }
 }

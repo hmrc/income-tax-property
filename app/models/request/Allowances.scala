@@ -18,31 +18,34 @@ package models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-
-case class CapitalAllowancesForACar(capitalAllowancesForACarYesNo: Boolean,
-                                    capitalAllowancesForACarAmount: Option[BigDecimal])
+case class CapitalAllowancesForACar(
+  capitalAllowancesForACarYesNo: Boolean,
+  capitalAllowancesForACarAmount: Option[BigDecimal]
+)
 
 object CapitalAllowancesForACar {
   implicit val formats: OFormat[CapitalAllowancesForACar] = Json.format[CapitalAllowancesForACar]
 }
 
-case class ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo: Boolean,
-                                        electricChargePointAllowanceAmount: Option[BigDecimal])
+case class ElectricChargePointAllowance(
+  electricChargePointAllowanceYesOrNo: Boolean,
+  electricChargePointAllowanceAmount: Option[BigDecimal]
+)
 
 object ElectricChargePointAllowance {
   implicit val formats: OFormat[ElectricChargePointAllowance] = Json.format[ElectricChargePointAllowance]
 }
 
 case class Allowances(
-                             annualInvestmentAllowance: Option[BigDecimal],
-                             electricChargePointAllowance: Option[ElectricChargePointAllowance],
-                             zeroEmissionCarAllowance: Option[BigDecimal],
-                             zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
-                             businessPremisesRenovationAllowance: Option[BigDecimal],
-                             replacementOfDomesticGoodsAllowance: Option[BigDecimal],
-                             capitalAllowancesForACar: Option[CapitalAllowancesForACar],
-                             otherCapitalAllowance: Option[BigDecimal]
-                           )
+  annualInvestmentAllowance: Option[BigDecimal],
+  electricChargePointAllowance: Option[ElectricChargePointAllowance],
+  zeroEmissionCarAllowance: Option[BigDecimal],
+  zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
+  businessPremisesRenovationAllowance: Option[BigDecimal],
+  replacementOfDomesticGoodsAllowance: Option[BigDecimal],
+  capitalAllowancesForACar: Option[CapitalAllowancesForACar],
+  otherCapitalAllowance: Option[BigDecimal]
+)
 
 object Allowances {
   implicit val formats: OFormat[Allowances] = Json.format[Allowances]

@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 
 final case class SbaInfoToSave(
   claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-  structureBuildingFormGroup: Array[StructureBuildingFormGroup]
+  structureBuildingFormGroup: List[StructureBuildingFormGroup]
 )
 
 object SbaInfoToSave {
@@ -33,7 +33,7 @@ object SbaInfoExtensions {
     def toSbaToSave: SbaInfoToSave =
       SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.structureBuildingFormGroup)
 
-    def toSba: Array[StructuredBuildingAllowance] = sbaInfo.structureBuildingFormGroup.map(structureBuildingFormGroup =>
+    def toSba: List[StructuredBuildingAllowance] = sbaInfo.structureBuildingFormGroup.map(structureBuildingFormGroup =>
       StructuredBuildingAllowance(
         structureBuildingFormGroup.structureBuildingAllowanceClaim,
         Some(
