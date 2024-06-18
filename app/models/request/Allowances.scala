@@ -33,16 +33,17 @@ object ElectricChargePointAllowance {
   implicit val formats: OFormat[ElectricChargePointAllowance] = Json.format[ElectricChargePointAllowance]
 }
 
-case class RentalAllowances(
+case class Allowances(
                              annualInvestmentAllowance: Option[BigDecimal],
-                             electricChargePointAllowance: ElectricChargePointAllowance,
+                             electricChargePointAllowance: Option[ElectricChargePointAllowance],
                              zeroEmissionCarAllowance: Option[BigDecimal],
                              zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
                              businessPremisesRenovationAllowance: Option[BigDecimal],
                              replacementOfDomesticGoodsAllowance: Option[BigDecimal],
+                             capitalAllowancesForACar: Option[CapitalAllowancesForACar],
                              otherCapitalAllowance: Option[BigDecimal]
                            )
 
-object RentalAllowances {
-  implicit val formats: OFormat[RentalAllowances] = Json.format[RentalAllowances]
+object Allowances {
+  implicit val formats: OFormat[Allowances] = Json.format[Allowances]
 }

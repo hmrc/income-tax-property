@@ -466,18 +466,19 @@ class PropertyServiceSpec
     val taxYear = 2024
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
-    val allowances = RentalAllowances(
+    val allowances = Allowances(
       Some(11),
-      ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
-      Some(11),
-      Some(11),
+      Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
       Some(11),
       Some(11),
+      Some(11),
+      Some(11),
+      None,
       Some(11)
     )
     "return no content for valid request" in {
       mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
+      await(underTest.saveAllowances(ctx, allowances, JourneyName.RentalAllowances).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
@@ -487,7 +488,7 @@ class PropertyServiceSpec
         Nino(nino),
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      await(underTest.saveAllowances(ctx, allowances, JourneyName.RentalAllowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
@@ -496,18 +497,19 @@ class PropertyServiceSpec
     val taxYear = 2024
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
-    val allowances = RentalAllowances(
+    val allowances = Allowances(
       Some(11),
-      ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
-      Some(11),
-      Some(11),
+      Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
       Some(11),
       Some(11),
+      Some(11),
+      Some(11),
+      None,
       Some(11)
     )
     "return no content for valid request" in {
       mockCreateAnnualSubmission2(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
+      await(underTest.saveAllowances(ctx, allowances, JourneyName.RentalAllowances).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
@@ -517,7 +519,7 @@ class PropertyServiceSpec
         Nino(nino),
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      await(underTest.saveAllowances(ctx, allowances, JourneyName.RentalAllowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
   "save income" should {
@@ -1093,11 +1095,11 @@ class PropertyServiceSpec
       }
 
       def testOnlyAdd(
-        clock: Clock,
-        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-        ctx: JourneyContext,
-        newData: JsObject
-      ) = {
+                       clock: Clock,
+                       mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+                       ctx: JourneyContext,
+                       newData: JsObject
+                     ): Future[Boolean] = {
 
         val now = clock.instant()
         val expireAt = calculateExpireAt(now.plusSeconds(1000))

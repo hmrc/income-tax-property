@@ -16,29 +16,46 @@
 
 package models
 
-import models.request.{ElectricChargePointAllowance, RentalAllowances}
+import models.request.{Allowances, CapitalAllowancesForACar, ElectricChargePointAllowance}
 import play.api.libs.json.{Json, OFormat}
 
-
-case class RentalAllowancesStoreAnswers(annualInvestmentAllowance: Option[BigDecimal],
-                             electricChargePointAllowance: ElectricChargePointAllowance,
-                             zeroEmissionCarAllowance: Option[BigDecimal],
-                             zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
-                             businessPremisesRenovationAllowance: Option[BigDecimal],
-                             replacementOfDomesticGoodsAllowance: Option[BigDecimal],
-                             otherCapitalAllowance: Option[BigDecimal])
+case class RentalAllowancesStoreAnswers(
+  capitalAllowancesForACar: Option[CapitalAllowancesForACar],
+  annualInvestmentAllowance: Option[BigDecimal],
+  electricChargePointAllowance: Option[ElectricChargePointAllowance],
+  zeroEmissionCarAllowance: Option[BigDecimal],
+  zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
+  businessPremisesRenovationAllowance: Option[BigDecimal],
+  replacementOfDomesticGoodsAllowance: Option[BigDecimal],
+  otherCapitalAllowance: Option[BigDecimal]
+)
 
 object RentalAllowancesStoreAnswers {
   implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]
-
-  def fromJourneyAnswers(answers: RentalAllowances): RentalAllowancesStoreAnswers =
-    RentalAllowancesStoreAnswers(
-      annualInvestmentAllowance = answers.annualInvestmentAllowance,
-      electricChargePointAllowance = answers.electricChargePointAllowance,
-      zeroEmissionCarAllowance = answers.zeroEmissionCarAllowance,
-      zeroEmissionGoodsVehicleAllowance = answers.zeroEmissionGoodsVehicleAllowance,
-      businessPremisesRenovationAllowance = answers.businessPremisesRenovationAllowance,
-      replacementOfDomesticGoodsAllowance = answers.replacementOfDomesticGoodsAllowance,
-      otherCapitalAllowance = answers.otherCapitalAllowance
-    )
+  def fromJourneyAnswers(answers: Allowances): RentalAllowancesStoreAnswers = {
+   answers.capitalAllowancesForACar.fold{
+     RentalAllowancesStoreAnswers(
+       capitalAllowancesForACar = None,
+       annualInvestmentAllowance = answers.annualInvestmentAllowance,
+       electricChargePointAllowance = answers.electricChargePointAllowance,
+       zeroEmissionCarAllowance = answers.zeroEmissionCarAllowance,
+       zeroEmissionGoodsVehicleAllowance = answers.zeroEmissionGoodsVehicleAllowance,
+       businessPremisesRenovationAllowance = answers.businessPremisesRenovationAllowance,
+       replacementOfDomesticGoodsAllowance = answers.replacementOfDomesticGoodsAllowance,
+       otherCapitalAllowance = answers.otherCapitalAllowance
+     )
+   }{
+     capitalAllowancesForACar =>
+     RentalAllowancesStoreAnswers(
+       capitalAllowancesForACar = answers.capitalAllowancesForACar,
+       annualInvestmentAllowance = None,
+       electricChargePointAllowance = None,
+       zeroEmissionCarAllowance = None,
+       zeroEmissionGoodsVehicleAllowance = None,
+       businessPremisesRenovationAllowance = None,
+       replacementOfDomesticGoodsAllowance = None,
+       otherCapitalAllowance = capitalAllowancesForACar.capitalAllowancesForACarAmount
+     )
+   }
+  }
 }

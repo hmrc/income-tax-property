@@ -196,16 +196,21 @@ class JourneyAnswersController @Inject() (
       }
     }
 
-  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+  def saveAllowances(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    journeyName: String
+  ): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-      val requestBody = parseBody[RentalAllowances](request)
+      val requestBody = parseBody[Allowances](request)
 
       requestBody match {
         case Success(validatedRes) =>
           validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
             case JsSuccess(value, _) =>
-              propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
+              propertyService.saveAllowances(ctx, value, JourneyName.withName(journeyName)).value.map(_ => NoContent)
             case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
           }
         case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))

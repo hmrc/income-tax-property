@@ -221,20 +221,21 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockSavePropertyRentalAllowances(
+      mockSaveAllowances(
         ctx,
-        RentalAllowances(
+        Allowances(
           Some(11),
-          ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
-          Some(11),
-          Some(11),
+          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
+          Some(11),
+          Some(11),
+          None,
           Some(11)
         )
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.savePropertyRentalAllowances(taxYear, incomeSourceId, nino)(request))
+      val result = await(underTest.saveAllowances(taxYear, incomeSourceId, nino, "rental-allowances")(request))
       result.header.status shouldBe NO_CONTENT
     }
 
