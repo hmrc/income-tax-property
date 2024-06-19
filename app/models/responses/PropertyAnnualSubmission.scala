@@ -16,12 +16,10 @@
 
 package models.responses
 
+import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
-
-import models.request.{Allowances, CapitalAllowancesForACar, PropertyAbout, PropertyRentalAdjustments, RaRAbout}
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances, SaveIncome}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
