@@ -17,13 +17,45 @@
 package models.request
 
 import models.responses.UkOtherPropertyIncome
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
 
 final case class SaveIncome(
-                             ukOtherPropertyIncome: UkOtherPropertyIncome,
-                             incomeToSave: Income
-                           )
+  ukOtherPropertyIncome: UkOtherPropertyIncome,
+  incomeToSave: Income
+)
 
 object SaveIncome {
   implicit val format: OFormat[SaveIncome] = Json.format[SaveIncome]
+}
+
+final case class PropertyRentalsIncome(
+  isNonUKLandlord: Boolean,
+  incomeFromPropertyRentals: BigDecimal,
+  otherIncomeFromProperty: BigDecimal,
+  deductingTax: Option[DeductingTax],
+  calculatedFigureYourself: Option[CalculatedFigureYourself],
+  yearLeaseAmount: Option[BigDecimal],
+  receivedGrantLeaseAmount: Option[BigDecimal],
+  premiumsGrantLease: Option[PremiumsGrantLease],
+  reversePremiumsReceived: Option[ReversePremiumsReceived]
+)
+
+case object PropertyRentalsIncome {
+
+  implicit val formats: Format[PropertyRentalsIncome] = Json.format[PropertyRentalsIncome]
+}
+
+final case class PropertyRentalsExpense(
+  consolidatedExpenses: Option[ConsolidatedExpenses],
+  rentsRatesAndInsurance: Option[BigDecimal],
+  repairsAndMaintenanceCosts: Option[BigDecimal],
+  loanInterestOrOtherFinancialCost: Option[BigDecimal],
+  otherProfessionalFees: Option[BigDecimal],
+  costsOfServicesProvided: Option[BigDecimal],
+  propertyBusinessTravelCosts: Option[BigDecimal],
+  otherAllowablePropertyExpenses: Option[BigDecimal]
+)
+
+object PropertyRentalsExpense {
+  implicit val format = Json.format[PropertyRentalsExpense]
 }

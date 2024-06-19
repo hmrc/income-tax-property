@@ -20,20 +20,16 @@ import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
-import models.repository.Extractor._
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
-import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.sba.SbaInfo
-import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.responses._
+import models.request.ukrentaroom.RaRAdjustments
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.PropertyService
 import services.journeyAnswers.JourneyStatusService
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
 
@@ -130,6 +126,21 @@ class JourneyAnswersController @Inject() (
             case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
           }
         case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
+  def savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RaRAdjustments](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentARoomAdjustments,
+        request
+      ) { (ctx, annualRaRAdjustmentsBody) =>
+        handleResponse(CREATED) {
+          propertyService.saveRaRAdjustments(ctx, nino, annualRaRAdjustmentsBody)
+        }
       }
     }
 

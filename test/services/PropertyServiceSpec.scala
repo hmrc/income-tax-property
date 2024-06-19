@@ -29,6 +29,7 @@ import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
+import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -723,6 +724,7 @@ class PropertyServiceSpec
       None,
       None,
       None,
+      None,
       None
     )
 
@@ -1211,6 +1213,8 @@ class PropertyServiceSpec
               None,
               Some(Allowances(None, Some(ElectricChargePointAllowance(false, None)), None, None, None, None, None, None )),
               esbaInfoRetrieved,
+              None,
+              None,
               None
             ).asRight[ServiceError]
           }
@@ -1540,6 +1544,114 @@ class PropertyServiceSpec
             ctx.toJourneyContext(JourneyName.RentalIncome),
             Nino(nino),
             ukRaRAbout
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "save uk rent a room adjustments" should {
+
+    val taxYear = 2024
+    val mtditid = "1234567890"
+    val ctx = JourneyContext(
+      TaxYear(taxYear),
+      IncomeSourceId(incomeSourceId),
+      Mtditid(mtditid),
+      JourneyName.RentARoomAdjustments
+    )
+
+    val ukRaRAdjustments = RaRAdjustments(
+      Some(RaRBalancingCharge(true, Some(12.34)))
+    )
+
+    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+
+    "return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(
+          annualSubmission.copy(ukOtherProperty =
+            Some(
+              AnnualUkOtherProperty(
+                Some(
+                  UkOtherAdjustments(
+                    None,
+                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    None,
+                    None,
+                    None,
+                    None
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        ().asRight[ApiError]
+      )
+      await(
+        underTest
+          .saveRaRAdjustments(
+            ctx,
+            Nino(nino),
+            ukRaRAdjustments
+          )
+          .value
+      ) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(
+          annualSubmission.copy(ukOtherProperty =
+            Some(
+              AnnualUkOtherProperty(
+                Some(
+                  UkOtherAdjustments(
+                    None,
+                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    None,
+                    None,
+                    None,
+                    None
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Unit]
+      )
+      await(
+        underTest
+          .saveRaRAdjustments(
+            ctx,
+            Nino(nino),
+            ukRaRAdjustments
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))

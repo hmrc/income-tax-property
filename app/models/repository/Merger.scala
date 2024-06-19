@@ -16,7 +16,7 @@
 
 package models.repository
 
-import models.RentalAllowancesStoreAnswers
+import models.{ExpensesStoreAnswers, RentalAllowancesStoreAnswers}
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, StructureBuildingFormGroup}
@@ -33,6 +33,70 @@ trait Merger[T, U, X] {
 }
 
 object Merger {
+
+  implicit object RentalsExpensesMerger
+      extends Merger[Option[PropertyRentalsExpense], Option[ExpensesStoreAnswers], Option[UkOtherPropertyExpenses]] {
+    override def merge(
+      extractedMaybe: Option[ExpensesStoreAnswers],
+      fromDownstreamMaybe: Option[UkOtherPropertyExpenses]
+    ): Option[PropertyRentalsExpense] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsExpense(
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce =>
+                ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
+              ),
+              rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
+              repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
+              loanInterestOrOtherFinancialCost = fromDownstream.financialCosts,
+              otherProfessionalFees = fromDownstream.professionalFees,
+              costsOfServicesProvided = fromDownstream.costOfServices,
+              propertyBusinessTravelCosts = fromDownstream.travelCosts,
+              otherAllowablePropertyExpenses = fromDownstream.other
+            )
+          )
+        case (_, Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsExpense(
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => ConsolidatedExpenses(true, Some(ce))),
+              rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
+              repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
+              loanInterestOrOtherFinancialCost = fromDownstream.financialCosts,
+              otherProfessionalFees = fromDownstream.professionalFees,
+              costsOfServicesProvided = fromDownstream.costOfServices,
+              propertyBusinessTravelCosts = fromDownstream.travelCosts,
+              otherAllowablePropertyExpenses = fromDownstream.other
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RentalsIncomeMerger
+      extends Merger[Option[PropertyRentalsIncome], Option[Income], Option[UkOtherPropertyIncome]] {
+    override def merge(
+      extractedMaybe: Option[Income],
+      fromDownstreamMaybe: Option[UkOtherPropertyIncome]
+    ): Option[PropertyRentalsIncome] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsIncome(
+              isNonUKLandlord = extracted.isNonUKLandlord,
+              incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
+              otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
+              deductingTax = fromDownstream.taxDeducted.map(_ => DeductingTax(true)),
+              calculatedFigureYourself = extracted.calculatedFigureYourself,
+              yearLeaseAmount = extracted.yearLeaseAmount,
+              receivedGrantLeaseAmount = extracted.receivedGrantLeaseAmount,
+              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(_ => PremiumsGrantLease(true)),
+              reversePremiumsReceived = fromDownstream.reversePremiums.map(_ => ReversePremiumsReceived(true))
+            )
+          )
+        case _ => None
+      }
+  }
   implicit object AllowancesMerger
       extends Merger[Option[Allowances], Option[RentalAllowancesStoreAnswers], Option[UkOtherAllowances]] {
     override def merge(
@@ -42,6 +106,7 @@ object Merger {
       (extractedMaybe, fromDownstreamMaybe) match {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
+
             Allowances(
               fromDownstream.annualInvestmentAllowance,
               Some(ElectricChargePointAllowance(
@@ -65,6 +130,7 @@ object Merger {
           )
         case (None, Some(fromDownstream)) =>
           Some(
+
             Allowances(
               fromDownstream.annualInvestmentAllowance,
               Some(ElectricChargePointAllowance(
@@ -115,22 +181,25 @@ object Merger {
             ) =>
           Some(
             PropertyRentalAdjustments(
-              fromDownstreamAdjustment.privateUseAdjustment.get,
-              BalancingCharge(
-                extractedMaybe.map(_.balancingChargeYesNo).getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
-                fromDownstreamAdjustment.balancingCharge
+              privateUseAdjustment = fromDownstreamAdjustment.privateUseAdjustment.get,
+              balancingCharge = BalancingCharge(
+                balancingChargeYesNo = extractedMaybe
+                  .map(_.balancingChargeYesNo)
+                  .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
+                balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
               ),
-              0, // Todo: fromWhere?
-              RenovationAllowanceBalancingCharge(
-                extractedMaybe
+              propertyIncomeAllowance = 0, // Todo: fromWhere?
+              renovationAllowanceBalancingCharge = RenovationAllowanceBalancingCharge(
+                renovationAllowanceBalancingChargeYesNo = extractedMaybe
                   .map(_.renovationAllowanceBalancingChargeYesNo)
                   .getOrElse(
                     !fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges.isEmpty
                   ),
-                fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
+                renovationAllowanceBalancingChargeAmount =
+                  fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
               ),
-              residentialFinanceCost,
-              residentialFinanceCostCarriedForward
+              residentialFinanceCost = residentialFinanceCost,
+              unusedResidentialFinanceCost = residentialFinanceCostCarriedForward
             )
           )
         case _ => None
@@ -147,17 +216,17 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             EsbaInfo(
-              extracted.claimEnhancedStructureBuildingAllowance,
-              extracted.esbaClaims,
-              fromDownstream
+              claimEnhancedStructureBuildingAllowance = extracted.claimEnhancedStructureBuildingAllowance,
+              esbaClaims = extracted.esbaClaims,
+              esbas = fromDownstream
             )
           )
         case (None, Some(fromDownstream)) => // Todo: How to act here???
           Some(
             EsbaInfo(
-              ClaimEnhancedStructureBuildingAllowance(true),
-              EsbaClaims(false), // ToDo:???
-              fromDownstream
+              claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true),
+              esbaClaims = EsbaClaims(false), // ToDo:???
+              esbas = fromDownstream
             )
           )
         case _ => None
@@ -178,15 +247,15 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             SbaInfo(
-              extracted.claimStructureBuildingAllowance,
-              fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance,
+              structureBuildingFormGroup = fromDownstream.map(fromSbaDownstreamToUpstream(_))
             )
           )
         case (None, Some(fromDownstream)) =>
           Some(
             SbaInfo(
-              ClaimStructureBuildingAllowance(true),
-              fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              claimStructureBuildingAllowance = ClaimStructureBuildingAllowance(true),
+              structureBuildingFormGroup = fromDownstream.map(fromSbaDownstreamToUpstream(_))
             )
           )
         case _ => None
@@ -194,12 +263,12 @@ object Merger {
 
     private def fromSbaDownstreamToUpstream(sba: StructuredBuildingAllowance): StructureBuildingFormGroup =
       StructureBuildingFormGroup(
-        sba.firstYear.map(_.qualifyingDate).getOrElse(LocalDate.now()), // Todo
-        sba.amount,
-        sba.firstYear
+        structureBuildingQualifyingDate = sba.firstYear.map(_.qualifyingDate).getOrElse(LocalDate.now()), // Todo
+        structureBuildingQualifyingAmount = sba.amount,
+        structureBuildingAllowanceClaim = sba.firstYear
           .map(_.qualifyingAmountExpenditure)
           .getOrElse(0), // ToDo: Check first optional and fail maybe?
-        Address(
+        structuredBuildingAllowanceAddress = Address(
           BuildingName(sba.building.name.getOrElse("")),
           BuildingNumber(sba.building.number.getOrElse("")),
           Postcode(sba.building.postCode)

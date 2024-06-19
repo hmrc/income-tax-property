@@ -23,6 +23,7 @@ import models.errors.ServiceError
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import org.scalamock.handlers._
@@ -268,4 +269,19 @@ trait MockPropertyService extends MockFactory {
       .saveRaRAbout(_: JourneyContext, _: Nino, _: RaRAbout)(_: HeaderCarrier))
       .expects(journeyContext, nino, ukRaRAbout, *)
       .returning(EitherT.pure(result))
+
+  def mockSaveUkRaRAdjustments[A](
+    journeyContext: JourneyContext,
+    nino: Nino,
+    raRAdjustments: RaRAdjustments,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler4[JourneyContext, Nino, RaRAdjustments, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockPropertyService
+      .saveRaRAdjustments(_: JourneyContext, _: Nino, _: RaRAdjustments)(_: HeaderCarrier))
+      .expects(journeyContext, nino, raRAdjustments, *)
+      .returning(EitherT.fromEither(result))
 }
