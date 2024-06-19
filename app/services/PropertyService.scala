@@ -26,11 +26,11 @@ import models.errors._
 import models.repository.Extractor.GeneralExtractor
 import models.repository.Merger._
 import models.request._
-import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{SbaInfo, SbaInfoToSave}
+import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
 import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.Files.logger
@@ -46,6 +46,12 @@ final case class ClaimExpensesOrRRRYesNo(claimExpensesOrRRR: Boolean)
 
 object ClaimExpensesOrRRRYesNo {
   implicit val format = Json.format[ClaimExpensesOrRRRYesNo]
+}
+
+final case class RaRBalancingChargeYesNo(raRBalancingChargeYesNo: Boolean)
+
+object RaRBalancingChargeYesNo {
+  implicit val format = Json.format[RaRBalancingChargeYesNo]
 }
 
 class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)(
@@ -172,7 +178,55 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     val allowancesMaybe =
       mergeAllowances(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalAllowances.entryName))
 
-    FetchedPropertyData(None, propertyAboutMaybe, adjustmentsMaybe, allowancesMaybe, esbaInfoMaybe, sbaInfoMaybe)
+    val rentalsIncomeMaybe =
+      mergeRentalsIncome(
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalIncome.entryName)
+      )
+
+    val rentalsExpensesMaybe =
+      mergeRentalsExpenses(
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalExpenses.entryName)
+      )
+    FetchedPropertyData(
+      None,
+      propertyAboutMaybe,
+      adjustmentsMaybe,
+      allowancesMaybe,
+      esbaInfoMaybe,
+      sbaInfoMaybe,
+      rentalsIncomeMaybe,
+      rentalsExpensesMaybe
+    )
+  }
+
+  def mergeRentalsIncome(
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    resultFromRepository: Option[JourneyAnswers]
+  ): Option[PropertyRentalsIncome] = {
+    val rentalsIncomeStoreAnswers: Option[Income] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[Income])
+      case None                 => None
+    }
+    val ukOtherPropertyIncome: Option[UkOtherPropertyIncome] =
+      resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.income))
+
+    rentalsIncomeStoreAnswers.merge(ukOtherPropertyIncome)
+  }
+
+  def mergeRentalsExpenses(
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    resultFromRepository: Option[JourneyAnswers]
+  ): Option[PropertyRentalsExpense] = {
+    val rentalsExpensesStoreAnswers: Option[ExpensesStoreAnswers] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[ExpensesStoreAnswers])
+      case None                 => None
+    }
+    val ukOtherPropertyExpenses: Option[UkOtherPropertyExpenses] =
+      resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.expenses))
+
+    rentalsExpensesStoreAnswers.merge(ukOtherPropertyExpenses)
   }
 
   def mergeAllowances(
@@ -187,6 +241,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
       resultFromDownstream.ukOtherProperty.flatMap(_.ukOtherPropertyAnnualAllowances)
     allowancesStoreAnswers.merge(ukOtherPropertyAnnualAllowances)
   }
+
   private def mergePropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyAbout])
@@ -592,6 +647,43 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
       res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers)
     } yield res
 
+  }
+
+  def saveRaRAdjustments(ctx: JourneyContext, nino: Nino, raRAdjustments: RaRAdjustments)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ServiceError, Boolean] = {
+
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+
+    for {
+      propertyAnnualSubmissionFromDownstream <-
+        this
+          .getPropertyAnnualSubmission(
+            ctx.taxYear.endYear,
+            nino.value,
+            ctx.incomeSourceId.value
+          )
+          .leftFlatMap(e =>
+            e match {
+              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+            }
+          )
+      _ <- createOrUpdateAnnualSubmission(
+             ctx.taxYear,
+             ctx.incomeSourceId,
+             nino,
+             PropertyAnnualSubmission
+               .fromRaRAdjustments(propertyAnnualSubmissionFromDownstream, raRAdjustments)
+           )
+      res <- {
+        raRAdjustments.balancingCharge match {
+          case Some(RaRBalancingCharge(raRbalancingChargeYesNo, _)) =>
+            persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
+          case _ => ITPEnvelope.liftPure(true)
+        }
+      }
+    } yield res
   }
 
   def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)(implicit

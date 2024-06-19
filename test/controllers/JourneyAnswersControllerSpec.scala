@@ -17,13 +17,14 @@
 package controllers
 
 import cats.syntax.either._
-import models.common.JourneyName.{About, RentARoomAbout}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo}
 import models.request.sba._
+import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
@@ -107,6 +108,54 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       val result = underTest.saveRentARoomAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "create or update uk rent a room adjustments section" should {
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAdjustments)
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |    "balancingCharge" : {
+                                                 |        "raRbalancingChargeYesNo" : true,
+                                                 |        "raRbalancingChargeAmount" : 12.34
+                                                 |    }
+                                                 |}""".stripMargin)
+
+    "return CREATED for valid request body" in {
+
+      mockAuthorisation()
+      mockSaveUkRaRAdjustments(
+        ctx,
+        nino,
+        RaRAdjustments(Some(RaRBalancingCharge(true, Some(12.34)))),
+        true.asRight[ServiceError]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRaRAdjustments(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyRaRAdjustments(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "return INTERNAL_SERVER_ERROR when service returns service error" in {
+
+      mockAuthorisation()
+      mockSaveUkRaRAdjustments(
+        ctx,
+        nino,
+        RaRAdjustments(Some(RaRBalancingCharge(true, Some(12.34)))),
+        ApiServiceError(500).asLeft[Boolean]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRaRAdjustments(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
@@ -720,6 +769,8 @@ class JourneyAnswersControllerSpec
             List()
           )
         ),
+        None,
+        None,
         None
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])

@@ -152,22 +152,22 @@ object UpdatePropertyPeriodicSubmissionRequest {
       }
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant,
-      saveIncome.ukOtherPropertyIncome.reversePremiums,
-      saveIncome.ukOtherPropertyIncome.periodAmount,
-      saveIncome.ukOtherPropertyIncome.taxDeducted,
-      saveIncome.ukOtherPropertyIncome.otherIncome,
-      periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
+      premiumsOfLeaseGrant = saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant,
+      reversePremiums = saveIncome.ukOtherPropertyIncome.reversePremiums,
+      periodAmount = saveIncome.ukOtherPropertyIncome.periodAmount,
+      taxDeducted = saveIncome.ukOtherPropertyIncome.taxDeducted,
+      otherIncome = saveIncome.ukOtherPropertyIncome.otherIncome,
+      ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
     val requestWithEmptyRentalsIncome = UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmission.flatMap(_.foreignFhlEea),
-      periodicSubmission.flatMap(_.foreignProperty),
-      periodicSubmission.flatMap(_.ukFhlProperty),
-      Some(
+      foreignFhlEea = periodicSubmission.flatMap(_.foreignFhlEea),
+      foreignProperty = periodicSubmission.flatMap(_.foreignProperty),
+      ukFhlProperty = periodicSubmission.flatMap(_.ukFhlProperty),
+      ukOtherProperty = Some(
         UkOtherProperty(
-          None,
-          ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
+          income = None,
+          expenses = ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
         )
       )
     )
