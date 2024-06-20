@@ -90,13 +90,32 @@ object Merger {
               calculatedFigureYourself = extracted.calculatedFigureYourself,
               yearLeaseAmount = extracted.yearLeaseAmount,
               receivedGrantLeaseAmount = extracted.receivedGrantLeaseAmount,
-              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(_ => PremiumsGrantLease(true)),
-              reversePremiumsReceived = fromDownstream.reversePremiums.map(_ => ReversePremiumsReceived(true))
+              premiumsGrantLease =
+                fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
+              reversePremiumsReceived =
+                fromDownstream.reversePremiums.map(rp => ReversePremiumsReceived(true, Some(rp)))
+            )
+          )
+        case (None, Some(fromDownstream)) =>
+          Some(
+            PropertyRentalsIncome(
+              isNonUKLandlord = false,
+              incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
+              otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
+              deductingTax = fromDownstream.taxDeducted.map(_ => DeductingTax(true)),
+              calculatedFigureYourself = None,
+              yearLeaseAmount = None,
+              receivedGrantLeaseAmount = None,
+              premiumsGrantLease =
+                fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
+              reversePremiumsReceived =
+                fromDownstream.reversePremiums.map(rp => ReversePremiumsReceived(true, Some(rp)))
             )
           )
         case _ => None
       }
   }
+
   implicit object AllowancesMerger
       extends Merger[Option[RentalAllowances], Option[RentalAllowancesStoreAnswers], Option[UkOtherAllowances]] {
     override def merge(
@@ -137,6 +156,7 @@ object Merger {
         case _ => None
       }
   }
+
   implicit object AdjustmentsMerger
       extends Merger[Option[PropertyRentalAdjustments], Option[AdjustmentStoreAnswers], Option[
         (UkOtherAdjustments, UkOtherPropertyExpenses)

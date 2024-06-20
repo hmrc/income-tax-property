@@ -17,9 +17,11 @@
 package models
 
 import cats.syntax.either._
+import models.common.TaxYear
 import models.errors.ServiceError
 import models.request._
 import models.responses._
+import utils.TaxYearUtils.taxYear
 import utils.UnitTest
 
 import java.time.LocalDate
@@ -33,18 +35,15 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherProfessionalFee = Some(400),
     costsOfServicesProvided = Some(500),
     propertyBusinessTravelCost = Some(600),
-    otherAllowablePropertyExpenses = Some(700),
-    legalManagementOtherFee = None,
-    residentialPropertyFinanceCosts = None,
-    unusedResidentialPropertyFinanceCostsBroughtFwd = None,
-    otherPropertyExpenses = None
+    otherAllowablePropertyExpenses = Some(700)
   )
 
   val saveIncome = SaveIncome(
     UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
-    Income(true, 55, true, ReversePremiumsReceived(false), None, None, None, None, None)
+    Income(true, 55, true, ReversePremiumsReceived(false, Some(12.34)), None, None, None, None, None)
   )
   val date = LocalDate.now()
+
   val ukOtherPropertyIncome = UkOtherPropertyIncome(None, None, None, None, Some(BigDecimal(100.0)), None)
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,
@@ -138,6 +137,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from expenses" in {
 
       CreatePropertyPeriodicSubmissionRequest.fromExpenses(
+        TaxYear(taxYear),
         Some(propertyPeriodicSubmission),
         expenses
       ) shouldBe createPropertyPeriodicSubmissionRequest.asRight[ServiceError]
@@ -146,6 +146,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from income" in {
 
       CreatePropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
+        TaxYear(taxYear),
         Some(propertyPeriodicSubmission),
         saveIncome
       ) shouldBe
@@ -161,7 +162,11 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         1.23,
         ClaimExpensesOrRRR(true, Some(4.56))
       )
-      CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(Some(propertyPeriodicSubmission), ukRaRAbout) shouldBe
+      CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
+        TaxYear(taxYear),
+        Some(propertyPeriodicSubmission),
+        ukRaRAbout
+      ) shouldBe
         propertyPeriodicSubmissionRequest(
           propertyPeriodicSubmission.ukOtherProperty.flatMap(
             _.income.map(_.copy(ukOtherRentARoom = Some(RentARoomIncome(ukRaRAbout.totalIncomeAmount))))

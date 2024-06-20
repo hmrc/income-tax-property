@@ -17,11 +17,11 @@
 package models.request
 
 import cats.implicits.catsSyntaxEitherId
+import models.common.TaxYear
 import models.errors.ServiceError
 import models.responses
 import models.responses._
 import monocle.Optional
-import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
@@ -40,6 +40,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     Json.format[CreatePropertyPeriodicSubmissionRequest]
 
   def fromUkRaRAbout(
+    taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     ukRaRAbout: RaRAbout
   ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
@@ -76,8 +77,8 @@ object CreatePropertyPeriodicSubmissionRequest {
       )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_))))
 
     val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
-      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.now()), // Todo:
-      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.now()), // Todo:
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
       periodicSubmissionMaybe.flatMap(_.foreignFhlEea),
       periodicSubmissionMaybe.flatMap(_.foreignProperty),
       periodicSubmissionMaybe.flatMap(_.ukFhlProperty),
@@ -98,6 +99,7 @@ object CreatePropertyPeriodicSubmissionRequest {
   }
 
   def fromExpenses(
+    taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     expenses: Expenses
   ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
@@ -110,8 +112,8 @@ object CreatePropertyPeriodicSubmissionRequest {
         case _         => (None, None)
       }
     CreatePropertyPeriodicSubmissionRequest(
-      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.now()), // Todo:
-      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.now()), // Todo:
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
       periodicSubmission.flatMap(_.foreignFhlEea),
       periodicSubmission.flatMap(_.foreignProperty),
       periodicSubmission.flatMap(_.ukFhlProperty),
@@ -144,7 +146,54 @@ object CreatePropertyPeriodicSubmissionRequest {
 
   }
 
+  def fromRaRExpenses(
+    taxYear: TaxYear,
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission], // Those should all be none.
+    raRExpenses: RentARoomExpenses
+  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+    val (periodicSubmission, ukOtherPropertyIncome)
+      : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
+      periodicSubmissionMaybe match {
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+          (Some(pps), Some(income))
+        case Some(pps) => (Some(pps), None)
+        case _         => (None, None)
+      }
+
+    CreatePropertyPeriodicSubmissionRequest(
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
+      periodicSubmission.flatMap(_.foreignFhlEea),
+      periodicSubmission.flatMap(_.foreignProperty),
+      periodicSubmission.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          ukOtherPropertyIncome,
+          Some(
+            UkOtherPropertyExpenses(
+              premisesRunningCosts = raRExpenses.rentsRatesAndInsurance,
+              repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
+              professionalFees = raRExpenses.legalManagementOtherFee,
+              costOfServices = raRExpenses.costOfServicesProvided,
+              residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
+              residentialFinancialCostsCarriedForward = raRExpenses.unusedResidentialPropertyFinanceCostsBroughtFwd,
+              other = raRExpenses.otherPropertyExpenses,
+              consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
+              financialCosts =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.financialCosts))),
+              travelCosts = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.travelCosts))),
+              ukOtherRentARoom =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom)))
+            )
+          )
+        )
+      )
+    ).asRight[ServiceError]
+
+  }
+
   def fromUkOtherPropertyIncome(
+    taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     saveIncome: SaveIncome
   ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
@@ -168,8 +217,8 @@ object CreatePropertyPeriodicSubmissionRequest {
     )
 
     val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(
-      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.now()), // Todo:
-      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.now()), // Todo:
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
       periodicSubmission.flatMap(_.foreignFhlEea),
       periodicSubmission.flatMap(_.foreignProperty),
       periodicSubmission.flatMap(_.ukFhlProperty),
