@@ -34,6 +34,7 @@ import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
 import models.RentARoomAllowancesStoreAnswers
 import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
+import monocle.macros.GenLens
 import play.api.libs.Files.logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -743,7 +744,9 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     val newAllowance = answers.capitalAllowancesForACar.fold{
       allowances
     }{
-      amount => allowances.copy(otherCapitalAllowance = amount.capitalAllowancesForACarAmount)
+      amount => {
+       GenLens[UkOtherAllowances](_.otherCapitalAllowance).modify(_ => amount.capitalAllowancesForACarAmount)(allowances)
+      }
     }
 
     val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(newAllowance))
