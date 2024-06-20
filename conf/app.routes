@@ -29,6 +29,8 @@ POST          /property/:taxYear/:incomeSourceId/property-rental-adjustments/:ni
 
 POST          /property/:taxYear/:incomeSourceId/property-rental-allowances/:nino/answers                                          controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
+POST          /property/:taxYear/:incomeSourceId/rent-a-room-allowances/:nino/answers                                              controllers.JourneyAnswersController.saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
 POST          /property/:taxYear/:incomeSourceId/property-rental-sba/:nino/answers                                                 controllers.JourneyAnswersController.savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/uk-rent-a-room-about/:nino/answers                                                 controllers.JourneyAnswersController.saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

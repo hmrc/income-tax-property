@@ -180,6 +180,22 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val requestBody = parseBody[RentARoomAllowances](request)
+
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.saveRentARoomAllowances(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
   def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)

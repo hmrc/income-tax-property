@@ -32,6 +32,7 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
+import models.RentARoomAllowancesStoreAnswers
 import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import play.api.libs.Files.logger
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -686,18 +687,29 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     } yield res
   }
 
+  def saveRentARoomAllowances(ctx: JourneyContextWithNino, answers: RentARoomAllowances)(implicit
+                                                                                           hc: HeaderCarrier
+  ): EitherT[Future, ServiceError, Boolean] = {
+    val storeAnswers: RentARoomAllowancesStoreAnswers = RentARoomAllowancesStoreAnswers.fromJourneyAnswers(answers)
+    val submission: PropertyAnnualSubmission = getPropertySubmissionForRentARoomAllowances(answers)
+    for {
+      _   <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.incomeSourceId, ctx.nino, submission)
+      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), storeAnswers)
+    } yield res
+  }
+
   def savePropertyRentalAllowances(ctx: JourneyContextWithNino, answers: RentalAllowances)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, Boolean] = {
     val storeAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(answers)
-    val submission: PropertyAnnualSubmission = getPropertySubmission(answers)
+    val submission: PropertyAnnualSubmission = getPropertySubmissionForRentalAllowances(answers)
     for {
       _   <- createOrUpdateAnnualSubmission(ctx.taxYear, ctx.incomeSourceId, ctx.nino, submission)
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), storeAnswers)
     } yield res
   }
 
-  private def getPropertySubmission(answers: RentalAllowances) = {
+  private def getPropertySubmissionForRentalAllowances(answers: RentalAllowances) = {
     val allowances = UkOtherAllowances(
       answers.annualInvestmentAllowance,
       answers.zeroEmissionGoodsVehicleAllowance,
@@ -713,4 +725,29 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(allowances))
     PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
   }
+
+  private def getPropertySubmissionForRentARoomAllowances(answers: RentARoomAllowances) = {
+    val allowances = UkOtherAllowances(
+      answers.annualInvestmentAllowance,
+      answers.zeroEmissionGoodsVehicleAllowance,
+      answers.businessPremisesRenovationAllowance,
+      answers.otherCapitalAllowance,
+      answers.replacementOfDomesticGoodsAllowance,
+      answers.electricChargePointAllowance.flatMap(_.electricChargePointAllowanceAmount),
+      None,
+      None,
+      answers.zeroEmissionCarAllowance,
+      None
+    )
+
+    val newAllowance = answers.capitalAllowancesForACar.fold{
+      allowances
+    }{
+      amount => allowances.copy(otherCapitalAllowance = amount.capitalAllowancesForACarAmount)
+    }
+
+    val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(newAllowance))
+    PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+  }
+
 }
