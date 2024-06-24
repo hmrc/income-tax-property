@@ -81,6 +81,7 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     taxYear: Int,
     taxableEntityId: String,
     incomeSourceId: String,
+    createRequest: CreatePropertyPeriodicSubmissionRequest,
     result: Either[ApiError, Option[PeriodicSubmissionId]]
   ): CallHandler5[Int, String, String, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[PeriodicSubmissionId]]
@@ -89,13 +90,14 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .createPeriodicSubmission(_: Int, _: String, _: String, _: CreatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
-      .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
+      .expects(taxYear, taxableEntityId, incomeSourceId, createRequest, *)
       .returning(Future.successful(result))
 
   def mockUpdatePeriodicSubmission(
     taxYear: Int,
     taxableEntityId: String,
     incomeSourceId: String,
+    updateRequest: UpdatePropertyPeriodicSubmissionRequest,
     submissionId: String,
     result: Either[ApiError, Option[String]]
   ): CallHandler6[String, String, Int, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
@@ -105,7 +107,7 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
-      .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, *, *)
+      .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, updateRequest, *)
       .returning(Future.successful(result))
 
   def mockDeleteAnnualSubmissions(
@@ -120,17 +122,6 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .returning(Future.successful(result))
 
   def mockCreateAnnualSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
-    result: Either[ApiError, Unit]
-  ): CallHandler5[Int, String, String, JsValue, HeaderCarrier, Future[Either[ApiError, Unit]]] =
-    (mockIntegrationFrameworkConnector
-      .createOrUpdateAnnualSubmission(_: Int, _: String, _: String, _: JsValue)(_: HeaderCarrier))
-      .expects(taxYear, taxableEntityId, incomeSourceId, *, *)
-      .returning(Future.successful(result))
-
-  def mockCreateAnnualSubmission2(
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
     taxableEntityId: Nino,
@@ -162,6 +153,6 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
           ))
           .expects(taxYear, incomeSourceId, taxableEntityId, pas, *)
           .returning(Future.successful(result))
-      case _ => mockCreateAnnualSubmission2(taxYear, incomeSourceId, taxableEntityId, result)
+      case _ => mockCreateAnnualSubmission(taxYear, incomeSourceId, taxableEntityId, result)
     }
 }

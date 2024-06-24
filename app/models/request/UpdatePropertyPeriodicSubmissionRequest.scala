@@ -23,8 +23,6 @@ import models.responses._
 import monocle.Optional
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
-
 final case class UpdatePropertyPeriodicSubmissionRequest(
   foreignFhlEea: Option[ForeignFhlEea],
   foreignProperty: Option[Seq[ForeignProperty]],
@@ -129,6 +127,48 @@ object UpdatePropertyPeriodicSubmissionRequest {
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense))),
               residentialFinancialCost =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost)))
+            )
+          )
+        )
+      )
+    ).asRight[ServiceError]
+
+  }
+
+  def fromRaRExpenses(
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    raRExpenses: RentARoomExpenses
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+    val (periodicSubmission, ukOtherPropertyIncome)
+      : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
+      periodicSubmissionMaybe match {
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+          (Some(pps), Some(income))
+        case Some(pps) => (Some(pps), None)
+        case _         => (None, None)
+      }
+    UpdatePropertyPeriodicSubmissionRequest(
+      periodicSubmission.flatMap(_.foreignFhlEea),
+      periodicSubmission.flatMap(_.foreignProperty),
+      periodicSubmission.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          ukOtherPropertyIncome,
+          Some(
+            UkOtherPropertyExpenses(
+              premisesRunningCosts = raRExpenses.rentsRatesAndInsurance,
+              repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
+              professionalFees = raRExpenses.legalManagementOtherFee,
+              costOfServices = raRExpenses.costOfServicesProvided,
+              residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
+              residentialFinancialCostsCarriedForward = raRExpenses.unusedResidentialPropertyFinanceCostsBroughtFwd,
+              other = raRExpenses.otherPropertyExpenses,
+              consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
+              financialCosts =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.financialCosts))),
+              travelCosts = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.travelCosts))),
+              ukOtherRentARoom =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom)))
             )
           )
         )

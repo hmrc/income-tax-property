@@ -34,12 +34,12 @@ object Income {
   implicit val format: OFormat[Income] = Json.format[Income]
 }
 
-final case class PremiumsGrantLease(yesOrNo: Boolean)
+final case class PremiumsGrantLease(premiumsGrantLeaseYesOrNo: Boolean, premiumsGrantLease: Option[BigDecimal])
 
 object PremiumsGrantLease {
   implicit val format: OFormat[PremiumsGrantLease] = Json.format[PremiumsGrantLease]
 }
-final case class ReversePremiumsReceived(reversePremiumsReceived: Boolean)
+final case class ReversePremiumsReceived(reversePremiumsReceived: Boolean, amount: Option[BigDecimal])
 
 object ReversePremiumsReceived {
   implicit val format: OFormat[ReversePremiumsReceived] = Json.format[ReversePremiumsReceived]

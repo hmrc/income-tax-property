@@ -35,48 +35,44 @@ import utils.providers.FakeRequestProvider
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class RequestHandlerSpec extends ControllerUnitTest
-  with MockAuthorisedAction
-  with FakeRequestProvider
-  with ScalaCheckPropertyChecks {
+class RequestHandlerSpec
+    extends ControllerUnitTest with MockAuthorisedAction with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   val requestHandler = new RequestHandler with Logging {}
-  val validRequestBody: JsValue = Json.parse(
-    """{
-      |   "ukOtherPropertyIncome": {
-      |        "premiumsOfLeaseGrant":52.64,
-      |        "reversePremiums":34,
-      |        "periodAmount":4,
-      |        "otherIncome":76,
-      |        "ukOtherRentARoom": {
-      |          "rentsReceived":45
-      |        }
-      |   },
-      |   "incomeToSave": {
-      |        "isNonUKLandlord" : true,
-      |        "incomeFromPropertyRentals" : 45,
-      |        "leasePremiumPayment" : true,
-      |        "reversePremiumsReceived" : {
-      |            "reversePremiumsReceived" : true
-      |        },
-      |        "calculatedFigureYourself" : {
-      |            "calculatedFigureYourself" : false
-      |        },
-      |        "yearLeaseAmount" : 4
-      |    }
-      |}""".stripMargin)
+  val validRequestBody: JsValue = Json.parse("""{
+                                               |   "ukOtherPropertyIncome": {
+                                               |        "premiumsOfLeaseGrant":52.64,
+                                               |        "reversePremiums":34,
+                                               |        "periodAmount":4,
+                                               |        "otherIncome":76,
+                                               |        "ukOtherRentARoom": {
+                                               |          "rentsReceived":45
+                                               |        }
+                                               |   },
+                                               |   "incomeToSave": {
+                                               |        "isNonUKLandlord" : true,
+                                               |        "incomeFromPropertyRentals" : 45,
+                                               |        "leasePremiumPayment" : true,
+                                               |        "reversePremiumsReceived" : {
+                                               |            "reversePremiumsReceived" : true
+                                               |        },
+                                               |        "calculatedFigureYourself" : {
+                                               |            "calculatedFigureYourself" : false
+                                               |        },
+                                               |        "yearLeaseAmount" : 4
+                                               |    }
+                                               |}""".stripMargin)
 
   "RequestHandler" should {
     "handle errors and parsing correctly" in {
       val scenarios = Table[Request[AnyContent], Int, String](
         ("Request", "Expected Status", "Expected Message"),
-        //(fakeRequest.withHeaders(("Content-Type", "application/json")).withRawBody(ByteString("test")), BAD_REQUEST, "Cannot parse JSON"),
+        // (fakeRequest.withHeaders(("Content-Type", "application/json")).withRawBody(ByteString("test")), BAD_REQUEST, "Cannot parse JSON"),
         (fakeRequest.withJsonBody(validRequestBody), OK, "Success"),
-        (fakeRequest.withJsonBody(Json.toJson(PremiumsGrantLease(true))), BAD_REQUEST, "Cannot read JSON")
+        (fakeRequest.withJsonBody(Json.toJson(PremiumsGrantLease(true, Some(12.34)))), BAD_REQUEST, "Cannot read JSON")
       )
 
-      forAll(scenarios) { (request: Request[AnyContent], expectedStatus: Int, expectedMessage: String) => {
-
+      forAll(scenarios) { (request: Request[AnyContent], expectedStatus: Int, expectedMessage: String) =>
         val result = requestHandler.withJourneyContextAndEntity[SaveIncome](
           TaxYear(2023),
           IncomeSourceId(""),
@@ -88,8 +84,7 @@ class RequestHandlerSpec extends ControllerUnitTest
         }
 
         await(result.map(a => consumeBody(a))).contains(expectedMessage) shouldBe true
-        status(result) shouldBe (expectedStatus)
-      }
+        status(result) shouldBe expectedStatus
       }
     }
   }

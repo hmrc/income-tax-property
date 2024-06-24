@@ -389,12 +389,14 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
           httpResponse
         )
 
+        val propertyAnnualSubmission: PropertyAnnualSubmission =
+          Json.toJson(aPropertyAnnualSubmission).as[PropertyAnnualSubmission]
         await(
           underTest.createOrUpdateAnnualSubmission(
-            taxYear,
-            taxableEntityId,
-            incomeSourceId,
-            Json.toJson(aPropertyAnnualSubmission)
+            TaxYear(taxYear),
+            IncomeSourceId(incomeSourceId),
+            Nino(taxableEntityId),
+            propertyAnnualSubmission
           )(hc)
         ) shouldBe Right()
       }
@@ -412,7 +414,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest
-            .createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)
+            .createOrUpdateAnnualSubmission(
+              TaxYear(taxYear),
+              IncomeSourceId(incomeSourceId),
+              Nino(nino),
+              aPropertyAnnualSubmission
+            )(hc)
         ) shouldBe Right()
       }
 
@@ -428,7 +435,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest
-            .createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)
+            .createOrUpdateAnnualSubmission(
+              TaxYear(taxYear),
+              IncomeSourceId(incomeSourceId),
+              Nino(nino),
+              aPropertyAnnualSubmission
+            )(hc)
         ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
@@ -443,7 +455,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest
-            .createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)
+            .createOrUpdateAnnualSubmission(
+              TaxYear(taxYear),
+              IncomeSourceId(incomeSourceId),
+              Nino(nino),
+              aPropertyAnnualSubmission
+            )(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
@@ -460,7 +477,12 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest
-            .createOrUpdateAnnualSubmission(taxYear, nino, incomeSourceId, Json.toJson(aPropertyAnnualSubmission))(hc)
+            .createOrUpdateAnnualSubmission(
+              TaxYear(taxYear),
+              IncomeSourceId(incomeSourceId),
+              Nino(nino),
+              aPropertyAnnualSubmission
+            )(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }

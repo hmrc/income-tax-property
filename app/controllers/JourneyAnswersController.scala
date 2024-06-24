@@ -103,6 +103,26 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def saveRaRExpenses(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    journeyName: String
+  ): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RentARoomExpenses](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.withName(journeyName),
+        request
+      ) { (ctx, raRExpenses) =>
+        handleResponse(CREATED) {
+          propertyService.saveRaRExpenses(ctx, nino, raRExpenses)
+        }
+      }
+    }
+
   def saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[RaRAbout](taxYear, incomeSourceId, nino, JourneyName.RentARoomAbout, request) {
