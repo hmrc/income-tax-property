@@ -27,20 +27,19 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ErrorHandler extends Results {
 
   def handleResponse[T](
-                         successStatusCode: Int
-                       )
-                       (
-                         response: EitherT[Future, ServiceError, T]
-                       )(
-                         implicit ec: ExecutionContext,
-                         writes: Writes[T]
-                       ): Future[Result] = {
-    response.fold({
-      case e@ApiServiceError(BAD_REQUEST) => BadRequest(Json.toJson(ErrorResponse(BAD_REQUEST, e.message)))
-      case e@ApiServiceError(CONFLICT) => Conflict(Json.toJson(ErrorResponse(CONFLICT, e.message)))
-      case e => InternalServerError(Json.toJson(ErrorResponse(INTERNAL_SERVER_ERROR, e.message)))
-    }, r =>
-      Status(successStatusCode)(Json.toJson(r))
+    successStatusCode: Int
+  )(
+    response: EitherT[Future, ServiceError, T]
+  )(implicit
+    ec: ExecutionContext,
+    writes: Writes[T]
+  ): Future[Result] =
+    response.fold(
+      {
+        case e @ ApiServiceError(BAD_REQUEST) => BadRequest(Json.toJson(ErrorResponse(BAD_REQUEST, e.message)))
+        case e @ ApiServiceError(CONFLICT)    => Conflict(Json.toJson(ErrorResponse(CONFLICT, e.message)))
+        case e => InternalServerError(Json.toJson(ErrorResponse(INTERNAL_SERVER_ERROR, e.message)))
+      },
+      r => Status(successStatusCode)(Json.toJson(r))
     )
-  }
 }

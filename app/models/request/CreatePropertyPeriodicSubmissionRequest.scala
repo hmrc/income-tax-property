@@ -148,7 +148,7 @@ object CreatePropertyPeriodicSubmissionRequest {
 
   def fromRaRExpenses(
     taxYear: TaxYear,
-    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission], // Those should all be none.
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     raRExpenses: RentARoomExpenses
   ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
     val (periodicSubmission, ukOtherPropertyIncome)
@@ -193,10 +193,10 @@ object CreatePropertyPeriodicSubmissionRequest {
 
   }
 
-  def fromUkOtherPropertyIncome(
+  def fromPropertyRentalsIncome(
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
-    saveIncome: SaveIncome
+    propertyRentalsIncome: PropertyRentalsIncome
   ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
@@ -209,12 +209,12 @@ object CreatePropertyPeriodicSubmissionRequest {
       }
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant,
-      saveIncome.ukOtherPropertyIncome.reversePremiums,
-      saveIncome.ukOtherPropertyIncome.periodAmount,
-      saveIncome.ukOtherPropertyIncome.taxDeducted,
-      saveIncome.ukOtherPropertyIncome.otherIncome,
-      periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
+      premiumsOfLeaseGrant = propertyRentalsIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      reversePremiums = propertyRentalsIncome.reversePremiumsReceived.flatMap(_.amount),
+      periodAmount = Some(propertyRentalsIncome.incomeFromPropertyRentals),
+      taxDeducted = propertyRentalsIncome.deductingTax.flatMap(_.taxDeductedAmount),
+      otherIncome = Some(propertyRentalsIncome.otherIncomeFromProperty),
+      ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
     val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(

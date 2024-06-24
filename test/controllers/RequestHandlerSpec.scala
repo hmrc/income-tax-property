@@ -19,7 +19,7 @@ package controllers
 import actions.AuthorisationRequest
 import models.User
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
-import models.request.{PremiumsGrantLease, SaveIncome}
+import models.request.{PremiumsGrantLease, PropertyRentalsIncome}
 import org.apache.pekko.util.ByteString
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Logging
@@ -39,29 +39,25 @@ class RequestHandlerSpec
     extends ControllerUnitTest with MockAuthorisedAction with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   val requestHandler = new RequestHandler with Logging {}
-  val validRequestBody: JsValue = Json.parse("""{
-                                               |   "ukOtherPropertyIncome": {
-                                               |        "premiumsOfLeaseGrant":52.64,
-                                               |        "reversePremiums":34,
-                                               |        "periodAmount":4,
-                                               |        "otherIncome":76,
-                                               |        "ukOtherRentARoom": {
-                                               |          "rentsReceived":45
+  val validRequestBody: JsValue = Json.parse("""
+                                               |{
+                                               |            "incomeFromPropertyRentals" : 15,
+                                               |            "isNonUKLandlord" : false,
+                                               |            "otherIncomeFromProperty" : 25,
+                                               |            "deductingTax" : {
+                                               |                "taxDeductedYesNo" : true,
+                                               |                "taxDeductedAmount" : 20
+                                               |            },
+                                               |            "premiumsGrantLease" : {
+                                               |                "premiumsGrantLeaseYesOrNo" : true,
+                                               |                "premiumsGrantLease" : 5
+                                               |            },
+                                               |            "reversePremiumsReceived" : {
+                                               |                "reversePremiumsReceived" : true,
+                                               |                "amount" : 10
+                                               |            }
                                                |        }
-                                               |   },
-                                               |   "incomeToSave": {
-                                               |        "isNonUKLandlord" : true,
-                                               |        "incomeFromPropertyRentals" : 45,
-                                               |        "leasePremiumPayment" : true,
-                                               |        "reversePremiumsReceived" : {
-                                               |            "reversePremiumsReceived" : true
-                                               |        },
-                                               |        "calculatedFigureYourself" : {
-                                               |            "calculatedFigureYourself" : false
-                                               |        },
-                                               |        "yearLeaseAmount" : 4
-                                               |    }
-                                               |}""".stripMargin)
+                                               |""".stripMargin)
 
   "RequestHandler" should {
     "handle errors and parsing correctly" in {
@@ -73,7 +69,7 @@ class RequestHandlerSpec
       )
 
       forAll(scenarios) { (request: Request[AnyContent], expectedStatus: Int, expectedMessage: String) =>
-        val result = requestHandler.withJourneyContextAndEntity[SaveIncome](
+        val result = requestHandler.withJourneyContextAndEntity[PropertyRentalsIncome](
           TaxYear(2023),
           IncomeSourceId(""),
           Nino(""),

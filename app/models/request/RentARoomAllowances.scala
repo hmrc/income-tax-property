@@ -23,7 +23,6 @@ case class RentARoomAllowances(
   electricChargePointAllowance: Option[ElectricChargePointAllowance],
   zeroEmissionCarAllowance: Option[BigDecimal],
   zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
-  businessPremisesRenovationAllowance: Option[BigDecimal],
   replacementOfDomesticGoodsAllowance: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal]
 )
