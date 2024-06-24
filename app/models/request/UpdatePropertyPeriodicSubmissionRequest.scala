@@ -156,7 +156,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
           ukOtherPropertyIncome,
           Some(
             UkOtherPropertyExpenses(
-              premisesRunningCosts = raRExpenses.rentsRatesAndInsurance,
+              premisesRunningCosts = raRExpenses.rentsRatesAndInsurance, // Recheck?
               repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
               professionalFees = raRExpenses.legalManagementOtherFee,
               costOfServices = raRExpenses.costOfServicesProvided,
@@ -177,9 +177,9 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
   }
 
-  def fromUkOtherPropertyIncome(
+  def fromPropertyRentalsIncome(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
-    saveIncome: SaveIncome
+    propertyRentalsIncome: PropertyRentalsIncome
   ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
@@ -192,22 +192,22 @@ object UpdatePropertyPeriodicSubmissionRequest {
       }
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      premiumsOfLeaseGrant = saveIncome.ukOtherPropertyIncome.premiumsOfLeaseGrant,
-      reversePremiums = saveIncome.ukOtherPropertyIncome.reversePremiums,
-      periodAmount = saveIncome.ukOtherPropertyIncome.periodAmount,
-      taxDeducted = saveIncome.ukOtherPropertyIncome.taxDeducted,
-      otherIncome = saveIncome.ukOtherPropertyIncome.otherIncome,
+      premiumsOfLeaseGrant = propertyRentalsIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      reversePremiums = propertyRentalsIncome.reversePremiumsReceived.flatMap(_.amount),
+      periodAmount = Some(propertyRentalsIncome.incomeFromPropertyRentals),
+      taxDeducted = propertyRentalsIncome.deductingTax.flatMap(_.taxDeductedAmount),
+      otherIncome = Some(propertyRentalsIncome.otherIncomeFromProperty),
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
     val requestWithEmptyRentalsIncome = UpdatePropertyPeriodicSubmissionRequest(
-      foreignFhlEea = periodicSubmission.flatMap(_.foreignFhlEea),
-      foreignProperty = periodicSubmission.flatMap(_.foreignProperty),
-      ukFhlProperty = periodicSubmission.flatMap(_.ukFhlProperty),
-      ukOtherProperty = Some(
+      periodicSubmission.flatMap(_.foreignFhlEea),
+      periodicSubmission.flatMap(_.foreignProperty),
+      periodicSubmission.flatMap(_.ukFhlProperty),
+      Some(
         UkOtherProperty(
-          income = None,
-          expenses = ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
+          None,
+          ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
         )
       )
     )

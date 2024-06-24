@@ -16,12 +16,14 @@
 
 package models.repository
 
-import models.{ExpensesStoreAnswers, RentalAllowancesStoreAnswers}
+import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, StructureBuildingFormGroup}
-import models.request._
+import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
 import models.responses._
+import models.{ExpensesStoreAnswers, RentARoomAllowancesStoreAnswers, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
+import services.{ClaimExpensesOrRRRYesNo, RaRBalancingChargeYesNo}
 
 import java.time.LocalDate
 
@@ -34,6 +36,31 @@ trait Merger[T, U, X] {
 
 object Merger {
 
+  implicit object RaRAboutMerger
+      extends Merger[Option[RaRAbout], Option[ClaimExpensesOrRRRYesNo], (Option[Boolean], Option[UkOtherProperty])] {
+    override def merge(
+      extracted: Option[ClaimExpensesOrRRRYesNo],
+      fromDownstream: (Option[Boolean], Option[UkOtherProperty])
+    ): Option[RaRAbout] =
+      fromDownstream match {
+        case (Some(jointlyLet), Some(ukOtherProperty)) =>
+          val amountClaimedMaybe: Option[BigDecimal] =
+            ukOtherProperty.expenses.flatMap(_.ukOtherRentARoom.map(_.amountClaimed))
+
+          Some(
+            RaRAbout(
+              ukRentARoomJointlyLet = jointlyLet,
+              totalIncomeAmount = ukOtherProperty.income.flatMap(_.ukOtherRentARoom.map(_.rentsReceived)).getOrElse(0),
+              claimExpensesOrRRR = ClaimExpensesOrRRR(
+                extracted.fold(!amountClaimedMaybe.isEmpty)(_.claimExpensesOrRRR),
+                amountClaimedMaybe
+              )
+            )
+          )
+
+        case _ => None
+      }
+  }
   implicit object RentalsExpensesMerger
       extends Merger[Option[PropertyRentalsExpense], Option[ExpensesStoreAnswers], Option[UkOtherPropertyExpenses]] {
     override def merge(
@@ -44,7 +71,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce =>
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -73,10 +100,55 @@ object Merger {
       }
   }
 
-  implicit object RentalsIncomeMerger
-      extends Merger[Option[PropertyRentalsIncome], Option[Income], Option[UkOtherPropertyIncome]] {
+  implicit object RentARoomExpensesMerger
+      extends Merger[
+        Option[RentARoomExpenses],
+        Option[RentARoomExpensesStoreAnswers],
+        Option[UkOtherPropertyExpenses]
+      ] {
     override def merge(
-      extractedMaybe: Option[Income],
+      extractedMaybe: Option[RentARoomExpensesStoreAnswers],
+      fromDownstreamMaybe: Option[UkOtherPropertyExpenses]
+    ): Option[RentARoomExpenses] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            RentARoomExpenses(
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
+                ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
+              ),
+              rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
+              repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
+              legalManagementOtherFee = fromDownstream.professionalFees,
+              costOfServicesProvided = fromDownstream.costOfServices,
+              residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
+              unusedResidentialPropertyFinanceCostsBroughtFwd = fromDownstream.residentialFinancialCostsCarriedForward,
+              otherPropertyExpenses = fromDownstream.other
+            )
+          )
+        case (_, Some(fromDownstream)) =>
+          Some(
+            RentARoomExpenses(
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
+                ConsolidatedExpenses(true, Some(ce))
+              ),
+              rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
+              repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
+              legalManagementOtherFee = fromDownstream.professionalFees,
+              costOfServicesProvided = fromDownstream.costOfServices,
+              residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
+              unusedResidentialPropertyFinanceCostsBroughtFwd = fromDownstream.residentialFinancialCostsCarriedForward,
+              otherPropertyExpenses = fromDownstream.other
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RentalsIncomeMerger
+      extends Merger[Option[PropertyRentalsIncome], Option[StoredIncome], Option[UkOtherPropertyIncome]] {
+    override def merge(
+      extractedMaybe: Option[StoredIncome],
       fromDownstreamMaybe: Option[UkOtherPropertyIncome]
     ): Option[PropertyRentalsIncome] =
       (extractedMaybe, fromDownstreamMaybe) match {
@@ -86,10 +158,10 @@ object Merger {
               isNonUKLandlord = extracted.isNonUKLandlord,
               incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
-              deductingTax = fromDownstream.taxDeducted.map(_ => DeductingTax(true)),
+              deductingTax = fromDownstream.taxDeducted.map(amount => DeductingTax(true, Some(amount))),
               calculatedFigureYourself = extracted.calculatedFigureYourself,
               yearLeaseAmount = extracted.yearLeaseAmount,
-              receivedGrantLeaseAmount = extracted.receivedGrantLeaseAmount,
+              receivedGrantLeaseAmount = extracted.yearLeaseAmount,
               premiumsGrantLease =
                 fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
               reversePremiumsReceived =
@@ -102,7 +174,7 @@ object Merger {
               isNonUKLandlord = false,
               incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
-              deductingTax = fromDownstream.taxDeducted.map(_ => DeductingTax(true)),
+              deductingTax = fromDownstream.taxDeducted.map(amount => DeductingTax(true, Some(amount))),
               calculatedFigureYourself = None,
               yearLeaseAmount = None,
               receivedGrantLeaseAmount = None,
@@ -151,6 +223,32 @@ object Merger {
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RaRAllowancesMerger
+      extends Merger[Option[RentARoomAllowances], Option[RentARoomAllowancesStoreAnswers], Option[UkOtherAllowances]] {
+    override def merge(
+      extractedMaybe: Option[RentARoomAllowancesStoreAnswers],
+      fromDownstreamMaybe: Option[UkOtherAllowances]
+    ): Option[RentARoomAllowances] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (_, Some(fromDownstream)) =>
+          Some(
+            RentARoomAllowances(
+              annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
+              electricChargePointAllowance =
+                fromDownstream.electricChargePointAllowance.map(a => ElectricChargePointAllowance(true, Some(a))),
+              zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
+              zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
+              // businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
+              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
+              otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
+              capitalAllowancesForACar =
+                fromDownstream.otherCapitalAllowance.map(amount => CapitalAllowancesForACar(true, Some(amount)))
             )
           )
         case _ => None
@@ -208,6 +306,35 @@ object Merger {
               ),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = residentialFinanceCostCarriedForward
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RaRAdjustmentsMerger
+      extends Merger[Option[RaRAdjustments], Option[RaRBalancingChargeYesNo], Option[
+        UkOtherAdjustments
+      ]] {
+    override def merge(
+      extractedMaybe: Option[RaRBalancingChargeYesNo],
+      fromDownstreamMaybe: Option[UkOtherAdjustments]
+    ): Option[RaRAdjustments] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (
+              _,
+              Some(fromDownstreamAdjustment)
+            ) =>
+          Some(
+            RaRAdjustments(
+              balancingCharge = Some(
+                RaRBalancingCharge(
+                  raRbalancingChargeYesNo = extractedMaybe
+                    .map(_.raRBalancingChargeYesNo)
+                    .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
+                  raRbalancingChargeAmount = fromDownstreamAdjustment.balancingCharge
+                )
+              )
             )
           )
         case _ => None

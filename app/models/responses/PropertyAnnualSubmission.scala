@@ -19,7 +19,7 @@ package models.responses
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances, SaveIncome}
+import models.request._
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -29,12 +29,17 @@ import java.time.{LocalDate, LocalDateTime}
 final case class FetchedPropertyData(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   propertyAbout: Option[PropertyAbout],
+  propertyRentalsAbout: Option[PropertyRentalsAbout],
   adjustments: Option[PropertyRentalAdjustments],
   allowances: Option[RentalAllowances],
   esbasWithSupportingQuestions: Option[EsbaInfo],
   sbasWithSupportingQuestions: Option[SbaInfo],
   propertyRentalsIncome: Option[PropertyRentalsIncome],
-  propertyRentalsExpenses: Option[PropertyRentalsExpense]
+  propertyRentalsExpenses: Option[PropertyRentalsExpense],
+  raRAbout: Option[RaRAbout],
+  rarExpenses: Option[RentARoomExpenses],
+  raRAdjustments: Option[RaRAdjustments],
+  rentARoomAllowances: Option[RentARoomAllowances]
 )
 
 object FetchedPropertyData {

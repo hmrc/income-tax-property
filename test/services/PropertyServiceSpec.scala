@@ -43,7 +43,7 @@ import repositories.ExpireAtCalculator.calculateExpireAt
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import java.time.{Clock, LocalDate, LocalDateTime}
@@ -51,12 +51,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new PropertyService(mockIntegrationFrameworkConnector, repository)
+
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
   private val nino = "A34324"
   private val incomeSourceId = "Rental"
   private val submissionId = "submissionId"
@@ -605,7 +606,7 @@ class PropertyServiceSpec
     )
 
   "save esbas" should {
-    "" in {
+    "call service method" in {
 
       val taxYear = 2024
       val mtditid = "1234567890"
@@ -654,7 +655,7 @@ class PropertyServiceSpec
   }
 
   "save sbas" should {
-    "" in {
+    "call service method" in {
 
       val taxYear = 2024
       val mtditid = "1234567890"
@@ -710,31 +711,17 @@ class PropertyServiceSpec
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
 
-    val incomeToSave: Income = Income(
-      false,
-      25,
+    val propertyRentalsIncome = PropertyRentalsIncome(
       true,
-      ReversePremiumsReceived(true, Some(12.34)),
-      None,
-      None,
-      None,
-      None,
-      None
+      12.34,
+      13.46,
+      Some(DeductingTax(true, Some(14.51))),
+      Some(CalculatedFigureYourself(true, Some(14.75))),
+      Some(98.78),
+      Some(64.23),
+      Some(PremiumsGrantLease(true, Some(93.85))),
+      Some(ReversePremiumsReceived(true, Some(913.84)))
     )
-
-    val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      None,
-      None,
-      None,
-      None,
-      None,
-      None
-    )
-
-    val ukOtherPropertyExpenses =
-      UkOtherPropertyExpenses(Some(100), None, None, None, None, None, None, None, None, None, None)
-    val saveIncome = SaveIncome(ukOtherPropertyIncome, incomeToSave)
-
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
@@ -758,10 +745,10 @@ class PropertyServiceSpec
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
+        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
           TaxYear(taxYear),
           Some(emptyPeriodicSubmission),
-          saveIncome
+          propertyRentalsIncome
         )
       mockCreatePeriodicSubmission(
         taxYear,
@@ -776,8 +763,7 @@ class PropertyServiceSpec
           .saveIncome(
             ctx.toJourneyContext(JourneyName.RentalIncome),
             Nino(nino),
-            incomeToSave,
-            saveIncome
+            propertyRentalsIncome
           )
           .value
       ) shouldBe Right(Some(PeriodicSubmissionId("")))
@@ -805,10 +791,10 @@ class PropertyServiceSpec
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
+        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
           TaxYear(taxYear),
           Some(emptyPeriodicSubmission),
-          saveIncome
+          propertyRentalsIncome
         )
 
       mockCreatePeriodicSubmission(
@@ -823,8 +809,7 @@ class PropertyServiceSpec
           .saveIncome(
             ctx.toJourneyContext(JourneyName.RentalIncome),
             Nino(nino),
-            incomeToSave,
-            saveIncome
+            propertyRentalsIncome
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
@@ -1463,6 +1448,23 @@ class PropertyServiceSpec
           )
         )
       )
+
+      def createFetchedPropertyData(esbaInfoRetrieved: Option[EsbaInfo]) =
+        FetchedPropertyData(
+          None,
+          None,
+          None,
+          None,
+          Some(RentalAllowances(None, ElectricChargePointAllowance(false, None), None, None, None, None, None)),
+          esbaInfoRetrieved,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None
+        )
       forAll(scenarios) {
         (
           isJourneyPresentInDb: Boolean,
@@ -1485,7 +1487,8 @@ class PropertyServiceSpec
             List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
               .asRight[ApiError]
           )
-
+          val fetchedPropertyData = createFetchedPropertyData(esbaInfoRetrieved)
+          mockMergeServiceMergeAll(fetchedPropertyData)
           mockGetPropertyPeriodicSubmission(
             taxYear,
             nino,
@@ -1523,16 +1526,7 @@ class PropertyServiceSpec
                  )
           } yield r
           whenReady(result.value, Timeout(Span(500, Millis))) { response =>
-            response shouldBe FetchedPropertyData(
-              None,
-              None,
-              None,
-              Some(RentalAllowances(None, ElectricChargePointAllowance(false, None), None, None, None, None, None)),
-              esbaInfoRetrieved,
-              None,
-              None,
-              None
-            ).asRight[ServiceError]
+            response shouldBe fetchedPropertyData.asRight[ServiceError]
           }
       }
 

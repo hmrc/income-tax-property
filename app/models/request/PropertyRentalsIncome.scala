@@ -16,17 +16,7 @@
 
 package models.request
 
-import models.responses.UkOtherPropertyIncome
 import play.api.libs.json.{Format, Json, OFormat}
-
-final case class SaveIncome(
-  ukOtherPropertyIncome: UkOtherPropertyIncome,
-  incomeToSave: Income
-)
-
-object SaveIncome {
-  implicit val format: OFormat[SaveIncome] = Json.format[SaveIncome]
-}
 
 final case class PropertyRentalsIncome(
   isNonUKLandlord: Boolean,

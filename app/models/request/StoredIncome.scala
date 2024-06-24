@@ -18,20 +18,27 @@ package models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class Income(
+final case class StoredIncome(
   isNonUKLandlord: Boolean,
-  incomeFromPropertyRentals: BigDecimal,
-  leasePremiumPayment: Boolean,
-  reversePremiumsReceived: ReversePremiumsReceived,
-  taxDeductedYesNo: Option[DeductingTax],
+  taxDeductedYesNo: Option[Boolean],
   calculatedFigureYourself: Option[CalculatedFigureYourself],
   yearLeaseAmount: Option[BigDecimal],
-  premiumsGrantLeaseYesNo: Option[PremiumsGrantLease],
-  receivedGrantLeaseAmount: Option[BigDecimal]
+  receivedGrantLeaseAmount: Option[BigDecimal],
+  premiumsGrantLeaseYesNo: Option[Boolean]
 )
 
-object Income {
-  implicit val format: OFormat[Income] = Json.format[Income]
+object StoredIncome {
+  implicit val format: OFormat[StoredIncome] = Json.format[StoredIncome]
+
+  def fromRentalsIncome(rentalsIncome: PropertyRentalsIncome): StoredIncome =
+    StoredIncome(
+      isNonUKLandlord = rentalsIncome.isNonUKLandlord,
+      taxDeductedYesNo = rentalsIncome.deductingTax.map(_.taxDeductedYesNo),
+      calculatedFigureYourself = rentalsIncome.calculatedFigureYourself,
+      yearLeaseAmount = rentalsIncome.yearLeaseAmount,
+      receivedGrantLeaseAmount = rentalsIncome.receivedGrantLeaseAmount,
+      premiumsGrantLeaseYesNo = rentalsIncome.premiumsGrantLease.map(_.premiumsGrantLeaseYesOrNo)
+    )
 }
 
 final case class PremiumsGrantLease(premiumsGrantLeaseYesOrNo: Boolean, premiumsGrantLease: Option[BigDecimal])
@@ -45,13 +52,13 @@ object ReversePremiumsReceived {
   implicit val format: OFormat[ReversePremiumsReceived] = Json.format[ReversePremiumsReceived]
 }
 
-final case class CalculatedFigureYourself(calculatedFigureYourself: Boolean)
+final case class CalculatedFigureYourself(calculatedFigureYourself: Boolean, amount: Option[BigDecimal])
 
 object CalculatedFigureYourself {
   implicit val format: OFormat[CalculatedFigureYourself] = Json.format[CalculatedFigureYourself]
 }
 
-final case class DeductingTax(taxDeductedYesNo: Boolean)
+final case class DeductingTax(taxDeductedYesNo: Boolean, taxDeductedAmount: Option[BigDecimal])
 
 object DeductingTax {
   implicit val format: OFormat[DeductingTax] = Json.format[DeductingTax]
