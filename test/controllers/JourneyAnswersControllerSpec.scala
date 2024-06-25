@@ -126,7 +126,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
         true.asRight[ServiceError]
       )
 
@@ -147,7 +147,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
         ApiServiceError(500).asLeft[Boolean]
       )
 
