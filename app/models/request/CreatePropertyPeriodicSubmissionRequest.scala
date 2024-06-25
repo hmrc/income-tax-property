@@ -176,7 +176,8 @@ object CreatePropertyPeriodicSubmissionRequest {
               professionalFees = raRExpenses.legalManagementOtherFee,
               costOfServices = raRExpenses.costOfServicesProvided,
               residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
-              residentialFinancialCostsCarriedForward = raRExpenses.unusedResidentialPropertyFinanceCostsBroughtFwd,
+              residentialFinancialCostsCarriedForward =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))),
               other = raRExpenses.otherPropertyExpenses,
               consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
               financialCosts =
@@ -240,21 +241,17 @@ object CreatePropertyPeriodicSubmissionRequest {
     request: CreatePropertyPeriodicSubmissionRequest
   ): CreatePropertyPeriodicSubmissionRequest = {
     val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] { ppsr =>
-        ppsr match {
-          case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
-          case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
-        }
+      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
 
     val ukOtherPropertyIncomeLens: Optional[UkOtherProperty, UkOtherPropertyIncome] =
-      Optional[UkOtherProperty, UkOtherPropertyIncome] { ukop =>
-        ukop match {
-          case UkOtherProperty(None, _)  => Some(UkOtherPropertyIncome(None, None, None, None, None, None))
-          case UkOtherProperty(ukopi, _) => ukopi
-        }
+      Optional[UkOtherProperty, UkOtherPropertyIncome] {
+        case UkOtherProperty(None, _) => Some(UkOtherPropertyIncome(None, None, None, None, None, None))
+        case UkOtherProperty(ukopi, _) => ukopi
       } { ukopi => ukop =>
         ukop.copy(income = Some(ukopi))
       }
@@ -269,22 +266,18 @@ object CreatePropertyPeriodicSubmissionRequest {
     request: CreatePropertyPeriodicSubmissionRequest
   ): CreatePropertyPeriodicSubmissionRequest = {
     val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] { ppsr =>
-        ppsr match {
-          case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
-          case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
-        }
+      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
 
     val ukOtherPropertyExpensesLens: Optional[UkOtherProperty, UkOtherPropertyExpenses] =
-      Optional[UkOtherProperty, UkOtherPropertyExpenses] { ukop =>
-        ukop match {
-          case UkOtherProperty(_, None) =>
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-          case UkOtherProperty(_, ukope) => ukope
-        }
+      Optional[UkOtherProperty, UkOtherPropertyExpenses] {
+        case UkOtherProperty(_, None) =>
+          Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+        case UkOtherProperty(_, ukope) => ukope
       } { ukope => ukop =>
         ukop.copy(expenses = Some(ukope))
       }
