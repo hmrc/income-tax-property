@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package models.request.ukrentaroom
+package utils
 
-import models.request.BalancingCharge
-import play.api.libs.json.{Json, OFormat}
-
-final case class RaRAdjustments(
-  balancingCharge: Option[BalancingCharge],
-  unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal]
-)
-
-object RaRAdjustments {
-  implicit val format: OFormat[RaRAdjustments] = Json.format[RaRAdjustments]
+object CaseClassLevelDifferenceUtil {
+  def diff[P <: Product with AnyRef](left: P, right: P): List[String] =
+    if (left eq right) {
+      List.empty
+    } else {
+      left.productElementNames
+        .zip(left.productIterator.zip(right.productIterator))
+        .collect { case (field, (l, r)) if l != r => field }
+        .toList
+    }
 }

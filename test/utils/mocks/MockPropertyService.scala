@@ -147,20 +147,18 @@ trait MockPropertyService extends MockFactory {
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
     journeyContext: JourneyContext,
-    income: Income,
-    saveIncome: SaveIncome,
+    propertyRentalsIncome: PropertyRentalsIncome,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[JourneyContext, Nino, Income, SaveIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[
+  ): CallHandler4[JourneyContext, Nino, PropertyRentalsIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[
     PeriodicSubmissionId
   ]]] =
     (mockPropertyService
       .saveIncome(
         _: JourneyContext,
         _: Nino,
-        _: Income,
-        _: SaveIncome
+        _: PropertyRentalsIncome
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, income, saveIncome, *)
+      .expects(journeyContext, nino, propertyRentalsIncome, *)
       .returning(EitherT.fromEither(result))
 
   def mockUpdatePeriodicSubmissions(

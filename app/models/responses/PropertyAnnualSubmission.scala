@@ -20,6 +20,7 @@ import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
+import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -29,12 +30,17 @@ import java.time.{LocalDate, LocalDateTime}
 final case class FetchedPropertyData(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   propertyAbout: Option[PropertyAbout],
+  propertyRentalsAbout: Option[PropertyRentalsAbout],
   adjustments: Option[PropertyRentalAdjustments],
   allowances: Option[RentalAllowances],
   esbasWithSupportingQuestions: Option[EsbaInfo],
   sbasWithSupportingQuestions: Option[SbaInfo],
   propertyRentalsIncome: Option[PropertyRentalsIncome],
-  propertyRentalsExpenses: Option[PropertyRentalsExpense]
+  propertyRentalsExpenses: Option[PropertyRentalsExpense],
+  raRAbout: Option[RaRAbout],
+  rarExpenses: Option[RentARoomExpenses],
+  raRAdjustments: Option[RaRAdjustments],
+  rentARoomAllowances: Option[RentARoomAllowances]
 )
 
 object FetchedPropertyData {
@@ -219,6 +225,159 @@ object PropertyAnnualSubmission {
     )(propertyAnnualSubmission)
 
     resultWithBalancingCharge
+  }
+
+  def fromRaRAllowances(
+    propertyAnnualSubmission: PropertyAnnualSubmission,
+    rentARoomAllowances: RentARoomAllowances
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(_, None) =>
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa) => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
+
+    val annualInvestmentAllowanceLens = GenLens[UkOtherAllowances](_.annualInvestmentAllowance)
+    val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
+    val zeroEmissionCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
+    val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
+    val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
+    val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
+
+    // Focuses
+    val focusFromRequestOnToannualInvestmentAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
+    val focusFromRequestOnTozeroEmissionCarAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionCarAllowanceLens)
+    val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionGoodsVehicleAllowanceLens)
+    val focusFromRequestOnTootherCapitalAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
+    val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
+    val focusFromRequestOnToelectricChargePointAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(electricChargePointAllowanceLens)
+
+    // Results
+    val resultWithzeroEmissionCarAllowance = focusFromRequestOnTozeroEmissionCarAllowanceLens.replace(
+      rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
+    )(propertyAnnualSubmission)
+
+    val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
+      rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
+    )(resultWithzeroEmissionCarAllowance)
+
+    val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
+      rentARoomAllowances.capitalAllowancesForACar
+        .flatMap(_.capitalAllowancesForACarAmount)
+        .fold(
+          rentARoomAllowances.otherCapitalAllowance
+        )(Some(_))
+    )(resultWithzeroEmissionGoodsVehicleAllowance)
+
+    val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
+      rentARoomAllowances.replacementOfDomesticGoodsAllowance
+    )(resultWithotherCapitalAllowance)
+
+    val resultWithelectricChargePointAllowance = focusFromRequestOnToelectricChargePointAllowanceLens.replace(
+      rentARoomAllowances.electricChargePointAllowance.flatMap(_.electricChargePointAllowanceAmount)
+    )(
+      resultWithcostOfReplacingDomesticGoods
+    )
+
+    resultWithelectricChargePointAllowance
+  }
+
+  def fromRentalAllowances(
+    propertyAnnualSubmission: PropertyAnnualSubmission,
+    rentalAllowances: RentalAllowances
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(_, None) =>
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa) => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
+
+    val annualInvestmentAllowanceLens = GenLens[UkOtherAllowances](_.annualInvestmentAllowance)
+    val zeroEmissionsCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
+    val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
+    val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
+    val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
+    val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
+    val businessPremisesRenovationAllowanceLens = GenLens[UkOtherAllowances](_.businessPremisesRenovationAllowance)
+
+    // Focuses
+    val focusFromRequestOnToannualInvestmentAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
+    val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionGoodsVehicleAllowanceLens)
+
+    val focusFromRequestOnTozeroEmissionsCarAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionsCarAllowanceLens)
+
+    val focusFromRequestOnTootherCapitalAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
+    val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
+    val focusFromRequestOnToelectricChargePointAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(electricChargePointAllowanceLens)
+    val focusFromRequestOnTobusinessPremisesRenovationAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(businessPremisesRenovationAllowanceLens)
+
+    // Results
+
+    val resultWithbusinessPremisesRenovationAllowance =
+      focusFromRequestOnTobusinessPremisesRenovationAllowanceLens.replace(
+        rentalAllowances.businessPremisesRenovationAllowance
+      )(propertyAnnualSubmission)
+
+    val resultWithzeroEmissionsCarAllowance = focusFromRequestOnTozeroEmissionsCarAllowanceLens.replace(
+      rentalAllowances.zeroEmissionCarAllowance
+    )(resultWithbusinessPremisesRenovationAllowance)
+
+    val resultWithannualInvestmentAllowance = focusFromRequestOnToannualInvestmentAllowanceLens.replace(
+      rentalAllowances.annualInvestmentAllowance
+    )(resultWithzeroEmissionsCarAllowance)
+
+    val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
+      rentalAllowances.zeroEmissionGoodsVehicleAllowance
+    )(resultWithannualInvestmentAllowance)
+
+    val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
+      rentalAllowances.otherCapitalAllowance
+    )(resultWithzeroEmissionGoodsVehicleAllowance)
+
+    val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
+      rentalAllowances.replacementOfDomesticGoodsAllowance
+    )(resultWithotherCapitalAllowance)
+
+    val resultWithelectricChargePointAllowance = focusFromRequestOnToelectricChargePointAllowanceLens.replace(
+      rentalAllowances.electricChargePointAllowance.electricChargePointAllowanceAmount
+    )(
+      resultWithcostOfReplacingDomesticGoods
+    )
+
+    resultWithelectricChargePointAllowance
   }
 
 }

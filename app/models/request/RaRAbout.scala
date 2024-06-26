@@ -19,7 +19,7 @@ package models.request
 import play.api.libs.json.{Format, Json}
 
 final case class ClaimExpensesOrRRR(
-                                     claimExpensesOrRRR: Boolean,
+                                     claimRRROrExpenses: Boolean,
                                      rentARoomAmount: Option[BigDecimal]
                                    )
 

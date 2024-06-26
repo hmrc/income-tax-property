@@ -20,15 +20,17 @@ import models.request.RentARoomAllowances
 import play.api.libs.json.{Json, OFormat}
 
 case class RentARoomAllowancesStoreAnswers(
-  raRCapitalAllowancesForACarYesOrNo: Boolean,
-  raROtherCapitalAllowancesYesOrNo: Boolean
+  raRCapitalAllowancesForACarYesOrNo: Option[Boolean],
+  electricChargePointAllowanceYesOrNo: Option[Boolean]
 )
 
 object RentARoomAllowancesStoreAnswers {
   implicit val formats: OFormat[RentARoomAllowancesStoreAnswers] = Json.format[RentARoomAllowancesStoreAnswers]
 
   def fromJourneyAnswers(answers: RentARoomAllowances): RentARoomAllowancesStoreAnswers =
-    answers.capitalAllowancesForACar.fold(RentARoomAllowancesStoreAnswers(false, true))(_ =>
-      RentARoomAllowancesStoreAnswers(true, false)
+    RentARoomAllowancesStoreAnswers(
+      answers.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo),
+      answers.electricChargePointAllowance.map(_.electricChargePointAllowanceYesOrNo)
     )
+
 }

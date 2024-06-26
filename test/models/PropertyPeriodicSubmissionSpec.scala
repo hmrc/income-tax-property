@@ -21,10 +21,11 @@ import models.common.TaxYear
 import models.errors.ServiceError
 import models.request._
 import models.responses._
+import utils.CaseClassLevelDifferenceUtil.diff
 import utils.TaxYearUtils.taxYear
 import utils.UnitTest
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 class PropertyPeriodicSubmissionSpec extends UnitTest {
   val expenses: Expenses = Expenses(
@@ -38,9 +39,16 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     otherAllowablePropertyExpenses = Some(700)
   )
 
-  val saveIncome = SaveIncome(
-    UkOtherPropertyIncome(Some(405), None, None, Some(51), None, None),
-    Income(true, 55, true, ReversePremiumsReceived(false, Some(12.34)), None, None, None, None, None)
+  val propertyRentalsIncome = PropertyRentalsIncome(
+    true,
+    4321.12,
+    987.65,
+    Some(DeductingTax(true, Some(86.42))),
+    Some(CalculatedFigureYourself(true, Some(35.75))),
+    Some(123.65),
+    Some(987.46),
+    Some(PremiumsGrantLease(true, Some(98.56))),
+    Some(ReversePremiumsReceived(true, Some(28.71)))
   )
   val date = LocalDate.now()
 
@@ -115,6 +123,120 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         )
       )
     )
+  val propertyPeriodicSubmissionWithAllFieldsExisting = PropertyPeriodicSubmission(
+    submissionId = Some(PeriodicSubmissionId("periodic-submission-id")),
+    submittedOn = Some(LocalDateTime.now()),
+    fromDate = date,
+    toDate = date,
+    foreignFhlEea = Some(
+      ForeignFhlEea(
+        ForeignFhlIncome(
+          12.34
+        ),
+        ForeignFhlExpenses(
+          Some(90.12),
+          Some(34.56),
+          Some(89.12),
+          Some(13.57),
+          Some(91.35),
+          Some(79.13),
+          Some(45.79),
+          Some(10.24)
+        )
+      )
+    ),
+    foreignProperty = Some(
+      Seq(
+        ForeignProperty(
+          "UK",
+          Some(
+            ForeignPropertyIncome(
+              Some(ForeignPropertyRentIncome(14.70)),
+              Some(true),
+              Some(36.92),
+              Some(58.03),
+              Some(69.25),
+              Some(81.47)
+            )
+          ),
+          Some(
+            ForeignPropertyExpenses(
+              Some(98.76),
+              Some(54.32),
+              Some(10.98),
+              Some(76.54),
+              Some(32.10),
+              Some(97.53),
+              Some(19.75),
+              Some(31.97),
+              Some(53.19),
+              Some(75.31)
+            )
+          )
+        )
+      )
+    ),
+    ukFhlProperty = Some(
+      UkFhlProperty(
+        UkFhlIncome(
+          Some(95.17),
+          Some(39.51),
+          Some(RentARoomIncome(84.06))
+        ),
+        UkPropertyExpenses(
+          Some(94.94),
+          Some(83.83),
+          Some(72.72),
+          Some(61.61),
+          Some(50.50),
+          Some(49.49),
+          Some(38.38),
+          Some(UkRentARoomExpense(27.27))
+        )
+      )
+    ),
+    ukOtherProperty = Some(
+      UkOtherProperty(
+        Some(
+          UkOtherPropertyIncome(
+            Some(93.39),
+            Some(82.26),
+            Some(71.16),
+            Some(60.06),
+            Some(59.95),
+            Some(RentARoomIncome(48.84))
+          )
+        ),
+        Some(
+          UkOtherPropertyExpenses(
+            Some(12.21),
+            Some(23.32),
+            Some(34.43),
+            Some(45.54),
+            Some(56.65),
+            Some(67.76),
+            Some(78.87),
+            Some(89.98),
+            Some(90.09),
+            Some(
+              UkRentARoomExpense(13.31)
+            ),
+            Some(92.29)
+          )
+        )
+      )
+    )
+  )
+
+  private def generateUpdateRequestWithSameValues(
+    propertyPeriodicSubmission: PropertyPeriodicSubmission
+  ) =
+    UpdatePropertyPeriodicSubmissionRequest(
+      propertyPeriodicSubmission.foreignFhlEea,
+      propertyPeriodicSubmission.foreignProperty,
+      propertyPeriodicSubmission.ukFhlProperty,
+      propertyPeriodicSubmission.ukOtherProperty
+    )
 
   def propertyPeriodicSubmissionRequest(
     ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
@@ -143,19 +265,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       ) shouldBe createPropertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
 
-    "be generated from income" in {
-
-      CreatePropertyPeriodicSubmissionRequest.fromUkOtherPropertyIncome(
-        TaxYear(taxYear),
-        Some(propertyPeriodicSubmission),
-        saveIncome
-      ) shouldBe
-        propertyPeriodicSubmissionRequest(
-          Some(saveIncome.ukOtherPropertyIncome),
-          propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
-        ).asRight[ServiceError]
-    }
-
     "be generated from uk rent a room" in {
       val ukRaRAbout = RaRAbout(
         true,
@@ -178,5 +287,220 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         ).asRight[ServiceError]
     }
+
+    "be generated from rar about and not override existing other fields" in {
+      val updateRequestWithOriginalSubmissionValues =
+        generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
+      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdatePropertyPeriodicSubmissionRequest
+        .fromUkRaRAbout(
+          Some(propertyPeriodicSubmissionWithAllFieldsExisting),
+          RaRAbout(
+            false,
+            12.34,
+            ClaimExpensesOrRRR(true, Some(56.78))
+          )
+        )
+
+      val firstLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout,
+        updateRequestWithOriginalSubmissionValues
+      )
+
+      val secondLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty.get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty.get
+      )
+
+      val thirdLevelDiffOnIncome = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty
+          .flatMap(_.income)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.income)
+          .get
+      )
+
+      val thirdLevelDiffOnExpense = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty
+          .flatMap(_.expenses)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.expenses)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("income", "expenses")
+      thirdLevelDiffOnIncome should be(
+        List("ukOtherRentARoom")
+      )
+
+      thirdLevelDiffOnExpense should be(
+        List("ukOtherRentARoom")
+      )
+    }
+
+    "be generated from rentals expenses and not override existing other fields" in {
+      val updateRequestWithOriginalSubmissionValues =
+        generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
+      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdatePropertyPeriodicSubmissionRequest
+        .fromExpenses(
+          Some(propertyPeriodicSubmissionWithAllFieldsExisting),
+          Expenses(
+            consolidatedExpenses = Some(
+              ConsolidatedExpenses(
+                true,
+                Some(113.57)
+              )
+            ),
+            rentsRatesAndInsurance = Some(191.35),
+            repairsAndMaintenanceCosts = Some(179.13),
+            loanInterest = Some(158.14),
+            otherProfessionalFee = Some(170.36),
+            costsOfServicesProvided = Some(193.71),
+            propertyBusinessTravelCost = Some(159.37),
+            otherAllowablePropertyExpenses = Some(115.93)
+          )
+        )
+
+      val firstLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses,
+        updateRequestWithOriginalSubmissionValues
+      )
+
+      val secondLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses.ukOtherProperty.get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty.get
+      )
+
+      val thirdLevelDiffOnExpense = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses.ukOtherProperty
+          .flatMap(_.expenses)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.expenses)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("expenses")
+
+      thirdLevelDiffOnExpense should be(
+        List(
+          "premisesRunningCosts",
+          "repairsAndMaintenance",
+          "financialCosts",
+          "professionalFees",
+          "travelCosts",
+          "costOfServices",
+          "other"
+        )
+      )
+    }
+
+    "be generated from rar expenses and not override existing other fields" in {
+      val updateRequestWithOriginalSubmissionValues =
+        generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
+      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdatePropertyPeriodicSubmissionRequest
+        .fromRaRExpenses(
+          Some(propertyPeriodicSubmissionWithAllFieldsExisting),
+          RentARoomExpenses(
+            Some(
+              ConsolidatedExpenses(
+                true,
+                Some(13.57)
+              )
+            ),
+            Some(91.35),
+            Some(79.13),
+            Some(58.14),
+            Some(70.36),
+            Some(93.71),
+            Some(59.37) // ,
+//            Some(15.93)
+          )
+        )
+
+      val firstLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses,
+        updateRequestWithOriginalSubmissionValues
+      )
+
+      val secondLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses.ukOtherProperty.get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty.get
+      )
+
+      val thirdLevelDiffOnExpense = diff(
+        propertyPeriodicSubmissionWithNewRentARoomExpenses.ukOtherProperty
+          .flatMap(_.expenses)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.expenses)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("expenses")
+
+      thirdLevelDiffOnExpense should be(
+        List(
+          "premisesRunningCosts",
+          "repairsAndMaintenance",
+          "professionalFees",
+          "costOfServices",
+          "other",
+          "residentialFinancialCost",
+          "consolidatedExpense"
+        )
+      )
+    }
+
+    "be generated from rentals income and not override existing other fields" in {
+      val updateRequestWithOriginalSubmissionValues =
+        generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
+      val Right(propertyPeriodicSubmissionWithNewRentalsIncome) = UpdatePropertyPeriodicSubmissionRequest
+        .fromPropertyRentalsIncome(
+          Some(propertyPeriodicSubmissionWithAllFieldsExisting),
+          PropertyRentalsIncome(
+            true,
+            12.34,
+            56.78,
+            Some(DeductingTax(true, Some(22.44))),
+            Some(CalculatedFigureYourself(true, Some(48.28))),
+            Some(12.21),
+            Some(15.51),
+            Some(PremiumsGrantLease(true, Some(35.53))),
+            Some(ReversePremiumsReceived(true, Some(64.46)))
+          )
+        )
+
+      val firstLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentalsIncome,
+        updateRequestWithOriginalSubmissionValues
+      )
+
+      val secondLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRentalsIncome.ukOtherProperty.get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty.get
+      )
+
+      val thirdLevelDiffOnExpense = diff(
+        propertyPeriodicSubmissionWithNewRentalsIncome.ukOtherProperty
+          .flatMap(_.income)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.income)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("income")
+
+      thirdLevelDiffOnExpense should be(
+        List("premiumsOfLeaseGrant", "reversePremiums", "periodAmount", "taxDeducted", "otherIncome")
+      )
+    }
+
   }
 }

@@ -87,7 +87,7 @@ class JourneyAnswersControllerSpec
                                                  |    "ukRentARoomJointlyLet" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimExpensesOrRRR" : {
-                                                 |        "claimExpensesOrRRR" : true,
+                                                 |        "claimRRROrExpenses" : true,
                                                  |        "rentARoomAmount" : 10.22
                                                  |    }
                                                  |}""".stripMargin)
@@ -320,29 +320,25 @@ class JourneyAnswersControllerSpec
   }
 
   "create property income section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 |   "ukOtherPropertyIncome": {
-                                                 |        "premiumsOfLeaseGrant":52.64,
-                                                 |        "reversePremiums":34,
-                                                 |        "periodAmount":4,
-                                                 |        "otherIncome":76,
-                                                 |        "ukOtherRentARoom": {
-                                                 |          "rentsReceived":45
+    val validRequestBody: JsValue = Json.parse("""
+                                                 |{
+                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "isNonUKLandlord" : false,
+                                                 |            "otherIncomeFromProperty" : 25,
+                                                 |            "deductingTax" : {
+                                                 |                "taxDeductedYesNo" : true,
+                                                 |                "taxDeductedAmount" : 20
+                                                 |            },
+                                                 |            "premiumsGrantLease" : {
+                                                 |                "premiumsGrantLeaseYesOrNo" : true,
+                                                 |                "premiumsGrantLease" : 5
+                                                 |            },
+                                                 |            "reversePremiumsReceived" : {
+                                                 |                "reversePremiumsReceived" : true,
+                                                 |                "amount" : 10
+                                                 |            }
                                                  |        }
-                                                 |   },
-                                                 |   "incomeToSave": {
-                                                 |        "isNonUKLandlord" : true,
-                                                 |        "incomeFromPropertyRentals" : 45,
-                                                 |        "leasePremiumPayment" : true,
-                                                 |        "reversePremiumsReceived" : {
-                                                 |            "reversePremiumsReceived" : true
-                                                 |        },
-                                                 |        "calculatedFigureYourself" : {
-                                                 |            "calculatedFigureYourself" : false
-                                                 |        },
-                                                 |        "yearLeaseAmount" : 4
-                                                 |    }
-                                                 |}""".stripMargin)
+                                                 |""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalIncome)
@@ -350,13 +346,12 @@ class JourneyAnswersControllerSpec
     "return created for valid request body" in {
 
       mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[SaveIncome]
+      val saveIncomeRequest = validRequestBody.as[PropertyRentalsIncome]
       mockSaveIncome(
         nino,
         incomeSourceId,
         taxYear,
         ctx,
-        saveIncomeRequest.incomeToSave,
         saveIncomeRequest,
         Right(Some(PeriodicSubmissionId("submissionId")))
       )
@@ -757,6 +752,7 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
+        None,
         Some(
           EsbaInfo(
             ClaimEnhancedStructureBuildingAllowance(true),
@@ -764,6 +760,10 @@ class JourneyAnswersControllerSpec
             List()
           )
         ),
+        None,
+        None,
+        None,
+        None,
         None,
         None,
         None

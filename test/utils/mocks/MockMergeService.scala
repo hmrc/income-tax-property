@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package models.request.ukrentaroom
+package utils.mocks
 
-import models.request.BalancingCharge
-import play.api.libs.json.{Json, OFormat}
+import models.domain.JourneyAnswers
+import models.responses._
+import services.MergeService
 
-final case class RaRAdjustments(
-  balancingCharge: Option[BalancingCharge],
-  unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal]
-)
+import org.scalamock.scalatest.MockFactory
 
-object RaRAdjustments {
-  implicit val format: OFormat[RaRAdjustments] = Json.format[RaRAdjustments]
+trait MockMergeService extends MockFactory {
+  protected val mergeService = mock[MergeService]
+
+  def mockMergeServiceMergeAll(returnValue: FetchedPropertyData) =
+    (mergeService
+      .mergeAll(_: PropertyAnnualSubmission, _: Option[PropertyPeriodicSubmission], _: Map[String, JourneyAnswers]))
+      .expects(*, *, *)
+      .returning(
+        returnValue
+      )
 }
