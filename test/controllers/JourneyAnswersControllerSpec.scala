@@ -117,7 +117,8 @@ class JourneyAnswersControllerSpec
                                                  |    "balancingCharge" : {
                                                  |        "balancingChargeYesNo" : true,
                                                  |        "balancingChargeAmount" : 12.34
-                                                 |    }
+                                                 |    },
+                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12
                                                  |}""".stripMargin)
 
     "return CREATED for valid request body" in {
@@ -126,7 +127,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
         true.asRight[ServiceError]
       )
 
@@ -147,7 +148,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
         ApiServiceError(500).asLeft[Boolean]
       )
 

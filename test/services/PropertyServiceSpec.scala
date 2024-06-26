@@ -568,7 +568,7 @@ class PropertyServiceSpec
     }
   }
 
-  def createAnnualSubmission(sbasMaybe: Option[List[StructuredBuildingAllowance]], esbasMaybe: Option[List[Esba]]) =
+  def createAnnualSubmission(sbasMaybe: Option[List[StructuredBuildingAllowance]], esbasMaybe: Option[List[Esba]]): PropertyAnnualSubmission =
     PropertyAnnualSubmission(
       None,
       None,
@@ -1072,7 +1072,6 @@ class PropertyServiceSpec
         None,
         None,
         None,
-        None,
         None
       )
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
@@ -1139,7 +1138,6 @@ class PropertyServiceSpec
       val raRExpenses = RentARoomExpenses(
         None,
         Some(200),
-        None,
         None,
         None,
         None,
@@ -1273,7 +1271,6 @@ class PropertyServiceSpec
       val raRExpenses = RentARoomExpenses(
         None,
         Some(200),
-        None,
         None,
         None,
         None,
@@ -1916,7 +1913,7 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))
+      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), None
     )
 
     val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)

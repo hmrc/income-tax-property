@@ -33,9 +33,10 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
+import models._
 import monocle.macros.GenLens
 import play.api.libs.Files.logger
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{Json, OFormat, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -46,13 +47,13 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class ClaimExpensesOrRRRYesNo(claimExpensesOrRRR: Boolean)
 
 object ClaimExpensesOrRRRYesNo {
-  implicit val format = Json.format[ClaimExpensesOrRRRYesNo]
+  implicit val format: OFormat[ClaimExpensesOrRRRYesNo] = Json.format[ClaimExpensesOrRRRYesNo]
 }
 
 final case class RaRBalancingChargeYesNo(raRBalancingChargeYesNo: Boolean)
 
 object RaRBalancingChargeYesNo {
-  implicit val format = Json.format[RaRBalancingChargeYesNo]
+  implicit val format: OFormat[RaRBalancingChargeYesNo] = Json.format[RaRBalancingChargeYesNo]
 }
 
 class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)(
@@ -149,7 +150,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
         case Right(ja) =>
           val (k, v) = kv
           val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.size == 1) {
-            (ja + (k -> v(0))).asRight[ServiceError]
+            (ja + (k -> v.head)).asRight[ServiceError]
           } else {
             RepositoryError.asLeft[Map[String, JourneyAnswers]]
           }
@@ -283,7 +284,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     } yield esba.toList
 
     val esbasInRequestMaybe: Option[List[EsbaInUpstream]] = esbasMaybe.flatMap(
-      EsbaInUpstream.fromEsbasToEsbasInUpstream(_)
+      EsbaInUpstream.fromEsbasToEsbasInUpstream
     )
 
     val esbaInfoSavedInRepositoryMaybe: Option[EsbaInfoToSave] = resultFromRepository match {
@@ -336,12 +337,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
 
     for {
       annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap(e =>
-          e match {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
-        )
+        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+        }
       r <- this.createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,
@@ -370,12 +369,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
 
     for {
       annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap(e =>
-          e match {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
-        )
+        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+        }
       r <- this.createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,
@@ -400,12 +397,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
       annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap(e =>
-          e match {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
-        )
+        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+        }
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
           CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(ctx.taxYear, maybePeriodicSubmission, rarAbout)
@@ -670,12 +665,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
             contextWithNino.nino.value,
             contextWithNino.incomeSourceId.value
           )
-          .leftFlatMap(e =>
-            e match {
-              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-            }
-          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+            case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          }
       _ <- createOrUpdateAnnualSubmission(
              contextWithNino.taxYear,
              contextWithNino.incomeSourceId,
@@ -702,12 +695,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
             nino.value,
             ctx.incomeSourceId.value
           )
-          .leftFlatMap(e =>
-            e match {
-              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-            }
-          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+            case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          }
       _ <- createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,
@@ -726,7 +717,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
   }
 
   def saveRentARoomAllowances(ctx: JourneyContextWithNino, answers: RentARoomAllowances)(implicit
-                                                                                           hc: HeaderCarrier
+                                                                                         hc: HeaderCarrier
   ): EitherT[Future, ServiceError, Boolean] = {
     val storeAnswers: RentARoomAllowancesStoreAnswers = RentARoomAllowancesStoreAnswers.fromJourneyAnswers(answers)
     val submission: PropertyAnnualSubmission = getPropertySubmissionForRentARoomAllowances(answers)
@@ -766,7 +757,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
 
   private def getPropertySubmissionForRentARoomAllowances(answers: RentARoomAllowances) = {
     val allowances = UkOtherAllowances(
-      answers.annualInvestmentAllowance,
+      None,
       answers.zeroEmissionGoodsVehicleAllowance,
       answers.businessPremisesRenovationAllowance,
       answers.otherCapitalAllowance,
@@ -778,12 +769,10 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
       None
     )
 
-    val newAllowance = answers.capitalAllowancesForACar.fold{
+    val newAllowance = answers.capitalAllowancesForACar.fold {
       allowances
-    }{
-      amount => {
-       GenLens[UkOtherAllowances](_.otherCapitalAllowance).modify(_ => amount.capitalAllowancesForACarAmount)(allowances)
-      }
+    } { amount =>
+      GenLens[UkOtherAllowances](_.otherCapitalAllowance).modify(_ => amount.capitalAllowancesForACarAmount)(allowances)
     }
 
     val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(newAllowance))
