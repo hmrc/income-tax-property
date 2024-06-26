@@ -16,11 +16,11 @@
 
 package models.request.ukrentaroom
 
+import models.request.BalancingCharge
 import play.api.libs.json.{Json, OFormat}
-import RaRBalancingCharge._
 
 final case class RaRAdjustments(
-  balancingCharge: Option[RaRBalancingCharge]
+                                 balancingCharge: Option[BalancingCharge]
 )
 
 object RaRAdjustments {

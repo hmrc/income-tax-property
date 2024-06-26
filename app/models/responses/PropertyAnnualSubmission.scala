@@ -16,10 +16,10 @@
 
 package models.responses
 
+import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances, SaveIncome}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -215,7 +215,7 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
 
     val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
-      raRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount)
+      raRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount)
     )(propertyAnnualSubmission)
 
     resultWithBalancingCharge
