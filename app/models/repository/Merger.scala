@@ -20,7 +20,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, StructureBuildingFormGroup}
-import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import models.{ExpensesStoreAnswers, RentARoomAllowancesStoreAnswers, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
 import services.{ClaimExpensesOrRRRYesNo, RaRBalancingChargeYesNo}
@@ -160,7 +160,7 @@ object Merger {
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
               deductingTax = fromDownstream.taxDeducted.map(amount => DeductingTax(true, Some(amount))),
               calculatedFigureYourself = extracted.calculatedFigureYourself,
-              yearLeaseAmount = extracted.yearLeaseAmount,
+              yearLeaseAmount = extracted.receivedGrantLeaseAmount,
               receivedGrantLeaseAmount = extracted.yearLeaseAmount,
               premiumsGrantLease =
                 fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
@@ -244,7 +244,6 @@ object Merger {
                 fromDownstream.electricChargePointAllowance.map(a => ElectricChargePointAllowance(true, Some(a))),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
-              // businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
               capitalAllowancesForACar =
@@ -328,11 +327,11 @@ object Merger {
           Some(
             RaRAdjustments(
               balancingCharge = Some(
-                RaRBalancingCharge(
-                  raRbalancingChargeYesNo = extractedMaybe
+                BalancingCharge(
+                  balancingChargeYesNo = extractedMaybe
                     .map(_.raRBalancingChargeYesNo)
                     .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
-                  raRbalancingChargeAmount = fromDownstreamAdjustment.balancingCharge
+                  balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
               )
             )

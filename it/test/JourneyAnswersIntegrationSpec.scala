@@ -15,14 +15,17 @@
  */
 
 import connectors.ConnectorIntegrationTest
-import models.request.CreatePropertyPeriodicSubmissionRequest
-import models.responses.{AnnualUkOtherProperty, Esba, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission, RentARoomIncome, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkOtherAdjustments, UkOtherAllowances, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome, UkRentARoom, UkRentARoomExpense}
+import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
+import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInUpstream, EsbaInfo}
+import models.request.ukrentaroom.RaRAdjustments
+import models.request.{BalancingCharge, CapitalAllowancesForACar, ClaimExpensesOrRRR, ConsolidatedExpenses, CreatePropertyPeriodicSubmissionRequest, DeductingTax, ElectricChargePointAllowance, PremiumsGrantLease, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RenovationAllowanceBalancingCharge, RentARoomAllowances, RentARoomExpenses, RentalAllowances, ReversePremiumsReceived}
+import models.responses.{AnnualUkOtherProperty, Esba, FetchedPropertyData, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission, RentARoomIncome, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkOtherAdjustments, UkOtherAllowances, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome, UkRentARoom, UkRentARoomExpense}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status.OK
+import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
@@ -107,8 +110,7 @@ class JourneyAnswersIntegrationSpec
   )
 
   val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
-  val httpResponsePeriod = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
-
+  val httpResponseOk = HttpResponse(NO_CONTENT, "")
   val taxYear = 2021
   private val wiremockPort = 11111
 
@@ -151,8 +153,9 @@ class JourneyAnswersIntegrationSpec
       |""".stripMargin
 
   "Income Tax Property" should {
-    "get error when downstream returns error" in {
+    "get success when downstream returns success" in {
       userLoggedInITPUser(NinoUser)
+      // Annual
       stubGetHttpClientCall(
         s"/income-tax/business/property/annual\\?" +
           s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
@@ -233,7 +236,206 @@ class JourneyAnswersIntegrationSpec
           .get()
           .futureValue
 
+      val fetchedPropertyData = response.json.as[FetchedPropertyData]
       response.status shouldBe 200
+      fetchedPropertyData shouldBe FetchedPropertyData(
+        capitalAllowancesForACar = None,
+        propertyAbout = None,
+        propertyRentalsAbout = None,
+        adjustments = Some(
+          PropertyRentalAdjustments(
+            23,
+            BalancingCharge(true, Some(32)),
+            0,
+            RenovationAllowanceBalancingCharge(true, Some(14)),
+            21,
+            22
+          )
+        ),
+        allowances = Some(
+          RentalAllowances(
+            Some(1),
+            ElectricChargePointAllowance(true, Some(6)),
+            Some(7),
+            Some(2),
+            Some(3),
+            Some(5),
+            Some(4)
+          )
+        ),
+        esbasWithSupportingQuestions = Some(
+          EsbaInfo(
+            ClaimEnhancedStructureBuildingAllowance(true),
+            EsbaClaims(false),
+            List(
+              EsbaInUpstream(
+                LocalDate.parse("2024-01-01"),
+                35,
+                25,
+                Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+              )
+            )
+          )
+        ),
+        sbasWithSupportingQuestions = None,
+        propertyRentalsIncome = Some(
+          PropertyRentalsIncome(
+            false,
+            3,
+            12,
+            Some(DeductingTax(true, Some(11))),
+            None,
+            None,
+            None,
+            Some(PremiumsGrantLease(true, Some(1))),
+            Some(ReversePremiumsReceived(true, Some(2)))
+          )
+        ),
+        propertyRentalsExpenses = Some(
+          PropertyRentalsExpense(
+            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(1),
+            Some(2),
+            Some(3),
+            Some(11),
+            Some(13),
+            Some(12),
+            Some(14)
+          )
+        ),
+        raRAbout = Some(RaRAbout(true, 7, ClaimExpensesOrRRR(true, Some(44)))),
+        rarExpenses = Some(
+          RentARoomExpenses(
+            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(1),
+            Some(2),
+            Some(11),
+            Some(13),
+            Some(21),
+            Some(22),
+            Some(14)
+          )
+        ),
+        raRAdjustments = Some(RaRAdjustments(Some(BalancingCharge(true, Some(32))))),
+        rentARoomAllowances = Some(
+          RentARoomAllowances(
+            Some(CapitalAllowancesForACar(true, Some(4))),
+            Some(1),
+            Some(ElectricChargePointAllowance(true, Some(6))),
+            Some(7),
+            Some(2),
+            Some(5),
+            Some(4)
+          )
+        )
+      )
+    }
+    "the downstream receives the expected payload when upload happens" in {
+
+      val rentARoomAdjustments = RaRAdjustments(
+        Some(
+          BalancingCharge(
+            true,
+            Some(12.34)
+          )
+        )
+      )
+
+      userLoggedInITPUser(NinoUser)
+      // Annual
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/annual\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
+        httpResponse
+      )
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
+        Json
+          .toJson(PropertyAnnualSubmission.fromRaRAdjustments(aPropertyAnnualSubmission, rentARoomAdjustments))
+          .toString(),
+        httpResponseOk
+      )
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-01-01"), LocalDate.parse("2021-11-11")),
+        PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-02-02"), LocalDate.parse("2022-12-12"))
+      )
+
+      val httpResponsePeriodicSubmissionIdModel = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
+
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/$taxableEntityId/$incomeSourceId/period\\?taxYear=2020-21",
+        httpResponsePeriodicSubmissionIdModel
+      )
+      val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
+        None,
+        submittedOn = Some(LocalDateTime.now),
+        fromDate = LocalDate.now.minusDays(1),
+        toDate = LocalDate.now,
+        None,
+        None,
+        None,
+        Some(
+          UkOtherProperty(
+            Some(
+              UkOtherPropertyIncome(
+                Some(1),
+                Some(2),
+                Some(3),
+                Some(11),
+                Some(12),
+                Some(
+                  RentARoomIncome(
+                    7
+                  )
+                )
+              )
+            ),
+            Some(
+              UkOtherPropertyExpenses(
+                Some(1),
+                Some(2),
+                Some(3),
+                Some(11),
+                Some(12),
+                Some(13),
+                Some(14),
+                Some(21),
+                Some(22),
+                Some(
+                  UkRentARoomExpense(
+                    44
+                  )
+                ),
+                Some(25)
+              )
+            )
+          )
+        )
+      )
+      val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
+
+      stubGetHttpClientCall(
+        s"/income-tax/business/property/periodic\\?" +
+          s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId1",
+        httpResponsePeriodicSubmission
+      )
+      val wsClient = app.injector.instanceOf[WSClient]
+      val requestHeaders =
+        Map("Content-Type" -> "application/json", "Authorization" -> "Bearer 123", "mtditid" -> "1234567890")
+      val baseUrl =
+        s"http://localhost:$port/income-tax-property/property/2021/$incomeSourceId/rent-a-room-adjustments/$taxableEntityId/answers"
+
+      val response =
+        wsClient
+          .url(s"$baseUrl")
+          .addHttpHeaders(requestHeaders.toSeq: _*)
+          .post(Json.toJson(rentARoomAdjustments))
+          .futureValue
+
+      response.status shouldBe 201
+
     }
   }
 }

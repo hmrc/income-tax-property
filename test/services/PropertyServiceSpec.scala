@@ -553,12 +553,25 @@ class PropertyServiceSpec
       Some(11),
       Some(11)
     )
+    val annualSubmission = createAnnualSubmission(None, None)
     "return no content for valid request" in {
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
       mockCreateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
       mockCreateAnnualSubmission(
         TaxYear(taxYear),
         IncomeSourceId(incomeSourceId),

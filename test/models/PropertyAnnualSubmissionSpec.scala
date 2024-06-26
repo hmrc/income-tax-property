@@ -16,9 +16,9 @@
 
 package models
 
-import models.request.{BalancingCharge, ClaimExpensesOrRRR, PropertyRentalAdjustments, RaRAbout, RenovationAllowanceBalancingCharge}
+import models.request.{BalancingCharge, CapitalAllowancesForACar, ClaimExpensesOrRRR, ElectricChargePointAllowance, PropertyRentalAdjustments, RaRAbout, RenovationAllowanceBalancingCharge, RentARoomAllowances, RentalAllowances}
 import models.request.common.Postcode
-import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses.{AnnualForeignFhlEea, AnnualForeignProperty, AnnualUkFhlProperty, AnnualUkOtherProperty, Esba, ForeignFhlAdjustments, ForeignFhlAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances, PropertyAnnualSubmission, StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkFhlAdjustments, UkFhlAllowances, UkOtherAdjustments, UkOtherAllowances, UkRentARoom}
 import utils.CaseClassLevelDifferenceUtil.diff
 import utils.UnitTest
@@ -319,7 +319,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     }
     "be generated from rar adjustments and not override existing other fields" in {
       val raRAdjustments = RaRAdjustments(
-        Option(RaRBalancingCharge(true, Some(80.24)))
+        Option(BalancingCharge(true, Some(80.24)))
       )
 
       val firstLevelDiff = diff(
@@ -360,6 +360,147 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
       thirdLevelDiff should be(
         List("balancingCharge")
+      )
+    }
+    "be generated from rental allowances and not override existing other fields" in {
+      val rentalAllowances = RentalAllowances(
+        annualInvestmentAllowance = Some(11.22),
+        electricChargePointAllowance = ElectricChargePointAllowance(true, Some(22.33)),
+        zeroEmissionCarAllowance = Some(33.44),
+        zeroEmissionGoodsVehicleAllowance = Some(44.55),
+        replacementOfDomesticGoodsAllowance = Some(55.66),
+        otherCapitalAllowance = Some(66.77),
+        businessPremisesRenovationAllowance = Some(77.88)
+      )
+
+      val pas = PropertyAnnualSubmission
+        .fromRentalAllowances(
+          annualSubmissionWithAllFieldsFilled,
+          rentalAllowances
+        )
+      val firstLevelDiff = diff(
+        pas,
+        annualSubmissionWithAllFieldsFilled
+      )
+
+      val secondLevelDiff = diff(
+        pas.ukOtherProperty.get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty.get
+      )
+
+      val thirdLevelDiff = diff(
+        pas.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      thirdLevelDiff should be(
+        List(
+          "annualInvestmentAllowance",
+          "zeroEmissionGoodsVehicleAllowance",
+          "businessPremisesRenovationAllowance",
+          "otherCapitalAllowance",
+          "costOfReplacingDomesticGoods",
+          "electricChargePointAllowance",
+          "zeroEmissionsCarAllowance"
+        )
+      )
+    }
+    "be generated from rar allowances and not override existing other fields" in {
+      val raRAllowances = RentARoomAllowances(
+        capitalAllowancesForACar = None,
+        annualInvestmentAllowance = Some(11.22),
+        electricChargePointAllowance = Some(ElectricChargePointAllowance(true, Some(22.33))),
+        zeroEmissionCarAllowance = Some(33.44),
+        zeroEmissionGoodsVehicleAllowance = Some(44.55),
+        replacementOfDomesticGoodsAllowance = Some(55.66),
+        otherCapitalAllowance = Some(66.77)
+      )
+      val raRAllowancesCapitalAllowancesForACar =
+        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None, None)
+
+      val pas = PropertyAnnualSubmission
+        .fromRaRAllowances(
+          annualSubmissionWithAllFieldsFilled,
+          raRAllowances
+        )
+      val firstLevelDiff = diff(
+        pas,
+        annualSubmissionWithAllFieldsFilled
+      )
+
+      val secondLevelDiff = diff(
+        pas.ukOtherProperty.get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty.get
+      )
+
+      val thirdLevelDiff = diff(
+        pas.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      thirdLevelDiff should be(
+        List(
+          "annualInvestmentAllowance",
+          "zeroEmissionGoodsVehicleAllowance",
+          "otherCapitalAllowance",
+          "costOfReplacingDomesticGoods",
+          "electricChargePointAllowance",
+          "zeroEmissionsCarAllowance"
+        )
+      )
+    }
+    "be generated from rar allowances(with CapitalAllowancesForACar) and not override existing other fields" in {
+
+      val raRAllowancesCapitalAllowancesForACar =
+        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None, None)
+
+      val pas = PropertyAnnualSubmission
+        .fromRaRAllowances(
+          annualSubmissionWithAllFieldsFilled,
+          raRAllowancesCapitalAllowancesForACar
+        )
+      val firstLevelDiff = diff(
+        pas,
+        annualSubmissionWithAllFieldsFilled
+      )
+
+      val secondLevelDiff = diff(
+        pas.ukOtherProperty.get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty.get
+      )
+
+      val thirdLevelDiff = diff(
+        pas.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAllowances)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      thirdLevelDiff should be(
+        List(
+          "annualInvestmentAllowance",
+          "zeroEmissionGoodsVehicleAllowance",
+          "otherCapitalAllowance",
+          "costOfReplacingDomesticGoods",
+          "electricChargePointAllowance",
+          "zeroEmissionsCarAllowance"
+        )
       )
     }
     "be generated from rental sbas and not override existing other fields" in {
