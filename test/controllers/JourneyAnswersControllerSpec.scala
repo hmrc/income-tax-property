@@ -117,7 +117,8 @@ class JourneyAnswersControllerSpec
                                                  |    "balancingCharge" : {
                                                  |        "balancingChargeYesNo" : true,
                                                  |        "balancingChargeAmount" : 12.34
-                                                 |    }
+                                                 |    },
+                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12
                                                  |}""".stripMargin)
 
     "return CREATED for valid request body" in {
