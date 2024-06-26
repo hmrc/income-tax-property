@@ -21,10 +21,9 @@ import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
-import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo}
 import models.request.sba._
-import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
@@ -35,7 +34,6 @@ import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
-import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyAnswersControllerSpec
@@ -117,8 +115,8 @@ class JourneyAnswersControllerSpec
 
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "balancingCharge" : {
-                                                 |        "raRbalancingChargeYesNo" : true,
-                                                 |        "raRbalancingChargeAmount" : 12.34
+                                                 |        "balancingChargeYesNo" : true,
+                                                 |        "balancingChargeAmount" : 12.34
                                                  |    }
                                                  |}""".stripMargin)
 
@@ -128,7 +126,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(RaRBalancingCharge(true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
         true.asRight[ServiceError]
       )
 
@@ -149,7 +147,7 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(RaRBalancingCharge(true, Some(12.34)))),
+        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))),
         ApiServiceError(500).asLeft[Boolean]
       )
 
@@ -172,7 +170,7 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockPersistAnswers(ctx, PropertyRentalsAbout(true, true))
+      mockPersistAnswers(ctx, PropertyRentalsAbout(toexpensesLessThan1000 = true, claimPropertyIncomeAllowance = true))
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
@@ -619,8 +617,6 @@ class JourneyAnswersControllerSpec
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalESBA)
-
-    import esba.EsbaInfoExtensions._
     "return no_content for valid request body" in {
       val esbaInfo = validRequestBody.as[EsbaInfo]
       mockAuthorisation()
@@ -708,8 +704,6 @@ class JourneyAnswersControllerSpec
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalSBA)
-
-    import sba.SbaInfoExtensions._
     "return no_content for valid request body" in {
       val sbaInfo = validRequestBody.as[SbaInfo]
 

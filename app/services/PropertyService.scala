@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
+import models._
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
@@ -30,14 +31,11 @@ import models.request.esba.EsbaInfoExtensions._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{SbaInfo, SbaInfoToSave}
-import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
-import models.RentARoomAllowancesStoreAnswers
-import models.{ExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalAllowancesStoreAnswers}
 import monocle.macros.GenLens
 import play.api.libs.Files.logger
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -719,7 +717,7 @@ class PropertyService @Inject() (connector: IntegrationFrameworkConnector, repos
            )
       res <- {
         raRAdjustments.balancingCharge match {
-          case Some(RaRBalancingCharge(raRbalancingChargeYesNo, _)) =>
+          case Some(BalancingCharge(raRbalancingChargeYesNo, _)) =>
             persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
           case _ => ITPEnvelope.liftPure(true)
         }

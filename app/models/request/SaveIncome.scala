@@ -57,5 +57,5 @@ final case class PropertyRentalsExpense(
 )
 
 object PropertyRentalsExpense {
-  implicit val format = Json.format[PropertyRentalsExpense]
+  implicit val format: OFormat[PropertyRentalsExpense] = Json.format[PropertyRentalsExpense]
 }

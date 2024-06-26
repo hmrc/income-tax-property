@@ -20,16 +20,16 @@ import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
-import models.common.{TaxYear, _}
+import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
-import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
-import models.request.ukrentaroom.{RaRAdjustments, RaRBalancingCharge}
+import models.request.ukrentaroom.RaRAdjustments
+import models.request._
 import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -1916,7 +1916,7 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(RaRBalancingCharge(true, Some(12.34)))
+      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34)))
     )
 
     val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
@@ -1942,7 +1942,7 @@ class PropertyServiceSpec
                 Some(
                   UkOtherAdjustments(
                     None,
-                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    ukRaRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount),
                     None,
                     None,
                     None,
@@ -1986,7 +1986,7 @@ class PropertyServiceSpec
                 Some(
                   UkOtherAdjustments(
                     None,
-                    ukRaRAdjustments.balancingCharge.flatMap(_.raRbalancingChargeAmount),
+                    ukRaRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount),
                     None,
                     None,
                     None,
