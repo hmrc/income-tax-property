@@ -319,7 +319,8 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     }
     "be generated from rar adjustments and not override existing other fields" in {
       val raRAdjustments = RaRAdjustments(
-        Option(BalancingCharge(true, Some(80.24)))
+        Option(BalancingCharge(true, Some(80.24))),
+        Some(12.65)
       )
 
       val firstLevelDiff = diff(
@@ -414,7 +415,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar allowances and not override existing other fields" in {
       val raRAllowances = RentARoomAllowances(
         capitalAllowancesForACar = None,
-        annualInvestmentAllowance = Some(11.22),
         electricChargePointAllowance = Some(ElectricChargePointAllowance(true, Some(22.33))),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
@@ -422,7 +422,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
         otherCapitalAllowance = Some(66.77)
       )
       val raRAllowancesCapitalAllowancesForACar =
-        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None, None)
+        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None)
 
       val pas = PropertyAnnualSubmission
         .fromRaRAllowances(
@@ -452,7 +452,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
         List(
-          "annualInvestmentAllowance",
           "zeroEmissionGoodsVehicleAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
@@ -464,7 +463,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar allowances(with CapitalAllowancesForACar) and not override existing other fields" in {
 
       val raRAllowancesCapitalAllowancesForACar =
-        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None, None)
+        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None)
 
       val pas = PropertyAnnualSubmission
         .fromRaRAllowances(
@@ -494,7 +493,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
         List(
-          "annualInvestmentAllowance",
           "zeroEmissionGoodsVehicleAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",

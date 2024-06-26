@@ -245,10 +245,13 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
     resultFromRepository: Option[JourneyAnswers]
   ): Option[RaRAdjustments] = {
 
-    val raRAdjustments = for {
-      uopAnnual <- resultFromDownstream.ukOtherProperty
-      uopaa     <- uopAnnual.ukOtherPropertyAnnualAdjustments
-    } yield uopaa
+    val raRAdjustments: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)] = for {
+      uopAnnual                    <- resultFromDownstream.ukOtherProperty
+      uopaa                        <- uopAnnual.ukOtherPropertyAnnualAdjustments
+      resultFromPeriodicDownstream <- resultFromPeriodicDownstreamMaybe
+      ukOtherProperty              <- resultFromPeriodicDownstream.ukOtherProperty
+      ukOtherPropertyExpenses      <- ukOtherProperty.expenses
+    } yield (uopaa, ukOtherPropertyExpenses)
 
     val raRAdjustmentStoreAnswers: Option[RaRBalancingChargeYesNo] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[RaRBalancingChargeYesNo])

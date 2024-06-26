@@ -638,46 +638,4 @@ class PropertyService @Inject() (
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
     } yield res
   }
-
-  private def getPropertySubmissionForRentalAllowances(answers: RentalAllowances) = {
-    val allowances = UkOtherAllowances(
-      answers.annualInvestmentAllowance,
-      answers.zeroEmissionGoodsVehicleAllowance,
-      answers.businessPremisesRenovationAllowance,
-      answers.otherCapitalAllowance,
-      answers.replacementOfDomesticGoodsAllowance,
-      answers.electricChargePointAllowance.electricChargePointAllowanceAmount,
-      None,
-      None,
-      answers.zeroEmissionCarAllowance,
-      None
-    )
-    val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(allowances))
-    PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
-  }
-
-  private def getPropertySubmissionForRentARoomAllowances(answers: RentARoomAllowances) = {
-    val allowances = UkOtherAllowances(
-      None,
-      answers.zeroEmissionGoodsVehicleAllowance,
-      None, // ToDo: Change here IN NEXT TICKET!
-      answers.otherCapitalAllowance,
-      answers.replacementOfDomesticGoodsAllowance,
-      answers.electricChargePointAllowance.flatMap(_.electricChargePointAllowanceAmount),
-      None,
-      None,
-      answers.zeroEmissionCarAllowance,
-      None
-    )
-
-    val newAllowance = answers.capitalAllowancesForACar.fold {
-      allowances
-    } { amount =>
-      GenLens[UkOtherAllowances](_.otherCapitalAllowance).modify(_ => amount.capitalAllowancesForACarAmount)(allowances)
-    }
-
-    val annualUkOtherProperty = AnnualUkOtherProperty(None, Some(newAllowance))
-    PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
-  }
-
 }

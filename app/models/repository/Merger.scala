@@ -122,7 +122,6 @@ object Merger {
               legalManagementOtherFee = fromDownstream.professionalFees,
               costOfServicesProvided = fromDownstream.costOfServices,
               residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
-              unusedResidentialPropertyFinanceCostsBroughtFwd = fromDownstream.residentialFinancialCostsCarriedForward,
               otherPropertyExpenses = fromDownstream.other
             )
           )
@@ -137,7 +136,6 @@ object Merger {
               legalManagementOtherFee = fromDownstream.professionalFees,
               costOfServicesProvided = fromDownstream.costOfServices,
               residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
-              unusedResidentialPropertyFinanceCostsBroughtFwd = fromDownstream.residentialFinancialCostsCarriedForward,
               otherPropertyExpenses = fromDownstream.other
             )
           )
@@ -239,7 +237,6 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             RentARoomAllowances(
-              annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
               electricChargePointAllowance =
                 fromDownstream.electricChargePointAllowance.map(a => ElectricChargePointAllowance(true, Some(a))),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
@@ -313,16 +310,34 @@ object Merger {
 
   implicit object RaRAdjustmentsMerger
       extends Merger[Option[RaRAdjustments], Option[RaRBalancingChargeYesNo], Option[
-        UkOtherAdjustments
+        (UkOtherAdjustments, UkOtherPropertyExpenses)
       ]] {
     override def merge(
       extractedMaybe: Option[RaRBalancingChargeYesNo],
-      fromDownstreamMaybe: Option[UkOtherAdjustments]
+      fromDownstreamMaybe: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)]
     ): Option[RaRAdjustments] =
       (extractedMaybe, fromDownstreamMaybe) match {
+
         case (
               _,
-              Some(fromDownstreamAdjustment)
+              Some(
+                (
+                  fromDownstreamAdjustment,
+                  UkOtherPropertyExpenses(
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    residentialFinanceCostCarriedForward,
+                    _,
+                    _
+                  )
+                )
+              )
             ) =>
           Some(
             RaRAdjustments(
@@ -333,7 +348,8 @@ object Merger {
                     .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
-              )
+              ),
+              unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward
             )
           )
         case _ => None

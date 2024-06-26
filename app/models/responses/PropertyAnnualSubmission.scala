@@ -273,13 +273,9 @@ object PropertyAnnualSubmission {
       rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
     )(propertyAnnualSubmission)
 
-    val resultWithannualInvestmentAllowance = focusFromRequestOnToannualInvestmentAllowanceLens.replace(
-      rentARoomAllowances.annualInvestmentAllowance
-    )(resultWithzeroEmissionCarAllowance)
-
     val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
       rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
-    )(resultWithannualInvestmentAllowance)
+    )(resultWithzeroEmissionCarAllowance)
 
     val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
       rentARoomAllowances.capitalAllowancesForACar

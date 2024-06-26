@@ -206,7 +206,7 @@ class JourneyAnswersIntegrationSpec
                 Some(13),
                 Some(14),
                 Some(21),
-                Some(22),
+                Some(34.56),
                 Some(
                   UkRentARoomExpense(
                     44
@@ -249,7 +249,7 @@ class JourneyAnswersIntegrationSpec
             0,
             RenovationAllowanceBalancingCharge(true, Some(14)),
             21,
-            22
+            34.56
           )
         ),
         allowances = Some(
@@ -312,15 +312,13 @@ class JourneyAnswersIntegrationSpec
             Some(11),
             Some(13),
             Some(21),
-            Some(22),
             Some(14)
           )
         ),
-        raRAdjustments = Some(RaRAdjustments(Some(BalancingCharge(true, Some(32))))),
+        raRAdjustments = Some(RaRAdjustments(Some(BalancingCharge(true, Some(32))), Some(34.56))),
         rentARoomAllowances = Some(
           RentARoomAllowances(
             Some(CapitalAllowancesForACar(true, Some(4))),
-            Some(1),
             Some(ElectricChargePointAllowance(true, Some(6))),
             Some(7),
             Some(2),
@@ -338,7 +336,8 @@ class JourneyAnswersIntegrationSpec
             true,
             Some(12.34)
           )
-        )
+        ),
+        Some(34.56)
       )
 
       userLoggedInITPUser(NinoUser)
@@ -402,7 +401,7 @@ class JourneyAnswersIntegrationSpec
                 Some(13),
                 Some(14),
                 Some(21),
-                Some(22),
+                Some(34.56),
                 Some(
                   UkRentARoomExpense(
                     44

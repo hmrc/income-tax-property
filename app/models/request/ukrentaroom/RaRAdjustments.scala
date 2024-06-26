@@ -20,8 +20,8 @@ import models.request.BalancingCharge
 import play.api.libs.json.{Json, OFormat}
 
 final case class RaRAdjustments(
-                                 balancingCharge: Option[BalancingCharge],
-                                 unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal]
+  balancingCharge: Option[BalancingCharge],
+  unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal]
 )
 
 object RaRAdjustments {
