@@ -43,9 +43,7 @@ POST          /property/:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answ
 
 POST          /property/:taxYear/:incomeSourceId/rent-a-room-adjustments/:nino/answers                                                controllers.JourneyAnswersController.savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST          /property/:taxYear/:incomeSourceId/allowances/:nino/esba/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-PUT           /property/:taxYear/:nino/:incomeSourceId/esba/answers                                                                controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/esba/:nino/answers                                                     controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 GET           /property/:taxYear/income/:nino/:incomeSourceId                                                                      controllers.JourneyAnswersController.fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
 
