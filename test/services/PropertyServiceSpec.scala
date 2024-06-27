@@ -487,6 +487,46 @@ class PropertyServiceSpec
       val annualUkOtherProperty =
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None)), None)
 
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(
+          PeriodicSubmissionIdModel(
+            "",
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+            LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
+          )
+        )
+          .asRight[ApiError]
+      )
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          None,
+          None,
+          None,
+          None
+        )
+
+      val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
+        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+          TaxYear(taxYear),
+          Some(emptyPeriodicSubmission),
+          propertyRentalAdjustments
+        )
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("")).asRight[ApiError]
+      )
+
       val annualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
       val updatedAnnualSubmission = PropertyAnnualSubmission(
         None,
@@ -525,6 +565,47 @@ class PropertyServiceSpec
           AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None)), None)
         )
       )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(
+          PeriodicSubmissionIdModel(
+            "",
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+            LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
+          )
+        )
+          .asRight[ApiError]
+      )
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          None,
+          None,
+          None,
+          None
+        )
+
+      val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
+        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+          TaxYear(taxYear),
+          Some(emptyPeriodicSubmission),
+          propertyRentalAdjustments
+        )
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("")).asRight[ApiError]
+      )
+
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
       mockCreateAnnualSubmission(
         TaxYear(taxYear),
@@ -582,7 +663,10 @@ class PropertyServiceSpec
     }
   }
 
-  def createAnnualSubmission(sbasMaybe: Option[List[StructuredBuildingAllowance]], esbasMaybe: Option[List[Esba]]): PropertyAnnualSubmission =
+  def createAnnualSubmission(
+    sbasMaybe: Option[List[StructuredBuildingAllowance]],
+    esbasMaybe: Option[List[Esba]]
+  ): PropertyAnnualSubmission =
     PropertyAnnualSubmission(
       None,
       None,
@@ -738,6 +822,7 @@ class PropertyServiceSpec
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
+
       mockGetAllPeriodicSubmission(
         taxYear,
         nino,
@@ -1920,7 +2005,8 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), None
+      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+      None
     )
 
     val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)

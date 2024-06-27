@@ -192,7 +192,7 @@ class PropertyService @Inject() (
       annualSubmission <-
         getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
           case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
         }
       r <- this.createOrUpdateAnnualSubmission(
              ctx.taxYear,
@@ -224,7 +224,7 @@ class PropertyService @Inject() (
       annualSubmission <-
         getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
           case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
         }
       r <- this.createOrUpdateAnnualSubmission(
              ctx.taxYear,
@@ -252,7 +252,7 @@ class PropertyService @Inject() (
       annualSubmission <-
         getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
           case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
         }
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
@@ -511,6 +511,42 @@ class PropertyService @Inject() (
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
 
     for {
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(
+                                   contextWithNino.taxYear.endYear,
+                                   contextWithNino.nino.value,
+                                   contextWithNino.incomeSourceId.value
+                                 )
+      updatePeriodicSubmissionRequest <-
+        ITPEnvelope.liftPure(
+          UpdatePropertyPeriodicSubmissionRequest
+            .fromPropertyRentalAdjustments(maybePeriodicSubmission, propertyRentalAdjustment)
+        )
+      createPeriodicSubmissionRequest <-
+        ITPEnvelope.liftPure(
+          CreatePropertyPeriodicSubmissionRequest
+            .fromPropertyRentalAdjustments(contextWithNino.taxYear, maybePeriodicSubmission, propertyRentalAdjustment)
+        )
+      submissionResponse <- maybePeriodicSubmission match {
+                              case None =>
+                                createPeriodicSubmission(
+                                  contextWithNino.nino.value,
+                                  contextWithNino.incomeSourceId.value,
+                                  contextWithNino.taxYear.endYear,
+                                  createPeriodicSubmissionRequest
+                                )
+                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) =>
+                                updatePeriodicSubmission(
+                                  contextWithNino.nino.value,
+                                  contextWithNino.incomeSourceId.value,
+                                  contextWithNino.taxYear.endYear,
+                                  submissionId.submissionId,
+                                  updatePeriodicSubmissionRequest
+                                ).map(_ => Some(submissionId))
+                              case _ =>
+                                ITPEnvelope.liftEither(
+                                  InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
+                                )
+                            }
       propertyAnnualSubmissionFromDownstream <-
         this
           .getPropertyAnnualSubmission(
@@ -520,7 +556,7 @@ class PropertyService @Inject() (
           )
           .leftFlatMap {
             case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
           }
       _ <- createOrUpdateAnnualSubmission(
              contextWithNino.taxYear,
@@ -550,7 +586,7 @@ class PropertyService @Inject() (
           )
           .leftFlatMap {
             case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case e => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
           }
       _ <- createOrUpdateAnnualSubmission(
              ctx.taxYear,

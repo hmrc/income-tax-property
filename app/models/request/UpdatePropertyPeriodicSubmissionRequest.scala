@@ -31,8 +31,51 @@ final case class UpdatePropertyPeriodicSubmissionRequest(
 )
 
 object UpdatePropertyPeriodicSubmissionRequest {
+
+//propertyIncomeAllowance: BigDecimal, // ToDo: Where is this used?
+//  renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge, //
+//  residentialFinanceCost: BigDecimal,
+//  unusedResidentialFinanceCost: BigDecimal
   implicit val format: OFormat[UpdatePropertyPeriodicSubmissionRequest] =
     Json.format[UpdatePropertyPeriodicSubmissionRequest]
+
+  private def fromPropertyPeriodicSubmission(
+    maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]
+  ): UpdatePropertyPeriodicSubmissionRequest = maybePropertyPeriodicSubmission match {
+    case Some(propertyPeriodicSubmission) =>
+      UpdatePropertyPeriodicSubmissionRequest(
+        propertyPeriodicSubmission.foreignFhlEea,
+        propertyPeriodicSubmission.foreignProperty,
+        propertyPeriodicSubmission.ukFhlProperty,
+        propertyPeriodicSubmission.ukOtherProperty
+      )
+    case None =>
+      UpdatePropertyPeriodicSubmissionRequest(
+        None,
+        None,
+        None,
+        None
+      )
+  }
+
+  def fromPropertyRentalAdjustments(
+    maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
+    propertyRentalAdjustments: PropertyRentalAdjustments
+  ): UpdatePropertyPeriodicSubmissionRequest = {
+
+    val propertyPeriodicSubmission = fromPropertyPeriodicSubmission(maybePeriodicSubmission)
+    val expensesMaybe: Option[UkOtherPropertyExpenses] = propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
+    val ukOtherExpenses = expensesMaybe.fold(
+      UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+    )(expenses => expenses)
+
+    val expenses = ukOtherExpenses.copy(
+      residentialFinancialCost = Some(propertyRentalAdjustments.residentialFinanceCost),
+      residentialFinancialCostsCarriedForward = Some(propertyRentalAdjustments.unusedResidentialFinanceCost)
+    )
+
+    updateUkOtherPropertiesExpenses(expenses, propertyPeriodicSubmission)
+  }
 
   def fromUkRaRAbout(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
@@ -161,8 +204,9 @@ object UpdatePropertyPeriodicSubmissionRequest {
               professionalFees = raRExpenses.legalManagementOtherFee,
               costOfServices = raRExpenses.costOfServicesProvided,
               residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
-              residentialFinancialCostsCarriedForward =
-                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))),
+              residentialFinancialCostsCarriedForward = periodicSubmission.flatMap(
+                _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))
+              ),
               other = raRExpenses.otherPropertyExpenses,
               consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
               financialCosts =
@@ -232,7 +276,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
     val ukOtherPropertyIncomeLens: Optional[UkOtherProperty, UkOtherPropertyIncome] =
       Optional[UkOtherProperty, UkOtherPropertyIncome] {
-        case UkOtherProperty(None, _) => Some(UkOtherPropertyIncome(None, None, None, None, None, None))
+        case UkOtherProperty(None, _)  => Some(UkOtherPropertyIncome(None, None, None, None, None, None))
         case UkOtherProperty(ukopi, _) => ukopi
       } { ukopi => ukop =>
         ukop.copy(income = Some(ukopi))
