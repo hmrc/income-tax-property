@@ -311,7 +311,7 @@ class JourneyAnswersIntegrationSpec
             Some(2),
             Some(11),
             Some(13),
-            Some(21)
+            Some(14)
           )
         ),
         raRAdjustments = Some(RaRAdjustments(Some(BalancingCharge(true, Some(32))), Some(34.56))),
