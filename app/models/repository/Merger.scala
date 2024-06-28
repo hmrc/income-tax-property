@@ -121,7 +121,6 @@ object Merger {
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
               legalManagementOtherFee = fromDownstream.professionalFees,
               costOfServicesProvided = fromDownstream.costOfServices,
-              residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
               otherPropertyExpenses = fromDownstream.other
             )
           )
@@ -135,7 +134,6 @@ object Merger {
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
               legalManagementOtherFee = fromDownstream.professionalFees,
               costOfServicesProvided = fromDownstream.costOfServices,
-              residentialPropertyFinanceCosts = fromDownstream.residentialFinancialCost,
               otherPropertyExpenses = fromDownstream.other
             )
           )

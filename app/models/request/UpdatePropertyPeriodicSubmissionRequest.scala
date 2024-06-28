@@ -203,7 +203,8 @@ object UpdatePropertyPeriodicSubmissionRequest {
               repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
               professionalFees = raRExpenses.legalManagementOtherFee,
               costOfServices = raRExpenses.costOfServicesProvided,
-              residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
+              residentialFinancialCost =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost))),
               residentialFinancialCostsCarriedForward = periodicSubmission.flatMap(
                 _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))
               ),
