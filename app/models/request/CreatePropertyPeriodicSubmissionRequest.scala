@@ -18,7 +18,7 @@ package models.request
 
 import cats.implicits.catsSyntaxEitherId
 import models.common.TaxYear
-import models.errors.ServiceError
+import models.errors.{InternalError, ServiceError}
 import models.responses
 import models.responses._
 import monocle.Optional
@@ -39,6 +39,23 @@ object CreatePropertyPeriodicSubmissionRequest {
   implicit val format: OFormat[CreatePropertyPeriodicSubmissionRequest] =
     Json.format[CreatePropertyPeriodicSubmissionRequest]
 
+  def fromEntity[T](
+    taxYear: TaxYear,
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    entity: T
+  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] =
+    entity match {
+      case e @ RaRAbout(_, _, _)                   => fromUkRaRAbout(taxYear, periodicSubmissionMaybe, e)
+      case e @ Expenses(_, _, _, _, _, _, _, _)    => fromExpenses(taxYear, periodicSubmissionMaybe, e)
+      case e @ RentARoomExpenses(_, _, _, _, _, _) => fromRaRExpenses(taxYear, periodicSubmissionMaybe, e)
+      case e @ PropertyRentalsIncome(_, _, _, _, _, _, _, _, _) =>
+        fromPropertyRentalsIncome(taxYear, periodicSubmissionMaybe, e)
+      case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
+        fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
+      case _ =>
+        InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
+          .asLeft[CreatePropertyPeriodicSubmissionRequest]
+    }
   private def fromPropertyPeriodicSubmission(
     taxYear: TaxYear,
     maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]
@@ -219,7 +236,8 @@ object CreatePropertyPeriodicSubmissionRequest {
               repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
               professionalFees = raRExpenses.legalManagementOtherFee,
               costOfServices = raRExpenses.costOfServicesProvided,
-              residentialFinancialCost = raRExpenses.residentialPropertyFinanceCosts,
+              residentialFinancialCost =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost))),
               residentialFinancialCostsCarriedForward = periodicSubmission.flatMap(
                 _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))
               ),

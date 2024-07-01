@@ -24,7 +24,7 @@ final case class JourneyContextWithNino(
 ) {
   def toJourneyContext(journeyName: JourneyName): JourneyContext =
     JourneyContext(taxYear, incomeSourceId, mtditid, journeyName)
-  
+
 }
 
 final case class JourneyContext(
@@ -32,4 +32,7 @@ final case class JourneyContext(
   incomeSourceId: IncomeSourceId,
   mtditid: Mtditid,
   journey: JourneyName
-)
+) {
+  def toJourneyContextWithNino(nino: Nino): JourneyContextWithNino =
+    JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+}

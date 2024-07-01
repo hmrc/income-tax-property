@@ -311,7 +311,6 @@ class JourneyAnswersIntegrationSpec
             Some(2),
             Some(11),
             Some(13),
-            Some(21),
             Some(14)
           )
         ),

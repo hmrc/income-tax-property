@@ -415,9 +415,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             Some(79.13),
             Some(58.14),
             Some(70.36),
-            Some(93.71),
-            Some(59.37) // ,
-//            Some(15.93)
+            Some(93.71)
           )
         )
 
@@ -450,7 +448,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           "professionalFees",
           "costOfServices",
           "other",
-          "residentialFinancialCost",
           "consolidatedExpense"
         )
       )
