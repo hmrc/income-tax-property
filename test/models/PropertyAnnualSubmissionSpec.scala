@@ -421,8 +421,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
         replacementOfDomesticGoodsAllowance = Some(55.66),
         otherCapitalAllowance = Some(66.77)
       )
-      val raRAllowancesCapitalAllowancesForACar =
-        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None)
 
       val pas = PropertyAnnualSubmission
         .fromRaRAllowances(
