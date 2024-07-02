@@ -415,7 +415,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar allowances and not override existing other fields" in {
       val raRAllowances = RentARoomAllowances(
         capitalAllowancesForACar = None,
-        electricChargePointAllowance = Some(ElectricChargePointAllowance(true, Some(22.33))),
+        electricChargePointAllowance = Some(22.33),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
         replacementOfDomesticGoodsAllowance = Some(55.66),
