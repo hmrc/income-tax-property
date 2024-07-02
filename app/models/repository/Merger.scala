@@ -235,8 +235,7 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             RentARoomAllowances(
-              electricChargePointAllowance =
-                fromDownstream.electricChargePointAllowance.map(a => ElectricChargePointAllowance(true, Some(a))),
+              electricChargePointAllowance = fromDownstream.electricChargePointAllowance,
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,

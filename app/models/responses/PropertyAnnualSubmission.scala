@@ -290,7 +290,7 @@ object PropertyAnnualSubmission {
     )(resultWithotherCapitalAllowance)
 
     val resultWithelectricChargePointAllowance = focusFromRequestOnToelectricChargePointAllowanceLens.replace(
-      rentARoomAllowances.electricChargePointAllowance.flatMap(_.electricChargePointAllowanceAmount)
+      rentARoomAllowances.electricChargePointAllowance
     )(
       resultWithcostOfReplacingDomesticGoods
     )

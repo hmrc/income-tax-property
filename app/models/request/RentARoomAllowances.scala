@@ -20,7 +20,7 @@ import play.api.libs.json.{Format, Json}
 
 case class RentARoomAllowances(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
-  electricChargePointAllowance: Option[ElectricChargePointAllowance],
+  electricChargePointAllowance: Option[BigDecimal],
   zeroEmissionCarAllowance: Option[BigDecimal],
   zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
   replacementOfDomesticGoodsAllowance: Option[BigDecimal],

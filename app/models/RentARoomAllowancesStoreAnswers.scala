@@ -20,8 +20,7 @@ import models.request.RentARoomAllowances
 import play.api.libs.json.{Json, OFormat}
 
 case class RentARoomAllowancesStoreAnswers(
-  raRCapitalAllowancesForACarYesOrNo: Option[Boolean],
-  electricChargePointAllowanceYesOrNo: Option[Boolean]
+  raRCapitalAllowancesForACarYesOrNo: Option[Boolean]
 )
 
 object RentARoomAllowancesStoreAnswers {
@@ -29,8 +28,7 @@ object RentARoomAllowancesStoreAnswers {
 
   def fromJourneyAnswers(answers: RentARoomAllowances): RentARoomAllowancesStoreAnswers =
     RentARoomAllowancesStoreAnswers(
-      answers.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo),
-      answers.electricChargePointAllowance.map(_.electricChargePointAllowanceYesOrNo)
+      answers.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
     )
 
 }
