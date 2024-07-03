@@ -604,8 +604,7 @@ class PropertyService @Inject() (
     rentARoomAllowances: RentARoomAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     val rentARoomAllowancesStoreAnswers = RentARoomAllowancesStoreAnswers(
-      rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo),
-      rentARoomAllowances.electricChargePointAllowance.map(_.electricChargePointAllowanceYesOrNo)
+      rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
     )
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)

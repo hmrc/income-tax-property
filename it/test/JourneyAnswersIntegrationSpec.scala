@@ -318,7 +318,7 @@ class JourneyAnswersIntegrationSpec
         rentARoomAllowances = Some(
           RentARoomAllowances(
             Some(CapitalAllowancesForACar(true, Some(4))),
-            Some(ElectricChargePointAllowance(true, Some(6))),
+            Some(6),
             Some(7),
             Some(2),
             Some(5),
