@@ -16,22 +16,24 @@
 
 package repositories
 
-import com.mongodb.client.model
+import config.AppConfig
 import models.common.JourneyName.About
-import models.common.JourneyStatus.{InProgress, NotStarted}
+import models.common.JourneyStatus.InProgress
 import models.common._
 import models.domain.JourneyAnswers
+import org.mockito.Mockito.when
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant, ZoneId}
+import java.time.{Clock, Instant, ZoneId, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -40,7 +42,12 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
+  val mockAppConfig: AppConfig = mock[AppConfig]
+  when(mockAppConfig.mongoTTL) thenReturn 28
+
+  private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
+
+  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
 
   val taxYear: TaxYear = TaxYear(2024)
   val incomeSourceId: IncomeSourceId = IncomeSourceId("incomeSourceId")
@@ -82,7 +89,9 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
       val updatedRecord = find(filters).futureValue.headOption.value
 
       result shouldBe true
-      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+
+      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.mongoTTL).truncatedTo(ChronoUnit.DAYS).toInstant
+
       updatedRecord shouldBe JourneyAnswers(
         mtditid,
         incomeSourceId,
@@ -98,12 +107,12 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
 
     "update already existing answers (values, updateAt)" in {
       val result = for {
-        _ <- repository.upsertAnswers(ctx, Json.obj("field" -> "value"))
-        _ <- repository.upsertAnswers(ctx, Json.obj("field" -> "updated"))
+        _       <- repository.upsertAnswers(ctx, Json.obj("field" -> "value"))
+        _       <- repository.upsertAnswers(ctx, Json.obj("field" -> "updated"))
         updated <- find(filters)
       } yield updated.headOption.value
 
-      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.mongoTTL).truncatedTo(ChronoUnit.DAYS).toInstant
 
       result.futureValue shouldBe JourneyAnswers(
         mtditid,

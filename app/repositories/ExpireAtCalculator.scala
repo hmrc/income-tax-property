@@ -19,14 +19,16 @@ package repositories
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, Month, ZoneOffset}
 
+/** This was getting used for 4 years TTL. Not that is changed to 28 days.
+  */
 object ExpireAtCalculator {
   private val StartTaxYearDayOfMonth = 6
   private val HowManyTaxYearsToStore = 4
-  private val TaxYearStartMonth      = Month.APRIL
-  private val zoneId                 = ZoneOffset.UTC
+  private val TaxYearStartMonth = Month.APRIL
+  private val zoneId = ZoneOffset.UTC
 
   def calculateExpireAt(nowInstant: Instant): Instant = {
-    val now         = nowInstant.atZone(zoneId)
+    val now = nowInstant.atZone(zoneId)
 
     val startOfThisTaxYear = {
       val startOfYear = now.withMonth(TaxYearStartMonth.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
