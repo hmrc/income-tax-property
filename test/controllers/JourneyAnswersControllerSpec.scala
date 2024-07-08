@@ -800,7 +800,16 @@ class JourneyAnswersControllerSpec
     "return CREATED for valid request body" in {
 
       mockAuthorisation()
-      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRRR(true, Some(10.22))), true)
+
+      val journeyContextForPropertyRentalsAndRentARoomAbout =
+        ctx.copy(journey = JourneyName.PropertyRentalsAndRentARoomAbout)
+
+      mockSaveUkRentARoomAbout(
+        journeyContextForPropertyRentalsAndRentARoomAbout,
+        nino,
+        RaRAbout(true, 55.22, ClaimExpensesOrRRR(true, Some(10.22))),
+        true
+      )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(request))
