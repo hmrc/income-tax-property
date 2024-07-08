@@ -48,3 +48,5 @@ POST          /property/:taxYear/:incomeSourceId/esba/:nino/answers             
 GET           /property/:taxYear/income/:nino/:incomeSourceId                                                                      controllers.JourneyAnswersController.fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
 
 PUT           /completed-section/:incomeSourceId/:journey/:taxYear                                                                 controllers.JourneyAnswersController.setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String)
+
+POST          /property/:taxYear/:incomeSourceId/property-rentals-and-rent-a-room-about/:nino/answers                                                 controllers.JourneyAnswersController.savePropertyRentalsAndRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

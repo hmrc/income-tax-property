@@ -783,4 +783,34 @@ class JourneyAnswersControllerSpec
       result.header.status shouldBe 500
     }
   }
+
+  "create or update property rentals and rent a room about section" should {
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAbout)
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |    "ukRentARoomJointlyLet" : true,
+                                                 |    "totalIncomeAmount" : 55.22,
+                                                 |    "claimExpensesOrRRR" : {
+                                                 |        "claimRRROrExpenses" : true,
+                                                 |        "rentARoomAmount" : 10.22
+                                                 |    }
+                                                 |}""".stripMargin)
+
+    "return CREATED for valid request body" in {
+
+      mockAuthorisation()
+      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRRR(true, Some(10.22))), true)
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
 }
