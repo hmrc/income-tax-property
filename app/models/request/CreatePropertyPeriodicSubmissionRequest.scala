@@ -19,7 +19,7 @@ package models.request
 import cats.implicits.catsSyntaxEitherId
 import models.common.TaxYear
 import models.errors.{InternalError, ServiceError}
-import models.responses
+import models.{RentalsAndRaRAbout, responses}
 import models.responses._
 import monocle.Optional
 import play.api.libs.json.{Json, OFormat}
@@ -52,6 +52,7 @@ object CreatePropertyPeriodicSubmissionRequest {
         fromPropertyRentalsIncome(taxYear, periodicSubmissionMaybe, e)
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
+      case e @ RentalsAndRaRAbout(_, _, _, _) => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[CreatePropertyPeriodicSubmissionRequest]
@@ -136,6 +137,65 @@ object CreatePropertyPeriodicSubmissionRequest {
           None
         )
       )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_))))
+
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
+      periodicSubmissionMaybe.flatMap(_.foreignFhlEea),
+      periodicSubmissionMaybe.flatMap(_.foreignProperty),
+      periodicSubmissionMaybe.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          None,
+          None // Todo: Change here, move consolidated to separate part!
+        )
+      )
+    )
+
+    val resultWithIncome: CreatePropertyPeriodicSubmissionRequest =
+      updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
+
+    val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
+
+    result.asRight[ServiceError]
+  }
+
+  def fromRentalsAndRaRAbout(
+    taxYear: TaxYear,
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    rentalsAndRaRAbout: RentalsAndRaRAbout
+  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+    val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
+      periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
+
+    val ukOtherPropertyExpensesMaybe: Option[responses.UkOtherPropertyExpenses] =
+      periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.expenses))
+
+    val ukOtherPropertyIncome: UkOtherPropertyIncome = ukOtherPropertyIncomeMaybe
+      .fold(
+        UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount)))
+      )(
+        _.copy(
+          ukOtherRentARoom = Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
+        )
+      )
+
+    val ukOtherPropertyExpenses: UkOtherPropertyExpenses = ukOtherPropertyExpensesMaybe
+      .fold(
+        UkOtherPropertyExpenses(
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          rentalsAndRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_)),
+          None
+        )
+      )(_.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_))))
 
     val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),

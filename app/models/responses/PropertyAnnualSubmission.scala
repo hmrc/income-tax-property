@@ -16,6 +16,7 @@
 
 package models.responses
 
+import models.RentalsAndRaRAbout
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
@@ -119,6 +120,45 @@ object PropertyAnnualSubmission {
       focusFromAnnualSubmissionOnSbasLens.replace(Some(sbas))(propertyAnnualSubmission)
 
     resultWithSbas
+  }
+
+  def fromRentalsAndRentARoomAbout(
+    rentalsAndRaRAbout: RentalsAndRaRAbout,
+    request: PropertyAnnualSubmission
+  ): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+
+    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
+      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(uoa, _)  => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
+      }
+    val ukRentARoomLens = GenLens[UkOtherAdjustments](_.ukOtherRentARoom)
+
+    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
+
+    val focusFromRequestOnToUkRentARoomLens =
+      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
+    val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
+      Some(UkRentARoom(rentalsAndRaRAbout.ukRentARoomJointlyLet))
+    )(request)
+
+    val focusFromRequestOnToBalancingChargeLens =
+      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
+
+    val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
+      rentalsAndRaRAbout.balancingCharge.balancingChargeAmount
+    )(resultWithUkRentARoom)
+
+    resultWithBalancingCharge
   }
 
   def fromUkRentARoomAbout(

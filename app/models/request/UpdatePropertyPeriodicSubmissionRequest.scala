@@ -18,7 +18,7 @@ package models.request
 
 import cats.implicits.catsSyntaxEitherId
 import models.errors.{InternalError, ServiceError}
-import models.responses
+import models.{RentalsAndRaRAbout, responses}
 import models.responses._
 import monocle.Optional
 import play.api.libs.json.{Json, OFormat}
@@ -88,6 +88,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       case e @ PropertyRentalsIncome(_, _, _, _, _, _, _, _, _) => fromPropertyRentalsIncome(periodicSubmissionMaybe, e)
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(periodicSubmissionMaybe, e).asRight[ServiceError]
+      case e @ RentalsAndRaRAbout(_, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[UpdatePropertyPeriodicSubmissionRequest]
@@ -128,6 +129,62 @@ object UpdatePropertyPeriodicSubmissionRequest {
           None
         )
       )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_))))
+
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdatePropertyPeriodicSubmissionRequest(
+      periodicSubmissionMaybe.flatMap(_.foreignFhlEea),
+      periodicSubmissionMaybe.flatMap(_.foreignProperty),
+      periodicSubmissionMaybe.flatMap(_.ukFhlProperty),
+      Some(
+        UkOtherProperty(
+          None,
+          None // Todo: Change here, move consolidated to separate part!
+        )
+      )
+    )
+
+    val resultWithIncome: UpdatePropertyPeriodicSubmissionRequest =
+      updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
+
+    val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
+
+    result.asRight[ServiceError]
+  }
+
+  def fromRentalsAndRaRAbout(
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    rentalsAndRaRAbout: RentalsAndRaRAbout
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+    val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
+      periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
+
+    val ukOtherPropertyExpensesMaybe: Option[responses.UkOtherPropertyExpenses] =
+      periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.expenses))
+
+    val ukOtherPropertyIncome: UkOtherPropertyIncome = ukOtherPropertyIncomeMaybe
+      .fold(
+        UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount)))
+      )(
+        _.copy(
+          ukOtherRentARoom = Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
+        )
+      )
+
+    val ukOtherPropertyExpenses: UkOtherPropertyExpenses = ukOtherPropertyExpensesMaybe
+      .fold(
+        UkOtherPropertyExpenses(
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          None,
+          rentalsAndRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_)),
+          None
+        )
+      )(_.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_))))
 
     val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.flatMap(_.foreignFhlEea),

@@ -17,6 +17,7 @@
 package controllers
 
 import cats.syntax.either._
+import models.RentalsAndRaRAbout
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
@@ -791,6 +792,10 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "ukRentARoomJointlyLet" : true,
                                                  |    "totalIncomeAmount" : 55.22,
+                                                 |    "balancingCharge" : {
+                                                 |        "balancingChargeYesNo" : true,
+                                                 |        "balancingChargeAmount" : 12.34
+                                                 |    },
                                                  |    "claimExpensesOrRRR" : {
                                                  |        "claimRRROrExpenses" : true,
                                                  |        "rentARoomAmount" : 10.22
@@ -804,10 +809,10 @@ class JourneyAnswersControllerSpec
       val journeyContextForPropertyRentalsAndRentARoomAbout =
         ctx.copy(journey = JourneyName.PropertyRentalsAndRentARoomAbout)
 
-      mockSaveUkRentARoomAbout(
+      mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RaRAbout(true, 55.22, ClaimExpensesOrRRR(true, Some(10.22))),
+        RentalsAndRaRAbout(true, 55.22, BalancingCharge(true, Some(12.34)), ClaimExpensesOrRRR(true, Some(10.22))),
         true
       )
 

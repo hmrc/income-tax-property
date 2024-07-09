@@ -25,7 +25,7 @@ import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
+import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.Writes
@@ -270,6 +270,21 @@ trait MockPropertyService extends MockFactory {
     (mockPropertyService
       .saveRaRAbout(_: JourneyContext, _: Nino, _: RaRAbout)(_: HeaderCarrier))
       .expects(journeyContext, nino, ukRaRAbout, *)
+      .returning(EitherT.pure(result))
+
+  def mockSaveRentalsAndRentARoomAbout(
+    journeyContext: JourneyContext,
+    nino: Nino,
+    rentalsAndRaRAbout: RentalsAndRaRAbout,
+    result: Boolean
+  ): CallHandler4[JourneyContext, Nino, RentalsAndRaRAbout, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockPropertyService
+      .saveRentalsAndRaRAbout(_: JourneyContext, _: Nino, _: RentalsAndRaRAbout)(_: HeaderCarrier))
+      .expects(journeyContext, nino, rentalsAndRaRAbout, *)
       .returning(EitherT.pure(result))
 
   def mockSaveUkRaRAdjustments[A](
