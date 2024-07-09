@@ -29,7 +29,7 @@ class AppConfigStub extends MockFactory {
 
     private lazy val authorisationToken: String = "secret"
 
-    override lazy val mongoTTL: Int = Duration("28days").toDays.toInt
+    override lazy val timeToLive: Int = Duration("28days").toDays.toInt
 
     override lazy val appName = "income-tax-property"
 

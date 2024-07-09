@@ -19,7 +19,8 @@ package repositories
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, Month, ZoneOffset}
 
-/** This was getting used for 4 years TTL. Not that is changed to 28 days.
+/** This was getting used when timeToLive was agreed to be 4 years. Now the timeToLive is changed to 28 days so this is
+  * not needed for now
   */
 object ExpireAtCalculator {
   private val StartTaxYearDayOfMonth = 6

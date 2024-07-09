@@ -16,20 +16,18 @@
 
 package repositories
 
-import config.AppConfig
 import models.common.JourneyName.About
 import models.common.JourneyStatus.InProgress
 import models.common._
 import models.domain.JourneyAnswers
-import org.mockito.Mockito.when
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+import utils.AppConfigStub
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit
@@ -42,10 +40,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  val mockAppConfig: AppConfig = mock[AppConfig]
-  when(mockAppConfig.mongoTTL) thenReturn 28
-
-  private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
+  val mockAppConfig = new AppConfigStub().config()
 
   override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
 
@@ -90,7 +85,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
 
       result shouldBe true
 
-      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.mongoTTL).truncatedTo(ChronoUnit.DAYS).toInstant
+      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.timeToLive).truncatedTo(ChronoUnit.DAYS).toInstant
 
       updatedRecord shouldBe JourneyAnswers(
         mtditid,
@@ -112,7 +107,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         updated <- find(filters)
       } yield updated.headOption.value
 
-      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.mongoTTL).truncatedTo(ChronoUnit.DAYS).toInstant
+      val expectedExpireAt = now.atZone(ZoneOffset.UTC).plusDays(mockAppConfig.timeToLive).truncatedTo(ChronoUnit.DAYS).toInstant
 
       result.futureValue shouldBe JourneyAnswers(
         mtditid,

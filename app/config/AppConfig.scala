@@ -28,7 +28,7 @@ class AppConfig @Inject()(config: Configuration) {
 
   lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
 
-  lazy val mongoTTL: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
+  lazy val timeToLive: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 
   def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 

@@ -47,7 +47,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         IndexModel(
           Indexes.ascending("expireAt"),
           IndexOptions()
-            .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
+            .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
             .name("expire_at")
         ),
         IndexModel(
@@ -99,7 +99,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     ctx: JourneyContext
   )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = now.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).plusDays(appConfig.mongoTTL).toInstant
+    val expireAt = now.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).plusDays(appConfig.timeToLive).toInstant
 
     Updates.combine(
       Updates.set(fieldName, bsonValue),
@@ -116,7 +116,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
 
   private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.mongoTTL).truncatedTo(ChronoUnit.DAYS).toInstant
+    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.timeToLive).truncatedTo(ChronoUnit.DAYS).toInstant
 
     Updates.combine(
       Updates.set("status", status.entryName),
