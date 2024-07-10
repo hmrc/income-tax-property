@@ -24,8 +24,8 @@ import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
-import play.api.Logging
-import play.api.libs.json.{JsValue, Json, StaticBinding, Writes}
+import play.api.Logger
+import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 
 import java.net.URL
@@ -34,8 +34,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: AppConfig)(implicit
   ec: ExecutionContext
-) extends IFConnector with Logging {
+) extends IFConnector {
 
+  private lazy val logger: Logger = Logger.apply(this.getClass)
   override protected[connectors] val appConfig: AppConfig = appConf
 
   def getBusinessDetails(
@@ -225,7 +226,7 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
         "1593"
       )
     }
-
+    logger.debug(s"createPeriodicSubmission with url: $url, body: ${Json.toJson(body)}")
     httpClient
       .POST[CreatePropertyPeriodicSubmissionRequest, PostPeriodicSubmissionResponse](url, body)(
         implicitly[Writes[CreatePropertyPeriodicSubmissionRequest]],
@@ -268,7 +269,9 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
         "1594"
       )
     }
-
+    logger.debug(
+      s"updatePeriodicSubmission with url: $url, body: ${Json.toJson(propertyPeriodicSubmissionRequest)}"
+    )
     httpClient
       .PUT[UpdatePropertyPeriodicSubmissionRequest, PutPeriodicSubmissionResponse](
         url,
@@ -311,6 +314,7 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
         "1597"
       )
     }
+    logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
 
     httpClient
       .PUT[PropertyAnnualSubmission, PutAnnualSubmissionResponse](url, body)(
