@@ -16,9 +16,11 @@
 
 package utils
 
+import config.AppConfig
 import org.scalamock.scalatest.MockFactory
 import play.api.Configuration
-import config.AppConfig
+
+import scala.concurrent.duration.Duration
 
 class AppConfigStub extends MockFactory {
 
@@ -26,6 +28,8 @@ class AppConfigStub extends MockFactory {
     private val wireMockPort = 11111
 
     private lazy val authorisationToken: String = "secret"
+
+    override lazy val timeToLive: Int = Duration("28days").toDays.toInt
 
     override lazy val appName = "income-tax-property"
 

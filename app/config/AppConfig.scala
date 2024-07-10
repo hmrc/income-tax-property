@@ -16,8 +16,10 @@
 
 package config
 
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.Duration
 
 @Singleton
 class AppConfig @Inject()(config: Configuration) {
@@ -25,6 +27,8 @@ class AppConfig @Inject()(config: Configuration) {
   lazy val appName: String = config.get[String]("appName")
 
   lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
+
+  lazy val timeToLive: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 
   def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 

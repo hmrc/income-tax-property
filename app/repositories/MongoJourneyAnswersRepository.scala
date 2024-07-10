@@ -16,6 +16,7 @@
 
 package repositories
 
+import config.AppConfig
 import models.common.{JourneyContext, JourneyStatus}
 import models.domain.JourneyAnswers
 import org.mongodb.scala._
@@ -24,19 +25,20 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.libs.json.{JsValue, Json}
-import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.Logging
 
-import java.time.{Clock, Instant}
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[JourneyAnswers](
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit
+  ec: ExecutionContext
+) extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,
       domainFormat = JourneyAnswers.formats,
@@ -45,8 +47,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         IndexModel(
           Indexes.ascending("expireAt"),
           IndexOptions()
-            .name("expireAt")
-            .expireAfter(0, TimeUnit.SECONDS)
+            .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
+            .name("expire_at")
         ),
         IndexModel(
           Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
@@ -95,12 +97,12 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   }
   private[repositories] def createUpsert(
     ctx: JourneyContext
-  )(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+  )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = calculateExpireAt(now)
+    val expireAt = now.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).plusDays(appConfig.timeToLive).toInstant
 
     Updates.combine(
-      Updates.set(fieldName, value),
+      Updates.set(fieldName, bsonValue),
       Updates.set("updatedAt", now),
       Updates.setOnInsert("mtditid", ctx.mtditid.value),
       Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
@@ -114,7 +116,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = calculateExpireAt(now)
+    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.timeToLive).truncatedTo(ChronoUnit.DAYS).toInstant
 
     Updates.combine(
       Updates.set("status", status.entryName),

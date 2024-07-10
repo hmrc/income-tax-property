@@ -17,18 +17,23 @@
 package utils.mocks
 
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.OptionValues
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import repositories.MongoJourneyAnswersRepository
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
+import utils.AppConfigStub
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport{
+trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues {
+
+  val mockAppConfig = new AppConfigStub().config()
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
-  protected val repository = new MongoJourneyAnswersRepository(mongoComponent, stubClock)
+  protected val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
   protected val journeyStatusService: JourneyStatusService = new JourneyStatusService(repository)
 }

@@ -23,13 +23,13 @@ import models.PropertyPeriodicSubmissionResponse
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
+import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
 import models.request.ukrentaroom.RaRAdjustments
-import models.request._
 import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
