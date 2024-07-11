@@ -18,7 +18,7 @@ package models.request
 
 import play.api.libs.json.{Json, OFormat}
 
-case class PropertyRentalsAbout(toexpensesLessThan1000: Boolean, claimPropertyIncomeAllowance: Boolean)
+case class PropertyRentalsAbout(toexpensesLessThan1000: Boolean, claimPropertyIncomeAllowanceYesOrNo: Boolean)
 
 object PropertyRentalsAbout {
   implicit val formats: OFormat[PropertyRentalsAbout] = Json.format[PropertyRentalsAbout]

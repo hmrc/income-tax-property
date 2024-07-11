@@ -163,7 +163,7 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
                                                  |   "toexpensesLessThan1000": true,
-                                                 |   "claimPropertyIncomeAllowance": true
+                                                 |   "claimPropertyIncomeAllowanceYesOrNo": true
                                                  |}
                                                  |""".stripMargin)
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
@@ -171,7 +171,7 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockPersistAnswers(ctx, PropertyRentalsAbout(toexpensesLessThan1000 = true, claimPropertyIncomeAllowance = true))
+      mockPersistAnswers(ctx, PropertyRentalsAbout(toexpensesLessThan1000 = true, claimPropertyIncomeAllowanceYesOrNo = true))
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
