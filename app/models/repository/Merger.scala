@@ -395,14 +395,14 @@ object Merger {
           Some(
             SbaInfo(
               claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance,
-              structureBuildingFormGroup = fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              sbas = fromDownstream.map(fromSbaDownstreamToUpstream(_))
             )
           )
         case (None, Some(fromDownstream)) =>
           Some(
             SbaInfo(
               claimStructureBuildingAllowance = ClaimStructureBuildingAllowance(true),
-              structureBuildingFormGroup = fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              sbas = fromDownstream.map(fromSbaDownstreamToUpstream(_))
             )
           )
         case _ => None

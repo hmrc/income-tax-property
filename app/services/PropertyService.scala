@@ -277,9 +277,13 @@ class PropertyService @Inject() (
              nino,
              annualSubmissionRequest
            )
-      res <- persistAnswers(
+      _ <- persistAnswers(
                ctx,
                ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRRR.claimRRROrExpenses)
+             )
+      res <- persistAnswers(
+               ctx,
+               RaRBalancingChargeYesNo(rentalsAndRaRAbout.balancingCharge.balancingChargeYesNo)
              )
 
     } yield res
