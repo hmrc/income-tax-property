@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 final case class RentalsAndRaRAbout(
   ukRentARoomJointlyLet: Boolean,
   totalIncomeAmount: BigDecimal,
-  balancingCharge: BalancingCharge,
+  claimPropertyIncomeAllowanceYesOrNo: Boolean,
   claimExpensesOrRRR: ClaimExpensesOrRRR
 )
 

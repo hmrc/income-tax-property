@@ -56,6 +56,12 @@ object RaRBalancingChargeYesNo {
   implicit val format: OFormat[RaRBalancingChargeYesNo] = Json.format[RaRBalancingChargeYesNo]
 }
 
+final case class ClaimPropertyIncomeAllowanceYesOrNo(claimPropertyIncomeAllowanceYesOrNo: Boolean)
+
+object ClaimPropertyIncomeAllowanceYesOrNo {
+  implicit val format = Json.format[ClaimPropertyIncomeAllowanceYesOrNo]
+
+}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
@@ -278,12 +284,12 @@ class PropertyService @Inject() (
              annualSubmissionRequest
            )
       _ <- persistAnswers(
-               ctx,
-               ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRRR.claimRRROrExpenses)
-             )
+             ctx,
+             ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRRR.claimRRROrExpenses)
+           )
       res <- persistAnswers(
                ctx,
-               RaRBalancingChargeYesNo(rentalsAndRaRAbout.balancingCharge.balancingChargeYesNo)
+               ClaimPropertyIncomeAllowanceYesOrNo(rentalsAndRaRAbout.claimPropertyIncomeAllowanceYesOrNo)
              )
 
     } yield res

@@ -792,10 +792,7 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "ukRentARoomJointlyLet" : true,
                                                  |    "totalIncomeAmount" : 55.22,
-                                                 |    "balancingCharge" : {
-                                                 |        "balancingChargeYesNo" : true,
-                                                 |        "balancingChargeAmount" : 12.34
-                                                 |    },
+                                                 |    "claimPropertyIncomeAllowanceYesOrNo": true,
                                                  |    "claimExpensesOrRRR" : {
                                                  |        "claimRRROrExpenses" : true,
                                                  |        "rentARoomAmount" : 10.22
@@ -812,7 +809,7 @@ class JourneyAnswersControllerSpec
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RentalsAndRaRAbout(true, 55.22, BalancingCharge(true, Some(12.34)), ClaimExpensesOrRRR(true, Some(10.22))),
+        RentalsAndRaRAbout(true, 55.22, true, ClaimExpensesOrRRR(true, Some(10.22))),
         true
       )
 

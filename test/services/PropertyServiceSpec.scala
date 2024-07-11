@@ -27,7 +27,7 @@ import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, Sba}
+import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.request._
 import models.responses._
@@ -1999,10 +1999,7 @@ class PropertyServiceSpec
     val rentalsAndRaRAbout = RentalsAndRaRAbout(
       true,
       55.22,
-      BalancingCharge(
-        true,
-        Some(12.34)
-      ),
+      true,
       ClaimExpensesOrRRR(
         true,
         Some(22.55)
@@ -2065,7 +2062,7 @@ class PropertyServiceSpec
                 Some(
                   UkOtherAdjustments(
                     None,
-                    rentalsAndRaRAbout.balancingCharge.balancingChargeAmount,
+                    None,
                     None,
                     None,
                     None,

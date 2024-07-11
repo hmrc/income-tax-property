@@ -349,7 +349,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           RentalsAndRaRAbout(
             false,
             12.34,
-            BalancingCharge(true, Some(90.12)),
+            true,
             ClaimExpensesOrRRR(true, Some(56.78))
           )
         )

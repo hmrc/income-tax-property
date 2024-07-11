@@ -154,11 +154,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToBalancingChargeLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
 
-    val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
-      rentalsAndRaRAbout.balancingCharge.balancingChargeAmount
-    )(resultWithUkRentARoom)
-
-    resultWithBalancingCharge
+    resultWithUkRentARoom
   }
 
   def fromUkRentARoomAbout(

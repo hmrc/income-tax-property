@@ -613,7 +613,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           RentalsAndRaRAbout(
             false,
             12.34,
-            BalancingCharge(true, Some(90.12)),
+            true,
             ClaimExpensesOrRRR(true, Some(56.78))
           ),
           annualSubmissionWithAllFieldsFilled
@@ -640,7 +640,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       firstLevelDiff shouldBe List("ukOtherProperty")
       secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
       thirdLevelDiff should be(
-        List("balancingCharge", "ukOtherRentARoom")
+        List("ukOtherRentARoom")
       )
     }
 
