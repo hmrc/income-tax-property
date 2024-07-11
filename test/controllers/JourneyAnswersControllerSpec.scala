@@ -664,7 +664,7 @@ class JourneyAnswersControllerSpec
   "update sba section" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimStructureBuildingAllowance" : true,
-                                                 | "structureBuildingFormGroup": [
+                                                 | "sbas": [
                                                  |            {
                                                  |                "structureBuildingQualifyingDate" : "2020-04-04",
                                                  |                "structureBuildingQualifyingAmount" : 12,
