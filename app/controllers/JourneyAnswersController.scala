@@ -18,6 +18,7 @@ package controllers
 
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
+import models.RentalsAndRaRAbout
 import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.request._
@@ -130,6 +131,25 @@ class JourneyAnswersController @Inject() (
           handleResponse(CREATED) {
             propertyService.saveRaRAbout(ctx, nino, rarAbout)
           }
+      }
+    }
+
+  def savePropertyRentalsAndRentARoomAbout(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino
+  ): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RentalsAndRaRAbout](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.PropertyRentalsAndRentARoomAbout,
+        request
+      ) { (ctx, rentalsAndRaRAbout) =>
+        handleResponse(CREATED) {
+          propertyService.saveRentalsAndRaRAbout(ctx, nino, rentalsAndRaRAbout)
+        }
       }
     }
 

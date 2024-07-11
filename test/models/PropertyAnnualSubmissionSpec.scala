@@ -607,6 +607,42 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
         List("ukOtherRentARoom")
       )
     }
+    "be generated from rentals and rar about and not override existing other fields" in {
+      val propertyAnnualSubmissionWithNewRaRAbout = PropertyAnnualSubmission
+        .fromRentalsAndRentARoomAbout(
+          RentalsAndRaRAbout(
+            false,
+            12.34,
+            true,
+            ClaimExpensesOrRRR(true, Some(56.78))
+          ),
+          annualSubmissionWithAllFieldsFilled
+        )
+      val firstLevelDiff = diff(
+        propertyAnnualSubmissionWithNewRaRAbout,
+        annualSubmissionWithAllFieldsFilled
+      )
+
+      val secondLevelDiff = diff(
+        propertyAnnualSubmissionWithNewRaRAbout.ukOtherProperty.get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty.get
+      )
+
+      val thirdLevelDiff = diff(
+        propertyAnnualSubmissionWithNewRaRAbout.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAdjustments)
+          .get,
+        annualSubmissionWithAllFieldsFilled.ukOtherProperty
+          .flatMap(_.ukOtherPropertyAnnualAdjustments)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
+      thirdLevelDiff should be(
+        List("ukOtherRentARoom")
+      )
+    }
 
   }
 

@@ -19,7 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import models.PropertyPeriodicSubmissionResponse
+import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
@@ -28,7 +28,7 @@ import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
+import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import org.mongodb.scala.bson.conversions.Bson
@@ -760,7 +760,7 @@ class PropertyServiceSpec
         JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
 
       val sbasToBeAdded = List(
-        StructureBuildingFormGroup(
+        Sba(
           LocalDate.now(),
           12.34,
           56.78,
@@ -1984,6 +1984,156 @@ class PropertyServiceSpec
             ctx.toJourneyContext(JourneyName.RentalIncome),
             Nino(nino),
             ukRaRAbout
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "save rentals and rent a room about" should {
+
+    val taxYear = 2024
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+
+    val rentalsAndRaRAbout = RentalsAndRaRAbout(
+      true,
+      55.22,
+      true,
+      ClaimExpensesOrRRR(
+        true,
+        Some(22.55)
+      )
+    )
+    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+
+    "return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          None,
+          None,
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
+        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
+          TaxYear(taxYear),
+          Some(emptyPeriodicSubmission),
+          rentalsAndRaRAbout
+        )
+
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("")).asRight[ApiError]
+      )
+
+      mockCreateAnnualSubmission(
+        TaxYear(taxYear),
+        IncomeSourceId(incomeSourceId),
+        Nino(nino),
+        Some(
+          annualSubmission.copy(ukOtherProperty =
+            Some(
+              AnnualUkOtherProperty(
+                Some(
+                  UkOtherAdjustments(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(UkRentARoom(rentalsAndRaRAbout.ukRentARoomJointlyLet))
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        ().asRight[ApiError]
+      )
+      await(
+        underTest
+          .saveRentalsAndRaRAbout(
+            ctx.toJourneyContext(JourneyName.PropertyRentalsAndRentARoomAbout),
+            Nino(nino),
+            rentalsAndRaRAbout
+          )
+          .value
+      ) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          None,
+          None,
+          None,
+          None
+        )
+
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
+        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
+          TaxYear(taxYear),
+          Some(emptyPeriodicSubmission),
+          rentalsAndRaRAbout
+        )
+
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Option[PeriodicSubmissionId]]
+      )
+      await(
+        underTest
+          .saveRentalsAndRaRAbout(
+            ctx.toJourneyContext(JourneyName.PropertyRentalsAndRentARoomAbout),
+            Nino(nino),
+            rentalsAndRaRAbout
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))

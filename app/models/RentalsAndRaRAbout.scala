@@ -14,29 +14,18 @@
  * limitations under the License.
  */
 
-package models.request.sba
+package models
 
-import models.request.common.Address
-import play.api.libs.json.{Format, Json}
+import models.request.{BalancingCharge, ClaimExpensesOrRRR}
+import play.api.libs.json.Json
 
-import java.time.LocalDate
-
-final case class Sba(
-  structureBuildingQualifyingDate: LocalDate,
-  structureBuildingQualifyingAmount: BigDecimal,
-  structureBuildingAllowanceClaim: BigDecimal,
-  structuredBuildingAllowanceAddress: Address
+final case class RentalsAndRaRAbout(
+  ukRentARoomJointlyLet: Boolean,
+  totalIncomeAmount: BigDecimal,
+  claimPropertyIncomeAllowanceYesOrNo: Boolean,
+  claimExpensesOrRRR: ClaimExpensesOrRRR
 )
 
-object Sba {
-  implicit val format: Format[Sba] = Json.format[Sba]
-}
-
-final case class SbaInfo(
-  claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-  sbas: List[Sba]
-)
-
-object SbaInfo {
-  implicit val format = Json.format[SbaInfo]
+object RentalsAndRaRAbout {
+  implicit val format = Json.format[RentalsAndRaRAbout]
 }

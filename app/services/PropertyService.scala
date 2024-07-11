@@ -56,6 +56,12 @@ object RaRBalancingChargeYesNo {
   implicit val format: OFormat[RaRBalancingChargeYesNo] = Json.format[RaRBalancingChargeYesNo]
 }
 
+final case class ClaimPropertyIncomeAllowanceYesOrNo(claimPropertyIncomeAllowanceYesOrNo: Boolean)
+
+object ClaimPropertyIncomeAllowanceYesOrNo {
+  implicit val format = Json.format[ClaimPropertyIncomeAllowanceYesOrNo]
+
+}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
@@ -246,6 +252,44 @@ class PropertyService @Inject() (
       res <- persistAnswers(
                ctx,
                ClaimExpensesOrRRRYesNo(rarAbout.claimExpensesOrRRR.claimRRROrExpenses)
+             )
+
+    } yield res
+  }
+
+  def saveRentalsAndRaRAbout(ctx: JourneyContext, nino: Nino, rentalsAndRaRAbout: RentalsAndRaRAbout)(implicit
+    hc: HeaderCarrier
+  ): ITPEnvelope[Boolean] = {
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    for {
+      annualSubmission <-
+        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+        }
+      annualSubmissionRequest <-
+        ITPEnvelope.liftPure(
+          PropertyAnnualSubmission.fromRentalsAndRentARoomAbout(rentalsAndRaRAbout, annualSubmission)
+        )
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
+      submissionResponse <- savePeriodicSubmission(
+                              ctx.toJourneyContextWithNino(nino),
+                              maybePeriodicSubmission,
+                              rentalsAndRaRAbout
+                            )
+      _ <- createOrUpdateAnnualSubmission(
+             ctx.taxYear,
+             ctx.incomeSourceId,
+             nino,
+             annualSubmissionRequest
+           )
+      _ <- persistAnswers(
+             ctx,
+             ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRRR.claimRRROrExpenses)
+           )
+      res <- persistAnswers(
+               ctx,
+               ClaimPropertyIncomeAllowanceYesOrNo(rentalsAndRaRAbout.claimPropertyIncomeAllowanceYesOrNo)
              )
 
     } yield res

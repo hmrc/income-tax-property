@@ -340,6 +340,59 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
     }
 
+    "be generated from rentals and rar about and not override existing other fields" in {
+      val updateRequestWithOriginalSubmissionValues =
+        generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
+      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdatePropertyPeriodicSubmissionRequest
+        .fromRentalsAndRaRAbout(
+          Some(propertyPeriodicSubmissionWithAllFieldsExisting),
+          RentalsAndRaRAbout(
+            false,
+            12.34,
+            true,
+            ClaimExpensesOrRRR(true, Some(56.78))
+          )
+        )
+
+      val firstLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout,
+        updateRequestWithOriginalSubmissionValues
+      )
+
+      val secondLevelDiff = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty.get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty.get
+      )
+
+      val thirdLevelDiffOnIncome = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty
+          .flatMap(_.income)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.income)
+          .get
+      )
+
+      val thirdLevelDiffOnExpense = diff(
+        propertyPeriodicSubmissionWithNewRaRAbout.ukOtherProperty
+          .flatMap(_.expenses)
+          .get,
+        updateRequestWithOriginalSubmissionValues.ukOtherProperty
+          .flatMap(_.expenses)
+          .get
+      )
+
+      firstLevelDiff shouldBe List("ukOtherProperty")
+      secondLevelDiff shouldBe List("income", "expenses")
+      thirdLevelDiffOnIncome should be(
+        List("ukOtherRentARoom")
+      )
+
+      thirdLevelDiffOnExpense should be(
+        List("ukOtherRentARoom")
+      )
+    }
+
     "be generated from rentals expenses and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)

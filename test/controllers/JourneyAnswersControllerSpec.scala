@@ -17,6 +17,7 @@
 package controllers
 
 import cats.syntax.either._
+import models.RentalsAndRaRAbout
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
@@ -663,7 +664,7 @@ class JourneyAnswersControllerSpec
   "update sba section" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimStructureBuildingAllowance" : true,
-                                                 | "structureBuildingFormGroup": [
+                                                 | "sbas": [
                                                  |            {
                                                  |                "structureBuildingQualifyingDate" : "2020-04-04",
                                                  |                "structureBuildingQualifyingAmount" : 12,
@@ -781,6 +782,46 @@ class JourneyAnswersControllerSpec
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, RepositoryError.asLeft[FetchedPropertyData])
       val result = await(underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest))
       result.header.status shouldBe 500
+    }
+  }
+
+  "create or update property rentals and rent a room about section" should {
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAbout)
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |    "ukRentARoomJointlyLet" : true,
+                                                 |    "totalIncomeAmount" : 55.22,
+                                                 |    "claimPropertyIncomeAllowanceYesOrNo": true,
+                                                 |    "claimExpensesOrRRR" : {
+                                                 |        "claimRRROrExpenses" : true,
+                                                 |        "rentARoomAmount" : 10.22
+                                                 |    }
+                                                 |}""".stripMargin)
+
+    "return CREATED for valid request body" in {
+
+      mockAuthorisation()
+
+      val journeyContextForPropertyRentalsAndRentARoomAbout =
+        ctx.copy(journey = JourneyName.PropertyRentalsAndRentARoomAbout)
+
+      mockSaveRentalsAndRentARoomAbout(
+        journeyContextForPropertyRentalsAndRentARoomAbout,
+        nino,
+        RentalsAndRaRAbout(true, 55.22, true, ClaimExpensesOrRRR(true, Some(10.22))),
+        true
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
     }
   }
 }
