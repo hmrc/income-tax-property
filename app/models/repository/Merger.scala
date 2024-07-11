@@ -19,7 +19,7 @@ package models.repository
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, StructureBuildingFormGroup}
+import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, Sba}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import models.{ExpensesStoreAnswers, RentARoomAllowancesStoreAnswers, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
@@ -408,8 +408,8 @@ object Merger {
         case _ => None
       }
 
-    private def fromSbaDownstreamToUpstream(sba: StructuredBuildingAllowance): StructureBuildingFormGroup =
-      StructureBuildingFormGroup(
+    private def fromSbaDownstreamToUpstream(sba: StructuredBuildingAllowance): Sba =
+      Sba(
         structureBuildingQualifyingDate = sba.firstYear.map(_.qualifyingDate).getOrElse(LocalDate.now()), // Todo
         structureBuildingQualifyingAmount = sba.amount,
         structureBuildingAllowanceClaim = sba.firstYear

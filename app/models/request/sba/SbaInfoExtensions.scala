@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 
 final case class SbaInfoToSave(
   claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-  structureBuildingFormGroup: List[StructureBuildingFormGroup]
+  structureBuildingFormGroup: List[Sba]
 )
 
 object SbaInfoToSave {

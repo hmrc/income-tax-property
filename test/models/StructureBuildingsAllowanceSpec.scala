@@ -29,7 +29,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
   val sbaInfo = SbaInfo(
     ClaimStructureBuildingAllowance(true),
     List(
-      StructureBuildingFormGroup(
+      Sba(
         LocalDate.parse("2020-04-04"),
         12,
         43,
@@ -39,7 +39,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
           Postcode("XX1 1XX")
         )
       ),
-      StructureBuildingFormGroup(
+      Sba(
         LocalDate.parse("2023-01-22"),
         535,
         54,
@@ -49,7 +49,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
           Postcode("XX1 1XX")
         )
       ),
-      StructureBuildingFormGroup(
+      Sba(
         LocalDate.parse("2024-02-12"),
         22,
         23,

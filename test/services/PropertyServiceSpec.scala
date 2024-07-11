@@ -27,7 +27,7 @@ import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, StructureBuildingFormGroup}
+import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, Sba}
 import models.request.ukrentaroom.RaRAdjustments
 import models.request._
 import models.responses._
@@ -760,7 +760,7 @@ class PropertyServiceSpec
         JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
 
       val sbasToBeAdded = List(
-        StructureBuildingFormGroup(
+        Sba(
           LocalDate.now(),
           12.34,
           56.78,
