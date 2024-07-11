@@ -84,7 +84,7 @@ class JourneyAnswersControllerSpec
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAbout)
 
     val validRequestBody: JsValue = Json.parse("""{
-                                                 |    "jointlyLet" : true,
+                                                 |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimExpensesOrRRR" : {
                                                  |        "claimRRROrExpenses" : true,

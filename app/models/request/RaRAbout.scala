@@ -28,7 +28,7 @@ object ClaimExpensesOrRRR {
 }
 
 final case class RaRAbout(
-                           jointlyLet: Boolean,
+                           jointlyLetYesOrNo: Boolean,
                            totalIncomeAmount: BigDecimal,
                            claimExpensesOrRRR: ClaimExpensesOrRRR
                          )
