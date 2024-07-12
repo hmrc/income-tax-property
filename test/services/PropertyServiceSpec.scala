@@ -2066,7 +2066,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     None,
-                    Some(UkRentARoom(rentalsAndRaRAbout.ukRentARoomJointlyLet))
+                    Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
                   )
                 ),
                 None
