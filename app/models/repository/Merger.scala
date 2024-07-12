@@ -49,7 +49,7 @@ object Merger {
 
           Some(
             RaRAbout(
-              ukRentARoomJointlyLet = jointlyLet,
+              jointlyLetYesOrNo = jointlyLet,
               totalIncomeAmount = ukOtherProperty.income.flatMap(_.ukOtherRentARoom.map(_.rentsReceived)).getOrElse(0),
               claimExpensesOrRRR = ClaimExpensesOrRRR(
                 extracted.fold(!amountClaimedMaybe.isEmpty)(_.claimExpensesOrRRR),

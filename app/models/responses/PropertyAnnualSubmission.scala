@@ -180,7 +180,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(ukRaRAbout.ukRentARoomJointlyLet))
+      Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
     )(request)
 
     resultWithUkRentARoom
