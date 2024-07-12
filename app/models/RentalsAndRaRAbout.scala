@@ -20,7 +20,7 @@ import models.request.{BalancingCharge, ClaimExpensesOrRRR}
 import play.api.libs.json.Json
 
 final case class RentalsAndRaRAbout(
-  ukRentARoomJointlyLet: Boolean,
+  jointlyLetYesOrNo: Boolean,
   totalIncomeAmount: BigDecimal,
   claimPropertyIncomeAllowanceYesOrNo: Boolean,
   claimExpensesOrRRR: ClaimExpensesOrRRR
