@@ -10,14 +10,15 @@ class UkOtherPropertySpec extends UnitTest {
       Some(UkOtherPropertyIncome(None, None, None, None, None, None)),
       Some(UkOtherPropertyExpenses(Some(22), None, None, None, None, None, None, None, None, None, None))
     )
-    UkOtherProperty.convertToNoneIfAllFieldsNone(ukOtherProperty) shouldBe ukOtherProperty.copy(income = None)
+    UkOtherProperty.convertToNoneIfAllFieldsNone(ukOtherProperty) shouldBe Some(ukOtherProperty.copy(income = None))
   }
+
   "convert expense having all None values to None" in {
 
     val ukOtherProperty: UkOtherProperty = UkOtherProperty(
       Some(UkOtherPropertyIncome(Some(12.34), None, None, None, None, None)),
       Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
     )
-    UkOtherProperty.convertToNoneIfAllFieldsNone(ukOtherProperty) shouldBe ukOtherProperty.copy(expenses = None)
+    UkOtherProperty.convertToNoneIfAllFieldsNone(ukOtherProperty) shouldBe Some(ukOtherProperty.copy(expenses = None))
   }
 }
