@@ -43,8 +43,8 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     entity: T
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] =
-    entity match {
+  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+    val result = entity match {
       case e @ RaRAbout(_, _, _)                   => fromUkRaRAbout(taxYear, periodicSubmissionMaybe, e)
       case e @ Expenses(_, _, _, _, _, _, _, _)    => fromExpenses(taxYear, periodicSubmissionMaybe, e)
       case e @ RentARoomExpenses(_, _, _, _, _, _) => fromRaRExpenses(taxYear, periodicSubmissionMaybe, e)
@@ -57,6 +57,13 @@ object CreatePropertyPeriodicSubmissionRequest {
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[CreatePropertyPeriodicSubmissionRequest]
     }
+
+    result.map(r =>
+      r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone(_)))
+    )
+
+  }
+
   private def fromPropertyPeriodicSubmission(
     taxYear: TaxYear,
     maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]

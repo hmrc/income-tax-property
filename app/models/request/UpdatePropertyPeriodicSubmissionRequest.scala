@@ -80,8 +80,8 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromEntity[T](
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     entity: T
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] =
-    entity match {
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+    val result = entity match {
       case e @ RaRAbout(_, _, _)                                => fromUkRaRAbout(periodicSubmissionMaybe, e)
       case e @ Expenses(_, _, _, _, _, _, _, _)                 => fromExpenses(periodicSubmissionMaybe, e)
       case e @ RentARoomExpenses(_, _, _, _, _, _)              => fromRaRExpenses(periodicSubmissionMaybe, e)
@@ -93,6 +93,11 @@ object UpdatePropertyPeriodicSubmissionRequest {
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[UpdatePropertyPeriodicSubmissionRequest]
     }
+
+    result.map(r =>
+      r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone(_)))
+    )
+  }
 
   def fromUkRaRAbout(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
