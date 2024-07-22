@@ -163,7 +163,6 @@ class JourneyAnswersControllerSpec
 
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |   "toexpensesLessThan1000": true,
                                                  |   "claimPropertyIncomeAllowanceYesOrNo": true
                                                  |}
                                                  |""".stripMargin)
@@ -174,7 +173,7 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       mockPersistAnswers(
         ctx,
-        PropertyRentalsAbout(toexpensesLessThan1000 = true, claimPropertyIncomeAllowanceYesOrNo = true)
+        PropertyRentalsAbout(claimPropertyIncomeAllowanceYesOrNo = true)
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
