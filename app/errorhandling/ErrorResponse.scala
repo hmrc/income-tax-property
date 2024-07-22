@@ -16,10 +16,10 @@
 
 package errorhandling
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 final case class ErrorResponse(status: Int, message: String)
 
 object ErrorResponse {
-  implicit val format = Json.format[ErrorResponse]
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

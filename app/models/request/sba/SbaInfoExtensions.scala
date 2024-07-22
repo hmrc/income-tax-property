@@ -17,7 +17,7 @@
 package models.request.sba
 
 import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 final case class SbaInfoToSave(
   claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
@@ -25,7 +25,7 @@ final case class SbaInfoToSave(
 )
 
 object SbaInfoToSave {
-  implicit val format = Json.format[SbaInfoToSave]
+  implicit val format: OFormat[SbaInfoToSave] = Json.format[SbaInfoToSave]
 }
 
 object SbaInfoExtensions {

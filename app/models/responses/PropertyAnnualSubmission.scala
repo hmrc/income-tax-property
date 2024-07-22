@@ -17,11 +17,10 @@
 package models.responses
 
 import models.RentalsAndRaRAbout
-import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{CapitalAllowancesForACar, Expenses, PropertyAbout, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RentalAllowances}
+import models.request._
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -45,7 +44,7 @@ final case class FetchedPropertyData(
 )
 
 object FetchedPropertyData {
-  implicit val format = Json.format[FetchedPropertyData]
+  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
 }
 
 case class PropertyAnnualSubmission(
@@ -58,7 +57,7 @@ case class PropertyAnnualSubmission(
 
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
-  val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+  val emptyPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
 
   def fromEsbas(
     propertyAnnualSubmission: PropertyAnnualSubmission,
@@ -151,8 +150,7 @@ object PropertyAnnualSubmission {
       Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
     )(request)
 
-    val focusFromRequestOnToBalancingChargeLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
+    ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
 
     resultWithUkRentARoom
   }
@@ -291,8 +289,7 @@ object PropertyAnnualSubmission {
     val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
 
     // Focuses
-    val focusFromRequestOnToannualInvestmentAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
+    ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
     val focusFromRequestOnTozeroEmissionCarAllowanceLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionCarAllowanceLens)
     val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =

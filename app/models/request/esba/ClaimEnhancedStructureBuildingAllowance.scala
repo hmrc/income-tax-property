@@ -16,10 +16,10 @@
 
 package models.request.esba
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 final case class ClaimEnhancedStructureBuildingAllowance(value: Boolean) extends AnyVal
 
 object ClaimEnhancedStructureBuildingAllowance {
-  implicit val format = Json.valueFormat[ClaimEnhancedStructureBuildingAllowance]
+  implicit val format: Format[ClaimEnhancedStructureBuildingAllowance] = Json.valueFormat[ClaimEnhancedStructureBuildingAllowance]
 }

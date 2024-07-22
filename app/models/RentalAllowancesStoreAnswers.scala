@@ -16,7 +16,7 @@
 
 package models
 
-import models.request.{ElectricChargePointAllowance, RentalAllowances}
+import models.request.RentalAllowances
 import play.api.libs.json.{Json, OFormat}
 
 case class RentalAllowancesStoreAnswers(electricChargePointAllowanceYesOrNo: Boolean)
