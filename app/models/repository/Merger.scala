@@ -71,7 +71,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -86,7 +86,7 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => ConsolidatedExpenses(true, Some(ce))),
+              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => ConsolidatedExpenses(true, Some(ce))),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
               loanInterestOrOtherFinancialCost = fromDownstream.financialCosts,
@@ -114,7 +114,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             RentARoomExpenses(
-              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -127,7 +127,7 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             RentARoomExpenses(
-              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(true, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,

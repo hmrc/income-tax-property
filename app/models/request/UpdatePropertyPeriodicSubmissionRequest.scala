@@ -80,8 +80,8 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromEntity[T](
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     entity: T
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] =
-    entity match {
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+    val result = entity match {
       case e @ RaRAbout(_, _, _)                                => fromUkRaRAbout(periodicSubmissionMaybe, e)
       case e @ Expenses(_, _, _, _, _, _, _, _)                 => fromExpenses(periodicSubmissionMaybe, e)
       case e @ RentARoomExpenses(_, _, _, _, _, _)              => fromRaRExpenses(periodicSubmissionMaybe, e)
@@ -93,6 +93,11 @@ object UpdatePropertyPeriodicSubmissionRequest {
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[UpdatePropertyPeriodicSubmissionRequest]
     }
+
+    result.map(r =>
+      r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone(_)))
+    )
+  }
 
   def fromUkRaRAbout(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
@@ -239,8 +244,8 @@ object UpdatePropertyPeriodicSubmissionRequest {
               ),
               ukOtherRentARoom =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom))),
-              consolidatedExpense =
-                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense))),
+              consolidatedExpenses =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpenses))),
               residentialFinancialCost =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost)))
             )
@@ -282,7 +287,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
                 _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))
               ),
               other = raRExpenses.otherPropertyExpenses,
-              consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
+              consolidatedExpenses = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
               financialCosts =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.financialCosts))),
               travelCosts = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.travelCosts))),

@@ -39,7 +39,7 @@ POST          /property/:taxYear/:incomeSourceId/rental-income/:nino/answers    
 
 POST          /property/:taxYear/:incomeSourceId/property-rental-expenses/:nino/answers                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rental-expenses")
 
-POST          /property/:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answers                                                controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rent-a-room-expenses")
+POST          /property/:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answers                                                controllers.JourneyAnswersController.saveRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rent-a-room-expenses")
 
 POST          /property/:taxYear/:incomeSourceId/rent-a-room-adjustments/:nino/answers                                                controllers.JourneyAnswersController.savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
