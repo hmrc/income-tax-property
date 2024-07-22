@@ -20,11 +20,10 @@ import actions.AuthorisationRequest
 import models.User
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.request.{PremiumsGrantLease, PropertyRentalsIncome}
-import org.apache.pekko.util.ByteString
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Logging
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsNull, JsUndefined, JsValue, Json}
+import play.api.http.Status.{BAD_REQUEST, OK}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Results.Ok
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.Helpers.status
@@ -32,8 +31,8 @@ import utils.ControllerUnitTest
 import utils.mocks.MockAuthorisedAction
 import utils.providers.FakeRequestProvider
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RequestHandlerSpec
     extends ControllerUnitTest with MockAuthorisedAction with FakeRequestProvider with ScalaCheckPropertyChecks {

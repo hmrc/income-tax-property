@@ -19,7 +19,6 @@ package models.repository
 import models.repository.Extractor._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.responses.Esba
 import utils.UnitTest
 
 import java.time.LocalDate

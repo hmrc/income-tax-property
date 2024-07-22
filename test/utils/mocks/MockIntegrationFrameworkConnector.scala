@@ -23,7 +23,6 @@ import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPe
 import models.responses._
 import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future

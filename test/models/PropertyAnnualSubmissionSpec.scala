@@ -16,10 +16,9 @@
 
 package models
 
-import models.request.{BalancingCharge, CapitalAllowancesForACar, ClaimExpensesOrRRR, ElectricChargePointAllowance, PropertyRentalAdjustments, RaRAbout, RenovationAllowanceBalancingCharge, RentARoomAllowances, RentalAllowances}
-import models.request.common.Postcode
+import models.request._
 import models.request.ukrentaroom.RaRAdjustments
-import models.responses.{AnnualForeignFhlEea, AnnualForeignProperty, AnnualUkFhlProperty, AnnualUkOtherProperty, Esba, ForeignFhlAdjustments, ForeignFhlAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances, PropertyAnnualSubmission, StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkFhlAdjustments, UkFhlAllowances, UkOtherAdjustments, UkOtherAllowances, UkRentARoom}
+import models.responses._
 import utils.CaseClassLevelDifferenceUtil.diff
 import utils.UnitTest
 
