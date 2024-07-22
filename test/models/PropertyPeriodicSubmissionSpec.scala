@@ -90,7 +90,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
               residentialFinancialCost = None,
               residentialFinancialCostsCarriedForward = None,
               ukOtherRentARoom = None,
-              consolidatedExpense = None
+              consolidatedExpenses = None
             )
           )
         )
@@ -117,7 +117,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
               residentialFinancialCost = None,
               residentialFinancialCostsCarriedForward = None,
               ukOtherRentARoom = None,
-              consolidatedExpense = None
+              consolidatedExpenses = None
             )
           )
         )
@@ -619,7 +619,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           "professionalFees",
           "costOfServices",
           "other",
-          "consolidatedExpense"
+          "consolidatedExpenses"
         )
       )
     }

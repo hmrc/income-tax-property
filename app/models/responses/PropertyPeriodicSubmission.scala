@@ -197,17 +197,17 @@ object UkOtherPropertyIncome {
 }
 
 case class UkOtherPropertyExpenses(
-  premisesRunningCosts: Option[BigDecimal],
-  repairsAndMaintenance: Option[BigDecimal],
-  financialCosts: Option[BigDecimal],
-  professionalFees: Option[BigDecimal],
-  travelCosts: Option[BigDecimal],
-  costOfServices: Option[BigDecimal],
-  other: Option[BigDecimal],
-  residentialFinancialCost: Option[BigDecimal],
-  residentialFinancialCostsCarriedForward: Option[BigDecimal],
-  ukOtherRentARoom: Option[UkRentARoomExpense],
-  consolidatedExpense: Option[BigDecimal]
+                                    premisesRunningCosts: Option[BigDecimal],
+                                    repairsAndMaintenance: Option[BigDecimal],
+                                    financialCosts: Option[BigDecimal],
+                                    professionalFees: Option[BigDecimal],
+                                    travelCosts: Option[BigDecimal],
+                                    costOfServices: Option[BigDecimal],
+                                    other: Option[BigDecimal],
+                                    residentialFinancialCost: Option[BigDecimal],
+                                    residentialFinancialCostsCarriedForward: Option[BigDecimal],
+                                    ukOtherRentARoom: Option[UkRentARoomExpense],
+                                    consolidatedExpenses: Option[BigDecimal]
 )
 
 object UkOtherPropertyExpenses {
