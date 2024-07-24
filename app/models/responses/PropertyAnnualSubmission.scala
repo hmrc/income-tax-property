@@ -17,10 +17,10 @@
 package models.responses
 
 import models.RentalsAndRaRAbout
+import models.request._
 import models.request.esba.EsbaInfo
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
-import models.request._
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{Json, OFormat}
@@ -289,7 +289,6 @@ object PropertyAnnualSubmission {
     val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
 
     // Focuses
-    ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
     val focusFromRequestOnTozeroEmissionCarAllowanceLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionCarAllowanceLens)
     val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =
