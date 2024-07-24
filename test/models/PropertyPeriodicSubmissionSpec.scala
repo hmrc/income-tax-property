@@ -269,7 +269,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       val ukRaRAbout = RaRAbout(
         true,
         1.23,
-        ClaimExpensesOrRRR(true, Some(4.56))
+        ClaimExpensesOrRelief(true, Some(4.56))
       )
       CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
         TaxYear(taxYear),
@@ -282,7 +282,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           ),
           propertyPeriodicSubmission.ukOtherProperty.flatMap(
             _.expenses.map(
-              _.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRRR.rentARoomAmount.map(UkRentARoomExpense(_)))
+              _.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_)))
             )
           )
         ).asRight[ServiceError]
@@ -298,7 +298,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             false,
-            ClaimExpensesOrRRR(false, None)
+            ClaimExpensesOrRelief(false, None)
           )
         ) shouldBe
         Right(
@@ -327,7 +327,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           RaRAbout(
             false,
             12.34,
-            ClaimExpensesOrRRR(
+            ClaimExpensesOrRelief(
               false,
               None
             )
@@ -360,7 +360,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             false,
-            ClaimExpensesOrRRR(false, None)
+            ClaimExpensesOrRelief(false, None)
           )
         ) shouldBe
         Right(
@@ -386,7 +386,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           RaRAbout(
             false,
             12.34,
-            ClaimExpensesOrRRR(
+            ClaimExpensesOrRelief(
               false,
               None
             )
@@ -415,7 +415,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           RaRAbout(
             false,
             12.34,
-            ClaimExpensesOrRRR(true, Some(56.78))
+            ClaimExpensesOrRelief(true, Some(56.78))
           )
         )
 
@@ -468,7 +468,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             true,
-            ClaimExpensesOrRRR(true, Some(56.78))
+            ClaimExpensesOrRelief(true, Some(56.78))
           )
         )
 

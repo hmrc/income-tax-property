@@ -1850,7 +1850,7 @@ class PropertyServiceSpec
     val ukRaRAbout = RaRAbout(
       true,
       55.22,
-      ClaimExpensesOrRRR(
+      ClaimExpensesOrRelief(
         true,
         Some(22.55)
       )
@@ -2000,7 +2000,7 @@ class PropertyServiceSpec
       true,
       55.22,
       true,
-      ClaimExpensesOrRRR(
+      ClaimExpensesOrRelief(
         true,
         Some(22.55)
       )
