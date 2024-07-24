@@ -16,11 +16,11 @@
 
 package models.request.esba
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 final case class EsbaClaims(value: Boolean) extends AnyVal
 
 object EsbaClaims {
-  implicit val format = Json.valueFormat[EsbaClaims]
+  implicit val format: Format[EsbaClaims] = Json.valueFormat[EsbaClaims]
 }
 

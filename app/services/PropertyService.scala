@@ -25,18 +25,15 @@ import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
 import models.repository.Extractor.GeneralExtractor
-import models.repository.Merger._
 import models.request._
+import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfoExtensions._
-import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
+import models.request.sba.SbaInfo
 import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models._
-import monocle.macros.GenLens
-import play.api.libs.Files.logger
-import play.api.libs.json.{Json, OFormat, Writes}
+import play.api.Logging
+import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -44,31 +41,12 @@ import java.time.Period
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class ClaimExpensesOrRRRYesNo(claimExpensesOrRRR: Boolean)
-
-object ClaimExpensesOrRRRYesNo {
-  implicit val format: OFormat[ClaimExpensesOrRRRYesNo] = Json.format[ClaimExpensesOrRRRYesNo]
-}
-
-final case class RaRBalancingChargeYesNo(raRBalancingChargeYesNo: Boolean)
-
-object RaRBalancingChargeYesNo {
-  implicit val format: OFormat[RaRBalancingChargeYesNo] = Json.format[RaRBalancingChargeYesNo]
-}
-
-final case class ClaimPropertyIncomeAllowanceYesOrNo(claimPropertyIncomeAllowanceYesOrNo: Boolean)
-
-object ClaimPropertyIncomeAllowanceYesOrNo {
-  implicit val format = Json.format[ClaimPropertyIncomeAllowanceYesOrNo]
-
-}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
   repository: MongoJourneyAnswersRepository
-)(implicit
-  ec: ExecutionContext
-) {
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
   def saveIncome(journeyContext: JourneyContext, nino: Nino, propertyRentalsIncome: PropertyRentalsIncome)(implicit
     hc: HeaderCarrier
@@ -661,12 +639,10 @@ class PropertyService @Inject() (
             ctx.nino.value,
             ctx.incomeSourceId.value
           )
-          .leftFlatMap(e =>
-            e match {
-              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-            }
-          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          }
       _ <- createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,

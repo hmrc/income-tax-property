@@ -16,14 +16,13 @@
 
 package models.repository
 
+import models._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.sba.{ClaimStructureBuildingAllowance, SbaInfo, SbaInfoToSave, Sba}
+import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{ExpensesStoreAnswers, RentARoomAllowancesStoreAnswers, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
-import services.{ClaimExpensesOrRRRYesNo, RaRBalancingChargeYesNo}
 
 import java.time.LocalDate
 
@@ -52,7 +51,7 @@ object Merger {
               jointlyLetYesOrNo = jointlyLet,
               totalIncomeAmount = ukOtherProperty.income.flatMap(_.ukOtherRentARoom.map(_.rentsReceived)).getOrElse(0),
               claimExpensesOrRRR = ClaimExpensesOrRRR(
-                extracted.fold(!amountClaimedMaybe.isEmpty)(_.claimExpensesOrRRR),
+                extracted.fold(amountClaimedMaybe.isDefined)(_.claimExpensesOrRRR),
                 amountClaimedMaybe
               )
             )
@@ -86,7 +85,8 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => ConsolidatedExpenses(true, Some(ce))),
+              consolidatedExpenses =
+                fromDownstream.consolidatedExpenses.map(ce => ConsolidatedExpenses(true, Some(ce))),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
               loanInterestOrOtherFinancialCost = fromDownstream.financialCosts,
@@ -128,7 +128,7 @@ object Merger {
           Some(
             RentARoomExpenses(
               consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
-                ConsolidatedExpenses(true, Some(ce))
+                ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
@@ -154,14 +154,17 @@ object Merger {
               isNonUKLandlord = extracted.isNonUKLandlord,
               incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
-              deductingTax = fromDownstream.taxDeducted.map(amount => DeductingTax(true, Some(amount))),
+              deductingTax =
+                fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
               calculatedFigureYourself = extracted.calculatedFigureYourself,
               yearLeaseAmount = extracted.receivedGrantLeaseAmount,
               receivedGrantLeaseAmount = extracted.yearLeaseAmount,
-              premiumsGrantLease =
-                fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
-              reversePremiumsReceived =
-                fromDownstream.reversePremiums.map(rp => ReversePremiumsReceived(true, Some(rp)))
+              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
+                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+              ),
+              reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
+                ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
+              )
             )
           )
         case (None, Some(fromDownstream)) =>
@@ -170,14 +173,17 @@ object Merger {
               isNonUKLandlord = false,
               incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
-              deductingTax = fromDownstream.taxDeducted.map(amount => DeductingTax(true, Some(amount))),
+              deductingTax =
+                fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
               calculatedFigureYourself = None,
               yearLeaseAmount = None,
               receivedGrantLeaseAmount = None,
-              premiumsGrantLease =
-                fromDownstream.premiumsOfLeaseGrant.map(polg => PremiumsGrantLease(true, Some(polg))),
-              reversePremiumsReceived =
-                fromDownstream.reversePremiums.map(rp => ReversePremiumsReceived(true, Some(rp)))
+              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
+                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+              ),
+              reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
+                ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
+              )
             )
           )
         case _ => None
@@ -292,7 +298,7 @@ object Merger {
                 renovationAllowanceBalancingChargeYesNo = extractedMaybe
                   .map(_.renovationAllowanceBalancingChargeYesNo)
                   .getOrElse(
-                    !fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges.isEmpty
+                    fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges.isDefined
                   ),
                 renovationAllowanceBalancingChargeAmount =
                   fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
@@ -342,7 +348,7 @@ object Merger {
                 BalancingCharge(
                   balancingChargeYesNo = extractedMaybe
                     .map(_.raRBalancingChargeYesNo)
-                    .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
+                    .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
               ),
@@ -395,14 +401,14 @@ object Merger {
           Some(
             SbaInfo(
               claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance,
-              sbas = fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              sbas = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )
         case (None, Some(fromDownstream)) =>
           Some(
             SbaInfo(
               claimStructureBuildingAllowance = ClaimStructureBuildingAllowance(true),
-              sbas = fromDownstream.map(fromSbaDownstreamToUpstream(_))
+              sbas = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )
         case _ => None

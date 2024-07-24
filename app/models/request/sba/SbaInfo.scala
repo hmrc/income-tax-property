@@ -17,7 +17,7 @@
 package models.request.sba
 
 import models.request.common.Address
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
 
 import java.time.LocalDate
 
@@ -38,5 +38,5 @@ final case class SbaInfo(
 )
 
 object SbaInfo {
-  implicit val format = Json.format[SbaInfo]
+  implicit val format: OFormat[SbaInfo] = Json.format[SbaInfo]
 }

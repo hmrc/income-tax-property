@@ -16,10 +16,10 @@
 
 package models.request.common
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 final case class BuildingNumber(value: String) extends AnyVal
 
 object BuildingNumber {
-  implicit val format = Json.valueFormat[BuildingNumber]
+  implicit val format: Format[BuildingNumber] = Json.valueFormat[BuildingNumber]
 }

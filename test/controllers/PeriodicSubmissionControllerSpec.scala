@@ -21,7 +21,7 @@ import models.errors.{ApiServiceError, DataNotFoundError}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers.status
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockPropertyService}

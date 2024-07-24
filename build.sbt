@@ -17,7 +17,7 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*",
     "controllers.testOnly.*",
-    "models.*",
+    "models.*"
   )
 
   Seq(
@@ -30,8 +30,14 @@ lazy val coverageSettings: Seq[Setting[?]] = {
 
 Global / scalacOptions += "-Ymacro-annotations"
 
-ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.12"
+inThisBuild(
+  List(
+    majorVersion := 0,
+    scalaVersion := "2.13.12",
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
+  )
+)
 
 lazy val microservice = Project("income-tax-property", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -40,7 +46,8 @@ lazy val microservice = Project("income-tax-property", file("."))
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
-  .settings(resolvers += Resolver.jcenterRepo,
+  .settings(
+    resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
       "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"

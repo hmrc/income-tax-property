@@ -17,6 +17,7 @@
 package services
 
 import connectors.IntegrationFrameworkConnector
+import models._
 import models.common._
 import models.domain.JourneyAnswers
 import models.repository.Merger._
@@ -25,7 +26,6 @@ import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{ExpensesStoreAnswers, RentARoomAllowancesStoreAnswers, RentARoomExpensesStoreAnswers, RentalAllowancesStoreAnswers}
 import repositories.MongoJourneyAnswersRepository
 
 import javax.inject.Inject
@@ -272,7 +272,7 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
     } yield esba.toList
 
     val esbasInRequestMaybe: Option[List[EsbaInUpstream]] = esbasMaybe.flatMap(
-      EsbaInUpstream.fromEsbasToEsbasInUpstream(_)
+      EsbaInUpstream.fromEsbasToEsbasInUpstream
     )
 
     val esbaInfoSavedInRepositoryMaybe: Option[EsbaInfoToSave] = resultFromRepository match {

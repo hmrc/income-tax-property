@@ -17,7 +17,7 @@
 package models.request.esba
 
 import models.responses.{Esba, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 final case class EsbaInfoToSave(
   claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
@@ -25,7 +25,7 @@ final case class EsbaInfoToSave(
 )
 
 object EsbaInfoToSave {
-  implicit val format = Json.format[EsbaInfoToSave]
+  implicit val format: OFormat[EsbaInfoToSave] = Json.format[EsbaInfoToSave]
 }
 
 object EsbaInfoExtensions {

@@ -16,16 +16,10 @@
 
 package models
 
-import models.request.ClaimExpensesOrRRR
 import play.api.libs.json.{Json, OFormat}
 
-final case class RentalsAndRaRAbout(
-  jointlyLetYesOrNo: Boolean,
-  totalIncomeAmount: BigDecimal,
-  claimPropertyIncomeAllowanceYesOrNo: Boolean,
-  claimExpensesOrRRR: ClaimExpensesOrRRR
-)
+final case class ClaimPropertyIncomeAllowanceYesOrNo(claimPropertyIncomeAllowanceYesOrNo: Boolean)
 
-object RentalsAndRaRAbout {
-  implicit val format: OFormat[RentalsAndRaRAbout] = Json.format[RentalsAndRaRAbout]
+object ClaimPropertyIncomeAllowanceYesOrNo {
+  implicit val format: OFormat[ClaimPropertyIncomeAllowanceYesOrNo] = Json.format[ClaimPropertyIncomeAllowanceYesOrNo]
 }

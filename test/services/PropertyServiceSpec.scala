@@ -19,7 +19,6 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import models.common._
 import models.domain.JourneyAnswers
 import models.errors._
@@ -31,6 +30,7 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
+import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -2159,7 +2159,6 @@ class PropertyServiceSpec
     val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
 
     "return no content for valid request" in {
-      val fromDate = LocalDate.now().minusMonths(1)
 
       mockGetPropertyAnnualSubmission(
         taxYear,

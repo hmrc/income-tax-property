@@ -16,13 +16,12 @@
 
 package connectors.response
 
-import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.HttpResponse
 import connectors.response.GetPropertyAnnualSubmissionResponse.getPropertyAnnualSubmissionDataReads
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses.PropertyAnnualSubmission
-import org.scalatest.Ignore
+import play.api.http.Status._
+import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
 import java.time.LocalDateTime

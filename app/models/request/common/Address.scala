@@ -16,10 +16,10 @@
 
 package models.request.common
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 final case class Address(buildingName: BuildingName, buildingNumber: BuildingNumber, postCode: Postcode)
 
 object Address {
-  implicit val format = Json.format[Address]
+  implicit val format: OFormat[Address] = Json.format[Address]
 }

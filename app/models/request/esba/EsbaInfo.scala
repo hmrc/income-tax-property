@@ -18,7 +18,7 @@ package models.request.esba
 
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.responses.Esba
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 
@@ -30,7 +30,7 @@ final case class EsbaInUpstream(
 )
 
 object EsbaInUpstream {
-  implicit val format = Json.format[EsbaInUpstream]
+  implicit val format: OFormat[EsbaInUpstream] = Json.format[EsbaInUpstream]
 
   def fromEsbasToEsbasInUpstream(esbas: List[Esba]): Option[List[EsbaInUpstream]] =
     toNoneIfAnyFirstYearIsNone(esbas)
@@ -69,5 +69,5 @@ final case class EsbaInfo(
 )
 
 object EsbaInfo {
-  implicit val format = Json.format[EsbaInfo]
+  implicit val format: OFormat[EsbaInfo] = Json.format[EsbaInfo]
 }
