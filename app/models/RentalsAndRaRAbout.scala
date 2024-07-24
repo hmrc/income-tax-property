@@ -16,14 +16,14 @@
 
 package models
 
-import models.request.ClaimExpensesOrRRR
+import models.request.ClaimExpensesOrRelief
 import play.api.libs.json.{Json, OFormat}
 
 final case class RentalsAndRaRAbout(
   jointlyLetYesOrNo: Boolean,
   totalIncomeAmount: BigDecimal,
   claimPropertyIncomeAllowanceYesOrNo: Boolean,
-  claimExpensesOrRRR: ClaimExpensesOrRRR
+  claimExpensesOrRelief: ClaimExpensesOrRelief
 )
 
 object RentalsAndRaRAbout {

@@ -229,7 +229,7 @@ class PropertyService @Inject() (
            )
       res <- persistAnswers(
                ctx,
-               ClaimExpensesOrRRRYesNo(rarAbout.claimExpensesOrRRR.claimRRROrExpenses)
+               ClaimExpensesOrRRRYesNo(rarAbout.claimExpensesOrRelief.claimExpensesOrReliefYesNo)
              )
 
     } yield res
@@ -263,7 +263,7 @@ class PropertyService @Inject() (
            )
       _ <- persistAnswers(
              ctx,
-             ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRRR.claimRRROrExpenses)
+             ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRelief.claimExpensesOrReliefYesNo)
            )
       res <- persistAnswers(
                ctx,

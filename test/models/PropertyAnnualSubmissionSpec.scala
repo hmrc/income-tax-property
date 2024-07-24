@@ -242,7 +242,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       val ukRaRAbout = RaRAbout(
         true,
         12.34,
-        ClaimExpensesOrRRR(
+        ClaimExpensesOrRelief(
           true,
           Some(56.78)
         )
@@ -577,7 +577,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           RaRAbout(
             false,
             12.34,
-            ClaimExpensesOrRRR(true, Some(56.78))
+            ClaimExpensesOrRelief(true, Some(56.78))
           ),
           annualSubmissionWithAllFieldsFilled
         )
@@ -613,7 +613,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             false,
             12.34,
             true,
-            ClaimExpensesOrRRR(true, Some(56.78))
+            ClaimExpensesOrRelief(true, Some(56.78))
           ),
           annualSubmissionWithAllFieldsFilled
         )

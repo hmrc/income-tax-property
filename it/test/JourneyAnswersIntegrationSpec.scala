@@ -15,11 +15,11 @@
  */
 
 import connectors.ConnectorIntegrationTest
+import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
-import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInUpstream, EsbaInfo}
+import models.request.esba._
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{BalancingCharge, CapitalAllowancesForACar, ClaimExpensesOrRRR, ConsolidatedExpenses, CreatePropertyPeriodicSubmissionRequest, DeductingTax, ElectricChargePointAllowance, PremiumsGrantLease, PropertyRentalAdjustments, PropertyRentalsExpense, PropertyRentalsIncome, RaRAbout, RenovationAllowanceBalancingCharge, RentARoomAllowances, RentARoomExpenses, RentalAllowances, ReversePremiumsReceived}
-import models.responses.{AnnualUkOtherProperty, Esba, FetchedPropertyData, PeriodicSubmissionIdModel, PropertyAnnualSubmission, PropertyPeriodicSubmission, RentARoomIncome, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate, UkOtherAdjustments, UkOtherAllowances, UkOtherProperty, UkOtherPropertyExpenses, UkOtherPropertyIncome, UkRentARoom, UkRentARoomExpense}
+import models.responses._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -29,10 +29,10 @@ import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
+import support.stubs.AuthStub._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
 import java.time.{LocalDate, LocalDateTime}
-import support.stubs.AuthStub._
 class JourneyAnswersIntegrationSpec
     extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
     with ConnectorIntegrationTest {
@@ -303,7 +303,7 @@ class JourneyAnswersIntegrationSpec
             Some(14)
           )
         ),
-        raRAbout = Some(RaRAbout(true, 7, ClaimExpensesOrRRR(true, Some(44)))),
+        raRAbout = Some(RaRAbout(true, 7, ClaimExpensesOrRelief(true, Some(44)))),
         rarExpenses = Some(
           RentARoomExpenses(
             Some(ConsolidatedExpenses(true, Some(25))),

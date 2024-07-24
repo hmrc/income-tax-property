@@ -87,8 +87,8 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
-                                                 |    "claimExpensesOrRRR" : {
-                                                 |        "claimRRROrExpenses" : true,
+                                                 |    "claimExpensesOrRelief" : {
+                                                 |        "claimExpensesOrReliefYesNo" : true,
                                                  |        "rentARoomAmount" : 10.22
                                                  |    }
                                                  |}""".stripMargin)
@@ -96,7 +96,7 @@ class JourneyAnswersControllerSpec
     "return CREATED for valid request body" in {
 
       mockAuthorisation()
-      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRRR(true, Some(10.22))), true)
+      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRelief(true, Some(10.22))), true)
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.saveRentARoomAbout(taxYear, incomeSourceId, nino)(request))
@@ -795,8 +795,8 @@ class JourneyAnswersControllerSpec
                                                  |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimPropertyIncomeAllowanceYesOrNo": true,
-                                                 |    "claimExpensesOrRRR" : {
-                                                 |        "claimRRROrExpenses" : true,
+                                                 |    "claimExpensesOrRelief" : {
+                                                 |        "claimExpensesOrReliefYesNo" : true,
                                                  |        "rentARoomAmount" : 10.22
                                                  |    }
                                                  |}""".stripMargin)
@@ -811,7 +811,7 @@ class JourneyAnswersControllerSpec
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RentalsAndRaRAbout(true, 55.22, true, ClaimExpensesOrRRR(true, Some(10.22))),
+        RentalsAndRaRAbout(true, 55.22, true, ClaimExpensesOrRelief(true, Some(10.22))),
         true
       )
 
