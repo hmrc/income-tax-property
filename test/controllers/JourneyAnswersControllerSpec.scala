@@ -826,4 +826,54 @@ class JourneyAnswersControllerSpec
       status(result) shouldBe BAD_REQUEST
     }
   }
+
+  "create property rentals and rent a room income section" should {
+    val validRequestBody: JsValue = Json.parse("""
+                                                 |{
+                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "isNonUKLandlord" : false,
+                                                 |            "otherIncomeFromProperty" : 25,
+                                                 |            "deductingTax" : {
+                                                 |                "taxDeductedYesNo" : true,
+                                                 |                "taxDeductedAmount" : 20
+                                                 |            },
+                                                 |            "premiumsGrantLease" : {
+                                                 |                "premiumsGrantLeaseYesOrNo" : true,
+                                                 |                "premiumsGrantLease" : 5
+                                                 |            },
+                                                 |            "reversePremiumsReceived" : {
+                                                 |                "reversePremiumsReceived" : true,
+                                                 |                "amount" : 10
+                                                 |            }
+                                                 |        }
+                                                 |""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalsAndRaRIncome)
+
+    "return created for valid request body" in {
+
+      mockAuthorisation()
+      val saveIncomeRequest = validRequestBody.as[PropertyRentalsIncome]
+      mockSaveIncome(
+        nino,
+        incomeSourceId,
+        taxYear,
+        ctx,
+        saveIncomeRequest,
+        Right(Some(PeriodicSubmissionId("submissionId")))
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRentalsAndRaRIncome(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveIncome(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 }
