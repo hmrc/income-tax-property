@@ -56,3 +56,5 @@ PUT           /completed-section/:incomeSourceId/:journey/:taxYear              
 POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-about/:nino/answers                                       controllers.JourneyAnswersController.savePropertyRentalsAndRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-income/:nino/answers                                                       controllers.JourneyAnswersController.saveRentalsAndRaRIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-expenses/:nino/answers                                                       controllers.JourneyAnswersController.saveRentalsAndRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

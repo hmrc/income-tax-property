@@ -876,4 +876,142 @@ class JourneyAnswersControllerSpec
     }
   }
 
+  "create or update rentals and rent a room expenses section" should {
+
+    val ctx =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentARoomExpenses)
+
+    val rentARoomNonConsolidatedRequest: JsValue = Json.parse(
+      """{
+        |  "consolidatedExpenses": {
+        |     "consolidatedExpensesYesOrNo": false
+        |  },
+        |  "rentsRatesAndInsurance": 12,
+        |  "repairsAndMaintenanceCosts": 23,
+        |  "legalManagementOtherFee": 34,
+        |  "costsOfServicesProvided": 45,
+        |  "residentialPropertyFinanceCosts": 56,
+        |  "unusedResidentialPropertyFinanceCostsBroughtFwd": 67,
+        |  "otherPropertyExpenses": 78,
+        |  "propertyBusinessTravelCosts": 89,
+        |  "loanInterestOrOtherFinancialCost": 90,
+        |  "otherAllowablePropertyExpenses": 100
+        |}
+        |""".stripMargin
+    )
+
+    val rentARoomConsolidatedRequest: JsValue = Json.parse(
+      """
+        |{
+        |  "consolidatedExpenses": {
+        |     "consolidatedExpensesYesOrNo": true,
+        |     "consolidatedExpensesAmount": 1000
+        |  }
+        |}
+        |""".stripMargin
+    )
+
+    val rentARoomConsolidatedMoreThan85KRequest: JsValue = Json.parse(
+      """
+        | {
+        |     "rentsRatesAndInsurance": 12,
+        |     "repairsAndMaintenanceCosts": 23,
+        |     "legalManagementOtherFee": 34,
+        |     "costsOfServicesProvided": 45,
+        |     "residentialPropertyFinanceCosts": 56,
+        |     "unusedResidentialPropertyFinanceCostsBroughtFwd": 67,
+        |     "otherPropertyExpenses": 78
+        |  }
+        |""".stripMargin
+    )
+
+    val rentARoomNonConsolidatedRequestBody: Expenses = rentARoomNonConsolidatedRequest.as[Expenses]
+    val rentARoomConsolidatedRequestBody: Expenses = rentARoomConsolidatedRequest.as[Expenses]
+    val rentARoomConsolidatedMoreThan85KBody: Expenses = rentARoomConsolidatedMoreThan85KRequest.as[Expenses]
+
+    "return created for valid request body" in {
+
+      mockAuthorisation()
+      mockSaveExpenses(
+        ctx,
+        nino,
+        rentARoomNonConsolidatedRequestBody,
+        Some(PeriodicSubmissionId("1")).asRight[ServiceError]
+      )
+      val requestNonConsolidated = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
+      val resultNonConsolidated =
+        await(
+          underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(
+            requestNonConsolidated
+          )
+        )
+      resultNonConsolidated.header.status shouldBe CREATED
+
+      mockAuthorisation()
+      mockSaveExpenses(
+        ctx,
+        nino,
+        rentARoomConsolidatedRequestBody,
+        Some(PeriodicSubmissionId("1")).asRight[ServiceError]
+      )
+      val requestConsolidated = fakePostRequest.withJsonBody(rentARoomConsolidatedRequest)
+      val resultConsolidated =
+        await(underTest.saveExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(requestConsolidated))
+      resultConsolidated.header.status shouldBe CREATED
+
+      mockAuthorisation()
+      mockSaveExpenses(
+        ctx,
+        nino,
+        rentARoomConsolidatedMoreThan85KBody,
+        Some(PeriodicSubmissionId("1")).asRight[ServiceError]
+      )
+      val requestConsolidatedMoreThan85 = fakePostRequest.withJsonBody(rentARoomConsolidatedMoreThan85KRequest)
+      val resultConsolidatedMoreThan85 = await(
+        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(
+          requestConsolidatedMoreThan85
+        )
+      )
+      resultConsolidatedMoreThan85.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty when saving an expense" in {
+      mockAuthorisation()
+      val result =
+        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "should return a conflict error when the downstream API returns a conflict error when updating an expense" in {
+      mockAuthorisation()
+      mockSaveExpenses(
+        ctx,
+        nino,
+        rentARoomNonConsolidatedRequestBody,
+        ApiServiceError(CONFLICT).asLeft[Option[PeriodicSubmissionId]]
+      )
+
+      val request = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
+      val result =
+        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(request))
+      result.header.status shouldBe CONFLICT
+    }
+
+    "should return internal server error when the downstream API returns internal server error when updating an expense" in {
+      mockAuthorisation()
+      mockSaveExpenses(
+        ctx,
+        nino,
+        rentARoomNonConsolidatedRequestBody,
+        ApiServiceError(INTERNAL_SERVER_ERROR).asLeft[Option[PeriodicSubmissionId]]
+      )
+
+      val request = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
+      val result =
+        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+    }
+
+  }
+
 }
