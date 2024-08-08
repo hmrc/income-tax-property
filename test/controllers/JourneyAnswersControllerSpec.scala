@@ -879,7 +879,7 @@ class JourneyAnswersControllerSpec
   "create or update rentals and rent a room expenses section" should {
 
     val ctx =
-      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentARoomExpenses)
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalsAndRaRExpenses)
 
     val rentARoomNonConsolidatedRequest: JsValue = Json.parse(
       """{
@@ -956,7 +956,11 @@ class JourneyAnswersControllerSpec
       )
       val requestConsolidated = fakePostRequest.withJsonBody(rentARoomConsolidatedRequest)
       val resultConsolidated =
-        await(underTest.saveExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(requestConsolidated))
+        await(
+          underTest.saveExpenses(taxYear, incomeSourceId, nino, "property-rentals-and-rent-a-room-expenses")(
+            requestConsolidated
+          )
+        )
       resultConsolidated.header.status shouldBe CREATED
 
       mockAuthorisation()
