@@ -941,7 +941,7 @@ class JourneyAnswersControllerSpec
       val requestNonConsolidated = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
       val resultNonConsolidated =
         await(
-          underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(
+          underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino)(
             requestNonConsolidated
           )
         )
@@ -968,7 +968,7 @@ class JourneyAnswersControllerSpec
       )
       val requestConsolidatedMoreThan85 = fakePostRequest.withJsonBody(rentARoomConsolidatedMoreThan85KRequest)
       val resultConsolidatedMoreThan85 = await(
-        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(
+        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino)(
           requestConsolidatedMoreThan85
         )
       )
@@ -978,7 +978,7 @@ class JourneyAnswersControllerSpec
     "should return bad request error when request body is empty when saving an expense" in {
       mockAuthorisation()
       val result =
-        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(fakePostRequest)
+        underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
 
@@ -993,7 +993,7 @@ class JourneyAnswersControllerSpec
 
       val request = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
       val result =
-        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(request))
+        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe CONFLICT
     }
 
@@ -1008,7 +1008,7 @@ class JourneyAnswersControllerSpec
 
       val request = fakePostRequest.withJsonBody(rentARoomNonConsolidatedRequest)
       val result =
-        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino, "rent-a-room-expenses")(request))
+        await(underTest.saveRentalsAndRaRExpenses(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
 

@@ -225,11 +225,10 @@ class JourneyAnswersController @Inject() (
   def saveRentalsAndRaRExpenses(
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
-    nino: Nino,
-    journeyName: String
+    nino: Nino
   ): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.withName(journeyName), request) {
+      withJourneyContextAndEntity[Expenses](taxYear, incomeSourceId, nino, JourneyName.RentalsAndRaRExpenses, request) {
         (ctx, expenses) =>
           handleResponse(CREATED) {
             propertyService.saveExpenses(ctx, nino, expenses)
