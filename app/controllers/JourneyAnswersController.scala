@@ -289,6 +289,15 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RentalAllowances](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
+        (ctx, allowances) =>
+          handleResponse(NO_CONTENT) {
+            propertyService.savePropertyRentalAllowances(ctx.toJourneyContextWithNino(nino), allowances)
+          }
+      }
+    }
   def setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx =
