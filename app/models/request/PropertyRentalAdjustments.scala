@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 final case class PropertyRentalAdjustments(
   privateUseAdjustment: BigDecimal,
   balancingCharge: BalancingCharge,
-  propertyIncomeAllowance: BigDecimal, // ToDo: Where is this used?
+  propertyIncomeAllowance: BigDecimal, // NOT MANDATORY! - ToDo: Where is this used?
   renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
   residentialFinanceCost: BigDecimal,
   unusedResidentialFinanceCost: BigDecimal

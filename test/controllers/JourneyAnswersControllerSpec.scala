@@ -302,7 +302,7 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
+          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
           Some(11),
@@ -1043,7 +1043,7 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
+          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
           Some(11),

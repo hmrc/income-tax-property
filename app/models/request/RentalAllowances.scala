@@ -38,7 +38,7 @@ object ElectricChargePointAllowance {
 
 final case class RentalAllowances(
   annualInvestmentAllowance: Option[BigDecimal],
-  electricChargePointAllowance: ElectricChargePointAllowance,
+  electricChargePointAllowance: Option[ElectricChargePointAllowance],
   zeroEmissionCarAllowance: Option[BigDecimal],
   zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
   businessPremisesRenovationAllowance: Option[BigDecimal],

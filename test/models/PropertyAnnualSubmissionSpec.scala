@@ -365,7 +365,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rental allowances and not override existing other fields" in {
       val rentalAllowances = RentalAllowances(
         annualInvestmentAllowance = Some(11.22),
-        electricChargePointAllowance = ElectricChargePointAllowance(true, Some(22.33)),
+        electricChargePointAllowance = Some(ElectricChargePointAllowance(true, Some(22.33))),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
         replacementOfDomesticGoodsAllowance = Some(55.66),

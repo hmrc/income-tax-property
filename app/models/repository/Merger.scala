@@ -201,10 +201,13 @@ object Merger {
           Some(
             RentalAllowances(
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
-              electricChargePointAllowance = ElectricChargePointAllowance(
-                extracted.electricChargePointAllowanceYesOrNo,
-                fromDownstream.electricChargePointAllowance
-              ),
+              electricChargePointAllowance =
+                Some( // Todo: To be removed completely in related ticket. For Not, temporarily made optional)
+                  ElectricChargePointAllowance(
+                    fromDownstream.electricChargePointAllowance.isEmpty,
+                    fromDownstream.electricChargePointAllowance
+                  )
+                ),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
@@ -216,9 +219,11 @@ object Merger {
           Some(
             RentalAllowances(
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
-              electricChargePointAllowance = ElectricChargePointAllowance(
-                fromDownstream.electricChargePointAllowance.fold(false)(_ => true),
-                fromDownstream.electricChargePointAllowance
+              electricChargePointAllowance = Some(
+                ElectricChargePointAllowance(
+                  fromDownstream.electricChargePointAllowance.fold(false)(_ => true),
+                  fromDownstream.electricChargePointAllowance
+                )
               ),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
@@ -293,7 +298,8 @@ object Merger {
                   .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
                 balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
               ),
-              propertyIncomeAllowance = 0, // Todo: fromWhere?
+              propertyIncomeAllowance =
+                0, // Todo: fromWhere? (Change case class to make it optional, present in one of Rentals / RentaRoom)
               renovationAllowanceBalancingCharge = RenovationAllowanceBalancingCharge(
                 renovationAllowanceBalancingChargeYesNo = extractedMaybe
                   .map(_.renovationAllowanceBalancingChargeYesNo)
