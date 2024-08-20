@@ -302,7 +302,7 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11)),
+          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
           Some(11),
@@ -1016,6 +1016,51 @@ class JourneyAnswersControllerSpec
       result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
 
+  }
+
+  "create or update rentals and rent a room allowances section" should {
+
+    val validRequestBody: JsValue = Json.parse("""
+                                                 |{
+                                                 |  "annualInvestmentAllowance": 11,
+                                                 |  "electricChargePointAllowance": {
+                                                 |    "electricChargePointAllowanceYesOrNo": true,
+                                                 |    "electricChargePointAllowanceAmount": 11
+                                                 |  },
+                                                 |  "zeroEmissionCarAllowance": 11,
+                                                 |  "zeroEmissionGoodsVehicleAllowance": 11,
+                                                 |  "businessPremisesRenovationController": 11,
+                                                 |  "replacementOfDomesticGoodsController": 11,
+                                                 |  "otherCapitalAllowance": 11
+                                                 |}
+        """.stripMargin)
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+
+    "should return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockSavePropertyRentalAllowances(
+        ctx,
+        RentalAllowances(
+          Some(11),
+          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
+          Some(11),
+          Some(11),
+          Some(11),
+          Some(11),
+          Some(11)
+        )
+      )
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRentalsAndRaRAllowances(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveRentalsAndRaRAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
   }
 
 }

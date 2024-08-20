@@ -255,7 +255,7 @@ class JourneyAnswersIntegrationSpec
         allowances = Some(
           RentalAllowances(
             Some(1),
-            ElectricChargePointAllowance(true, Some(6)),
+            Some(ElectricChargePointAllowance(true, Some(6))),
             Some(7),
             Some(2),
             Some(3),
