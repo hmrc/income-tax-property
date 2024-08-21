@@ -144,15 +144,10 @@ class PropertyServiceSpec
     "return data when successful" in {
       val aPropertyAnnualSubmission = PropertyAnnualSubmission(
         submittedOn = Some(LocalDateTime.now),
+        None,
         Some(
-          AnnualForeignFhlEea(
-            ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-            ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-          )
-        ),
-        None,
-        None,
-        None
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+        )
       )
       val taxYear = 2024
 
@@ -374,15 +369,10 @@ class PropertyServiceSpec
   "create annual submission" should {
     val validRequest = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
+      None,
       Some(
-        AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )
-      ),
-      None,
-      None,
-      None
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+      )
     )
 
     "return no content for valid request" in {
@@ -417,15 +407,10 @@ class PropertyServiceSpec
   "create annual submission 2" should {
     val validRequestBody = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
+      None,
       Some(
-        AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )
-      ),
-      None,
-      None,
-      None
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+      )
     )
 
     "return no content for valid request" in {
@@ -527,10 +512,8 @@ class PropertyServiceSpec
         Some(PeriodicSubmissionId("")).asRight[ApiError]
       )
 
-      val annualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+      val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
       val updatedAnnualSubmission = PropertyAnnualSubmission(
-        None,
-        None,
         None,
         None,
         Some(
@@ -555,10 +538,8 @@ class PropertyServiceSpec
 
       val annualUkOtherProperty =
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None)), None)
-      val annualSubmission = PropertyAnnualSubmission(None, None, None, None, Some(annualUkOtherProperty))
+      val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
       val updatedAnnualSubmission = PropertyAnnualSubmission(
-        None,
-        None,
         None,
         None,
         Some(
@@ -668,8 +649,6 @@ class PropertyServiceSpec
     esbasMaybe: Option[List[Esba]]
   ): PropertyAnnualSubmission =
     PropertyAnnualSubmission(
-      None,
-      None,
       None,
       None,
       Some(
@@ -1431,8 +1410,6 @@ class PropertyServiceSpec
     val aPropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
       None,
-      None,
-      None,
       Some(
         AnnualUkOtherProperty(
           None,
@@ -1855,7 +1832,7 @@ class PropertyServiceSpec
         Some(22.55)
       )
     )
-    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val annualSubmission = PropertyAnnualSubmission(None, None, None)
 
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
@@ -2005,7 +1982,7 @@ class PropertyServiceSpec
         Some(22.55)
       )
     )
-    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val annualSubmission = PropertyAnnualSubmission(None, None, None)
 
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
@@ -2156,7 +2133,7 @@ class PropertyServiceSpec
       None
     )
 
-    val annualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val annualSubmission = PropertyAnnualSubmission(None, None, None)
 
     "return no content for valid request" in {
 

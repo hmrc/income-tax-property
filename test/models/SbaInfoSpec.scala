@@ -100,8 +100,6 @@ class SbaInfoSpec extends UnitTest {
   val submission: PropertyAnnualSubmission = PropertyAnnualSubmission(
     Some(LocalDateTime.now()),
     None,
-    None,
-    None,
     Some(
       AnnualUkOtherProperty(
         Some(

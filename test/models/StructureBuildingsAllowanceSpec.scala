@@ -100,8 +100,6 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
   val submission = PropertyAnnualSubmission(
     Some(LocalDateTime.now()),
     None,
-    None,
-    None,
     Some(
       AnnualUkOtherProperty(
         Some(

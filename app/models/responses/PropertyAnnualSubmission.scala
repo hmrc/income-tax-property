@@ -49,15 +49,13 @@ object FetchedPropertyData {
 
 case class PropertyAnnualSubmission(
   submittedOn: Option[LocalDateTime],
-  foreignFhlEea: Option[AnnualForeignFhlEea],
   foreignProperty: Option[Seq[AnnualForeignProperty]],
-  ukFhlProperty: Option[AnnualUkFhlProperty],
   ukOtherProperty: Option[AnnualUkOtherProperty]
 )
 
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
-  val emptyPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+  val emptyPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
   def fromEsbas(
     propertyAnnualSubmission: PropertyAnnualSubmission,
@@ -65,8 +63,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -96,8 +94,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -127,8 +125,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -161,8 +159,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -190,8 +188,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -236,8 +234,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -267,8 +265,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -336,8 +334,8 @@ object PropertyAnnualSubmission {
   ): PropertyAnnualSubmission = {
     val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
       Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, _, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, _, _, auop) => auop
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
       } { auop => pas =>
         pas.copy(ukOtherProperty = Some(auop))
       }
@@ -414,34 +412,6 @@ object PropertyAnnualSubmission {
 
 }
 
-case class AnnualForeignFhlEea(adjustments: ForeignFhlAdjustments, allowances: ForeignFhlAllowances)
-
-object AnnualForeignFhlEea {
-  implicit val format: OFormat[AnnualForeignFhlEea] = Json.format[AnnualForeignFhlEea]
-}
-
-case class ForeignFhlAdjustments(
-  privateUseAdjustment: BigDecimal,
-  balancingCharge: BigDecimal,
-  periodOfGraceAdjustment: Boolean
-)
-
-object ForeignFhlAdjustments {
-  implicit val format: OFormat[ForeignFhlAdjustments] = Json.format[ForeignFhlAdjustments]
-}
-
-case class ForeignFhlAllowances(
-  annualInvestmentAllowance: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
-  zeroEmissionsCarAllowance: Option[BigDecimal],
-  propertyAllowance: Option[BigDecimal]
-)
-
-object ForeignFhlAllowances {
-  implicit val format: OFormat[ForeignFhlAllowances] = Json.format[ForeignFhlAllowances]
-}
-
 case class AnnualForeignProperty(
   countryCode: String,
   adjustments: Option[ForeignPropertyAdjustments],
@@ -473,43 +443,10 @@ object ForeignPropertyAllowances {
   implicit val format: OFormat[ForeignPropertyAllowances] = Json.format[ForeignPropertyAllowances]
 }
 
-case class AnnualUkFhlProperty(adjustments: UkFhlAdjustments, allowances: UkFhlAllowances)
-
-object AnnualUkFhlProperty {
-  implicit val format: OFormat[AnnualUkFhlProperty] = Json.format[AnnualUkFhlProperty]
-}
-
-case class UkFhlAdjustments(
-  lossBroughtForward: Option[BigDecimal],
-  privateUseAdjustment: Option[BigDecimal],
-  balancingCharge: Option[BigDecimal],
-  periodOfGraceAdjustment: Option[Boolean],
-  businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
-  nonResidentLandlord: Boolean,
-  ukFhlRentARoom: Option[UkRentARoom]
-)
-
-object UkFhlAdjustments {
-  implicit val format: OFormat[UkFhlAdjustments] = Json.format[UkFhlAdjustments]
-}
-
 case class UkRentARoom(jointlyLet: Boolean)
 
 object UkRentARoom {
   implicit val format: OFormat[UkRentARoom] = Json.format[UkRentARoom]
-}
-
-case class UkFhlAllowances(
-  annualInvestmentAllowance: Option[BigDecimal],
-  businessPremisesRenovationAllowance: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
-  zeroEmissionsCarAllowance: Option[BigDecimal],
-  propertyIncomeAllowance: Option[BigDecimal]
-)
-
-object UkFhlAllowances {
-  implicit val format: OFormat[UkFhlAllowances] = Json.format[UkFhlAllowances]
 }
 
 case class AnnualUkOtherProperty(

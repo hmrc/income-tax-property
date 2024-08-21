@@ -240,15 +240,10 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   ".getPropertyAnnualSubmission" when {
     val aPropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
+      None,
       Some(
-        AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )
-      ),
-      None,
-      None,
-      None
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+      )
     )
 
     "when we call the IF" should {
@@ -368,15 +363,10 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
     val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
+      None,
       Some(
-        AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )
-      ),
-      None,
-      None,
-      None
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+      )
     )
 
     "create Annual Submission" should {
@@ -494,15 +484,10 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
     val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
+      None,
       Some(
-        AnnualForeignFhlEea(
-          ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-          ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-        )
-      ),
-      None,
-      None,
-      None
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+      )
     )
 
     "create Annual Submission" should {

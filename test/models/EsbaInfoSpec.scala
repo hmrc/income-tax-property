@@ -16,15 +16,15 @@
 
 package models
 
+import models.repository.Extractor._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
-import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
+import models.request.esba.EsbaInfoExtensions._
+import models.request.esba._
 import models.responses._
 import play.api.libs.json.{JsValue, Json}
 import utils.UnitTest
 
 import java.time.{LocalDate, LocalDateTime}
-import models.request.esba.EsbaInfoExtensions._
-import models.repository.Extractor._
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
     ClaimEnhancedStructureBuildingAllowance(true),
@@ -101,8 +101,6 @@ class EsbaInfoSpec extends UnitTest {
 
   val submission = PropertyAnnualSubmission(
     Some(LocalDateTime.now()),
-    None,
-    None,
     None,
     Some(
       AnnualUkOtherProperty(

@@ -146,7 +146,7 @@ class PropertyService @Inject() (
     nino: Nino,
     esbaInfo: EsbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       annualSubmission <-
@@ -178,7 +178,7 @@ class PropertyService @Inject() (
     sbaInfo: SbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
 
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       annualSubmission <-
@@ -206,7 +206,7 @@ class PropertyService @Inject() (
   def saveRaRAbout(ctx: JourneyContext, nino: Nino, rarAbout: RaRAbout)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Boolean] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
     for {
       annualSubmission <-
         getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
@@ -238,7 +238,7 @@ class PropertyService @Inject() (
   def saveRentalsAndRaRAbout(ctx: JourneyContext, nino: Nino, rentalsAndRaRAbout: RentalsAndRaRAbout)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Boolean] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
     for {
       annualSubmission <-
         getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
@@ -481,7 +481,7 @@ class PropertyService @Inject() (
       propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo
     )
 
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(
@@ -556,7 +556,7 @@ class PropertyService @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, Boolean] = {
 
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       propertyAnnualSubmissionFromDownstream <-
@@ -594,7 +594,7 @@ class PropertyService @Inject() (
 
     val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(rentalAllowances)
 
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       propertyAnnualSubmissionFromDownstream <-
@@ -629,7 +629,7 @@ class PropertyService @Inject() (
       rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
     )
 
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None, None, None)
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       propertyAnnualSubmissionFromDownstream <-

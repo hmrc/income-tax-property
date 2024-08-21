@@ -17,9 +17,9 @@
 package models.repository
 
 import models.repository.Merger._
-import models.request.{BalancingCharge, PropertyRentalAdjustments, RenovationAllowanceBalancingCharge}
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
+import models.request.{BalancingCharge, PropertyRentalAdjustments, RenovationAllowanceBalancingCharge}
 import models.responses._
 import utils.UnitTest
 
@@ -71,8 +71,6 @@ class MergerSpec extends UnitTest {
     )
     val aPropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),
-      None,
-      None,
       None,
       Some(
         AnnualUkOtherProperty(
