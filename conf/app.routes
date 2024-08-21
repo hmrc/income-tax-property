@@ -2,25 +2,6 @@
 #API-1711
 GET           /business-details/nino/:nino                                                                                         controllers.BusinessDetailsController.getBusinessDetails(nino: String)
 
-#API-1649 and API-1954
-GET           /property/submissions/periodic/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                            controllers.PeriodicSubmissionController.getAllPeriodicSubmissions(taxYear: Int, nino: String, incomeSourceId: String)
-
-#API-1598 & API-1805
-GET           /property/submissions/annual/taxyear/:taxYear/nino/:nino/incomesourceid/:incomeSourceId                              controllers.AnnualSubmissionController.getAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)
-
-#API-1596 & API-1863
-DELETE        /property/submissions/annual/taxyear/:taxYear/taxableEntityId/:taxableEntityId/incomesourceid/:incomeSourceId        controllers.AnnualSubmissionController.deleteAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)
-
-#API-1593 & #1861
-POST          /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                                     controllers.PeriodicSubmissionController.createPeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int)
-
-#API-1593 & API-1861
-PUT           /property/submissions/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear/submissionId/:submissionId          controllers.PeriodicSubmissionController.updatePeriodicSubmission(nino: String, incomeSourceId: String, taxYear: Int, submissionId: String)
-
-#API-1597 & API-1804
-PUT           /property/submissions/annual/nino/:nino/incomesourceid/:incomeSourceId/taxyear/:taxYear                              controllers.AnnualSubmissionController.createOrUpdateAnnualSubmission(nino: String, incomeSourceId: String, taxYear: Int)
-
-
 POST          /property/:taxYear/:incomeSourceId/property-about/:nino/answers                                                      controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/property-rental-about/:nino/answers                                               controllers.JourneyAnswersController.savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
@@ -55,8 +36,8 @@ PUT           /completed-section/:incomeSourceId/:journey/:taxYear              
 
 POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-about/:nino/answers                                       controllers.JourneyAnswersController.savePropertyRentalsAndRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-income/:nino/answers                                                       controllers.JourneyAnswersController.saveRentalsAndRaRIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-income/:nino/answers                                      controllers.JourneyAnswersController.saveRentalsAndRaRIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-expenses/:nino/answers                                                       controllers.JourneyAnswersController.saveRentalsAndRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-expenses/:nino/answers                                    controllers.JourneyAnswersController.saveRentalsAndRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-allowances/:nino/answers                                              controllers.JourneyAnswersController.saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-allowances/:nino/answers                                  controllers.JourneyAnswersController.saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
