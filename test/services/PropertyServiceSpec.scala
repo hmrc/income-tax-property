@@ -76,8 +76,6 @@ class PropertyServiceSpec
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
         None,
-        None,
-        None,
         None
       )
       val taxYear = 2024
@@ -210,26 +208,22 @@ class PropertyServiceSpec
   val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
   val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
 
   val propertyPeriodicSubmission = PropertyPeriodicSubmission(
@@ -237,15 +231,13 @@ class PropertyServiceSpec
     None,
     LocalDate.now(),
     LocalDate.now(),
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
 
   "create periodic submission" should {
@@ -493,8 +485,6 @@ class PropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
           None,
-          None,
-          None,
           None
         )
 
@@ -567,8 +557,6 @@ class PropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
-          None,
-          None,
           None,
           None
         )
@@ -816,8 +804,6 @@ class PropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
           None,
-          None,
-          None,
           None
         )
 
@@ -861,8 +847,6 @@ class PropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
-          None,
-          None,
           None,
           None
         )
@@ -923,8 +907,6 @@ class PropertyServiceSpec
         None,
         LocalDate.now().minusMonths(2),
         LocalDate.now().plusMonths(1),
-        None,
-        None,
         None,
         Some(
           UkOtherProperty(
@@ -1053,8 +1035,6 @@ class PropertyServiceSpec
         LocalDate.now().minusMonths(2),
         LocalDate.now().plusMonths(1),
         None,
-        None,
-        None,
         Some(
           UkOtherProperty(
             Some(ukOtherPropertyIncome),
@@ -1141,8 +1121,6 @@ class PropertyServiceSpec
         LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
         LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
         None,
-        None,
-        None,
         Some(
           UkOtherProperty(
             Some(ukOtherPropertyIncome),
@@ -1209,8 +1187,6 @@ class PropertyServiceSpec
         None,
         LocalDate.now().minusMonths(2),
         LocalDate.now().plusMonths(1),
-        None,
-        None,
         None,
         Some(
           UkOtherProperty(
@@ -1349,8 +1325,6 @@ class PropertyServiceSpec
         None,
         LocalDate.now().minusMonths(2),
         LocalDate.now().plusMonths(1),
-        None,
-        None,
         None,
         Some(
           UkOtherProperty(
@@ -1858,8 +1832,6 @@ class PropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
           None,
-          None,
-          None,
           None
         )
 
@@ -1929,8 +1901,6 @@ class PropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
-          None,
-          None,
           None,
           None
         )
@@ -2008,8 +1978,6 @@ class PropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
           None,
-          None,
-          None,
           None
         )
 
@@ -2079,8 +2047,6 @@ class PropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
           LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
-          None,
-          None,
           None,
           None
         )

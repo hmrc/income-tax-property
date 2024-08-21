@@ -25,41 +25,12 @@ case class PropertyPeriodicSubmission(
   submittedOn: Option[LocalDateTime],
   fromDate: LocalDate,
   toDate: LocalDate,
-  foreignFhlEea: Option[ForeignFhlEea],
   foreignProperty: Option[Seq[ForeignProperty]],
-  ukFhlProperty: Option[UkFhlProperty],
   ukOtherProperty: Option[UkOtherProperty]
 )
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
-}
-
-case class ForeignFhlEea(income: ForeignFhlIncome, expenses: ForeignFhlExpenses)
-
-object ForeignFhlEea {
-  implicit val format: OFormat[ForeignFhlEea] = Json.format[ForeignFhlEea]
-}
-
-case class ForeignFhlIncome(rentAmount: BigDecimal)
-
-object ForeignFhlIncome {
-  implicit val format: OFormat[ForeignFhlIncome] = Json.format[ForeignFhlIncome]
-}
-
-case class ForeignFhlExpenses(
-  premisesRunningCosts: Option[BigDecimal],
-  repairsAndMaintenance: Option[BigDecimal],
-  financialCosts: Option[BigDecimal],
-  professionalFees: Option[BigDecimal],
-  costOfServices: Option[BigDecimal],
-  travelCosts: Option[BigDecimal],
-  other: Option[BigDecimal],
-  consolidatedExpenseAmount: Option[BigDecimal]
-)
-
-object ForeignFhlExpenses {
-  implicit val format: OFormat[ForeignFhlExpenses] = Json.format[ForeignFhlExpenses]
 }
 
 case class ForeignProperty(
@@ -108,22 +79,6 @@ object ForeignPropertyRentIncome {
   implicit val format: OFormat[ForeignPropertyRentIncome] = Json.format[ForeignPropertyRentIncome]
 }
 
-case class UkFhlProperty(income: UkFhlIncome, expenses: UkPropertyExpenses)
-
-object UkFhlProperty {
-  implicit val format: OFormat[UkFhlProperty] = Json.format[UkFhlProperty]
-}
-
-case class UkFhlIncome(
-  periodAmount: Option[BigDecimal],
-  taxDeducted: Option[BigDecimal],
-  ukFhlRentARoom: Option[RentARoomIncome]
-)
-
-object UkFhlIncome {
-  implicit val format: OFormat[UkFhlIncome] = Json.format[UkFhlIncome]
-}
-
 case class RentARoomIncome(rentsReceived: BigDecimal)
 
 case class UkOtherRoomRent(amountClaimed: BigDecimal)
@@ -134,21 +89,6 @@ object UkOtherRoomRent {
 
 object RentARoomIncome {
   implicit val format: OFormat[RentARoomIncome] = Json.format[RentARoomIncome]
-}
-
-case class UkPropertyExpenses(
-  premisesRunningCosts: Option[BigDecimal],
-  repairsAndMaintenance: Option[BigDecimal],
-  financialCosts: Option[BigDecimal],
-  professionalFees: Option[BigDecimal],
-  travelCosts: Option[BigDecimal],
-  costOfServices: Option[BigDecimal],
-  other: Option[BigDecimal],
-  ukFhlRentARoom: Option[UkRentARoomExpense]
-)
-
-object UkPropertyExpenses {
-  implicit val format: OFormat[UkPropertyExpenses] = Json.format[UkPropertyExpenses]
 }
 
 case class UkRentARoomExpense(amountClaimed: BigDecimal)
@@ -197,17 +137,17 @@ object UkOtherPropertyIncome {
 }
 
 case class UkOtherPropertyExpenses(
-                                    premisesRunningCosts: Option[BigDecimal],
-                                    repairsAndMaintenance: Option[BigDecimal],
-                                    financialCosts: Option[BigDecimal],
-                                    professionalFees: Option[BigDecimal],
-                                    travelCosts: Option[BigDecimal],
-                                    costOfServices: Option[BigDecimal],
-                                    other: Option[BigDecimal],
-                                    residentialFinancialCost: Option[BigDecimal],
-                                    residentialFinancialCostsCarriedForward: Option[BigDecimal],
-                                    ukOtherRentARoom: Option[UkRentARoomExpense],
-                                    consolidatedExpenses: Option[BigDecimal]
+  premisesRunningCosts: Option[BigDecimal],
+  repairsAndMaintenance: Option[BigDecimal],
+  financialCosts: Option[BigDecimal],
+  professionalFees: Option[BigDecimal],
+  travelCosts: Option[BigDecimal],
+  costOfServices: Option[BigDecimal],
+  other: Option[BigDecimal],
+  residentialFinancialCost: Option[BigDecimal],
+  residentialFinancialCostsCarriedForward: Option[BigDecimal],
+  ukOtherRentARoom: Option[UkRentARoomExpense],
+  consolidatedExpenses: Option[BigDecimal]
 )
 
 object UkOtherPropertyExpenses {

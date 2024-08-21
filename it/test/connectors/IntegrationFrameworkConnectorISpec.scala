@@ -41,26 +41,22 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
   val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
 
   ".getBusinessDetails" when {
@@ -181,8 +177,6 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       submittedOn = Some(LocalDateTime.now),
       fromDate = LocalDate.now.minusDays(1),
       toDate = LocalDate.now,
-      None,
-      None,
       None,
       None
     )
@@ -604,13 +598,14 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
                                              |{
                                              |   "fromDate": "$fromDate",
                                              |   "toDate": "$toDate",
-                                             |   "foreignFhlEea": {
+                                             |   "ukOtherProperty": {
                                              |      "income": {
-                                             |         "rentAmount": 200.00
-                                             |      },
-                                             |      "expenses": {
-                                             |         "consolidatedExpenseAmount": 1000.99
-                                             |       }
+                                             |      "premiumsOfLeaseGrant": 200.00,
+                                             |      "reversePremiums": 200.00,
+                                             |      "periodAmount": 200.00,
+                                             |      "taxDeducted": 200.00,
+                                             |      "otherIncome": 200.00
+                                             |      }
                                              |   }
                                              |}
                                              |""".stripMargin)
@@ -707,13 +702,14 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
     val requestBody: JsValue = Json.parse(s"""
                                              |{
-                                             |   "foreignFhlEea": {
+                                             |   "ukOtherProperty": {
                                              |      "income": {
-                                             |         "rentAmount": 200.00
-                                             |      },
-                                             |      "expenses": {
-                                             |         "consolidatedExpenseAmount": 1000.99
-                                             |       }
+                                             |      "premiumsOfLeaseGrant": 200.00,
+                                             |      "reversePremiums": 200.00,
+                                             |      "periodAmount": 200.00,
+                                             |      "taxDeducted": 200.00,
+                                             |      "otherIncome": 200.00
+                                             |      }
                                              |   }
                                              |}
                                              |""".stripMargin)

@@ -19,8 +19,8 @@ package models.request
 import cats.implicits.catsSyntaxEitherId
 import models.common.TaxYear
 import models.errors.{InternalError, ServiceError}
-import models.{RentalsAndRaRAbout, responses}
 import models.responses._
+import models.{RentalsAndRaRAbout, responses}
 import monocle.Optional
 import play.api.libs.json.{Json, OFormat}
 
@@ -29,9 +29,7 @@ import java.time.LocalDate
 final case class CreatePropertyPeriodicSubmissionRequest(
   fromDate: LocalDate,
   toDate: LocalDate,
-  foreignFhlEea: Option[ForeignFhlEea],
   foreignProperty: Option[Seq[ForeignProperty]],
-  ukFhlProperty: Option[UkFhlProperty],
   ukOtherProperty: Option[UkOtherProperty]
 )
 
@@ -72,17 +70,13 @@ object CreatePropertyPeriodicSubmissionRequest {
       CreatePropertyPeriodicSubmissionRequest(
         LocalDate.parse(TaxYear.startDate(taxYear)),
         LocalDate.parse(TaxYear.endDate(taxYear)),
-        propertyPeriodicSubmission.foreignFhlEea,
         propertyPeriodicSubmission.foreignProperty,
-        propertyPeriodicSubmission.ukFhlProperty,
         propertyPeriodicSubmission.ukOtherProperty
       )
     case None =>
       CreatePropertyPeriodicSubmissionRequest(
         LocalDate.parse(TaxYear.startDate(taxYear)),
         LocalDate.parse(TaxYear.endDate(taxYear)),
-        None,
-        None,
         None,
         None
       )
@@ -148,9 +142,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmissionMaybe.flatMap(_.foreignFhlEea),
       periodicSubmissionMaybe.flatMap(_.foreignProperty),
-      periodicSubmissionMaybe.flatMap(_.ukFhlProperty),
       Some(
         UkOtherProperty(
           None,
@@ -207,9 +199,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmissionMaybe.flatMap(_.foreignFhlEea),
       periodicSubmissionMaybe.flatMap(_.foreignProperty),
-      periodicSubmissionMaybe.flatMap(_.ukFhlProperty),
       Some(
         UkOtherProperty(
           None,
@@ -234,7 +224,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
           (Some(pps), Some(income))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -242,9 +232,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignFhlEea),
       periodicSubmission.flatMap(_.foreignProperty),
-      periodicSubmission.flatMap(_.ukFhlProperty),
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -284,7 +272,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
           (Some(pps), Some(income))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -293,9 +281,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignFhlEea),
       periodicSubmission.flatMap(_.foreignProperty),
-      periodicSubmission.flatMap(_.ukFhlProperty),
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -334,7 +320,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
           (Some(pps), Some(expenses))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -352,9 +338,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignFhlEea),
       periodicSubmission.flatMap(_.foreignProperty),
-      periodicSubmission.flatMap(_.ukFhlProperty),
       Some(
         UkOtherProperty(
           None,
@@ -374,8 +358,8 @@ object CreatePropertyPeriodicSubmissionRequest {
   ): CreatePropertyPeriodicSubmissionRequest = {
     val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
       Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, None) => Some(UkOtherProperty(None, None))
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
@@ -399,8 +383,8 @@ object CreatePropertyPeriodicSubmissionRequest {
   ): CreatePropertyPeriodicSubmissionRequest = {
     val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
       Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, None) => Some(UkOtherProperty(None, None))
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, _, _, uopi) => uopi
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, None) => Some(UkOtherProperty(None, None))
+        case CreatePropertyPeriodicSubmissionRequest(_, _, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
