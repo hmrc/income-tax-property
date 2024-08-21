@@ -40,22 +40,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
 
   val annualSubmissionWithAllFieldsFilled = PropertyAnnualSubmission(
     submittedOn = None,
-    foreignFhlEea = Some(
-      AnnualForeignFhlEea(
-        ForeignFhlAdjustments(
-          78.90,
-          12.34,
-          true
-        ),
-        ForeignFhlAllowances(
-          Some(56.78),
-          Some(90.12),
-          Some(34.56),
-          Some(78.90),
-          Some(12.34)
-        )
-      )
-    ),
     foreignProperty = Some(
       Seq(
         AnnualForeignProperty(
@@ -99,27 +83,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(112.34)
             )
           )
-        )
-      )
-    ),
-    ukFhlProperty = Some(
-      AnnualUkFhlProperty(
-        UkFhlAdjustments(
-          Some(56.78),
-          Some(90.12),
-          Some(34.56),
-          Some(true),
-          Some(12.34),
-          true,
-          Some(UkRentARoom(true))
-        ),
-        UkFhlAllowances(
-          Some(34.56),
-          Some(78.90),
-          Some(12.34),
-          Some(56.78),
-          Some(90.12),
-          Some(34.56)
         )
       )
     ),
@@ -196,8 +159,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
   )
   def createAnnualSubmission(esbasMaybe: Option[List[Esba]]) =
     PropertyAnnualSubmission(
-      None,
-      None,
       None,
       None,
       Some(

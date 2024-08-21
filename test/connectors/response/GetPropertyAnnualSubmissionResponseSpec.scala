@@ -42,8 +42,6 @@ class GetPropertyAnnualSubmissionResponseSpec extends UnitTest {
         val propertyAnnualSubmission = PropertyAnnualSubmission(
           submittedOn = Some(LocalDateTime.now),
           None,
-          None,
-          None,
           None
         )
 

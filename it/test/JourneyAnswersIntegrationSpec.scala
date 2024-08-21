@@ -63,8 +63,6 @@ class JourneyAnswersIntegrationSpec
   val aPropertyAnnualSubmission = PropertyAnnualSubmission(
     submittedOn = Some(LocalDateTime.now),
     None,
-    None,
-    None,
     Some(
       AnnualUkOtherProperty(
         Some(

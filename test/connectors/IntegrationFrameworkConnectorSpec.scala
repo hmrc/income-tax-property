@@ -179,17 +179,12 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
     }
     "create or update annual submission" in {
 
-      val validRequestBody = PropertyAnnualSubmission(
+      val validRequestBody =PropertyAnnualSubmission(
         submittedOn = Some(LocalDateTime.now),
+        None,
         Some(
-          AnnualForeignFhlEea(
-            ForeignFhlAdjustments(1, 2, periodOfGraceAdjustment = false),
-            ForeignFhlAllowances(Some(1), Some(2), Some(3), Some(4), Some(5))
-          )
-        ),
-        None,
-        None,
-        None
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+        )
       )
 
       (appConf.authorisationTokenFor(_: String)).expects(*).returning("1234")
