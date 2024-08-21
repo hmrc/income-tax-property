@@ -292,7 +292,7 @@ class PropertyService @Inject() (
                                   ctx.taxYear.endYear,
                                   createPeriodicSubmissionRequest
                                 )
-                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) =>
+                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
                                   nino.value,
                                   ctx.incomeSourceId.value,
@@ -334,7 +334,7 @@ class PropertyService @Inject() (
                                   ctx.taxYear.endYear,
                                   createPeriodicSubmissionRequest
                                 )
-                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) =>
+                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
                                   nino.value,
                                   ctx.incomeSourceId.value,
@@ -537,7 +537,7 @@ class PropertyService @Inject() (
                                   contextWithNino.taxYear.endYear,
                                   createPeriodicSubmissionRequest
                                 )
-                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _, _)) =>
+                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
                                   contextWithNino.nino.value,
                                   contextWithNino.incomeSourceId.value,

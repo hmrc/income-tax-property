@@ -49,8 +49,6 @@ class JourneyAnswersIntegrationSpec
     LocalDate.now(),
     LocalDate.now(),
     None,
-    None,
-    None,
     None
   )
 
@@ -175,8 +173,6 @@ class JourneyAnswersIntegrationSpec
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
-        None,
-        None,
         None,
         Some(
           UkOtherProperty(
@@ -369,8 +365,6 @@ class JourneyAnswersIntegrationSpec
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
-        None,
-        None,
         None,
         Some(
           UkOtherProperty(

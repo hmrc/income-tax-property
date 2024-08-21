@@ -34,29 +34,26 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
   val appConf: AppConfig = mock[AppConfig]
+
   val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
   val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+    None,
     Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(200.00),
-        ForeignFhlExpenses(None, None, None, None, None, None, None, Some(1000.99))
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
       )
-    ),
-    None,
-    None,
-    None
+    )
   )
 
   val integrationFrameworkConnector = new IntegrationFrameworkConnector(mockHttpClient, appConf)
@@ -179,7 +176,7 @@ class IntegrationFrameworkConnectorSpec extends UnitTest with MockFactory {
     }
     "create or update annual submission" in {
 
-      val validRequestBody =PropertyAnnualSubmission(
+      val validRequestBody = PropertyAnnualSubmission(
         submittedOn = Some(LocalDateTime.now),
         None,
         Some(

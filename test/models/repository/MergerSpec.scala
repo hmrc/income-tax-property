@@ -46,8 +46,6 @@ class MergerSpec extends UnitTest {
       LocalDate.now(),
       LocalDate.now(),
       None,
-      None,
-      None,
       Some(
         UkOtherProperty(
           None,

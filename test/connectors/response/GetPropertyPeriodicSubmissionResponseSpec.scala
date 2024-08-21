@@ -16,12 +16,12 @@
 
 package connectors.response
 
-import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.HttpResponse
 import connectors.response.GetPropertyPeriodicSubmissionResponse.getPropertyPeriodicSubmissionDataReads
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses.PropertyPeriodicSubmission
+import play.api.http.Status._
+import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
 import java.time.{LocalDate, LocalDateTime}
@@ -44,7 +44,7 @@ class GetPropertyPeriodicSubmissionResponseSpec extends UnitTest {
           submittedOn = Some(LocalDateTime.now),
           fromDate = LocalDate.now.minusDays(1),
           toDate = LocalDate.now,
-          None, None, None, None
+          None, None
         )
 
         val httpResponse: HttpResponse = HttpResponse.apply(OK, Json.toJson(propertyPeriodicSubmission).toString, anyHeaders)

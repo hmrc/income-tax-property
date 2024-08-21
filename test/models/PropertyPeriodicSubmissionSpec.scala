@@ -59,8 +59,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     date,
     date,
     None,
-    None,
-    None,
     Some(
       UkOtherProperty(
         Some(ukOtherPropertyIncome),
@@ -72,8 +70,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     CreatePropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
-      None,
-      None,
       None,
       Some(
         UkOtherProperty(
@@ -99,8 +95,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
   val updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
     UpdatePropertyPeriodicSubmissionRequest(
-      None,
-      None,
       None,
       Some(
         UkOtherProperty(
@@ -128,23 +122,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     submittedOn = Some(LocalDateTime.now()),
     fromDate = date,
     toDate = date,
-    foreignFhlEea = Some(
-      ForeignFhlEea(
-        ForeignFhlIncome(
-          12.34
-        ),
-        ForeignFhlExpenses(
-          Some(90.12),
-          Some(34.56),
-          Some(89.12),
-          Some(13.57),
-          Some(91.35),
-          Some(79.13),
-          Some(45.79),
-          Some(10.24)
-        )
-      )
-    ),
     foreignProperty = Some(
       Seq(
         ForeignProperty(
@@ -173,25 +150,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
               Some(75.31)
             )
           )
-        )
-      )
-    ),
-    ukFhlProperty = Some(
-      UkFhlProperty(
-        UkFhlIncome(
-          Some(95.17),
-          Some(39.51),
-          Some(RentARoomIncome(84.06))
-        ),
-        UkPropertyExpenses(
-          Some(94.94),
-          Some(83.83),
-          Some(72.72),
-          Some(61.61),
-          Some(50.50),
-          Some(49.49),
-          Some(38.38),
-          Some(UkRentARoomExpense(27.27))
         )
       )
     ),
@@ -232,9 +190,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     propertyPeriodicSubmission: PropertyPeriodicSubmission
   ) =
     UpdatePropertyPeriodicSubmissionRequest(
-      propertyPeriodicSubmission.foreignFhlEea,
       propertyPeriodicSubmission.foreignProperty,
-      propertyPeriodicSubmission.ukFhlProperty,
       propertyPeriodicSubmission.ukOtherProperty
     )
 
@@ -244,8 +200,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   ): CreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
-    None,
-    None,
     None,
     Some(
       UkOtherProperty(
@@ -293,7 +247,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       CreatePropertyPeriodicSubmissionRequest
         .fromEntity(
           TaxYear(2024),
-          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None, None, None)),
+          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
           RentalsAndRaRAbout(
             false,
             12.34,
@@ -305,8 +259,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           CreatePropertyPeriodicSubmissionRequest(
             fakeDate,
             fakeDate,
-            None,
-            None,
             None,
             Some(
               UkOtherProperty(
@@ -338,8 +290,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           fakeDate,
           fakeDate,
           None,
-          None,
-          None,
           Some(
             UkOtherProperty(
               Some(UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(12.34)))),
@@ -355,7 +305,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
       UpdatePropertyPeriodicSubmissionRequest
         .fromEntity(
-          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None, None, None)),
+          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
           RentalsAndRaRAbout(
             false,
             12.34,
@@ -365,8 +315,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         ) shouldBe
         Right(
           UpdatePropertyPeriodicSubmissionRequest(
-            None,
-            None,
             None,
             Some(
               UkOtherProperty(
@@ -393,8 +341,6 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         ) shouldBe Right(
         UpdatePropertyPeriodicSubmissionRequest(
-          None,
-          None,
           None,
           Some(
             UkOtherProperty(
