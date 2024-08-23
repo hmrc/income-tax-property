@@ -29,7 +29,7 @@ object BusinessDetailsResponse {
 case class PropertyDetails(
   incomeSourceType: Option[String],
   tradingStartDate: Option[LocalDate],
-  cashOrAccruals: Option[Boolean],
+  accrualsOrCash: Option[Boolean],
   incomeSourceId: String
 )
 
