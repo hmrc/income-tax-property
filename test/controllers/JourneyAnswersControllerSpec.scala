@@ -806,7 +806,7 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
 
       val journeyContextForPropertyRentalsAndRentARoomAbout =
-        ctx.copy(journey = JourneyName.PropertyRentalsAndRentARoomAbout)
+        ctx.copy(journey = JourneyName.RentalsAndRaRAbout)
 
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
@@ -816,13 +816,13 @@ class JourneyAnswersControllerSpec
       )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
-      val result = await(underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(request))
+      val result = await(underTest.saveRentalsAndRaRAbout(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe CREATED
     }
 
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
-      val result = underTest.savePropertyRentalsAndRentARoomAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
+      val result = underTest.saveRentalsAndRaRAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }

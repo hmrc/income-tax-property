@@ -31,13 +31,10 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object About extends JourneyName("property-about")
 
+  // Rental
   case object RentalAbout extends JourneyName("property-rental-about")
 
   case object RentalIncome extends JourneyName("rental-income")
-
-  case object RentalsAndRaRIncome extends JourneyName("property-rentals-and-rent-a-room-income")
-
-  case object RentalsAndRaRExpenses extends JourneyName("property-rentals-and-rent-a-room-expenses")
 
   case object RentalAllowances extends JourneyName("rental-allowances")
 
@@ -49,6 +46,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object RentalESBA extends JourneyName("rental-esba")
 
+  // RentARoom
   case object RentARoomAbout extends JourneyName("rent-a-room-about")
 
   case object RentARoomAllowances extends JourneyName("rent-a-room-allowances")
@@ -57,6 +55,15 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object RentARoomAdjustments extends JourneyName("rent-a-room-adjustments")
 
-  case object PropertyRentalsAndRentARoomAbout extends JourneyName("property-rentals-and-rent-a-room-about")
+  // RentalAndRaR
+  case object RentalsAndRaRAbout extends JourneyName("property-rentals-and-rent-a-room-about")
+
+  case object RentalsAndRaRIncome extends JourneyName("property-rentals-and-rent-a-room-income")
+
+  case object RentalsAndRaRAllowances extends JourneyName("property-rentals-and-rent-a-room-allowances")
+
+  case object RentalsAndRaRExpenses extends JourneyName("property-rentals-and-rent-a-room-expenses")
+
+  case object RentalsAndRaRAdjustments extends JourneyName("property-rentals-and-rent-a-room-adjustments")
 
 }

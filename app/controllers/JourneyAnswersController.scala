@@ -72,6 +72,7 @@ class JourneyAnswersController @Inject() (
       }
   }
 
+  // Rentals
   def savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
@@ -83,6 +84,22 @@ class JourneyAnswersController @Inject() (
           validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
             case JsSuccess(value, _) =>
               propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
+  def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
+
+      annualPropertyRentalAdjustmentsBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).value.map(_ => NoContent)
             case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
           }
         case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
@@ -101,6 +118,89 @@ class JourneyAnswersController @Inject() (
           handleResponse(CREATED) {
             propertyService.saveExpenses(ctx, nino, expenses)
           }
+      }
+    }
+
+  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val requestBody = parseBody[RentalAllowances](request)
+
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
+  def savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
+        (ctx, sbaInfo) =>
+          handleResponse(NO_CONTENT) {
+            propertyService.saveSbas(ctx, nino, sbaInfo)
+          }
+      }
+    }
+
+  def saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.RentalESBA, request) { ctx =>
+        withEntity[EsbaInfo](request) { esbaInfo =>
+          handleResponse(NO_CONTENT) {
+            propertyService.saveEsbas(ctx, nino, esbaInfo)
+          }
+        }
+      }
+    }
+
+  def saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[PropertyRentalsIncome](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentalIncome,
+        request
+      ) { (ctx, propertyRentalsIncome) =>
+        handleResponse(CREATED) {
+          propertyService.saveIncome(
+            ctx,
+            nino,
+            propertyRentalsIncome
+          )
+        }
+      }
+    }
+
+  // RAR
+  def saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[RaRAbout](taxYear, incomeSourceId, nino, JourneyName.RentARoomAbout, request) {
+        (ctx, rarAbout) =>
+          handleResponse(CREATED) {
+            propertyService.saveRaRAbout(ctx, nino, rarAbout)
+          }
+      }
+    }
+
+  def saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
+      val requestBody = parseBody[RentARoomAllowances](request)
+
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              propertyService.saveRentARoomAllowances(ctx, value).value.map(_ => NoContent)
+            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
       }
     }
 
@@ -124,51 +224,6 @@ class JourneyAnswersController @Inject() (
       }
     }
 
-  def saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[RaRAbout](taxYear, incomeSourceId, nino, JourneyName.RentARoomAbout, request) {
-        (ctx, rarAbout) =>
-          handleResponse(CREATED) {
-            propertyService.saveRaRAbout(ctx, nino, rarAbout)
-          }
-      }
-    }
-
-  def savePropertyRentalsAndRentARoomAbout(
-    taxYear: TaxYear,
-    incomeSourceId: IncomeSourceId,
-    nino: Nino
-  ): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[RentalsAndRaRAbout](
-        taxYear,
-        incomeSourceId,
-        nino,
-        JourneyName.PropertyRentalsAndRentARoomAbout,
-        request
-      ) { (ctx, rentalsAndRaRAbout) =>
-        handleResponse(CREATED) {
-          propertyService.saveRentalsAndRaRAbout(ctx, nino, rentalsAndRaRAbout)
-        }
-      }
-    }
-
-  def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-      val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
-
-      annualPropertyRentalAdjustmentsBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
-      }
-    }
-
   def savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[RaRAdjustments](
@@ -184,21 +239,22 @@ class JourneyAnswersController @Inject() (
       }
     }
 
-  def saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+  // Rentals and RAR
+  def saveRentalsAndRaRAbout(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino
+  ): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[PropertyRentalsIncome](
+      withJourneyContextAndEntity[RentalsAndRaRAbout](
         taxYear,
         incomeSourceId,
         nino,
-        JourneyName.RentalIncome,
+        JourneyName.RentalsAndRaRAbout,
         request
-      ) { (ctx, propertyRentalsIncome) =>
+      ) { (ctx, rentalsAndRaRAbout) =>
         handleResponse(CREATED) {
-          propertyService.saveIncome(
-            ctx,
-            nino,
-            propertyRentalsIncome
-          )
+          propertyService.saveRentalsAndRaRAbout(ctx, nino, rentalsAndRaRAbout)
         }
       }
     }
@@ -236,68 +292,21 @@ class JourneyAnswersController @Inject() (
       }
     }
 
-  def saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+  def saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.RentalESBA, request) { ctx =>
-        withEntity[EsbaInfo](request) { esbaInfo =>
-          handleResponse(NO_CONTENT) {
-            propertyService.saveEsbas(ctx, nino, esbaInfo)
-          }
+      withJourneyContextAndEntity[RentalAllowances](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentalsAndRaRAllowances,
+        request
+      ) { (ctx, allowances) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.savePropertyRentalAllowances(ctx.toJourneyContextWithNino(nino), allowances)
         }
       }
     }
 
-  def savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
-        (ctx, sbaInfo) =>
-          handleResponse(NO_CONTENT) {
-            propertyService.saveSbas(ctx, nino, sbaInfo)
-          }
-      }
-    }
-
-  def saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-      val requestBody = parseBody[RentARoomAllowances](request)
-
-      requestBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.saveRentARoomAllowances(ctx, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
-      }
-    }
-
-  def savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-      val requestBody = parseBody[RentalAllowances](request)
-
-      requestBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.savePropertyRentalAllowances(ctx, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
-      }
-    }
-
-  def saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
-    auth.async { implicit request =>
-      withJourneyContextAndEntity[RentalAllowances](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
-        (ctx, allowances) =>
-          handleResponse(NO_CONTENT) {
-            propertyService.savePropertyRentalAllowances(ctx.toJourneyContextWithNino(nino), allowances)
-          }
-      }
-    }
   def setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx =
