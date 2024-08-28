@@ -2024,7 +2024,7 @@ class PropertyServiceSpec
       await(
         underTest
           .saveRentalsAndRaRAbout(
-            ctx.toJourneyContext(JourneyName.PropertyRentalsAndRentARoomAbout),
+            ctx.toJourneyContext(JourneyName.RentalsAndRaRAbout),
             Nino(nino),
             rentalsAndRaRAbout
           )
@@ -2074,7 +2074,7 @@ class PropertyServiceSpec
       await(
         underTest
           .saveRentalsAndRaRAbout(
-            ctx.toJourneyContext(JourneyName.PropertyRentalsAndRentARoomAbout),
+            ctx.toJourneyContext(JourneyName.RentalsAndRaRAbout),
             Nino(nino),
             rentalsAndRaRAbout
           )
