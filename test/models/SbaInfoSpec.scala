@@ -63,7 +63,7 @@ class SbaInfoSpec extends UnitTest {
   )
   val validRequestBody: JsValue = Json.parse("""{
                                                | "claimStructureBuildingAllowance" : true,
-                                               | "sbas": [
+                                               | "allowances": [
                                                |            {
                                                |                "structureBuildingQualifyingDate" : "2020-04-04",
                                                |                "structureBuildingQualifyingAmount" : 12,
@@ -157,7 +157,7 @@ class SbaInfoSpec extends UnitTest {
   "SbaInfoExtension" should {
 
     "convert from sbaInfo to structureBuildingFormGroup" in {
-      val sbas = sbaInfo.sbas.map(sbaInRequest =>
+      val sbas = sbaInfo.allowances.map(sbaInRequest =>
         StructuredBuildingAllowance(
           sbaInRequest.structureBuildingAllowanceClaim,
           Some(
@@ -182,7 +182,7 @@ class SbaInfoSpec extends UnitTest {
     "convert to from SbaInfo to SbaInfoToSave" in {
       sbaInfo.toSbaToSave shouldBe SbaInfoToSave(
         sbaInfo.claimStructureBuildingAllowance,
-        sbaInfo.sbas
+        sbaInfo.allowances
       )
     }
   }

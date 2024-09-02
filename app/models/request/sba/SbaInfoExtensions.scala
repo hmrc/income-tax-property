@@ -31,9 +31,9 @@ object SbaInfoToSave {
 object SbaInfoExtensions {
   implicit class SbaExtensions(sbaInfo: SbaInfo) {
     def toSbaToSave: SbaInfoToSave =
-      SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.sbas)
+      SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.allowances)
 
-    def toSba: List[StructuredBuildingAllowance] = sbaInfo.sbas.map(structureBuildingFormGroup =>
+    def toSba: List[StructuredBuildingAllowance] = sbaInfo.allowances.map(structureBuildingFormGroup =>
       StructuredBuildingAllowance(
         structureBuildingFormGroup.structureBuildingAllowanceClaim,
         Some(

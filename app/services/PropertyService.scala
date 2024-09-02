@@ -145,15 +145,9 @@ class PropertyService @Inject() (
     ctx: JourneyContext,
     nino: Nino,
     esbaInfo: EsbaInfo
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
-
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
-          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-        }
+      annualSubmission <- getAnnualSubmission(ctx, nino)
       r <- this.createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,
@@ -170,28 +164,20 @@ class PropertyService @Inject() (
                }
              )
     } yield r
-  }
 
-  def saveSbas(
+  def saveSBA(
     ctx: JourneyContext,
     nino: Nino,
     sbaInfo: SbaInfo
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
-
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
-
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
-          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-        }
-      r <- this.createOrUpdateAnnualSubmission(
-             ctx.taxYear,
-             ctx.incomeSourceId,
-             nino,
-             PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba.toList)
-           )
+      annualSubmission <- getAnnualSubmission(ctx, nino)
+      result <- this.createOrUpdateAnnualSubmission(
+                  ctx.taxYear,
+                  ctx.incomeSourceId,
+                  nino,
+                  PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba)
+                )
       _ <- this
              .persistAnswers(ctx, sbaInfo.toSbaToSave)
              .map(isPersistSuccess =>
@@ -201,18 +187,21 @@ class PropertyService @Inject() (
                  logger.info("SBA Persist successful")
                }
              )
-    } yield r
+    } yield result
+
+  private def getAnnualSubmission(ctx: JourneyContext, nino: Nino)(implicit hc: HeaderCarrier) = {
+    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
+    getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+      case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+      case error             => ITPEnvelope.liftEither(error.asLeft[PropertyAnnualSubmission])
+    }
   }
+
   def saveRaRAbout(ctx: JourneyContext, nino: Nino, rarAbout: RaRAbout)(implicit
     hc: HeaderCarrier
-  ): ITPEnvelope[Boolean] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
+  ): ITPEnvelope[Boolean] =
     for {
-      annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
-          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-        }
+      annualSubmission <- getAnnualSubmission(ctx, nino)
       annualSubmissionRequest <-
         ITPEnvelope.liftPure(PropertyAnnualSubmission.fromUkRentARoomAbout(rarAbout, annualSubmission))
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
@@ -233,18 +222,12 @@ class PropertyService @Inject() (
              )
 
     } yield res
-  }
 
   def saveRentalsAndRaRAbout(ctx: JourneyContext, nino: Nino, rentalsAndRaRAbout: RentalsAndRaRAbout)(implicit
     hc: HeaderCarrier
-  ): ITPEnvelope[Boolean] = {
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
+  ): ITPEnvelope[Boolean] =
     for {
-      annualSubmission <-
-        getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
-          case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-          case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-        }
+      annualSubmission <- getAnnualSubmission(ctx, nino)
       annualSubmissionRequest <-
         ITPEnvelope.liftPure(
           PropertyAnnualSubmission.fromRentalsAndRentARoomAbout(rentalsAndRaRAbout, annualSubmission)
@@ -271,7 +254,6 @@ class PropertyService @Inject() (
              )
 
     } yield res
-  }
 
   def saveExpenses(ctx: JourneyContext, nino: Nino, expenses: Expenses)(implicit
     hc: HeaderCarrier

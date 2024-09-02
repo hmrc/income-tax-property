@@ -127,14 +127,14 @@ trait MockPropertyService extends MockFactory {
       .expects(ctx, nino, esbaInfo, *)
       .returning(EitherT.fromEither(result))
 
-  def mockSaveSbas(
+  def mockSaveSBA(
     ctx: JourneyContext,
     nino: Nino,
     sbaInfo: SbaInfo,
     result: Either[ServiceError, Unit]
   ): CallHandler4[JourneyContext, Nino, SbaInfo, HeaderCarrier, ITPEnvelope[Unit]] =
     (mockPropertyService
-      .saveSbas(
+      .saveSBA(
         _: JourneyContext,
         _: Nino,
         _: SbaInfo

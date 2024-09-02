@@ -666,7 +666,7 @@ class JourneyAnswersControllerSpec
   "update sba section" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimStructureBuildingAllowance" : true,
-                                                 | "sbas": [
+                                                 | "allowances": [
                                                  |            {
                                                  |                "structureBuildingQualifyingDate" : "2020-04-04",
                                                  |                "structureBuildingQualifyingAmount" : 12,
@@ -708,7 +708,7 @@ class JourneyAnswersControllerSpec
 
       mockAuthorisation()
 
-      mockSaveSbas(ctx, nino, sbaInfo, ().asRight[ServiceError])
+      mockSaveSBA(ctx, nino, sbaInfo, ().asRight[ServiceError])
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalSBA(taxYear, incomeSourceId, nino)(request))
@@ -727,7 +727,7 @@ class JourneyAnswersControllerSpec
         mockAuthorisation()
         val sbaInfo = validRequestBody.as[SbaInfo]
 
-        mockSaveSbas(
+        mockSaveSBA(
           ctx,
           nino,
           sbaInfo,
@@ -1059,6 +1059,90 @@ class JourneyAnswersControllerSpec
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
       val result = underTest.saveRentalsAndRaRAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "update sba section for rentals and rent a room" should {
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 | "claimStructureBuildingAllowance" : true,
+                                                 | "allowances": [
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2020-04-04",
+                                                 |                "structureBuildingQualifyingAmount" : 12,
+                                                 |                "structureBuildingAllowanceClaim" : 43,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "name12",
+                                                 |                    "buildingNumber" : "123",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2023-01-22",
+                                                 |                "structureBuildingQualifyingAmount" : 535,
+                                                 |                "structureBuildingAllowanceClaim" : 54,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "235",
+                                                 |                    "buildingNumber" : "3",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "structureBuildingQualifyingDate" : "2024-02-12",
+                                                 |                "structureBuildingQualifyingAmount" : 22,
+                                                 |                "structureBuildingAllowanceClaim" : 23,
+                                                 |                "structuredBuildingAllowanceAddress" : {
+                                                 |                    "buildingName" : "12",
+                                                 |                    "buildingNumber" : "2",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            }
+                                                 |        ],
+                                                 |        "sbaClaims" : false
+                                                 |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalsAndRaRSBA)
+    "return no_content for valid request body" in {
+      val sbaInfo = validRequestBody.as[SbaInfo]
+
+      mockAuthorisation()
+
+      mockSaveSBA(ctx, nino, sbaInfo, ().asRight[ServiceError])
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.savRentalsAndRaRSBA(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        mockAuthorisation()
+        val sbaInfo = validRequestBody.as[SbaInfo]
+
+        mockSaveSBA(
+          ctx,
+          nino,
+          sbaInfo,
+          Left(serviceError)
+        )
+
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.savRentalsAndRaRSBA(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.savRentalsAndRaRSBA(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }
