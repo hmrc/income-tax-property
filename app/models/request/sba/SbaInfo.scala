@@ -34,7 +34,7 @@ object Sba {
 
 final case class SbaInfo(
   claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
-  sbas: List[Sba]
+  allowances: List[Sba]
 )
 
 object SbaInfo {

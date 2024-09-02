@@ -142,7 +142,7 @@ class JourneyAnswersController @Inject() (
       withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalSBA, request) {
         (ctx, sbaInfo) =>
           handleResponse(NO_CONTENT) {
-            propertyService.saveSbas(ctx, nino, sbaInfo)
+            propertyService.saveSBA(ctx, nino, sbaInfo)
           }
       }
     }
@@ -322,6 +322,16 @@ class JourneyAnswersController @Inject() (
               Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
           }
         case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
+  def savRentalsAndRaRSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalsAndRaRSBA, request) {
+        (ctx, sbaInfo) =>
+          handleResponse(NO_CONTENT) {
+            propertyService.saveSBA(ctx, nino, sbaInfo)
+          }
       }
     }
 }

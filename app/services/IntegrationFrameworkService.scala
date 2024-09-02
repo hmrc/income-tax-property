@@ -27,21 +27,24 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class IntegrationFrameworkService @Inject()(connector: IntegrationFrameworkConnector)
-                                           (implicit ec: ExecutionContext) {
+class IntegrationFrameworkService @Inject() (connector: IntegrationFrameworkConnector)(implicit ec: ExecutionContext) {
 
-  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, BusinessDetailsResponse]] = {
+  def getBusinessDetails(
+    nino: String
+  )(implicit hc: HeaderCarrier): Future[Either[ServiceError, BusinessDetailsResponse]] =
     connector.getBusinessDetails(nino).map {
       case Left(error) => Left(ApiServiceError(error.status))
-      case Right(allBusinessDetails) => allBusinessDetails.flatMap(_.taxPayerDisplayResponse.propertyData).fold[Either[ServiceError, BusinessDetailsResponse]](
-        Left(DataNotFoundError))(
-        propDetailsList =>
-          Right(BusinessDetailsResponse(filterProperty(propDetailsList).map(property => toResponseModel(property)))))
+      case Right(allBusinessDetails) =>
+        allBusinessDetails
+          .flatMap(_.taxPayerDisplayResponse.propertyData)
+          .fold[Either[ServiceError, BusinessDetailsResponse]](Left(DataNotFoundError))(propDetailsList =>
+            Right(BusinessDetailsResponse(filterProperty(propDetailsList).map(property => toResponseModel(property))))
+          )
     }
-  }
 
-  def filterProperty(propertyDetailsList: Seq[PropertyDetailsModel]): Seq[PropertyDetailsModel] = {
-    Seq(propertyDetailsList.find(propData => propData.incomeSourceType.contains("uk-property")),
-      propertyDetailsList.find(propData => propData.incomeSourceType.contains("foreign-property"))).flatten
-  }
+  private def filterProperty(propertyDetailsList: Seq[PropertyDetailsModel]): Seq[PropertyDetailsModel] =
+    propertyDetailsList.filter { propData =>
+      propData.incomeSourceType.exists(sourceType => sourceType == "uk-property" || sourceType == "foreign-property")
+    }
+
 }

@@ -764,7 +764,7 @@ class PropertyServiceSpec
         ().asRight[ApiError]
       )
 
-      await(underTest.saveSbas(ctx, Nino(nino), sbaInfo).value) shouldBe Right(())
+      await(underTest.saveSBA(ctx, Nino(nino), sbaInfo).value) shouldBe Right(())
 
     }
   }
