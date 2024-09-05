@@ -448,10 +448,11 @@ class PropertyServiceSpec
     val mtditid = "89787469409"
     val journeyContextWithNino =
       JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
       BalancingCharge(balancingChargeYesNo = true, Some(108)),
-      BigDecimal(34.56),
+      Some(BigDecimal(34.56)),
       RenovationAllowanceBalancingCharge(
         renovationAllowanceBalancingChargeYesNo = true,
         renovationAllowanceBalancingChargeAmount = Some(92)
@@ -519,7 +520,7 @@ class PropertyServiceSpec
         Right()
       )
       await(
-        underTest.savePropertyRentalAdjustments(journeyContextWithNino, propertyRentalAdjustments).value
+        underTest.savePropertyRentalAdjustments(journeyContext, Nino(nino), propertyRentalAdjustments).value
       ) shouldBe Right(true)
     }
 
@@ -584,7 +585,7 @@ class PropertyServiceSpec
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
-        underTest.savePropertyRentalAdjustments(journeyContextWithNino, propertyRentalAdjustments).value
+        underTest.savePropertyRentalAdjustments(journeyContext, Nino(nino), propertyRentalAdjustments).value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }

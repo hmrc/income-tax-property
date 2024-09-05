@@ -228,7 +228,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
       val propertyRentalAdjustments = PropertyRentalAdjustments(
         13.57,
         BalancingCharge(true, Some(80.24)),
-        68.02,
+        Some(68.02),
         RenovationAllowanceBalancingCharge(
           true,
           Some(35.79)

@@ -245,17 +245,18 @@ class JourneyAnswersControllerSpec
                                                             |  "unusedResidentialFinanceCost": 78.89
                                                             |}
         """.stripMargin)
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+    val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalAdjustments)
 
     "return no_content for valid request body" in {
 
       mockAuthorisation()
       mockSavePropertyRentalAdjustments(
         ctx,
+        nino,
         PropertyRentalAdjustments(
           BigDecimal(12.34),
           BalancingCharge(balancingChargeYesNo = true, Some(108)),
-          BigDecimal(34.56),
+          Some(BigDecimal(34.56)),
           RenovationAllowanceBalancingCharge(
             renovationAllowanceBalancingChargeYesNo = true,
             renovationAllowanceBalancingChargeAmount = Some(92)
@@ -1143,6 +1144,57 @@ class JourneyAnswersControllerSpec
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
       val result = underTest.savRentalsAndRaRSBA(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "create or update property rentals and rent a room adjustments section" should {
+
+    val propertyRentalAdjustmentsJs: JsValue = Json.parse("""
+                                                            |{
+                                                            |  "privateUseAdjustment": 12.34,
+                                                            |  "balancingCharge": {
+                                                            |    "balancingChargeYesNo": true,
+                                                            |    "balancingChargeAmount": 108
+                                                            |  },
+                                                            |  "propertyIncomeAllowance": 34.56,
+                                                            |  "renovationAllowanceBalancingCharge": {
+                                                            |    "renovationAllowanceBalancingChargeYesNo": true,
+                                                            |    "renovationAllowanceBalancingChargeAmount": 92
+                                                            |  },
+                                                            |  "residentialFinanceCost": 56.78,
+                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |}
+        """.stripMargin)
+    val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalsAndRaRAdjustments)
+
+    "return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockSavePropertyRentalAdjustments(
+        ctx,
+        nino,
+        PropertyRentalAdjustments(
+          BigDecimal(12.34),
+          BalancingCharge(balancingChargeYesNo = true, Some(108)),
+          Some(BigDecimal(34.56)),
+          RenovationAllowanceBalancingCharge(
+            renovationAllowanceBalancingChargeYesNo = true,
+            renovationAllowanceBalancingChargeAmount = Some(92)
+          ),
+          BigDecimal(56.78),
+          BigDecimal(78.89)
+        )
+      )
+
+      val request = fakePostRequest.withJsonBody(propertyRentalAdjustmentsJs)
+      val result = await(underTest.saveRentalsAndRaRAdjustments(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body does not have property rental adjustments and is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveRentalsAndRaRAdjustments(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }

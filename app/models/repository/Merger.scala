@@ -299,7 +299,7 @@ object Merger {
                 balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
               ),
               propertyIncomeAllowance =
-                0, // Todo: fromWhere? (Change case class to make it optional, present in one of Rentals / RentaRoom)
+                None, // Todo: fromWhere? (Change case class to make it optional, present in one of Rentals / RentaRoom)
               renovationAllowanceBalancingCharge = RenovationAllowanceBalancingCharge(
                 renovationAllowanceBalancingChargeYesNo = extractedMaybe
                   .map(_.renovationAllowanceBalancingChargeYesNo)

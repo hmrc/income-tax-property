@@ -92,17 +92,16 @@ class JourneyAnswersController @Inject() (
 
   def savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      val journeyContextWithNino = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-      val annualPropertyRentalAdjustmentsBody = parseBody[PropertyRentalAdjustments](request)
-
-      annualPropertyRentalAdjustmentsBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.savePropertyRentalAdjustments(journeyContextWithNino, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      withJourneyContextAndEntity[PropertyRentalAdjustments](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentalAdjustments,
+        request
+      ) { (ctx, adjustments) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.savePropertyRentalAdjustments(ctx, nino, adjustments)
+        }
       }
     }
 
@@ -332,6 +331,21 @@ class JourneyAnswersController @Inject() (
           handleResponse(NO_CONTENT) {
             propertyService.saveSBA(ctx, nino, sbaInfo)
           }
+      }
+    }
+
+  def saveRentalsAndRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[PropertyRentalAdjustments](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentalsAndRaRAdjustments,
+        request
+      ) { (ctx, adjustments) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.savePropertyRentalAdjustments(ctx, nino, adjustments)
+        }
       }
     }
 }
