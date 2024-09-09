@@ -454,7 +454,8 @@ class PropertyService @Inject() (
     )
 
   def savePropertyRentalAdjustments(
-    contextWithNino: JourneyContextWithNino,
+    context: JourneyContext,
+    nino: Nino,
     propertyRentalAdjustment: PropertyRentalAdjustments
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
@@ -462,35 +463,26 @@ class PropertyService @Inject() (
       propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
       propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo
     )
-
-    val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
-
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(
-                                   contextWithNino.taxYear.endYear,
-                                   contextWithNino.nino.value,
-                                   contextWithNino.incomeSourceId.value
+                                   context.taxYear.endYear,
+                                   nino.value,
+                                   context.incomeSourceId.value
                                  )
-      submissionResponse <- savePeriodicSubmission(contextWithNino, maybePeriodicSubmission, propertyRentalAdjustment)
-      propertyAnnualSubmissionFromDownstream <-
-        this
-          .getPropertyAnnualSubmission(
-            contextWithNino.taxYear.endYear,
-            contextWithNino.nino.value,
-            contextWithNino.incomeSourceId.value
-          )
-          .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
+      _ <- savePeriodicSubmission(
+             context.toJourneyContextWithNino(nino),
+             maybePeriodicSubmission,
+             propertyRentalAdjustment
+           )
+      propertyAnnualSubmissionFromDownstream <- getAnnualSubmission(context, nino)
       _ <- createOrUpdateAnnualSubmission(
-             contextWithNino.taxYear,
-             contextWithNino.incomeSourceId,
-             contextWithNino.nino,
+             context.taxYear,
+             context.incomeSourceId,
+             nino,
              PropertyAnnualSubmission
                .fromPropertyRentalAdjustments(propertyRentalAdjustment, propertyAnnualSubmissionFromDownstream)
            )
-      res <- persistAnswers(contextWithNino.toJourneyContext(JourneyName.RentalAdjustments), adjustmentStoreAnswers)
+      res <- persistAnswers(context, adjustmentStoreAnswers)
     } yield res
 
   }

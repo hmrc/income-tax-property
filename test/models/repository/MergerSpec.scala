@@ -157,7 +157,7 @@ class MergerSpec extends UnitTest {
         PropertyRentalAdjustments(
           BigDecimal(privateUseAdjustments),
           BalancingCharge(balancingChargeYesNo, Some(balancingCharge)),
-          0, // Todo: fromWhere?
+          None, // Todo: fromWhere?
           RenovationAllowanceBalancingCharge(
             renovationAllowanceBalancingChargeYesNo,
             Some(businessPremisesRenovationAllowanceBalancingCharges)
