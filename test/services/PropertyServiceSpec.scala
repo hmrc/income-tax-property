@@ -692,8 +692,8 @@ class PropertyServiceSpec
       )
 
       val esbaInfo = EsbaInfo(
-        ClaimEnhancedStructureBuildingAllowance(true),
-        EsbaClaims(true),
+        claimEnhancedStructureBuildingAllowance = true,
+        esbaClaims = true,
         esbasToBeAdded
       )
       val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
@@ -1423,8 +1423,8 @@ class PropertyServiceSpec
       val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
 
       def generateEsbaInfo(
-        claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-        esbaClaims: EsbaClaims
+        claimEnhancedStructureBuildingAllowance: Boolean,
+        esbaClaims: Boolean
       ): EsbaInfo =
         EsbaInfo(
           claimEnhancedStructureBuildingAllowance,
@@ -1443,51 +1443,51 @@ class PropertyServiceSpec
           )
         )
 
-      val scenarios = Table[Boolean, ClaimEnhancedStructureBuildingAllowance, EsbaClaims, Option[EsbaInfo]](
+      val scenarios = Table[Boolean, Boolean, Boolean, Option[EsbaInfo]](
         ("isJourneyPresentInDb", "ClaimEnhancedStructureBuildingAllowance", "EsbaClaims", "EsbaInfoRetrieved"),
         (
           true,
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(true),
+          true,
+          true,
           Some(
-            generateEsbaInfo(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(true))
+            generateEsbaInfo(claimEnhancedStructureBuildingAllowance = true, esbaClaims = true)
           )
         ),
         (
           true,
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(false),
+          true,
+          false,
           Some(
-            generateEsbaInfo(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false))
+            generateEsbaInfo(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false)
           )
         ),
         (
           true,
-          ClaimEnhancedStructureBuildingAllowance(false),
-          EsbaClaims(true),
+          false,
+          true,
           Some(
-            generateEsbaInfo(ClaimEnhancedStructureBuildingAllowance(false), EsbaClaims(true))
+            generateEsbaInfo(claimEnhancedStructureBuildingAllowance = false, esbaClaims = true)
           )
         ),
         (
           true,
-          ClaimEnhancedStructureBuildingAllowance(false),
-          EsbaClaims(false),
+          false,
+          false,
           Some(
             generateEsbaInfo(
-              ClaimEnhancedStructureBuildingAllowance(false),
-              EsbaClaims(false)
+              claimEnhancedStructureBuildingAllowance = false,
+              esbaClaims = false
             )
           )
         ),
         (
           false,
-          ClaimEnhancedStructureBuildingAllowance(true),
-          EsbaClaims(false),
+          true,
+          false,
           Some(
             generateEsbaInfo(
-              ClaimEnhancedStructureBuildingAllowance(true),
-              EsbaClaims(false)
+              claimEnhancedStructureBuildingAllowance = true,
+              esbaClaims = false
             )
           )
         )
@@ -1512,8 +1512,8 @@ class PropertyServiceSpec
       forAll(scenarios) {
         (
           isJourneyPresentInDb: Boolean,
-          claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-          esbaClaims: EsbaClaims,
+          claimEnhancedStructureBuildingAllowance: Boolean,
+          esbaClaims: Boolean,
           esbaInfoRetrieved: Option[EsbaInfo]
         ) =>
           mockGetPropertyAnnualSubmission(
@@ -1603,8 +1603,8 @@ class PropertyServiceSpec
       }
       val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
 
-      val claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true)
-      val esbaClaims = EsbaClaims(true)
+      val claimEnhancedStructureBuildingAllowance = true
+      val esbaClaims = true
 
       mockGetPropertyAnnualSubmission(
         taxYear,
@@ -1681,7 +1681,7 @@ class PropertyServiceSpec
                repository
                  .upsertAnswers(
                    ctx.toJourneyContext(JourneyName.RentalESBA),
-                   Json.toJson(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+                   Json.toJson(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
                  )
                  .map(_.asRight[ServiceError])
              )
@@ -1771,7 +1771,7 @@ class PropertyServiceSpec
                  Clock.systemUTC(),
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
-                 Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+                 Json.toJsObject(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
                ).map(_.asRight[ServiceError])
              )
         _ <- EitherT(
@@ -1779,7 +1779,7 @@ class PropertyServiceSpec
                  Clock.systemUTC(),
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
-                 Json.toJsObject(EsbaInfoToSave(ClaimEnhancedStructureBuildingAllowance(true), EsbaClaims(false)))
+                 Json.toJsObject(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
                ).map(_.asRight[ServiceError])
              )
         r <-
