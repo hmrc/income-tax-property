@@ -22,7 +22,7 @@ import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
-import models.request.esba.{ClaimEnhancedStructureBuildingAllowance, EsbaClaims, EsbaInfo}
+import models.request.esba.EsbaInfo
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -759,8 +759,8 @@ class JourneyAnswersControllerSpec
         None,
         Some(
           EsbaInfo(
-            ClaimEnhancedStructureBuildingAllowance(true),
-            EsbaClaims(true),
+            claimEnhancedStructureBuildingAllowance = true,
+            esbaClaims = true,
             List()
           )
         ),

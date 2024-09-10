@@ -383,8 +383,8 @@ object Merger {
         case (None, Some(fromDownstream)) => // Todo: How to act here???
           Some(
             EsbaInfo(
-              claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true),
-              esbaClaims = EsbaClaims(false), // ToDo:???
+              claimEnhancedStructureBuildingAllowance = true,
+              esbaClaims = false, // ToDo:???
               esbas = fromDownstream
             )
           )

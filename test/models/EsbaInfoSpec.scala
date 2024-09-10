@@ -27,8 +27,8 @@ import utils.UnitTest
 import java.time.{LocalDate, LocalDateTime}
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
-    ClaimEnhancedStructureBuildingAllowance(true),
-    EsbaClaims(false),
+    claimEnhancedStructureBuildingAllowance = true,
+    esbaClaims = false,
     List(
       EsbaInUpstream(
         LocalDate.parse("2020-04-04"),

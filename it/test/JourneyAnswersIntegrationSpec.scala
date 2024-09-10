@@ -259,8 +259,8 @@ class JourneyAnswersIntegrationSpec
         ),
         esbasWithSupportingQuestions = Some(
           EsbaInfo(
-            ClaimEnhancedStructureBuildingAllowance(true),
-            EsbaClaims(false),
+            claimEnhancedStructureBuildingAllowance = true,
+            esbaClaims = false,
             List(
               EsbaInUpstream(
                 LocalDate.parse("2024-01-01"),

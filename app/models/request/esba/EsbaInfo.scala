@@ -63,8 +63,8 @@ object EsbaInUpstream {
 }
 
 final case class EsbaInfo(
-  claimEnhancedStructureBuildingAllowance: ClaimEnhancedStructureBuildingAllowance,
-  esbaClaims: EsbaClaims,
+  claimEnhancedStructureBuildingAllowance: Boolean,
+  esbaClaims: Boolean,
   esbas: List[EsbaInUpstream]
 )
 

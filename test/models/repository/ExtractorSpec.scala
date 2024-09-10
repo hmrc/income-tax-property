@@ -32,8 +32,8 @@ class ExtractorSpec extends UnitTest {
     val address1 = "name1"
     val address2 = "name2"
     val postcode = "AB1 XY2"
-    val claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true)
-    val esbaClaims = EsbaClaims(false)
+    val claimEnhancedStructureBuildingAllowance = true
+    val esbaClaims = false
 
     "extract to save part into another model" in {
       EsbaInfo(

@@ -33,8 +33,8 @@ class MergerSpec extends UnitTest {
     val address1 = "name1"
     val address2 = "name2"
     val postcode = "AB1 XY2"
-    val claimEnhancedStructureBuildingAllowance = ClaimEnhancedStructureBuildingAllowance(true)
-    val esbaClaims = EsbaClaims(false)
+    val claimEnhancedStructureBuildingAllowance = true
+    val esbaClaims = false
     val balancingCharge = 24
     val privateUseAdjustments = 34
     val businessPremisesRenovationAllowanceBalancingCharges = 44
