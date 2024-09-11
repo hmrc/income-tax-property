@@ -20,7 +20,7 @@ import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanc
 import play.api.libs.json.{Json, OFormat}
 
 final case class SbaInfoToSave(
-  claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
+  claimStructureBuildingAllowance: Boolean,
   structureBuildingFormGroup: List[Sba]
 )
 

@@ -27,7 +27,7 @@ import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
 import models.request.sba.SbaInfoExtensions.SbaExtensions
-import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo}
+import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
@@ -741,7 +741,7 @@ class PropertyServiceSpec
       )
 
       val sbaInfo = SbaInfo(
-        ClaimStructureBuildingAllowance(true),
+        claimStructureBuildingAllowance = true,
         sbasToBeAdded
       )
 
