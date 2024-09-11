@@ -1199,4 +1199,91 @@ class JourneyAnswersControllerSpec
     }
   }
 
+  "create or update esba section for combined journey" should {
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 | "claimEnhancedStructureBuildingAllowance" : true,
+                                                 | "esbas": [
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2020-04-04",
+                                                 |                "esbaQualifyingAmount" : 12,
+                                                 |                "esbaClaim" : 43,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "name12",
+                                                 |                    "buildingNumber" : "123",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2023-01-22",
+                                                 |                "esbaQualifyingAmount" : 535,
+                                                 |                "esbaClaim" : 54,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "235",
+                                                 |                    "buildingNumber" : "3",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            },
+                                                 |            {
+                                                 |                "esbaQualifyingDate" : "2024-02-12",
+                                                 |                "esbaQualifyingAmount" : 22,
+                                                 |                "esbaClaim" : 23,
+                                                 |                "esbaAddress" : {
+                                                 |                    "buildingName" : "12",
+                                                 |                    "buildingNumber" : "2",
+                                                 |                    "postCode" : "XX1 1XX"
+                                                 |                }
+                                                 |            }
+                                                 |        ],
+                                                 |        "esbaClaims" : false
+                                                 |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalsAndRaRESBA)
+    "return no_content for valid request body" in {
+      val esbaInfo = validRequestBody.as[EsbaInfo]
+      mockAuthorisation()
+
+      mockSaveEsbas(
+        ctx,
+        nino,
+        esbaInfo,
+        ().asRight[ServiceError]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRentalsAndRaREsba(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        mockAuthorisation()
+        val esbaInfo = validRequestBody.as[EsbaInfo]
+
+        mockSaveEsbas(
+          ctx,
+          nino,
+          esbaInfo,
+          Left(serviceError)
+        )
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.saveRentalsAndRaREsba(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveRentalsAndRaREsba(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 }
