@@ -20,7 +20,7 @@ import models._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.sba.{ClaimStructureBuildingAllowance, Sba, SbaInfo, SbaInfoToSave}
+import models.request.sba.{Sba, SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 
@@ -413,7 +413,7 @@ object Merger {
         case (None, Some(fromDownstream)) =>
           Some(
             SbaInfo(
-              claimStructureBuildingAllowance = ClaimStructureBuildingAllowance(true),
+              claimStructureBuildingAllowance = true,
               allowances = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )

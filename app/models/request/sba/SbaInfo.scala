@@ -33,7 +33,7 @@ object Sba {
 }
 
 final case class SbaInfo(
-  claimStructureBuildingAllowance: ClaimStructureBuildingAllowance,
+  claimStructureBuildingAllowance: Boolean,
   allowances: List[Sba]
 )
 
