@@ -262,7 +262,7 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          BigDecimal(78.89)
+          Some(BigDecimal(78.89))
         )
       )
 
@@ -1183,7 +1183,7 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          BigDecimal(78.89)
+          Some(BigDecimal(78.89))
         )
       )
 

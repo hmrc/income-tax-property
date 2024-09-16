@@ -310,7 +310,7 @@ object Merger {
                   fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
               ),
               residentialFinanceCost = residentialFinanceCost,
-              unusedResidentialFinanceCost = residentialFinanceCostCarriedForward
+              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward)
             )
           )
         case _ => None
