@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package models
+package models.request
 
-import models.request.ClaimExpensesOrRelief
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
 
-final case class RentalsAndRaRAbout(
-  jointlyLetYesOrNo: Boolean,
-  totalIncomeAmount: BigDecimal,
-  claimPropertyIncomeAllowanceYesOrNo: Boolean,
-  incomeFromPropertyRentals: BigDecimal,
-  claimExpensesOrRelief: ClaimExpensesOrRelief
+final case class RentalsAndRaRIncome(
+  isNonUKLandlord: Boolean,
+  otherIncomeFromProperty: BigDecimal,
+  deductingTax: Option[DeductingTax],
+  calculatedFigureYourself: Option[CalculatedFigureYourself],
+  yearLeaseAmount: Option[BigDecimal],
+  receivedGrantLeaseAmount: Option[BigDecimal],
+  premiumsGrantLease: Option[PremiumsGrantLease],
+  reversePremiumsReceived: Option[ReversePremiumsReceived]
 )
 
-object RentalsAndRaRAbout {
-  implicit val format: OFormat[RentalsAndRaRAbout] = Json.format[RentalsAndRaRAbout]
+case object RentalsAndRaRIncome {
+
+  implicit val formats: Format[RentalsAndRaRIncome] = Json.format[RentalsAndRaRIncome]
 }

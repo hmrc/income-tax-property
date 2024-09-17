@@ -574,6 +574,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             false,
             12.34,
             true,
+            22.33,
             ClaimExpensesOrRelief(true, Some(56.78))
           ),
           annualSubmissionWithAllFieldsFilled

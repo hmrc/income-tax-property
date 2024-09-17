@@ -72,6 +72,31 @@ class PropertyService @Inject() (
            )
     } yield submissionResponse
 
+  def saveRentalsAndRaRIncome(journeyContext: JourneyContext, nino: Nino, rentalsAndRaRIncome: RentalsAndRaRIncome)(
+    implicit hc: HeaderCarrier
+  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    for {
+
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+                                     journeyContext.taxYear.endYear,
+                                     nino.value,
+                                     journeyContext.incomeSourceId.value
+                                   )
+      submissionResponse <- savePeriodicSubmission(
+                              journeyContext.toJourneyContextWithNino(nino),
+                              currentPeriodicSubmission,
+                              rentalsAndRaRIncome
+                            )
+      _ <- persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome)).map(
+             isPersistSuccess =>
+               if (!isPersistSuccess) {
+                 logger.error("Could not persist")
+               } else {
+                 logger.info("Persist successful")
+               }
+           )
+    } yield submissionResponse
+
   def getFetchedPropertyDataMerged(
     ctx: JourneyContext,
     nino: Nino,

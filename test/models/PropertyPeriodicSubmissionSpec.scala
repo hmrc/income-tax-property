@@ -252,6 +252,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             false,
+            22.33,
             ClaimExpensesOrRelief(false, None)
           )
         ) shouldBe
@@ -262,7 +263,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             None,
             Some(
               UkOtherProperty(
-                Some(UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(12.34)))),
+                Some(UkOtherPropertyIncome(None, None, Some(22.33), None, None, Some(RentARoomIncome(12.34)))),
                 None
               )
             )
@@ -310,6 +311,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             false,
+            22.33,
             ClaimExpensesOrRelief(false, None)
           )
         ) shouldBe
@@ -318,7 +320,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             None,
             Some(
               UkOtherProperty(
-                Some(UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(12.34)))),
+                Some(UkOtherPropertyIncome(None, None, Some(22.33), None, None, Some(RentARoomIncome(12.34)))),
                 None
               )
             )
@@ -414,6 +416,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             false,
             12.34,
             true,
+            22.33,
             ClaimExpensesOrRelief(true, Some(56.78))
           )
         )

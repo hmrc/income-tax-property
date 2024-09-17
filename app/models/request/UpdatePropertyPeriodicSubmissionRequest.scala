@@ -80,9 +80,10 @@ object UpdatePropertyPeriodicSubmissionRequest {
       case e @ Expenses(_, _, _, _, _, _, _, _)                 => fromExpenses(periodicSubmissionMaybe, e)
       case e @ RentARoomExpenses(_, _, _, _, _, _)              => fromRaRExpenses(periodicSubmissionMaybe, e)
       case e @ PropertyRentalsIncome(_, _, _, _, _, _, _, _, _) => fromPropertyRentalsIncome(periodicSubmissionMaybe, e)
+      case e @ RentalsAndRaRIncome(_, _, _, _, _, _, _, _)      => fromRentalsAndRaRIncome(periodicSubmissionMaybe, e)
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(periodicSubmissionMaybe, e).asRight[ServiceError]
-      case e @ RentalsAndRaRAbout(_, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
+      case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[UpdatePropertyPeriodicSubmissionRequest]
@@ -159,7 +160,14 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
     val ukOtherPropertyIncome: UkOtherPropertyIncome = ukOtherPropertyIncomeMaybe
       .fold(
-        UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount)))
+        UkOtherPropertyIncome(
+          None,
+          None,
+          Some(rentalsAndRaRAbout.incomeFromPropertyRentals),
+          None,
+          None,
+          Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
+        )
       )(
         _.copy(
           ukOtherRentARoom = Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
@@ -251,7 +259,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _,_, _, _, Some(UkOtherProperty(Some(income), _)))) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
           (Some(pps), Some(income))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -307,6 +315,44 @@ object UpdatePropertyPeriodicSubmissionRequest {
       periodAmount = Some(propertyRentalsIncome.incomeFromPropertyRentals),
       taxDeducted = propertyRentalsIncome.deductingTax.flatMap(_.taxDeductedAmount),
       otherIncome = Some(propertyRentalsIncome.otherIncomeFromProperty),
+      ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
+    )
+
+    val requestWithEmptyRentalsIncome = UpdatePropertyPeriodicSubmissionRequest(
+      periodicSubmission.flatMap(_.foreignProperty),
+      Some(
+        UkOtherProperty(
+          None,
+          ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
+        )
+      )
+    )
+
+    val result: UpdatePropertyPeriodicSubmissionRequest =
+      updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
+    result.asRight[ServiceError]
+  }
+
+  def fromRentalsAndRaRIncome(
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    rentalsAndRaRIncome: RentalsAndRaRIncome
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+
+    val (periodicSubmission, ukOtherPropertyExpenses)
+      : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
+      periodicSubmissionMaybe match {
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
+          (Some(pps), Some(expenses))
+        case Some(pps) => (Some(pps), None)
+        case _         => (None, None)
+      }
+
+    val ukOtherPropertyIncome = UkOtherPropertyIncome(
+      premiumsOfLeaseGrant = rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.amount),
+      periodAmount = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.periodAmount))),
+      taxDeducted = rentalsAndRaRIncome.deductingTax.flatMap(_.taxDeductedAmount),
+      otherIncome = Some(rentalsAndRaRIncome.otherIncomeFromProperty),
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 

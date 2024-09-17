@@ -1948,6 +1948,7 @@ class PropertyServiceSpec
       true,
       55.22,
       true,
+      22.33,
       ClaimExpensesOrRelief(
         true,
         Some(22.55)
