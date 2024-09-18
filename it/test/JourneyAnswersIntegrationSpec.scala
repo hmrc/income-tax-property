@@ -243,7 +243,7 @@ class JourneyAnswersIntegrationSpec
             None,
             RenovationAllowanceBalancingCharge(true, Some(14)),
             21,
-            34.56
+            Some(34.56)
           )
         ),
         allowances = Some(

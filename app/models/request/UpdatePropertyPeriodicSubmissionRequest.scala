@@ -65,7 +65,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
     val expenses = ukOtherExpenses.copy(
       residentialFinancialCost = Some(propertyRentalAdjustments.residentialFinanceCost),
-      residentialFinancialCostsCarriedForward = Some(propertyRentalAdjustments.unusedResidentialFinanceCost)
+      residentialFinancialCostsCarriedForward = propertyRentalAdjustments.unusedResidentialFinanceCost
     )
 
     updateUkOtherPropertiesExpenses(expenses, propertyPeriodicSubmission)

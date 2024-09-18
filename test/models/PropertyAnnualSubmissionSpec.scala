@@ -234,7 +234,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           Some(35.79)
         ),
         13.57,
-        91.35
+        Some(91.35)
       )
 
       val firstLevelDiff = diff(

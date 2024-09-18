@@ -163,7 +163,7 @@ class MergerSpec extends UnitTest {
             Some(businessPremisesRenovationAllowanceBalancingCharges)
           ),
           residentialFinanceCost,
-          residentialFinanceCostCarriedForward
+          Some(residentialFinanceCostCarriedForward)
         )
       )
     }

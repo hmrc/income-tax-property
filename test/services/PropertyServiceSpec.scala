@@ -458,7 +458,7 @@ class PropertyServiceSpec
         renovationAllowanceBalancingChargeAmount = Some(92)
       ),
       BigDecimal(56.78),
-      BigDecimal(78.89)
+      Some(BigDecimal(78.89))
     )
 
     "return a success with no content when the request is valid and data is persisted" in {
