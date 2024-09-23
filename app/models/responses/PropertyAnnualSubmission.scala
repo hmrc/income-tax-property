@@ -133,7 +133,7 @@ object PropertyAnnualSubmission {
 
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None))
         case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -167,7 +167,7 @@ object PropertyAnnualSubmission {
 
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None))
         case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -195,7 +195,7 @@ object PropertyAnnualSubmission {
       }
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None))
         case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -241,7 +241,7 @@ object PropertyAnnualSubmission {
       }
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None))
         case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
