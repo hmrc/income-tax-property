@@ -1865,7 +1865,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     None,
-                    None,
+                    Some(false),
                     Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
                   )
                 ),
@@ -2012,7 +2012,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     None,
-                    None,
+                    Some(false),
                     Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
                   )
                 ),
@@ -2126,7 +2126,7 @@ class PropertyServiceSpec
                     ukRaRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount),
                     None,
                     None,
-                    None,
+                    Some(false),
                     None
                   )
                 ),
@@ -2170,7 +2170,7 @@ class PropertyServiceSpec
                     ukRaRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount),
                     None,
                     None,
-                    None,
+                    Some(false),
                     None
                   )
                 ),

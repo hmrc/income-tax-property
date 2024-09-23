@@ -420,9 +420,14 @@ class PropertyService @Inject() (
     nino: Nino,
     body: PropertyAnnualSubmission
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
-    EitherT(
-      connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
-    ).leftMap(e => ApiServiceError(e.status))
+    body match {
+      case PropertyAnnualSubmission(None, None, None) =>
+        ITPEnvelope.liftPure(())
+      case _ =>
+        EitherT(
+          connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
+        ).leftMap(e => ApiServiceError(e.status))
+    }
 
   private def getPropertySubmissions(
     taxYear: Int,
