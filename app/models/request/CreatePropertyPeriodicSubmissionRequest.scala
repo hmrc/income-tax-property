@@ -48,9 +48,11 @@ object CreatePropertyPeriodicSubmissionRequest {
       case e @ RentARoomExpenses(_, _, _, _, _, _) => fromRaRExpenses(taxYear, periodicSubmissionMaybe, e)
       case e @ PropertyRentalsIncome(_, _, _, _, _, _, _, _, _) =>
         fromPropertyRentalsIncome(taxYear, periodicSubmissionMaybe, e)
+      case e @ RentalsAndRaRIncome(_, _, _, _, _, _, _, _) =>
+        fromRentalsAndRaRIncome(taxYear, periodicSubmissionMaybe, e)
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
-      case e @ RentalsAndRaRAbout(_, _, _, _) => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
+      case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[CreatePropertyPeriodicSubmissionRequest]
@@ -172,7 +174,14 @@ object CreatePropertyPeriodicSubmissionRequest {
 
     val ukOtherPropertyIncome: UkOtherPropertyIncome = ukOtherPropertyIncomeMaybe
       .fold(
-        UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount)))
+        UkOtherPropertyIncome(
+          None,
+          None,
+          Some(rentalsAndRaRAbout.incomeFromPropertyRentals),
+          None,
+          None,
+          Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
+        )
       )(
         _.copy(
           ukOtherRentARoom = Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))
@@ -332,6 +341,47 @@ object CreatePropertyPeriodicSubmissionRequest {
       periodAmount = Some(propertyRentalsIncome.incomeFromPropertyRentals),
       taxDeducted = propertyRentalsIncome.deductingTax.flatMap(_.taxDeductedAmount),
       otherIncome = Some(propertyRentalsIncome.otherIncomeFromProperty),
+      ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
+    )
+
+    val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(
+      periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
+      periodicSubmission.flatMap(_.foreignProperty),
+      Some(
+        UkOtherProperty(
+          None,
+          ukOtherPropertyExpenses // Todo: Change here, move consolidated to separate part!
+        )
+      )
+    )
+
+    val result: CreatePropertyPeriodicSubmissionRequest =
+      updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
+    result.asRight[ServiceError]
+  }
+
+  def fromRentalsAndRaRIncome(
+    taxYear: TaxYear,
+    periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
+    rentalsAndRaRIncome: RentalsAndRaRIncome
+  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+
+    val (periodicSubmission, ukOtherPropertyExpenses)
+      : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
+      periodicSubmissionMaybe match {
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
+          (Some(pps), Some(expenses))
+        case Some(pps) => (Some(pps), None)
+        case _         => (None, None)
+      }
+
+    val ukOtherPropertyIncome = UkOtherPropertyIncome(
+      premiumsOfLeaseGrant = rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.amount),
+      periodAmount = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.periodAmount))),
+      taxDeducted = rentalsAndRaRIncome.deductingTax.flatMap(_.taxDeductedAmount),
+      otherIncome = Some(rentalsAndRaRIncome.otherIncomeFromProperty),
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 

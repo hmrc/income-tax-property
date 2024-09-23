@@ -161,6 +161,25 @@ trait MockPropertyService extends MockFactory {
       .expects(journeyContext, nino, propertyRentalsIncome, *)
       .returning(EitherT.fromEither(result))
 
+  def mockSaveRentalsAndRaRIncome(
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
+    journeyContext: JourneyContext,
+    rentalsAndRaRIncome: RentalsAndRaRIncome,
+    result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler4[JourneyContext, Nino, RentalsAndRaRIncome, HeaderCarrier, EitherT[Future, ServiceError, Option[
+    PeriodicSubmissionId
+  ]]] =
+    (mockPropertyService
+      .saveRentalsAndRaRIncome(
+        _: JourneyContext,
+        _: Nino,
+        _: RentalsAndRaRIncome
+      )(_: HeaderCarrier))
+      .expects(journeyContext, nino, rentalsAndRaRIncome, *)
+      .returning(EitherT.fromEither(result))
+
   def mockUpdatePeriodicSubmissions(
     taxableEntityId: String,
     incomeSourceId: String,
@@ -248,7 +267,11 @@ trait MockPropertyService extends MockFactory {
     journeyContext: JourneyContext,
     nino: Nino,
     propertyRentalAdjustments: PropertyRentalAdjustments
-  ): CallHandler4[JourneyContext, Nino, PropertyRentalAdjustments, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+  ): CallHandler4[JourneyContext, Nino, PropertyRentalAdjustments, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
     (mockPropertyService
       .savePropertyRentalAdjustments(_: JourneyContext, _: Nino, _: PropertyRentalAdjustments)(_: HeaderCarrier))
       .expects(*, *, *, *)

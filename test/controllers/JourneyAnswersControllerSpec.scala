@@ -796,6 +796,7 @@ class JourneyAnswersControllerSpec
                                                  |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimPropertyIncomeAllowanceYesOrNo": true,
+                                                 |    "incomeFromPropertyRentals": 22.33,
                                                  |    "claimExpensesOrRelief" : {
                                                  |        "claimExpensesOrReliefYesNo" : true,
                                                  |        "rentARoomAmount" : 10.22
@@ -812,7 +813,7 @@ class JourneyAnswersControllerSpec
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RentalsAndRaRAbout(true, 55.22, true, ClaimExpensesOrRelief(true, Some(10.22))),
+        RentalsAndRaRAbout(true, 55.22, true, 22.33, ClaimExpensesOrRelief(true, Some(10.22))),
         true
       )
 
@@ -855,8 +856,8 @@ class JourneyAnswersControllerSpec
     "return created for valid request body" in {
 
       mockAuthorisation()
-      val saveIncomeRequest = validRequestBody.as[PropertyRentalsIncome]
-      mockSaveIncome(
+      val saveIncomeRequest = validRequestBody.as[RentalsAndRaRIncome]
+      mockSaveRentalsAndRaRIncome(
         nino,
         incomeSourceId,
         taxYear,

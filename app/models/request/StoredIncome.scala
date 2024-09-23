@@ -39,6 +39,16 @@ object StoredIncome {
       receivedGrantLeaseAmount = rentalsIncome.receivedGrantLeaseAmount,
       premiumsGrantLeaseYesNo = rentalsIncome.premiumsGrantLease.map(_.premiumsGrantLeaseYesOrNo)
     )
+
+  def fromRentalsAndRaRIncome(rentalsAndRaRIncome: RentalsAndRaRIncome): StoredIncome =
+    StoredIncome(
+      isNonUKLandlord = rentalsAndRaRIncome.isNonUKLandlord,
+      taxDeductedYesNo = rentalsAndRaRIncome.deductingTax.map(_.taxDeductedYesNo),
+      calculatedFigureYourself = rentalsAndRaRIncome.calculatedFigureYourself,
+      yearLeaseAmount = rentalsAndRaRIncome.yearLeaseAmount,
+      receivedGrantLeaseAmount = rentalsAndRaRIncome.receivedGrantLeaseAmount,
+      premiumsGrantLeaseYesNo = rentalsAndRaRIncome.premiumsGrantLease.map(_.premiumsGrantLeaseYesOrNo)
+    )
 }
 
 final case class PremiumsGrantLease(premiumsGrantLeaseYesOrNo: Boolean, premiumsGrantLease: Option[BigDecimal])
