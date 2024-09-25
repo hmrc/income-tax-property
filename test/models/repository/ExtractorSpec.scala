@@ -38,7 +38,7 @@ class ExtractorSpec extends UnitTest {
     "extract to save part into another model" in {
       EsbaInfo(
         claimEnhancedStructureBuildingAllowance,
-        esbaClaims,
+        Some(esbaClaims),
         List(
           EsbaInUpstream(
             esbaDate,
@@ -51,7 +51,7 @@ class ExtractorSpec extends UnitTest {
             )
           )
         )
-      ).extractToSavePart() shouldBe EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
+      ).extractToSavePart() shouldBe EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, Some(esbaClaims))
     }
   }
 }

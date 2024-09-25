@@ -693,7 +693,7 @@ class PropertyServiceSpec
 
       val esbaInfo = EsbaInfo(
         claimEnhancedStructureBuildingAllowance = true,
-        esbaClaims = true,
+        esbaClaims = Some(true),
         esbasToBeAdded
       )
       val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
@@ -1428,7 +1428,7 @@ class PropertyServiceSpec
       ): EsbaInfo =
         EsbaInfo(
           claimEnhancedStructureBuildingAllowance,
-          esbaClaims,
+          Some(esbaClaims),
           List(
             EsbaInUpstream(
               esbaDate,
@@ -1547,7 +1547,7 @@ class PropertyServiceSpec
                        .upsertAnswers(
                          ctx.toJourneyContext(JourneyName.RentalESBA),
                          Json.toJson(
-                           EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
+                           EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, Some(esbaClaims))
                          )
                        )
                        .map(_.asRight[ServiceError])
@@ -1637,7 +1637,7 @@ class PropertyServiceSpec
                  .upsertAnswers(
                    ctx.toJourneyContext(JourneyName.RentalESBA),
                    Json.toJson(
-                     EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims)
+                     EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, Some(esbaClaims))
                    )
                  )
                  .map(_.asRight[ServiceError])
@@ -1681,7 +1681,7 @@ class PropertyServiceSpec
                repository
                  .upsertAnswers(
                    ctx.toJourneyContext(JourneyName.RentalESBA),
-                   Json.toJson(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
+                   Json.toJson(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false)))
                  )
                  .map(_.asRight[ServiceError])
              )
@@ -1771,7 +1771,9 @@ class PropertyServiceSpec
                  Clock.systemUTC(),
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
-                 Json.toJsObject(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
+                 Json.toJsObject(
+                   EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false))
+                 )
                ).map(_.asRight[ServiceError])
              )
         _ <- EitherT(
@@ -1779,7 +1781,9 @@ class PropertyServiceSpec
                  Clock.systemUTC(),
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
-                 Json.toJsObject(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = false))
+                 Json.toJsObject(
+                   EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false))
+                 )
                ).map(_.asRight[ServiceError])
              )
         r <-

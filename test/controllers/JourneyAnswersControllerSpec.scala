@@ -760,7 +760,7 @@ class JourneyAnswersControllerSpec
         Some(
           EsbaInfo(
             claimEnhancedStructureBuildingAllowance = true,
-            esbaClaims = true,
+            esbaClaims = Some(true),
             List()
           )
         ),

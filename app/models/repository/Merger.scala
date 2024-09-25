@@ -384,7 +384,7 @@ object Merger {
           Some(
             EsbaInfo(
               claimEnhancedStructureBuildingAllowance = true,
-              esbaClaims = false, // ToDo:???
+              esbaClaims = Some(false), // ToDo:???
               esbas = fromDownstream
             )
           )
