@@ -16,20 +16,20 @@
 
 package controllers
 
+import models.errors.{ApiServiceError, DataNotFoundError}
+import models.{BusinessDetailsResponse, PropertyDetails}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.status
-import models.errors.{ApiServiceError, DataNotFoundError}
-import models.{BusinessDetailsResponse, PropertyDetails}
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockIntegrationFrameworkService}
+import utils.mocks.{MockAuthorisedAction, MockBusinessDetailsService}
 import utils.providers.FakeRequestProvider
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessDetailsControllerSpec
-    extends ControllerUnitTest with MockIntegrationFrameworkService with MockAuthorisedAction with FakeRequestProvider {
+    extends ControllerUnitTest with MockBusinessDetailsService with MockAuthorisedAction with FakeRequestProvider {
 
   private val underTest = new BusinessDetailsController(
     mockIntegrationFrameworkService,

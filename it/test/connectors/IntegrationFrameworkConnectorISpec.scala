@@ -24,7 +24,6 @@ import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
-import utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -58,28 +57,6 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       )
     )
   )
-
-  ".getBusinessDetails" when {
-    "when we call the IF" should {
-      "return correct IF data when correct parameters are passed" in {
-        val httpResponse = HttpResponse(OK, Json.toJson(anIncomeSourceDetails).toString())
-
-        stubGetHttpClientCall(s"/registration/business-details/nino/$nino", httpResponse)
-
-        await(underTest.getBusinessDetails(nino)(hc)) shouldBe Right(Some(anIncomeSourceDetails))
-      }
-
-      "return IF error when Left is returned" in {
-        val httpResponse =
-          HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-
-        stubGetHttpClientCall(s"/registration/business-details/nino/$nino", httpResponse)
-
-        await(underTest.getBusinessDetails(nino)(hc)) shouldBe
-          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
-      }
-    }
-  }
 
   "Given a need to get Periodic Submission Data" when {
 

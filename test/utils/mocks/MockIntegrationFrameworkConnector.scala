@@ -21,7 +21,7 @@ import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
-import org.scalamock.handlers.{CallHandler2, CallHandler4, CallHandler5, CallHandler6}
+import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,15 +30,6 @@ import scala.concurrent.Future
 trait MockIntegrationFrameworkConnector extends MockFactory {
 
   protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
-
-  def mockGetBusinessDetails(
-    nino: String,
-    result: Either[ApiError, Option[IncomeSourceDetailsModel]]
-  ): CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[IncomeSourceDetailsModel]]]] =
-    (mockIntegrationFrameworkConnector
-      .getBusinessDetails(_: String)(_: HeaderCarrier))
-      .expects(nino, *)
-      .returning(Future.successful(result))
 
   def mockGetAllPeriodicSubmission(
     taxYear: Int,

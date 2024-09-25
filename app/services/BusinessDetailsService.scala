@@ -16,7 +16,7 @@
 
 package services
 
-import connectors.IntegrationFrameworkConnector
+import connectors.BusinessDetailsConnector
 import models.BusinessDetailsResponse
 import models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
 import models.responses.PropertyDetailsModel
@@ -27,7 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class IntegrationFrameworkService @Inject() (connector: IntegrationFrameworkConnector)(implicit ec: ExecutionContext) {
+class BusinessDetailsService @Inject() (connector: BusinessDetailsConnector)(implicit ec: ExecutionContext) {
 
   def getBusinessDetails(
     nino: String

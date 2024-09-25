@@ -17,7 +17,6 @@
 package connectors
 
 import config.AppConfig
-import connectors.response.GetBusinessDetailsResponse.getBusinessDetailsResponseReads
 import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
@@ -37,18 +36,6 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
 ) extends IFConnector with Logging {
 
   override protected[connectors] val appConfig: AppConfig = appConf
-
-  def getBusinessDetails(
-    nino: String
-  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[IncomeSourceDetailsModel]]] = {
-    val url = new URL(s"${appConfig.ifBaseUrl}/registration/business-details/nino/$nino")
-    val apiVersion = "1171"
-
-    callGetBusinessDetails(url)(ifHeaderCarrier(url, apiVersion)).map(_.result)
-  }
-
-  private def callGetBusinessDetails(url: URL)(implicit hc: HeaderCarrier): Future[GetBusinessDetailsResponse] =
-    httpClient.GET[GetBusinessDetailsResponse](url)
 
   def getAllPeriodicSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
     hc: HeaderCarrier

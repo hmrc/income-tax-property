@@ -20,18 +20,14 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.http.test.HttpClientSupport
 import support.helpers.WireMockServer
 import support.stubs.WireMockStubs
+import uk.gov.hmrc.http.test.{HttpClientSupport, HttpClientV2Support}
 import utils.providers.AppConfigStubProvider
 
-trait ConnectorIntegrationTest extends AnyWordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout
-  with HttpClientSupport
-  with AppConfigStubProvider
-  with WireMockServer
-  with WireMockStubs
-  with BeforeAndAfterAll {
+trait ConnectorIntegrationTest
+    extends AnyWordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout with HttpClientSupport
+    with HttpClientV2Support with AppConfigStubProvider with WireMockServer with WireMockStubs with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {
     super.beforeAll()

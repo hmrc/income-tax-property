@@ -16,24 +16,26 @@
 
 package utils.mocks
 
-import org.scalamock.handlers._
+import connectors.BusinessDetailsConnector
+import models.errors.ApiError
+import models.responses._
+import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
-import models.BusinessDetailsResponse
-import models.errors.ServiceError
-import services.IntegrationFrameworkService
 
 import scala.concurrent.Future
 
-trait MockIntegrationFrameworkService extends MockFactory {
+trait MockBusinessDetailsConnector extends MockFactory {
 
-  protected val mockIntegrationFrameworkService: IntegrationFrameworkService = mock[IntegrationFrameworkService]
+  protected val mockIntegrationFrameworkConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
-  def mockGetBusinessDetails(nino: String,
-                             result: Either[ServiceError, BusinessDetailsResponse]
-                            ): CallHandler2[String, HeaderCarrier, Future[Either[ServiceError, BusinessDetailsResponse]]] = {
-    (mockIntegrationFrameworkService.getBusinessDetails(_: String)(_: HeaderCarrier))
+  def mockGetBusinessDetails(
+    nino: String,
+    result: Either[ApiError, Option[IncomeSourceDetailsModel]]
+  ): CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[IncomeSourceDetailsModel]]]] =
+    (mockIntegrationFrameworkConnector
+      .getBusinessDetails(_: String)(_: HeaderCarrier))
       .expects(nino, *)
       .returning(Future.successful(result))
-  }
+
 }
