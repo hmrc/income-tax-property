@@ -117,12 +117,12 @@ class MergerSpec extends UnitTest {
 
       val esbasInUpstream: Option[List[EsbaInUpstream]] = convert(aPropertyAnnualSubmission)
       val maybeEsbaInfoToSave: Option[EsbaInfoToSave] =
-        Some(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, esbaClaims))
+        Some(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance, Some(esbaClaims)))
 
       maybeEsbaInfoToSave.merge(esbasInUpstream) shouldBe Some(
         EsbaInfo(
           claimEnhancedStructureBuildingAllowance,
-          esbaClaims,
+          Some(esbaClaims),
           List(
             EsbaInUpstream(
               esbaDate,

@@ -28,7 +28,7 @@ import java.time.{LocalDate, LocalDateTime}
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
     claimEnhancedStructureBuildingAllowance = true,
-    esbaClaims = false,
+    esbaClaims = Some(false),
     List(
       EsbaInUpstream(
         LocalDate.parse("2020-04-04"),
