@@ -260,7 +260,7 @@ class JourneyAnswersIntegrationSpec
         esbasWithSupportingQuestions = Some(
           EsbaInfo(
             claimEnhancedStructureBuildingAllowance = true,
-            esbaClaims = false,
+            esbaClaims = Some(false),
             List(
               EsbaInUpstream(
                 LocalDate.parse("2024-01-01"),
