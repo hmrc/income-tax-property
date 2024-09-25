@@ -39,7 +39,6 @@ import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsObject, Json}
-import repositories.ExpireAtCalculator.calculateExpireAt
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
@@ -1716,7 +1715,6 @@ class PropertyServiceSpec
       ) = {
 
         val now = clock.instant()
-        val expireAt = calculateExpireAt(now.plusSeconds(1000))
 
         mongoJourneyAnswersRepository.collection
           .insertOne(
@@ -1727,7 +1725,6 @@ class PropertyServiceSpec
               ctx.journey,
               JourneyStatus.NotStarted,
               newData,
-              expireAt,
               now,
               now
             )

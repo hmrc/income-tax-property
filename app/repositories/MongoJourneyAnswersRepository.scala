@@ -29,8 +29,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.Logging
 
-import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant, ZoneOffset}
+import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,10 +44,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       replaceIndexes = true,
       indexes = Seq(
         IndexModel(
-          Indexes.ascending("expireAt"),
+          Indexes.ascending("updatedAt"),
           IndexOptions()
             .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
-            .name("expire_at")
+            .name("TTL_UpdatedAt_Index")
         ),
         IndexModel(
           Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
@@ -99,7 +98,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     ctx: JourneyContext
   )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = now.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).plusDays(appConfig.timeToLive).toInstant
 
     Updates.combine(
       Updates.set(fieldName, bsonValue),
@@ -109,25 +107,21 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       Updates.setOnInsert("incomeSourceId", ctx.incomeSourceId.value),
       Updates.setOnInsert("status", statusOnInsert.entryName),
       Updates.setOnInsert("journey", ctx.journey.entryName),
-      Updates.setOnInsert("createdAt", now),
-      Updates.setOnInsert("expireAt", expireAt)
+      Updates.setOnInsert("createdAt", now)
     )
   }
 
-  private[repositories] def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
+  private[repositories] def createUpsertStatus(status: JourneyStatus) = {
     val now = Instant.now(clock)
-    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.timeToLive).truncatedTo(ChronoUnit.DAYS).toInstant
-
     Updates.combine(
       Updates.set("status", status.entryName),
-      Updates.set("updatedAt", now),
-      Updates.setOnInsert("expireAt", expireAt)
+      Updates.set("updatedAt", now)
     )
   }
 
   private[repositories] def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
     val filter = filterJourney(ctx)
-    val update = createUpsertStatus(ctx)(status)
+    val update = createUpsertStatus(status)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture()
