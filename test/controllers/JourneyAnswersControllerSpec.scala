@@ -757,6 +757,9 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
+        None,
+        None,
+        None,
         Some(
           EsbaInfo(
             claimEnhancedStructureBuildingAllowance = true,
@@ -764,6 +767,10 @@ class JourneyAnswersControllerSpec
             List()
           )
         ),
+        None,
+        None,
+        None,
+        None,
         None,
         None,
         None,

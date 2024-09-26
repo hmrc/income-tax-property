@@ -60,6 +60,45 @@ object Merger {
         case _ => None
       }
   }
+
+  implicit object RentalsAndRaRAboutMerger
+      extends Merger[
+        Option[RentalsAndRaRAbout],
+        (
+          Option[ClaimPropertyIncomeAllowanceYesOrNo],
+          Option[
+            ClaimExpensesOrRRRYesNo
+          ]
+        ),
+        (Option[Boolean], Option[UkOtherProperty])
+      ] {
+    override def merge(
+      extracted: (Option[ClaimPropertyIncomeAllowanceYesOrNo], Option[ClaimExpensesOrRRRYesNo]),
+      fromDownstream: (Option[Boolean], Option[UkOtherProperty])
+    ): Option[RentalsAndRaRAbout] = {
+      val (claimPropertyIncomeAllowanceYesOrNo, claimExpensesOrRRRYesNo) = extracted
+      fromDownstream match {
+        case (Some(jointlyLet), Some(ukOtherProperty)) =>
+          val amountClaimedMaybe: Option[BigDecimal] =
+            ukOtherProperty.expenses.flatMap(_.ukOtherRentARoom.map(_.amountClaimed))
+          Some(
+            RentalsAndRaRAbout(
+              jointlyLetYesOrNo = jointlyLet,
+              totalIncomeAmount = ukOtherProperty.income.flatMap(_.ukOtherRentARoom.map(_.rentsReceived)).getOrElse(0),
+              claimExpensesOrRelief = ClaimExpensesOrRelief(
+                claimExpensesOrRRRYesNo.fold(amountClaimedMaybe.isDefined)(_.claimExpensesOrRRR),
+                amountClaimedMaybe
+              ),
+              claimPropertyIncomeAllowanceYesOrNo =
+                claimPropertyIncomeAllowanceYesOrNo.map(_.claimPropertyIncomeAllowanceYesOrNo).getOrElse(false),
+              incomeFromPropertyRentals = ukOtherProperty.income.flatMap(x => x.periodAmount).getOrElse(0)
+            )
+          )
+        case _ => None
+      }
+    }
+  }
+
   implicit object RentalsExpensesMerger
       extends Merger[Option[PropertyRentalsExpense], Option[ExpensesStoreAnswers], Option[UkOtherPropertyExpenses]] {
     override def merge(
@@ -172,6 +211,53 @@ object Merger {
             PropertyRentalsIncome(
               isNonUKLandlord = false,
               incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
+              otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
+              deductingTax =
+                fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
+              calculatedFigureYourself = None,
+              yearLeaseAmount = None,
+              receivedGrantLeaseAmount = None,
+              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
+                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+              ),
+              reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
+                ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
+              )
+            )
+          )
+        case _ => None
+      }
+  }
+
+  implicit object RentalsAndRaRIncomeMerger
+      extends Merger[Option[RentalsAndRaRIncome], Option[StoredIncome], Option[UkOtherPropertyIncome]] {
+    override def merge(
+      extractedMaybe: Option[StoredIncome],
+      fromDownstreamMaybe: Option[UkOtherPropertyIncome]
+    ): Option[RentalsAndRaRIncome] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extracted), Some(fromDownstream)) =>
+          Some(
+            RentalsAndRaRIncome(
+              isNonUKLandlord = extracted.isNonUKLandlord,
+              otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
+              deductingTax =
+                fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
+              calculatedFigureYourself = extracted.calculatedFigureYourself,
+              yearLeaseAmount = extracted.receivedGrantLeaseAmount,
+              receivedGrantLeaseAmount = extracted.yearLeaseAmount,
+              premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
+                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+              ),
+              reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
+                ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
+              )
+            )
+          )
+        case (None, Some(fromDownstream)) =>
+          Some(
+            RentalsAndRaRIncome(
+              isNonUKLandlord = false,
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
               deductingTax =
                 fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
