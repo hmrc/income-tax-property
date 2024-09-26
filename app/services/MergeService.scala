@@ -63,13 +63,20 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       resultFromRepository.get(JourneyName.RentalsAndRaRAbout.entryName)
     )
 
-    val adjustmentsMaybe =
+    val rentalsAdjustmentsMaybe =
       mergeAdjustments(
         resultFromAnnualDownstream,
         resultFromPeriodicDownstreamMaybe,
         resultFromRepository.get(JourneyName.RentalAdjustments.entryName)
       )
-
+    val adjustmentsMaybe = rentalsAdjustmentsMaybe.map(
+      _.copy(
+        propertyIncomeAllowance =
+          Some(rentalsAdjustmentsMaybe.flatMap(_.propertyIncomeAllowance).getOrElse(0)), // Todo: Revisit
+        unusedResidentialFinanceCost =
+          Some(rentalsAdjustmentsMaybe.flatMap(_.unusedResidentialFinanceCost).getOrElse(0)) // Todo: Revisit
+      )
+    )
     val adjustmentsRentalsAndRaRMaybe =
       mergeAdjustments(
         resultFromAnnualDownstream,
