@@ -241,7 +241,7 @@ class JourneyAnswersIntegrationSpec
           PropertyRentalAdjustments(
             23,
             BalancingCharge(true, Some(32)),
-            None,
+            Some(0),
             RenovationAllowanceBalancingCharge(true, Some(14)),
             21,
             Some(34.56)
