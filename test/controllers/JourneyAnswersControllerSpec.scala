@@ -777,7 +777,8 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
-        None
+        None,
+        List()
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

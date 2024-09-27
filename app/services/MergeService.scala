@@ -139,6 +139,8 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       resultFromRepository.get(JourneyName.RentARoomAbout.entryName)
     )
 
+    val journeyStatuses = mergeStatuses(resultFromRepository)
+
     val data = FetchedPropertyData(
       None,
       propertyAboutMaybe,
@@ -159,7 +161,8 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       raRAbout = raRAboutMaybe,
       rarExpenses = rarExpensesMaybe,
       raRAdjustments = raRAdjustmentsMaybe,
-      rentARoomAllowances = rentARoomAllowancesMaybe
+      rentARoomAllowances = rentARoomAllowancesMaybe,
+      journeyStatuses = journeyStatuses
     )
 
     data
@@ -273,7 +276,7 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       case None                 => None
     }
     val claimExpensesOrRRRYesNo: Option[ClaimExpensesOrRRRYesNo] = resultFromRepository match {
-      case Some(journeyAnswers) => Some(journeyAnswers.data.as[ClaimExpensesOrRRRYesNo])
+      case Some(journeyAnswers) => journeyAnswers.data.asOpt[ClaimExpensesOrRRRYesNo]
       case None                 => None
     }
 
@@ -314,6 +317,15 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
 
     rentARoomAllowancesStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
   }
+
+  def mergeStatuses(resultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
+    JourneyName.values.toList
+      .map(journeyName =>
+        resultFromRepository
+          .get(journeyName.entryName)
+          .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
+      )
+      .flatten
 
   def mergeAdjustments(
     resultFromDownstream: PropertyAnnualSubmission,

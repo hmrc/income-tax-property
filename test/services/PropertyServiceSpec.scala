@@ -1513,7 +1513,8 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          None
+          None,
+          List()
         )
       forAll(scenarios) {
         (

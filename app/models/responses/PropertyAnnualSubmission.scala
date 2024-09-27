@@ -27,6 +27,12 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, LocalDateTime}
 
+final case class JourneyWithStatus(journeyName: String, journeyStatus: String)
+
+object JourneyWithStatus {
+  implicit val format = Json.format[JourneyWithStatus]
+}
+
 final case class FetchedPropertyData(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   propertyAbout: Option[PropertyAbout],
@@ -47,7 +53,8 @@ final case class FetchedPropertyData(
   raRAbout: Option[RaRAbout],
   rarExpenses: Option[RentARoomExpenses],
   raRAdjustments: Option[RaRAdjustments],
-  rentARoomAllowances: Option[RentARoomAllowances]
+  rentARoomAllowances: Option[RentARoomAllowances],
+  journeyStatuses: List[JourneyWithStatus]
 )
 
 object FetchedPropertyData {
