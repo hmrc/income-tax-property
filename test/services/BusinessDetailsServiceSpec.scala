@@ -16,26 +16,26 @@
 
 package services
 
-import play.api.http.Status.INTERNAL_SERVER_ERROR
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientSupport
 import config.AppConfig
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
 import models.responses.{IncomeSourceDetailsModel, PropertyDetailsModel}
 import models.{BusinessDetailsResponse, PropertyDetails}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientSupport
+import utils.mocks.MockBusinessDetailsConnector
 import utils.{AppConfigStub, UnitTest}
-import utils.mocks.MockIntegrationFrameworkConnector
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IntegrationFrameworkServiceSpec extends UnitTest with MockIntegrationFrameworkConnector with HttpClientSupport {
+class BusinessDetailsServiceSpec extends UnitTest with MockBusinessDetailsConnector with HttpClientSupport {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new IntegrationFrameworkService(mockIntegrationFrameworkConnector)
+  private val underTest = new BusinessDetailsService(mockIntegrationFrameworkConnector)
 
   ".GetBusinessDetails" should {
     "return error when GetBusinessDetails fails" in {
