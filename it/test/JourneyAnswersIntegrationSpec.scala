@@ -380,7 +380,8 @@ class JourneyAnswersIntegrationSpec
             Some(12),
             Some(14)
           )
-        )
+        ),
+        List()
       )
     }
     "the downstream receives the expected payload when upload happens" in {
