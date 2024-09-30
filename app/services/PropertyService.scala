@@ -37,7 +37,6 @@ import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.Period
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -439,7 +438,10 @@ class PropertyService @Inject() (
     periodicSubmissionIds: List[PeriodicSubmissionIdModel]
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): ITPEnvelope[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds
-      .filter(submissionId => Period.between(submissionId.fromDate, submissionId.toDate).getYears >= 1)
+      .filter(submissionId =>
+        submissionId.fromDate.equals(TaxYear.startDate(taxYear)) && submissionId.toDate
+          .equals(TaxYear.endDate(taxYear))
+      )
       .map { submissionId =>
         connector
           .getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)

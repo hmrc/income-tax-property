@@ -67,7 +67,7 @@ class PropertyServiceSpec
     "return data when GetPeriodicSubmission has ids and the period is for a year" in {
       val periodicSubmissionId = "1"
       val periodicSubmissionIds = List(
-        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-01-01"), LocalDate.parse("2024-01-02"))
+        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-04-06"), LocalDate.parse("2024-04-05"))
       )
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
         Some(PeriodicSubmissionId(periodicSubmissionId)),
