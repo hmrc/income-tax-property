@@ -17,21 +17,22 @@
 package connectors
 
 import config.AppConfig
+import connectors.Connector.hcWithCorrelationId
 import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
-import models.errors.{ApiError, SingleErrorBody}
+import models.errors.ApiError
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import play.api.Logging
-import play.api.libs.json.{Json, Writes}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: AppConfig)(implicit
+class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppConfig)(implicit
   ec: ExecutionContext
 ) extends IFConnector with Logging {
 
@@ -43,37 +44,22 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
 
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$taxableEntityId/$incomeSourceId/period"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$taxableEntityId/$incomeSourceId/period",
         "1954"
       )
     } else {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParamBefore2324(taxYear)}"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParamBefore2324(taxYear)}",
         "1649"
       )
     }
 
-    val apiResponse = httpClient.GET[GetPeriodicSubmissionIdResponse](url)(
-      implicitly[HttpReads[GetPeriodicSubmissionIdResponse]],
-      ifHeaderCarrier(url, apiVersion),
-      ec
-    )
-    apiResponse.map { response =>
-      if (response.result.isLeft) {
-        Left(
-          ApiError(
-            response.httpResponse.status,
-            SingleErrorBody(response.getClass.getSimpleName, response.httpResponse.body)
-          )
-        )
-      } else {
-        response.result
-      }
-    }
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetPeriodicSubmissionIdResponse]
+      .map(response => response.result)
   }
 
   def getPropertyPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, submissionId: String)(implicit
@@ -81,28 +67,23 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
   ): Future[Either[ApiError, Option[PropertyPeriodicSubmission]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId",
         "1862"
       )
     } else {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic?" +
-            s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic?" +
+          s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
         "1595"
       )
     }
 
-    httpClient
-      .GET[GetPropertyPeriodicSubmissionResponse](url)(
-        implicitly[HttpReads[GetPropertyPeriodicSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion),
-        ec
-      )
-      .map { response: GetPropertyPeriodicSubmissionResponse =>
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetPropertyPeriodicSubmissionResponse]
+      .map { response =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -120,28 +101,23 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
   ): Future[Either[ApiError, Option[PropertyAnnualSubmission]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId",
         "1805"
       )
     } else {
       (
-        new URL(
-          s"${appConfig.ifBaseUrl}/income-tax/business/property/annual?" +
-            s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId"
-        ),
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual?" +
+          s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
         "1598"
       )
     }
 
-    httpClient
-      .GET[GetPropertyAnnualSubmissionResponse](url)(
-        implicitly[HttpReads[GetPropertyAnnualSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion),
-        ec
-      )
-      .map { response: GetPropertyAnnualSubmissionResponse =>
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetPropertyAnnualSubmissionResponse]
+      .map { response =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -153,32 +129,30 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
         response.result
       }
   }
+
   def deletePropertyAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)(implicit
     hc: HeaderCarrier
   ): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(
-            taxYear
-          )}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual" +
+          s"/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
         "1863"
       )
     } else {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(
-            taxYear
-          )}&incomeSourceId=$incomeSourceId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/" +
+          s"annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
         "1596"
       )
     }
 
-    httpClient
-      .DELETE[DeletePropertyAnnualSubmissionResponse](url)(
-        implicitly[HttpReads[DeletePropertyAnnualSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion),
-        ec
-      )
-      .map { response: DeletePropertyAnnualSubmissionResponse =>
+    http
+      .delete(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[DeletePropertyAnnualSubmissionResponse]
+      .map { response =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -199,27 +173,25 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(
-            taxYear
-          )}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
+          s"/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
         "1861"
       )
     } else {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(
-            taxYear
-          )}&incomeSourceId=$incomeSourceId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property" +
+          s"/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
         "1593"
       )
     }
     logger.debug(s"createPeriodicSubmission with url: $url, body: ${Json.toJson(body)}")
-    httpClient
-      .POST[CreatePropertyPeriodicSubmissionRequest, PostPeriodicSubmissionResponse](url, body)(
-        implicitly[Writes[CreatePropertyPeriodicSubmissionRequest]],
-        implicitly[HttpReads[PostPeriodicSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
-        ec
-      )
+
+    http
+      .post(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody[CreatePropertyPeriodicSubmissionRequest](body)
+      .execute[PostPeriodicSubmissionResponse]
       .map { response: PostPeriodicSubmissionResponse =>
         if (response.result.isLeft) {
           val correlationId =
@@ -242,14 +214,14 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     val (url, apiVersion) = if (after2324Api(taxYear)) {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(
             taxYear
           )}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId""",
         "1958"
       )
     } else {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(
             taxYear
           )}&incomeSourceId=$incomeSourceId&submissionId=$submissionId""",
         "1594"
@@ -258,16 +230,13 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     logger.debug(
       s"updatePeriodicSubmission with url: $url, body: ${Json.toJson(propertyPeriodicSubmissionRequest)}"
     )
-    httpClient
-      .PUT[UpdatePropertyPeriodicSubmissionRequest, PutPeriodicSubmissionResponse](
-        url,
-        propertyPeriodicSubmissionRequest
-      )(
-        implicitly[Writes[UpdatePropertyPeriodicSubmissionRequest]],
-        implicitly[HttpReads[PutPeriodicSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion).withExtraHeaders(headers = "Content-Type" -> "application/json"),
-        ec
-      )
+
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(propertyPeriodicSubmissionRequest)
+      .execute[PutPeriodicSubmissionResponse]
       .map { response: PutPeriodicSubmissionResponse =>
         if (response.result.isLeft) {
           val correlationId =
@@ -279,6 +248,7 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
         }
         response.result
       }
+
   }
 
   def createOrUpdateAnnualSubmission(
@@ -289,12 +259,12 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
         "1804"
       )
     } else {
       (
-        url"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
             taxYear
           )}&incomeSourceId=$incomeSourceId""",
         "1597"
@@ -302,13 +272,12 @@ class IntegrationFrameworkConnector @Inject() (httpClient: HttpClient, appConf: 
     }
     logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
 
-    httpClient
-      .PUT[PropertyAnnualSubmission, PutAnnualSubmissionResponse](url, body)(
-        implicitly[Writes[PropertyAnnualSubmission]],
-        implicitly[HttpReads[PutAnnualSubmissionResponse]],
-        ifHeaderCarrier(url, apiVersion),
-        ec
-      )
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(body)
+      .execute[PutAnnualSubmissionResponse]
       .map { response: PutAnnualSubmissionResponse =>
         if (response.result.isLeft) {
           val correlationId =

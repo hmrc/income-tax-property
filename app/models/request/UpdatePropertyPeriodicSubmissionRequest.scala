@@ -21,7 +21,8 @@ import models.errors.{InternalError, ServiceError}
 import models.responses._
 import models.{RentalsAndRaRAbout, responses}
 import monocle.Optional
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.ws.BodyWritable
 
 final case class UpdatePropertyPeriodicSubmissionRequest(
   foreignProperty: Option[Seq[ForeignProperty]],
@@ -34,8 +35,13 @@ object UpdatePropertyPeriodicSubmissionRequest {
 //  renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge, //
 //  residentialFinanceCost: BigDecimal,
 //  unusedResidentialFinanceCost: BigDecimal
-  implicit val format: OFormat[UpdatePropertyPeriodicSubmissionRequest] =
-    Json.format[UpdatePropertyPeriodicSubmissionRequest]
+  implicit val writes: Writes[UpdatePropertyPeriodicSubmissionRequest] =
+    Json.writes[UpdatePropertyPeriodicSubmissionRequest]
+
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 
   private def fromPropertyPeriodicSubmission(
     maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]
