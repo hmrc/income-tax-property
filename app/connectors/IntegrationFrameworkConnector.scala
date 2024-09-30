@@ -24,7 +24,7 @@ import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
-import play.api.Logging
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
@@ -34,7 +34,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppConfig)(implicit
   ec: ExecutionContext
-) extends IFConnector with Logging {
+) extends IFConnector {
+
+  lazy val logger: Logger = LoggerFactory.getLogger("connector")
 
   override protected[connectors] val appConfig: AppConfig = appConf
 
