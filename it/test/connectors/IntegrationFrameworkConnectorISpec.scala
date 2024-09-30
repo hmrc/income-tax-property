@@ -36,27 +36,29 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   private val submissionId = "some-submission-id"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  private val underTest = new IntegrationFrameworkConnector(httpClient, appConfigStub)
-  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
-    LocalDate.now(),
-    LocalDate.now(),
-    None,
-    Some(
-      UkOtherProperty(
-        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-        None
+  private val underTest = new IntegrationFrameworkConnector(httpClientV2, appConfigStub)
+  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
+    CreatePropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      Some(
+        UkOtherProperty(
+          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+          None
+        )
       )
     )
-  )
-  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
-    None,
-    Some(
-      UkOtherProperty(
-        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-        None
+  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
+    UpdatePropertyPeriodicSubmissionRequest(
+      None,
+      Some(
+        UkOtherProperty(
+          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+          None
+        )
       )
     )
-  )
 
   "Given a need to get Periodic Submission Data" when {
 
@@ -121,7 +123,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
           ApiError(
             SERVICE_UNAVAILABLE,
-            SingleErrorBody("GetPeriodicSubmissionIdResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")
+            SingleErrorBody("some-code", "some-reason")
           )
         )
       }
@@ -140,7 +142,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
           ApiError(
             BAD_GATEWAY,
-            SingleErrorBody("GetPeriodicSubmissionIdResponse", "{\"code\":\"some-code\",\"reason\":\"some-reason\"}")
+            SingleErrorBody("some-code", "some-reason")
           )
         )
       }

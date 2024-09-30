@@ -23,7 +23,8 @@ import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
 import monocle.Optional
 import monocle.macros.GenLens
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json, OFormat, Writes}
+import play.api.libs.ws.BodyWritable
 
 import java.time.{LocalDate, LocalDateTime}
 
@@ -55,6 +56,12 @@ case class PropertyAnnualSubmission(
 
 object PropertyAnnualSubmission {
   implicit val format: OFormat[PropertyAnnualSubmission] = Json.format[PropertyAnnualSubmission]
+
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
+
   val emptyPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
   def fromEsbas(

@@ -22,7 +22,8 @@ import models.errors.{InternalError, ServiceError}
 import models.responses._
 import models.{RentalsAndRaRAbout, responses}
 import monocle.Optional
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.ws.BodyWritable
 
 import java.time.LocalDate
 
@@ -34,8 +35,14 @@ final case class CreatePropertyPeriodicSubmissionRequest(
 )
 
 object CreatePropertyPeriodicSubmissionRequest {
-  implicit val format: OFormat[CreatePropertyPeriodicSubmissionRequest] =
-    Json.format[CreatePropertyPeriodicSubmissionRequest]
+
+  implicit val writes: Writes[CreatePropertyPeriodicSubmissionRequest] =
+    Json.writes[CreatePropertyPeriodicSubmissionRequest]
+
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 
   def fromEntity[T](
     taxYear: TaxYear,

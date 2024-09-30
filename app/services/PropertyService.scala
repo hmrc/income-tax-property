@@ -161,7 +161,10 @@ class PropertyService @Inject() (
                                    .leftMap(error => ApiServiceError(error.status))
         propertyPeriodicSubmissions <-
           getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, periodicSubmissionIds)
-      } yield propertyPeriodicSubmissions
+      } yield {
+        logger.debug(s"Filtered periodic submission details: $propertyPeriodicSubmissions")
+        propertyPeriodicSubmissions
+      }
 
     result.subflatMap(propertyPeriodicSubmissionList => transformToResponse(propertyPeriodicSubmissionList))
   }
@@ -554,7 +557,10 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-    } yield submissionResponse
+    } yield {
+      logger.debug(s"Save periodic submission details: $submissionResponse")
+      submissionResponse
+    }
 
   def saveRaRAdjustments(ctx: JourneyContext, nino: Nino, raRAdjustments: RaRAdjustments)(implicit
     hc: HeaderCarrier

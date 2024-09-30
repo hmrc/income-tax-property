@@ -22,7 +22,10 @@ import models.responses.PeriodicSubmissionIdModel
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-case class GetPeriodicSubmissionIdResponse(httpResponse: HttpResponse, result: Either[ApiError, List[PeriodicSubmissionIdModel]])
+case class GetPeriodicSubmissionIdResponse(
+  httpResponse: HttpResponse,
+  result: Either[ApiError, List[PeriodicSubmissionIdModel]]
+)
 
 object GetPeriodicSubmissionIdResponse {
 
@@ -31,17 +34,21 @@ object GetPeriodicSubmissionIdResponse {
 
       override protected[connectors] val parserName: String = this.getClass.getSimpleName
 
-      override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionIdResponse = response.status match {
-        case OK => GetPeriodicSubmissionIdResponse(response, extractResult(response))
-        case NOT_FOUND => GetPeriodicSubmissionIdResponse(response, Right(List.empty))
-        case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
-          GetPeriodicSubmissionIdResponse(response, handleError(response, response.status))
-        case _ => GetPeriodicSubmissionIdResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
-      }
+      override def read(method: String, url: String, response: HttpResponse): GetPeriodicSubmissionIdResponse =
+        response.status match {
+          case OK        => GetPeriodicSubmissionIdResponse(response, extractResult(response))
+          case NOT_FOUND => GetPeriodicSubmissionIdResponse(response, Right(List.empty))
+          case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY | BAD_GATEWAY =>
+            GetPeriodicSubmissionIdResponse(response, handleError(response, response.status))
+          case _ => GetPeriodicSubmissionIdResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+        }
 
-      private def extractResult(response: HttpResponse): Either[ApiError, List[PeriodicSubmissionIdModel]] = {
-        response.json.validate[List[PeriodicSubmissionIdModel]]
-          .fold[Either[ApiError, List[PeriodicSubmissionIdModel]]](_ => badSuccessJsonResponse, parsedModel => Right(parsedModel))
-      }
+      private def extractResult(response: HttpResponse): Either[ApiError, List[PeriodicSubmissionIdModel]] =
+        response.json
+          .validate[List[PeriodicSubmissionIdModel]]
+          .fold[Either[ApiError, List[PeriodicSubmissionIdModel]]](
+            _ => badSuccessJsonResponse,
+            parsedModel => Right(parsedModel)
+          )
     }
 }
