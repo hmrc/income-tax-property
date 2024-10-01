@@ -16,6 +16,7 @@
 
 import connectors.ConnectorIntegrationTest
 import models.RentalsAndRaRAbout
+import models.common.TaxYear
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
@@ -46,20 +47,21 @@ class JourneyAnswersIntegrationSpec
   private val submissionId2 = "some-submission-id-2"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
-    LocalDate.now(),
-    LocalDate.now(),
-    None,
-    None
-  )
+  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
+    CreatePropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      None
+    )
 
-  val esbaDate = LocalDate.parse("2024-01-01")
+  val esbaDate: LocalDate = LocalDate.parse("2024-01-01")
   val qualifyingAmountExpenditure = 35
   val amount = 25
   val address1 = "name1"
   val address2 = "name2"
   val postcode = "AB1 XY2"
-  val aPropertyAnnualSubmission = PropertyAnnualSubmission(
+  val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
     submittedOn = Some(LocalDateTime.now),
     None,
     Some(
@@ -106,8 +108,8 @@ class JourneyAnswersIntegrationSpec
     )
   )
 
-  val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
-  val httpResponseOk = HttpResponse(NO_CONTENT, "")
+  val httpResponse: HttpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
+  val httpResponseOk: HttpResponse = HttpResponse(NO_CONTENT, "")
   val taxYear = 2021
   private val wiremockPort = 11111
 
@@ -121,7 +123,7 @@ class JourneyAnswersIntegrationSpec
 
   private val baseUrl =
     s"http://localhost:$port/income-tax-property/property/2021/income/$taxableEntityId/$incomeSourceId"
-  val NinoUser =
+  val NinoUser: String =
     """
       |{
       |	"nino": "taxableEntityId",
@@ -159,8 +161,8 @@ class JourneyAnswersIntegrationSpec
         httpResponse
       )
       val aPeriodicSubmissionModel = List(
-        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-01-01"), LocalDate.parse("2021-11-11")),
-        PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-02-02"), LocalDate.parse("2022-12-12"))
+        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-04-06"), LocalDate.parse("2021-04-05")),
+        PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-04-06"), LocalDate.parse("2022-04-05"))
       )
 
       val httpResponsePeriodicSubmissionIdModel = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
@@ -172,8 +174,8 @@ class JourneyAnswersIntegrationSpec
       val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
         None,
         submittedOn = Some(LocalDateTime.now),
-        fromDate = LocalDate.now.minusDays(1),
-        toDate = LocalDate.now,
+        fromDate = TaxYear.startDate(2021),
+        toDate = TaxYear.endDate(2021),
         None,
         Some(
           UkOtherProperty(
@@ -240,9 +242,9 @@ class JourneyAnswersIntegrationSpec
         adjustments = Some(
           PropertyRentalAdjustments(
             23,
-            BalancingCharge(true, Some(32)),
+            BalancingCharge(balancingChargeYesNo = true, Some(32)),
             Some(0),
-            RenovationAllowanceBalancingCharge(true, Some(14)),
+            RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
             21,
             Some(34.56)
           )
@@ -250,7 +252,7 @@ class JourneyAnswersIntegrationSpec
         allowances = Some(
           RentalAllowances(
             Some(1),
-            Some(ElectricChargePointAllowance(true, Some(6))),
+            Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(6))),
             Some(7),
             Some(2),
             Some(3),
@@ -275,20 +277,20 @@ class JourneyAnswersIntegrationSpec
         sbasWithSupportingQuestions = None,
         propertyRentalsIncome = Some(
           PropertyRentalsIncome(
-            false,
+            isNonUKLandlord = false,
             3,
             12,
-            Some(DeductingTax(true, Some(11))),
+            Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
             None,
             None,
             None,
-            Some(PremiumsGrantLease(true, Some(1))),
-            Some(ReversePremiumsReceived(true, Some(2)))
+            Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(1))),
+            Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
           )
         ),
         propertyRentalsExpenses = Some(
           PropertyRentalsExpense(
-            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
             Some(1),
             Some(2),
             Some(3),
@@ -298,10 +300,12 @@ class JourneyAnswersIntegrationSpec
             Some(14)
           )
         ),
-        raRAbout = Some(RaRAbout(true, 7, ClaimExpensesOrRelief(true, Some(44)))),
+        raRAbout = Some(
+          RaRAbout(jointlyLetYesOrNo = true, 7, ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44)))
+        ),
         rarExpenses = Some(
           RentARoomExpenses(
-            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
             Some(1),
             Some(2),
             Some(11),
@@ -309,10 +313,11 @@ class JourneyAnswersIntegrationSpec
             Some(14)
           )
         ),
-        raRAdjustments = Some(RaRAdjustments(Some(BalancingCharge(true, Some(32))), Some(34.56))),
+        raRAdjustments =
+          Some(RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(32))), Some(34.56))),
         rentARoomAllowances = Some(
           RentARoomAllowances(
-            Some(CapitalAllowancesForACar(true, Some(4))),
+            Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
             Some(6),
             Some(7),
             Some(2),
@@ -389,7 +394,7 @@ class JourneyAnswersIntegrationSpec
       val rentARoomAdjustments = RaRAdjustments(
         Some(
           BalancingCharge(
-            true,
+            balancingChargeYesNo = true,
             Some(12.34)
           )
         ),
@@ -413,7 +418,7 @@ class JourneyAnswersIntegrationSpec
         httpResponseOk
       )
       val aPeriodicSubmissionModel = List(
-        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-01-01"), LocalDate.parse("2021-11-11")),
+        PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-04-06"), LocalDate.parse("2021-04-05")),
         PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-02-02"), LocalDate.parse("2022-12-12"))
       )
 
@@ -424,10 +429,10 @@ class JourneyAnswersIntegrationSpec
         httpResponsePeriodicSubmissionIdModel
       )
       val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None,
+        Some(PeriodicSubmissionId(submissionId1)),
         submittedOn = Some(LocalDateTime.now),
-        fromDate = LocalDate.now.minusDays(1),
-        toDate = LocalDate.now,
+        fromDate = TaxYear.startDate(taxYear),
+        toDate = TaxYear.endDate(taxYear),
         None,
         Some(
           UkOtherProperty(

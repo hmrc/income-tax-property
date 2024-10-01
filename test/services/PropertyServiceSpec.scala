@@ -67,7 +67,7 @@ class PropertyServiceSpec
     "return data when GetPeriodicSubmission has ids and the period is for a year" in {
       val periodicSubmissionId = "1"
       val periodicSubmissionIds = List(
-        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-01-01"), LocalDate.parse("2024-01-02"))
+        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-04-06"), LocalDate.parse("2024-04-05"))
       )
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
         Some(PeriodicSubmissionId(periodicSubmissionId)),
@@ -225,7 +225,7 @@ class PropertyServiceSpec
     )
   )
 
-  val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+  val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,
     None,
     LocalDate.now(),
@@ -470,8 +470,8 @@ class PropertyServiceSpec
         incomeSourceId,
         List(
           PeriodicSubmissionIdModel(
-            "",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+            "1",
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear - 1))),
             LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
           )
         )
@@ -544,7 +544,7 @@ class PropertyServiceSpec
         List(
           PeriodicSubmissionIdModel(
             "",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear - 1))),
             LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
           )
         )
@@ -915,8 +915,8 @@ class PropertyServiceSpec
           )
         )
       )
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -983,8 +983,8 @@ class PropertyServiceSpec
       }
     }
     "downstream error when getPropertyPeriodicSubmission call fails" in {
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1019,8 +1019,9 @@ class PropertyServiceSpec
     }
 
     "downstream error when create call fails" in {
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
+
       val ukOtherPropertyIncome = UkOtherPropertyIncome(
         Some(0),
         None,
@@ -1195,8 +1196,8 @@ class PropertyServiceSpec
           )
         )
       )
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1264,8 +1265,8 @@ class PropertyServiceSpec
       }
     }
     "downstream error when getPropertyPeriodicSubmission call fails" in {
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1301,8 +1302,8 @@ class PropertyServiceSpec
     }
 
     "downstream error when create call fails" in {
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
+      val fromDate = TaxYear.startDate(taxYear)
+      val toDate = TaxYear.endDate(taxYear)
 
       val raRExpenses = RentARoomExpenses(
         None,
@@ -1535,9 +1536,10 @@ class PropertyServiceSpec
             taxYear,
             nino,
             incomeSourceId,
-            List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+            List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
               .asRight[ApiError]
           )
+
           val fetchedPropertyData = createFetchedPropertyData(esbaInfoRetrieved)
           mockMergeServiceMergeAll(fetchedPropertyData)
           mockGetPropertyPeriodicSubmission(
@@ -1623,7 +1625,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
           .asRight[ApiError]
       )
 
@@ -1672,7 +1674,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
           .asRight[ApiError]
       )
 
@@ -1755,7 +1757,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", LocalDate.now().minusYears(2), LocalDate.now().plusYears(2)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
           .asRight[ApiError]
       )
 

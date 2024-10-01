@@ -23,21 +23,24 @@ import java.time.LocalDate
 
 final case class TaxYear(endYear: Int) extends AnyVal {
 
-  def isAfter24: Boolean = {
+  def isAfter24: Boolean =
     endYear >= 2024
-  }
   override def toString: String = endYear.toString
 }
 
 object TaxYear {
 
   private val taxYearStartDay = 6
-  private val taxYearEndDay   = 5
-  private val taxYearMonth    = 4
+  private val taxYearEndDay = 5
+  private val taxYearMonth = 4
 
   def startDate(taxYear: TaxYear): String = LocalDate.of(taxYear.endYear - 1, taxYearMonth, taxYearStartDay).toString
 
   def endDate(taxYear: TaxYear): String = LocalDate.of(taxYear.endYear, taxYearMonth, taxYearEndDay).toString
+
+  def startDate(taxYear: Int): LocalDate = LocalDate.of(taxYear - 1, taxYearMonth, taxYearStartDay)
+
+  def endDate(taxYear: Int): LocalDate = LocalDate.of(taxYear, taxYearMonth, taxYearEndDay)
 
   /* Gets a representation of a taxYear in a YY-YY format (from a YYYY format).
    */
@@ -48,13 +51,12 @@ object TaxYear {
   }
 
   /* Gets a representation of a taxYear in a YYYY-YY format (from a YYYY format).
- */
+   */
   def asTyBefore24(taxYear: TaxYear): String = {
     val end = taxYear.endYear - 2000
     val start = taxYear.endYear - 1
     s"$start-$end"
   }
-
 
   implicit def pathBindable(implicit intBinder: PathBindable[Int]): PathBindable[TaxYear] = new PathBindable[TaxYear] {
 
