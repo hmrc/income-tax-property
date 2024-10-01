@@ -28,20 +28,34 @@ import play.api.libs.ws.BodyWritable
 
 import java.time.{LocalDate, LocalDateTime}
 
+final case class JourneyWithStatus(journeyName: String, journeyStatus: String)
+
+object JourneyWithStatus {
+  implicit val format = Json.format[JourneyWithStatus]
+}
+
 final case class FetchedPropertyData(
   capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   propertyAbout: Option[PropertyAbout],
   propertyRentalsAbout: Option[PropertyRentalsAbout],
+  rentalsAndRaRAbout: Option[RentalsAndRaRAbout],
   adjustments: Option[PropertyRentalAdjustments],
+  rentalsAndRaRAdjustments: Option[PropertyRentalAdjustments],
   allowances: Option[RentalAllowances],
+  rentalsAndRaRAllowances: Option[RentalAllowances],
   esbasWithSupportingQuestions: Option[EsbaInfo],
+  rentalsAndRaREsbasWithSupportingQuestions: Option[EsbaInfo],
   sbasWithSupportingQuestions: Option[SbaInfo],
+  rentalsAndRaRSbasWithSupportingQuestions: Option[SbaInfo],
   propertyRentalsIncome: Option[PropertyRentalsIncome],
+  rentalsAndRaRIncome: Option[RentalsAndRaRIncome],
   propertyRentalsExpenses: Option[PropertyRentalsExpense],
+  rentalsAndRaRExpenses: Option[PropertyRentalsExpense],
   raRAbout: Option[RaRAbout],
   rarExpenses: Option[RentARoomExpenses],
   raRAdjustments: Option[RaRAdjustments],
-  rentARoomAllowances: Option[RentARoomAllowances]
+  rentARoomAllowances: Option[RentARoomAllowances],
+  journeyStatuses: List[JourneyWithStatus]
 )
 
 object FetchedPropertyData {

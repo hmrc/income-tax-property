@@ -15,6 +15,7 @@
  */
 
 import connectors.ConnectorIntegrationTest
+import models.RentalsAndRaRAbout
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
@@ -240,7 +241,7 @@ class JourneyAnswersIntegrationSpec
           PropertyRentalAdjustments(
             23,
             BalancingCharge(true, Some(32)),
-            None,
+            Some(0),
             RenovationAllowanceBalancingCharge(true, Some(14)),
             21,
             Some(34.56)
@@ -318,7 +319,69 @@ class JourneyAnswersIntegrationSpec
             Some(5),
             Some(4)
           )
-        )
+        ),
+        rentalsAndRaRAbout = Some(RentalsAndRaRAbout(true, 7, false, 3, ClaimExpensesOrRelief(true, Some(44)))),
+        rentalsAndRaRAdjustments = Some(
+          PropertyRentalAdjustments(
+            23,
+            BalancingCharge(true, Some(32)),
+            None,
+            RenovationAllowanceBalancingCharge(true, Some(14)),
+            21,
+            Some(34.56)
+          )
+        ),
+        rentalsAndRaRAllowances = Some(
+          RentalAllowances(
+            Some(1),
+            Some(ElectricChargePointAllowance(true, Some(6))),
+            Some(7),
+            Some(2),
+            Some(3),
+            Some(5),
+            Some(4)
+          )
+        ),
+        rentalsAndRaREsbasWithSupportingQuestions = Some(
+          EsbaInfo(
+            claimEnhancedStructureBuildingAllowance = true,
+            esbaClaims = Some(false),
+            List(
+              EsbaInUpstream(
+                LocalDate.parse("2024-01-01"),
+                35,
+                25,
+                Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+              )
+            )
+          )
+        ),
+        rentalsAndRaRSbasWithSupportingQuestions = None,
+        rentalsAndRaRIncome = Some(
+          RentalsAndRaRIncome(
+            false,
+            12,
+            Some(DeductingTax(true, Some(11))),
+            None,
+            None,
+            None,
+            Some(PremiumsGrantLease(true, Some(1))),
+            Some(ReversePremiumsReceived(true, Some(2)))
+          )
+        ),
+        rentalsAndRaRExpenses = Some(
+          PropertyRentalsExpense(
+            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(1),
+            Some(2),
+            Some(3),
+            Some(11),
+            Some(13),
+            Some(12),
+            Some(14)
+          )
+        ),
+        journeyStatuses = List()
       )
     }
     "the downstream receives the expected payload when upload happens" in {

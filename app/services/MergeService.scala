@@ -42,8 +42,14 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
     val esbaInfoMaybe =
       mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
 
+    val esbaInfoRentalsAndRaRMaybe =
+      mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalsAndRaRESBA.entryName))
+
     val sbaInfoMaybe =
       mergeSbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalSBA.entryName))
+
+    val sbaInfoAndRaRMaybe =
+      mergeSbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalsAndRaRESBA.entryName))
 
     val propertyAboutMaybe = mergePropertyAbout(resultFromRepository.get(JourneyName.About.entryName))
 
@@ -51,15 +57,41 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       resultFromRepository.get(JourneyName.RentalAbout.entryName)
     )
 
-    val adjustmentsMaybe =
+    val rentalsAndRaRAboutMaybe = mergeRentalsAndRaRAbout(
+      resultFromAnnualDownstream,
+      resultFromPeriodicDownstreamMaybe,
+      resultFromRepository.get(JourneyName.RentalsAndRaRAbout.entryName)
+    )
+
+    val rentalsAdjustmentsMaybe =
       mergeAdjustments(
         resultFromAnnualDownstream,
         resultFromPeriodicDownstreamMaybe,
         resultFromRepository.get(JourneyName.RentalAdjustments.entryName)
       )
+    val adjustmentsMaybe = rentalsAdjustmentsMaybe.map(
+      _.copy(
+        propertyIncomeAllowance =
+          Some(rentalsAdjustmentsMaybe.flatMap(_.propertyIncomeAllowance).getOrElse(0)), // Todo: Revisit
+        unusedResidentialFinanceCost =
+          Some(rentalsAdjustmentsMaybe.flatMap(_.unusedResidentialFinanceCost).getOrElse(0)) // Todo: Revisit
+      )
+    )
+    val adjustmentsRentalsAndRaRMaybe =
+      mergeAdjustments(
+        resultFromAnnualDownstream,
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalsAndRaRAdjustments.entryName)
+      )
 
     val allowancesMaybe =
       mergeAllowances(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalAllowances.entryName))
+
+    val allowancesRentalsAndRaRMaybe =
+      mergeAllowances(
+        resultFromAnnualDownstream,
+        resultFromRepository.get(JourneyName.RentalsAndRaRAllowances.entryName)
+      )
 
     val rentalsIncomeMaybe =
       mergeRentalsIncome(
@@ -67,10 +99,22 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
         resultFromRepository.get(JourneyName.RentalIncome.entryName)
       )
 
+    val rentalsAndRaRIncomeMaybe =
+      mergeRentalsAndRaRIncome(
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalsAndRaRIncome.entryName)
+      )
+
     val rentalsExpensesMaybe =
       mergeRentalsExpenses(
         resultFromPeriodicDownstreamMaybe,
         resultFromRepository.get(JourneyName.RentalExpenses.entryName)
+      )
+
+    val rentalsAndRaRExpensesMaybe =
+      mergeRentalsExpenses(
+        resultFromPeriodicDownstreamMaybe,
+        resultFromRepository.get(JourneyName.RentalsAndRaRExpenses.entryName)
       )
 
     val rarExpensesMaybe = mergeRaRExpenses(
@@ -95,20 +139,30 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       resultFromRepository.get(JourneyName.RentARoomAbout.entryName)
     )
 
+    val journeyStatuses = mergeStatuses(resultFromRepository)
+
     val data = FetchedPropertyData(
       None,
       propertyAboutMaybe,
       propertyRentalsAboutMaybe,
+      rentalsAndRaRAboutMaybe,
       adjustmentsMaybe,
+      rentalsAndRaRAdjustments = adjustmentsRentalsAndRaRMaybe,
       allowancesMaybe,
+      rentalsAndRaRAllowances = allowancesRentalsAndRaRMaybe,
       esbaInfoMaybe,
-      sbaInfoMaybe,
+      rentalsAndRaREsbasWithSupportingQuestions = esbaInfoRentalsAndRaRMaybe,
+      sbasWithSupportingQuestions = sbaInfoMaybe,
+      rentalsAndRaRSbasWithSupportingQuestions = sbaInfoAndRaRMaybe,
       rentalsIncomeMaybe,
+      rentalsAndRaRIncomeMaybe,
       rentalsExpensesMaybe,
+      rentalsAndRaRExpenses = rentalsAndRaRExpensesMaybe,
       raRAbout = raRAboutMaybe,
       rarExpenses = rarExpensesMaybe,
       raRAdjustments = raRAdjustmentsMaybe,
-      rentARoomAllowances = rentARoomAllowancesMaybe
+      rentARoomAllowances = rentARoomAllowancesMaybe,
+      journeyStatuses = journeyStatuses
     )
 
     data
@@ -125,7 +179,25 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
     val ukOtherPropertyIncome: Option[UkOtherPropertyIncome] =
       resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.income))
 
-    rentalsIncomeStoreAnswers.merge(ukOtherPropertyIncome)
+    val propertyRentalsIncome: Option[PropertyRentalsIncome] =
+      rentalsIncomeStoreAnswers.merge(ukOtherPropertyIncome)(RentalsIncomeMerger)
+    propertyRentalsIncome
+  }
+
+  def mergeRentalsAndRaRIncome(
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    resultFromRepository: Option[JourneyAnswers]
+  ): Option[RentalsAndRaRIncome] = {
+    val rentalsIncomeStoreAnswers: Option[StoredIncome] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[StoredIncome])
+      case None                 => None
+    }
+    val ukOtherPropertyIncome: Option[UkOtherPropertyIncome] =
+      resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.income))
+
+    val rentalsAndRaRIncome: Option[RentalsAndRaRIncome] =
+      rentalsIncomeStoreAnswers.merge(ukOtherPropertyIncome)(RentalsAndRaRIncomeMerger)
+    rentalsAndRaRIncome
   }
 
   def mergeRentalsExpenses(
@@ -194,6 +266,35 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
       case None                 => None
     }
 
+  def mergeRentalsAndRaRAbout(
+    resultFromDownstream: PropertyAnnualSubmission,
+    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+    resultFromRepository: Option[JourneyAnswers]
+  ): Option[RentalsAndRaRAbout] = {
+    val claimPropertyIncomeAllowanceYesOrNo: Option[ClaimPropertyIncomeAllowanceYesOrNo] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[ClaimPropertyIncomeAllowanceYesOrNo])
+      case None                 => None
+    }
+    val claimExpensesOrRRRYesNo: Option[ClaimExpensesOrRRRYesNo] = resultFromRepository match {
+      case Some(journeyAnswers) => journeyAnswers.data.asOpt[ClaimExpensesOrRRRYesNo]
+      case None                 => None
+    }
+
+    val jointlyLet = for {
+      uop    <- resultFromDownstream.ukOtherProperty
+      ukopaa <- uop.ukOtherPropertyAnnualAdjustments
+      ukorar <- ukopaa.ukOtherRentARoom
+    } yield ukorar.jointlyLet
+
+    val uKOtherPropertyMaybe: Option[UkOtherProperty] = for {
+      resultFromPeriodicDownstream <- resultFromPeriodicDownstreamMaybe
+      ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
+    } yield ukop
+
+    val rentalsAndRaRAboutStoreAnswers = (claimPropertyIncomeAllowanceYesOrNo, claimExpensesOrRRRYesNo)
+    rentalsAndRaRAboutStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
+  }
+
   def mergeRaRAbout(
     resultFromDownstream: PropertyAnnualSubmission,
     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
@@ -216,6 +317,15 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
 
     rentARoomAllowancesStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
   }
+
+  def mergeStatuses(resultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
+    JourneyName.values.toList
+      .map(journeyName =>
+        resultFromRepository
+          .get(journeyName.entryName)
+          .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
+      )
+      .flatten
 
   def mergeAdjustments(
     resultFromDownstream: PropertyAnnualSubmission,

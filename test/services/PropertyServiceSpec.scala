@@ -1498,6 +1498,9 @@ class PropertyServiceSpec
           None,
           None,
           None,
+          None,
+          None,
+          None,
           Some(RentalAllowances(None, Some(ElectricChargePointAllowance(false, None)), None, None, None, None, None)),
           esbaInfoRetrieved,
           None,
@@ -1506,7 +1509,12 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          None
+          None,
+          None,
+          None,
+          None,
+          None,
+          List()
         )
       forAll(scenarios) {
         (
