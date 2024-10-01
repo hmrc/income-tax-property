@@ -16,6 +16,7 @@
 
 package utils.mocks
 
+import config.AppConfig
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -28,9 +29,10 @@ import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockMongoJourneyAnswersRepository extends MockFactory with CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues {
+trait MockMongoJourneyAnswersRepository
+    extends MockFactory with CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues {
 
-  val mockAppConfig = new AppConfigStub().config()
+  val mockAppConfig: AppConfig = new AppConfigStub().config()
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
