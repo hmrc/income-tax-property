@@ -20,6 +20,7 @@ import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
+import models.domain.FetchedPropertyData
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo

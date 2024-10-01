@@ -22,7 +22,7 @@ import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models._
 import models.common._
-import models.domain.JourneyAnswers
+import models.domain.{FetchedPropertyData, JourneyAnswers}
 import models.errors._
 import models.repository.Extractor.GeneralExtractor
 import models.request._

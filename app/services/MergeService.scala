@@ -19,7 +19,7 @@ package services
 import connectors.IntegrationFrameworkConnector
 import models._
 import models.common._
-import models.domain.JourneyAnswers
+import models.domain.{FetchedPropertyData, JourneyAnswers, JourneyWithStatus}
 import models.repository.Merger._
 import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}

@@ -17,6 +17,7 @@
 import connectors.ConnectorIntegrationTest
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
+import models.domain.FetchedPropertyData
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._

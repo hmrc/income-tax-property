@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package utils.mocks
+package models.domain
 
-import models.domain.{FetchedPropertyData, JourneyAnswers}
-import models.responses._
-import org.scalamock.scalatest.MockFactory
-import services.MergeService
+import play.api.libs.json.{Json, OFormat}
 
-trait MockMergeService extends MockFactory {
-  protected val mergeService = mock[MergeService]
+final case class JourneyWithStatus(journeyName: String, journeyStatus: String)
 
-  def mockMergeServiceMergeAll(returnValue: FetchedPropertyData) =
-    (mergeService
-      .mergeAll(_: PropertyAnnualSubmission, _: Option[PropertyPeriodicSubmission], _: Map[String, JourneyAnswers]))
-      .expects(*, *, *)
-      .returning(
-        returnValue
-      )
+object JourneyWithStatus {
+  implicit val format: OFormat[JourneyWithStatus] = Json.format[JourneyWithStatus]
 }
