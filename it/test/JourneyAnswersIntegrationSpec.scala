@@ -326,13 +326,21 @@ class JourneyAnswersIntegrationSpec
             Some(4)
           )
         ),
-        rentalsAndRaRAbout = Some(RentalsAndRaRAbout(true, 7, false, 3, ClaimExpensesOrRelief(true, Some(44)))),
+        rentalsAndRaRAbout = Some(
+          RentalsAndRaRAbout(
+            jointlyLetYesOrNo = true,
+            7,
+            claimPropertyIncomeAllowanceYesOrNo = false,
+            3,
+            ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44))
+          )
+        ),
         rentalsAndRaRAdjustments = Some(
           PropertyRentalAdjustments(
             23,
-            BalancingCharge(true, Some(32)),
+            BalancingCharge(balancingChargeYesNo = true, Some(32)),
             None,
-            RenovationAllowanceBalancingCharge(true, Some(14)),
+            RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
             21,
             Some(34.56)
           )
@@ -340,7 +348,7 @@ class JourneyAnswersIntegrationSpec
         rentalsAndRaRAllowances = Some(
           RentalAllowances(
             Some(1),
-            Some(ElectricChargePointAllowance(true, Some(6))),
+            Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(6))),
             Some(7),
             Some(2),
             Some(3),
@@ -365,19 +373,19 @@ class JourneyAnswersIntegrationSpec
         rentalsAndRaRSbasWithSupportingQuestions = None,
         rentalsAndRaRIncome = Some(
           RentalsAndRaRIncome(
-            false,
+            isNonUKLandlord = false,
             12,
-            Some(DeductingTax(true, Some(11))),
+            Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
             None,
             None,
             None,
-            Some(PremiumsGrantLease(true, Some(1))),
-            Some(ReversePremiumsReceived(true, Some(2)))
+            Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(1))),
+            Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
           )
         ),
         rentalsAndRaRExpenses = Some(
           PropertyRentalsExpense(
-            Some(ConsolidatedExpenses(true, Some(25))),
+            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
             Some(1),
             Some(2),
             Some(3),
@@ -414,7 +422,10 @@ class JourneyAnswersIntegrationSpec
         s"/income-tax/business/property/annual\\?" +
           s"taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
         Json
-          .toJson(PropertyAnnualSubmission.fromRaRAdjustments(aPropertyAnnualSubmission, rentARoomAdjustments))
+          .toJson(
+            PropertyAnnualSubmission
+              .fromRaRAdjustments(aPropertyAnnualSubmission.copy(submittedOn = None), rentARoomAdjustments)
+          )
           .toString(),
         httpResponseOk
       )

@@ -274,11 +274,14 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
     }
     logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
 
+    // refactor: to fix bug
+    val submissionRequest = body.copy(submittedOn = None)
+
     http
       .put(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .withBody(body)
+      .withBody(submissionRequest)
       .execute[PutAnnualSubmissionResponse]
       .map { response: PutAnnualSubmissionResponse =>
         if (response.result.isLeft) {

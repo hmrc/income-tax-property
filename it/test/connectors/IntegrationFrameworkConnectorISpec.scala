@@ -212,7 +212,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
   ".getPropertyAnnualSubmission" when {
     val aPropertyAnnualSubmission = PropertyAnnualSubmission(
-      submittedOn = Some(LocalDateTime.now),
+      submittedOn = None,
       None,
       Some(
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
@@ -335,7 +335,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   ".createOrUpdateAnnualSubmission" when {
 
     val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
-      submittedOn = Some(LocalDateTime.now),
+      submittedOn = None,
       None,
       Some(
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
@@ -456,7 +456,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   "create Or Update Annual Submission" when {
 
     val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
-      submittedOn = Some(LocalDateTime.now),
+      submittedOn = None,
       None,
       Some(
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
