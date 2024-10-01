@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
 import models.common._
-import models.domain.JourneyAnswers
+import models.domain.{FetchedPropertyData, JourneyAnswers}
 import models.errors._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}

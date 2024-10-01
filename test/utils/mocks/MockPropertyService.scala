@@ -19,6 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
+import models.domain.FetchedPropertyData
 import models.errors.ServiceError
 import models.request._
 import models.request.esba.EsbaInfo
