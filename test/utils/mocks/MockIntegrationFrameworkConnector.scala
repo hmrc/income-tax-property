@@ -32,82 +32,82 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
   protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
 
   def mockGetAllPeriodicSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     result: Either[ApiError, List[PeriodicSubmissionIdModel]]
-  ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ApiError, List[PeriodicSubmissionIdModel]]]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, List[PeriodicSubmissionIdModel]]]] =
     (mockIntegrationFrameworkConnector
-      .getAllPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .getAllPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
 
   def mockGetPropertyPeriodicSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     submissionId: String,
     result: Either[ApiError, Option[PropertyPeriodicSubmission]]
-  ): CallHandler5[Int, String, String, String, HeaderCarrier, Future[
+  ): CallHandler5[TaxYear, Nino, IncomeSourceId, String, HeaderCarrier, Future[
     Either[ApiError, Option[PropertyPeriodicSubmission]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .getPropertyPeriodicSubmission(_: Int, _: String, _: String, _: String)(_: HeaderCarrier))
+      .getPropertyPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, submissionId, *)
       .returning(Future.successful(result))
 
   def mockGetPropertyAnnualSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     result: Either[ApiError, Option[PropertyAnnualSubmission]]
-  ): CallHandler4[Int, String, String, HeaderCarrier, Future[Either[ApiError, Option[PropertyAnnualSubmission]]]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, Option[PropertyAnnualSubmission]]]] =
     (mockIntegrationFrameworkConnector
-      .getPropertyAnnualSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .getPropertyAnnualSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
 
   def mockCreatePeriodicSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     createRequest: CreatePropertyPeriodicSubmissionRequest,
     result: Either[ApiError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[Int, String, String, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
+  ): CallHandler5[TaxYear, Nino, IncomeSourceId, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[PeriodicSubmissionId]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .createPeriodicSubmission(_: Int, _: String, _: String, _: CreatePropertyPeriodicSubmissionRequest)(
+      .createPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: CreatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxYear, taxableEntityId, incomeSourceId, createRequest, *)
       .returning(Future.successful(result))
 
   def mockUpdatePeriodicSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     updateRequest: UpdatePropertyPeriodicSubmissionRequest,
     submissionId: String,
     result: Either[ApiError, Option[String]]
-  ): CallHandler6[String, String, Int, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
+  ): CallHandler6[Nino, IncomeSourceId, TaxYear, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[String]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
+      .updatePeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, updateRequest, *)
       .returning(Future.successful(result))
 
   def mockDeleteAnnualSubmissions(
-    incomeSourceId: String,
-    taxableEntityId: String,
-    taxYear: Int,
+    incomeSourceId: IncomeSourceId,
+    taxableEntityId: Nino,
+    taxYear: TaxYear,
     result: Either[ApiError, Unit]
-  ): CallHandler4[String, String, Int, HeaderCarrier, Future[Either[ApiError, Unit]]] =
+  ): CallHandler4[IncomeSourceId, Nino, TaxYear, HeaderCarrier, Future[Either[ApiError, Unit]]] =
     (mockIntegrationFrameworkConnector
-      .deletePropertyAnnualSubmission(_: String, _: String, _: Int)(_: HeaderCarrier))
+      .deletePropertyAnnualSubmission(_: IncomeSourceId, _: Nino, _: TaxYear)(_: HeaderCarrier))
       .expects(incomeSourceId, taxableEntityId, taxYear, *)
       .returning(Future.successful(result))
 

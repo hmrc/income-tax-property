@@ -50,7 +50,7 @@ class JourneyAnswersController @Inject() (
     implicit request =>
       withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.AllJourneys, request) { ctx =>
         handleResponse(OK) {
-          propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId.value)
+          propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId)
         }
       }
   }

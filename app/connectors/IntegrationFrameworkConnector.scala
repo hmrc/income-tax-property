@@ -40,18 +40,18 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
 
   override protected[connectors] val appConfig: AppConfig = appConf
 
-  def getAllPeriodicSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
+  def getAllPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ApiError, List[PeriodicSubmissionIdModel]]] = {
 
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$taxableEntityId/$incomeSourceId/period",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/${asTys(taxYear)}/$nino/$incomeSourceId/period",
         "1954"
       )
     } else {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/business/property/$taxableEntityId/$incomeSourceId/period?taxYear=${toTaxYearParamBefore2324(taxYear)}",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/$nino/$incomeSourceId/period?taxYear=${asTyBefore24(taxYear)}",
         "1649"
       )
     }
@@ -64,18 +64,18 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
       .map(response => response.result)
   }
 
-  def getPropertyPeriodicSubmission(taxYear: Int, nino: String, incomeSourceId: String, submissionId: String)(implicit
-    hc: HeaderCarrier
+  def getPropertyPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: String)(
+    implicit hc: HeaderCarrier
   ): Future[Either[ApiError, Option[PropertyPeriodicSubmission]]] = {
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/business/property/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/${asTys(taxYear)}/$nino/$incomeSourceId/periodic/$submissionId",
         "1862"
       )
     } else {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic?" +
-          s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
+          s"taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
         "1595"
       )
     }
@@ -98,18 +98,18 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
       }
   }
 
-  def getPropertyAnnualSubmission(taxYear: Int, nino: String, incomeSourceId: String)(implicit
+  def getPropertyAnnualSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ApiError, Option[PropertyAnnualSubmission]]] = {
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${toTaxYearParamAfter2324(taxYear)}/$nino/$incomeSourceId",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId",
         "1805"
       )
     } else {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/annual?" +
-          s"taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
+          s"taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId",
         "1598"
       )
     }
@@ -132,19 +132,19 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
       }
   }
 
-  def deletePropertyAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)(implicit
+  def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
     hc: HeaderCarrier
   ): Future[Either[ApiError, Unit]] = {
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/annual" +
-          s"/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
+          s"/${asTys(taxYear)}?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
         "1863"
       )
     } else {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/" +
-          s"annual?taxableEntityId=$taxableEntityId&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
+          s"annual?taxableEntityId=$taxableEntityId&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId",
         "1596"
       )
     }
@@ -168,21 +168,21 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
   }
 
   def createPeriodicSubmission(
-    taxYear: Int,
-    nino: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
     body: CreatePropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
-          s"/${toTaxYearParamAfter2324(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
+          s"/${asTys(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
         "1861"
       )
     } else {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property" +
-          s"/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(taxYear)}&incomeSourceId=$incomeSourceId",
+          s"/periodic?taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId",
         "1593"
       )
     }
@@ -208,24 +208,22 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
   }
 
   def updatePeriodicSubmission(
-    nino: String,
-    incomeSourceId: String,
-    taxYear: Int,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
     submissionId: String,
     propertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
-    val (url, apiVersion) = if (after2324Api(taxYear)) {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic/${toTaxYearParamAfter2324(
-            taxYear
-          )}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
+          s"/${asTys(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
         "1958"
       )
     } else {
       (
-        s"""${appConfig.ifBaseUrl}/income-tax/business/property/periodic?taxableEntityId=$nino&taxYear=${toTaxYearParamBefore2324(
-            taxYear
-          )}&incomeSourceId=$incomeSourceId&submissionId=$submissionId""",
+        s"${appConfig.ifBaseUrl}/income-tax/business/property" +
+          s"/periodic?taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
         "1594"
       )
     }
@@ -295,14 +293,5 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppC
         response.result
       }
   }
-
-  private def after2324Api(taxYear: Int): Boolean =
-    taxYear >= 2024
-
-  private def toTaxYearParamBefore2324(taxYear: Int): String =
-    s"${taxYear - 1}-${taxYear.toString takeRight 2}"
-
-  private def toTaxYearParamAfter2324(taxYear: Int): String =
-    s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
 
 }

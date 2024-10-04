@@ -57,10 +57,11 @@ class PropertyServiceSpec
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
   private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
-  private val nino = "A34324"
-  private val incomeSourceId = "Rental"
+  private val nino = Nino("A34324")
+  private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"
-  private val taxableEntityId = "taxableEntityId"
+  private val taxableEntityId = Nino("taxableEntityId")
+  val taxYear: TaxYear = TaxYear(2024)
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -77,7 +78,6 @@ class PropertyServiceSpec
         None,
         None
       )
-      val taxYear = 2024
 
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(periodicSubmissionIds))
       mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, "1", Right(Some(propertyPeriodicSubmission)))
@@ -91,8 +91,6 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      val taxYear = 2024
-
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
@@ -105,9 +103,9 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
       )
     }
@@ -115,9 +113,9 @@ class PropertyServiceSpec
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
       val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
 
-      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
       )
 
@@ -125,12 +123,12 @@ class PropertyServiceSpec
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
       mockGetAllPeriodicSubmission(
-        2024,
-        "A34324",
-        "Rental",
+        taxYear,
+        nino,
+        incomeSourceId,
         Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error")))
       )
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Left(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Left(
         ApiServiceError(500)
       )
     }
@@ -146,7 +144,6 @@ class PropertyServiceSpec
           AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
         )
       )
-      val taxYear = 2024
 
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Right(Some(aPropertyAnnualSubmission)))
 
@@ -159,7 +156,6 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      val taxYear = 2024
 
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
@@ -173,9 +169,9 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
       )
     }
@@ -183,9 +179,9 @@ class PropertyServiceSpec
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
       val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
 
-      mockGetAllPeriodicSubmission(2024, "A34324", "Rental", Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Right(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
       )
 
@@ -193,12 +189,12 @@ class PropertyServiceSpec
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
       mockGetAllPeriodicSubmission(
-        2024,
-        "A34324",
-        "Rental",
+        taxYear,
+        nino,
+        incomeSourceId,
         Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error")))
       )
-      await(underTest.getPropertyPeriodicSubmissions(2024, "A34324", "Rental").value) shouldBe Left(
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Left(
         ApiServiceError(500)
       )
     }
@@ -243,7 +239,6 @@ class PropertyServiceSpec
 
     "return submissionId for valid request" in {
       val periodicSubmissionId = PeriodicSubmissionId("submissionId")
-      val taxYear = 2024
 
       mockCreatePeriodicSubmission(
         taxYear,
@@ -262,7 +257,6 @@ class PropertyServiceSpec
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
 
       mockCreatePeriodicSubmission(
         taxYear,
@@ -283,7 +277,6 @@ class PropertyServiceSpec
   "update periodic submission" should {
 
     "return no content for valid request" in {
-      val taxYear = 2024
 
       mockUpdatePeriodicSubmission(
         taxYear,
@@ -309,7 +302,7 @@ class PropertyServiceSpec
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
+
       mockUpdatePeriodicSubmission(
         taxYear,
         nino,
@@ -336,7 +329,7 @@ class PropertyServiceSpec
   "delete annual submission" should {
 
     "return no content for valid request" in {
-      val taxYear = 2024
+
       mockDeleteAnnualSubmissions(incomeSourceId, taxableEntityId, taxYear, Right(None))
 
       await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear).value) shouldBe
@@ -344,7 +337,7 @@ class PropertyServiceSpec
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
+
       mockDeleteAnnualSubmissions(
         incomeSourceId,
         taxableEntityId,
@@ -367,29 +360,28 @@ class PropertyServiceSpec
     )
 
     "return no content for valid request" in {
-      val taxYear = 2024
-      mockCreateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
       await(
         underTest
-          .createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), validRequest)
+          .createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, validRequest)
           .value
       ) shouldBe
         Right()
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
 
       await(
         underTest
-          .createOrUpdateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), validRequest)
+          .createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, validRequest)
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
@@ -405,14 +397,13 @@ class PropertyServiceSpec
     )
 
     "return no content for valid request" in {
-      val taxYear = 2024
-      mockCreateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
       await(
         underTest
           .createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             validRequestBody
           )
           .value
@@ -421,19 +412,19 @@ class PropertyServiceSpec
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
+
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
         underTest
           .createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             validRequestBody
           )
           .value
@@ -443,10 +434,9 @@ class PropertyServiceSpec
 
   "save property rental adjustments" should {
 
-    val taxYear = 2024
     val mtditid = "89787469409"
     val journeyContextWithNino =
-      JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
     val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
@@ -471,8 +461,8 @@ class PropertyServiceSpec
         List(
           PeriodicSubmissionIdModel(
             "1",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear - 1))),
-            LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
+            LocalDate.parse(TaxYear.endDate(taxYear))
           )
         )
           .asRight[ApiError]
@@ -482,15 +472,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
         CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalAdjustments
         )
@@ -512,19 +502,18 @@ class PropertyServiceSpec
       )
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(updatedAnnualSubmission),
         Right()
       )
       await(
-        underTest.savePropertyRentalAdjustments(journeyContext, Nino(nino), propertyRentalAdjustments).value
+        underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
       ) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
-      val taxYear = 2024
 
       val annualUkOtherProperty =
         AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None)), None)
@@ -544,8 +533,8 @@ class PropertyServiceSpec
         List(
           PeriodicSubmissionIdModel(
             "",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear - 1))),
-            LocalDate.parse(TaxYear.endDate(TaxYear(taxYear)))
+            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
+            LocalDate.parse(TaxYear.endDate(taxYear))
           )
         )
           .asRight[ApiError]
@@ -555,15 +544,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
         CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalAdjustments
         )
@@ -577,23 +566,22 @@ class PropertyServiceSpec
 
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(updatedAnnualSubmission),
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
-        underTest.savePropertyRentalAdjustments(journeyContext, Nino(nino), propertyRentalAdjustments).value
+        underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
   "save property rental allowances" should {
 
-    val taxYear = 2024
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
     val allowances = RentalAllowances(
       Some(11),
       Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
@@ -611,7 +599,7 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(annualSubmission).asRight[ApiError]
       )
-      mockCreateAnnualSubmission(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Nino(nino), Right())
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
     }
 
@@ -623,9 +611,9 @@ class PropertyServiceSpec
         Some(annualSubmission).asRight[ApiError]
       )
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
@@ -672,10 +660,9 @@ class PropertyServiceSpec
   "save esbas" should {
     "call service method" in {
 
-      val taxYear = 2024
       val mtditid = "1234567890"
       val ctx =
-        JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
+        JourneyContext(taxYear, incomeSourceId, Mtditid(mtditid), JourneyName.RentalESBA)
 
       val esbasToBeAdded = List(
         EsbaInUpstream(
@@ -706,14 +693,14 @@ class PropertyServiceSpec
       )
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(annualSubmissionAfterAdditionOfEsbas),
         ().asRight[ApiError]
       )
 
-      await(underTest.saveEsbas(ctx, Nino(nino), esbaInfo).value) shouldBe Right(())
+      await(underTest.saveEsbas(ctx, nino, esbaInfo).value) shouldBe Right(())
 
     }
   }
@@ -721,10 +708,9 @@ class PropertyServiceSpec
   "save sbas" should {
     "call service method" in {
 
-      val taxYear = 2024
       val mtditid = "1234567890"
       val ctx =
-        JourneyContext(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), JourneyName.RentalESBA)
+        JourneyContext(taxYear, incomeSourceId, Mtditid(mtditid), JourneyName.RentalESBA)
 
       val sbasToBeAdded = List(
         Sba(
@@ -757,23 +743,22 @@ class PropertyServiceSpec
       )
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(annualSubmissionAfterAdditionOfEsbas),
         ().asRight[ApiError]
       )
 
-      await(underTest.saveSBA(ctx, Nino(nino), sbaInfo).value) shouldBe Right(())
+      await(underTest.saveSBA(ctx, nino, sbaInfo).value) shouldBe Right(())
 
     }
   }
 
   "save income" should {
 
-    val taxYear = 2024
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val propertyRentalsIncome = PropertyRentalsIncome(
       true,
@@ -801,15 +786,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalsIncome
         )
@@ -825,7 +810,7 @@ class PropertyServiceSpec
         underTest
           .saveIncome(
             ctx.toJourneyContext(JourneyName.RentalIncome),
-            Nino(nino),
+            nino,
             propertyRentalsIncome
           )
           .value
@@ -845,15 +830,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalsIncome
         )
@@ -869,7 +854,7 @@ class PropertyServiceSpec
         underTest
           .saveIncome(
             ctx.toJourneyContext(JourneyName.RentalIncome),
-            Nino(nino),
+            nino,
             propertyRentalsIncome
           )
           .value
@@ -879,8 +864,7 @@ class PropertyServiceSpec
 
   "save expenses" should {
 
-    val taxYear = 2024
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid("mtditid"), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid("mtditid"), nino)
       .toJourneyContext(JourneyName.RentalExpenses)
 
     "return submissionId" in {
@@ -915,8 +899,8 @@ class PropertyServiceSpec
           )
         )
       )
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -947,7 +931,7 @@ class PropertyServiceSpec
         underTest
           .saveExpenses(
             ctx,
-            Nino(nino),
+            nino,
             expenses
           )
           .value
@@ -966,7 +950,7 @@ class PropertyServiceSpec
 
       val result = underTest.saveExpenses(
         ctx,
-        Nino(nino),
+        nino,
         Expenses(
           None,
           Some(200),
@@ -983,8 +967,8 @@ class PropertyServiceSpec
       }
     }
     "downstream error when getPropertyPeriodicSubmission call fails" in {
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1001,7 +985,7 @@ class PropertyServiceSpec
       )
       val result = underTest.saveExpenses(
         ctx,
-        Nino(nino),
+        nino,
         Expenses(
           None,
           Some(200),
@@ -1019,8 +1003,8 @@ class PropertyServiceSpec
     }
 
     "downstream error when create call fails" in {
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       val ukOtherPropertyIncome = UkOtherPropertyIncome(
         Some(0),
@@ -1083,7 +1067,7 @@ class PropertyServiceSpec
 
       val result = underTest.saveExpenses(
         ctx,
-        Nino(nino),
+        nino,
         expenses
       )
       whenReady(result.value) { r =>
@@ -1094,8 +1078,7 @@ class PropertyServiceSpec
 
   "save rent a room expenses" should {
 
-    val taxYear = 2024
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid("mtditid"), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid("mtditid"), nino)
       .toJourneyContext(JourneyName.RentalExpenses)
 
     "return submissionId when creating" in {
@@ -1119,8 +1102,8 @@ class PropertyServiceSpec
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
         None,
         None,
-        LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-        LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+        LocalDate.parse(TaxYear.startDate(taxYear)),
+        LocalDate.parse(TaxYear.endDate(taxYear)),
         None,
         Some(
           UkOtherProperty(
@@ -1141,7 +1124,7 @@ class PropertyServiceSpec
 
       val Right(raRExpensesForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromRaRExpenses(
-          TaxYear(taxYear),
+          taxYear,
           None,
           raRExpenses
         )
@@ -1157,7 +1140,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRExpenses(
             ctx,
-            Nino(nino),
+            nino,
             raRExpenses
           )
           .value
@@ -1196,8 +1179,8 @@ class PropertyServiceSpec
           )
         )
       )
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1229,7 +1212,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRExpenses(
             ctx,
-            Nino(nino),
+            nino,
             raRExpenses
           )
           .value
@@ -1248,7 +1231,7 @@ class PropertyServiceSpec
 
       val result = underTest.saveExpenses(
         ctx,
-        Nino(nino),
+        nino,
         Expenses(
           None,
           Some(200),
@@ -1265,8 +1248,8 @@ class PropertyServiceSpec
       }
     }
     "downstream error when getPropertyPeriodicSubmission call fails" in {
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -1284,7 +1267,7 @@ class PropertyServiceSpec
 
       val result = underTest.saveExpenses(
         ctx,
-        Nino(nino),
+        nino,
         Expenses(
           None,
           Some(200),
@@ -1302,8 +1285,8 @@ class PropertyServiceSpec
     }
 
     "downstream error when create call fails" in {
-      val fromDate = TaxYear.startDate(taxYear)
-      val toDate = TaxYear.endDate(taxYear)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
 
       val raRExpenses = RentARoomExpenses(
         None,
@@ -1363,7 +1346,7 @@ class PropertyServiceSpec
 
       val result = underTest.saveRaRExpenses(
         ctx,
-        Nino(nino),
+        nino,
         raRExpenses
       )
       whenReady(result.value) { r =>
@@ -1373,7 +1356,7 @@ class PropertyServiceSpec
   }
 
   "fetch" should {
-    val taxYear = 2024
+
     val mtditid = "1234567890"
 
     val esbaDate = LocalDate.parse("2024-01-01")
@@ -1420,7 +1403,7 @@ class PropertyServiceSpec
       )
     )
     "return successful with Esba Info fetched" in {
-      val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
       def generateEsbaInfo(
         claimEnhancedStructureBuildingAllowance: Boolean,
@@ -1536,7 +1519,7 @@ class PropertyServiceSpec
             taxYear,
             nino,
             incomeSourceId,
-            List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
+            List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear.endYear), TaxYear.endDate(taxYear.endYear)))
               .asRight[ApiError]
           )
 
@@ -1570,7 +1553,7 @@ class PropertyServiceSpec
 
             r <- underTest.getFetchedPropertyDataMerged(
                    ctx.toJourneyContext(JourneyName.AllJourneys),
-                   Nino(nino),
+                   nino,
                    incomeSourceId
                  )
             _ <- EitherT(
@@ -1610,14 +1593,14 @@ class PropertyServiceSpec
           )
         mongoJourneyAnswersRepository.collection.deleteMany(filter).toFuture().map(_ => ())
       }
-      val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
       val claimEnhancedStructureBuildingAllowance = true
       val esbaClaims = true
 
       mockGetPropertyAnnualSubmission(
         taxYear,
-        "A34324",
+        nino,
         incomeSourceId,
         Some(aPropertyAnnualSubmission).asRight[ApiError]
       )
@@ -1625,7 +1608,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear.endYear), TaxYear.endDate(taxYear.endYear)))
           .asRight[ApiError]
       )
 
@@ -1653,7 +1636,7 @@ class PropertyServiceSpec
              )
         r <-
           underTest
-            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.NoJourney), Nino(nino), incomeSourceId)
+            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.NoJourney), nino, incomeSourceId)
       } yield r
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
         response shouldBe InternalError("Journey Repo 'should' not be accessed, journey name: no-journey")
@@ -1663,10 +1646,10 @@ class PropertyServiceSpec
 
     }
     "return ApiError for invalid request" in {
-      val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
       mockGetPropertyAnnualSubmission(
         taxYear,
-        "A34324",
+        nino,
         incomeSourceId,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
@@ -1674,7 +1657,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear.endYear), TaxYear.endDate(taxYear.endYear)))
           .asRight[ApiError]
       )
 
@@ -1696,7 +1679,7 @@ class PropertyServiceSpec
              )
         r <-
           underTest
-            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.RentalESBA), Nino(nino), incomeSourceId)
+            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.RentalESBA), nino, incomeSourceId)
       } yield r
 
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
@@ -1743,10 +1726,10 @@ class PropertyServiceSpec
           .map(_ => true)
       }
 
-      val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
       mockGetPropertyAnnualSubmission(
         taxYear,
-        "A34324",
+        nino,
         incomeSourceId,
         Some(
           aPropertyAnnualSubmission
@@ -1757,7 +1740,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear), TaxYear.endDate(taxYear)))
+        List(PeriodicSubmissionIdModel("1", TaxYear.startDate(taxYear.endYear), TaxYear.endDate(taxYear.endYear)))
           .asRight[ApiError]
       )
 
@@ -1795,7 +1778,7 @@ class PropertyServiceSpec
              )
         r <-
           underTest
-            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.AllJourneys), Nino(nino), incomeSourceId)
+            .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.AllJourneys), nino, incomeSourceId)
       } yield r
 
       whenReady(result.value, Timeout(Span(1500, Millis))) { response =>
@@ -1806,9 +1789,8 @@ class PropertyServiceSpec
 
   "save uk rent a room about" should {
 
-    val taxYear = 2024
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val ukRaRAbout = RaRAbout(
       true,
@@ -1841,15 +1823,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           ukRaRAbout
         )
@@ -1863,9 +1845,9 @@ class PropertyServiceSpec
       )
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(
           annualSubmission.copy(ukOtherProperty =
             Some(
@@ -1891,7 +1873,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRAbout(
             ctx.toJourneyContext(JourneyName.RentalIncome),
-            Nino(nino),
+            nino,
             ukRaRAbout
           )
           .value
@@ -1911,8 +1893,8 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
@@ -1925,7 +1907,7 @@ class PropertyServiceSpec
       )
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           ukRaRAbout
         )
@@ -1941,7 +1923,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRAbout(
             ctx.toJourneyContext(JourneyName.RentalIncome),
-            Nino(nino),
+            nino,
             ukRaRAbout
           )
           .value
@@ -1951,9 +1933,8 @@ class PropertyServiceSpec
 
   "save rentals and rent a room about" should {
 
-    val taxYear = 2024
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(TaxYear(taxYear), IncomeSourceId(incomeSourceId), Mtditid(mtditid), Nino(nino))
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val rentalsAndRaRAbout = RentalsAndRaRAbout(
       true,
@@ -1988,15 +1969,15 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRAbout
         )
@@ -2010,9 +1991,9 @@ class PropertyServiceSpec
       )
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(
           annualSubmission.copy(ukOtherProperty =
             Some(
@@ -2038,7 +2019,7 @@ class PropertyServiceSpec
         underTest
           .saveRentalsAndRaRAbout(
             ctx.toJourneyContext(JourneyName.RentalsAndRaRAbout),
-            Nino(nino),
+            nino,
             rentalsAndRaRAbout
           )
           .value
@@ -2058,8 +2039,8 @@ class PropertyServiceSpec
         PropertyPeriodicSubmission(
           None,
           None,
-          LocalDate.parse(TaxYear.startDate(TaxYear(taxYear))),
-          LocalDate.parse(TaxYear.endDate(TaxYear(taxYear))),
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
           None
         )
@@ -2072,7 +2053,7 @@ class PropertyServiceSpec
       )
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
-          TaxYear(taxYear),
+          taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRAbout
         )
@@ -2088,7 +2069,7 @@ class PropertyServiceSpec
         underTest
           .saveRentalsAndRaRAbout(
             ctx.toJourneyContext(JourneyName.RentalsAndRaRAbout),
-            Nino(nino),
+            nino,
             rentalsAndRaRAbout
           )
           .value
@@ -2098,11 +2079,10 @@ class PropertyServiceSpec
 
   "save uk rent a room adjustments" should {
 
-    val taxYear = 2024
     val mtditid = "1234567890"
     val ctx = JourneyContext(
-      TaxYear(taxYear),
-      IncomeSourceId(incomeSourceId),
+      taxYear,
+      incomeSourceId,
       Mtditid(mtditid),
       JourneyName.RentARoomAdjustments
     )
@@ -2124,9 +2104,9 @@ class PropertyServiceSpec
       )
 
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(
           annualSubmission.copy(ukOtherProperty =
             Some(
@@ -2152,7 +2132,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRAdjustments(
             ctx,
-            Nino(nino),
+            nino,
             ukRaRAdjustments
           )
           .value
@@ -2168,9 +2148,9 @@ class PropertyServiceSpec
         Some(annualSubmission).asRight[ApiError]
       )
       mockCreateAnnualSubmission(
-        TaxYear(taxYear),
-        IncomeSourceId(incomeSourceId),
-        Nino(nino),
+        taxYear,
+        incomeSourceId,
+        nino,
         Some(
           annualSubmission.copy(ukOtherProperty =
             Some(
@@ -2196,7 +2176,7 @@ class PropertyServiceSpec
         underTest
           .saveRaRAdjustments(
             ctx,
-            Nino(nino),
+            nino,
             ukRaRAdjustments
           )
           .value

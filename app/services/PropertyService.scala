@@ -53,9 +53,9 @@ class PropertyService @Inject() (
     for {
 
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                     journeyContext.taxYear.endYear,
-                                     nino.value,
-                                     journeyContext.incomeSourceId.value
+                                     journeyContext.taxYear,
+                                     nino,
+                                     journeyContext.incomeSourceId
                                    )
       submissionResponse <- savePeriodicSubmission(
                               journeyContext.toJourneyContextWithNino(nino),
@@ -77,9 +77,9 @@ class PropertyService @Inject() (
     for {
 
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                     journeyContext.taxYear.endYear,
-                                     nino.value,
-                                     journeyContext.incomeSourceId.value
+                                     journeyContext.taxYear,
+                                     nino,
+                                     journeyContext.incomeSourceId
                                    )
       submissionResponse <- savePeriodicSubmission(
                               journeyContext.toJourneyContextWithNino(nino),
@@ -99,14 +99,13 @@ class PropertyService @Inject() (
   def getFetchedPropertyDataMerged(
     ctx: JourneyContext,
     nino: Nino,
-    incomeSourceId: String
+    incomeSourceId: IncomeSourceId
   )(implicit
-    ec: ExecutionContext,
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, FetchedPropertyData] = {
-    val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
+    val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear, nino, incomeSourceId)
 
-    val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.toString, incomeSourceId)
+    val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear, nino, incomeSourceId)
 
     for {
       resultFromDownstreamAnnual        <- resultAnnual
@@ -150,16 +149,16 @@ class PropertyService @Inject() (
 
   }
 
-  def getPropertyPeriodicSubmissions(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
+  def getPropertyPeriodicSubmissions(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[PropertyPeriodicSubmissionResponse] = {
 
     val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
       for {
-        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId))
+        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, nino, incomeSourceId))
                                    .leftMap(error => ApiServiceError(error.status))
         propertyPeriodicSubmissions <-
-          getPropertySubmissions(taxYear, taxableEntityId, incomeSourceId, periodicSubmissionIds)
+          getPropertySubmissions(taxYear, nino, incomeSourceId, periodicSubmissionIds)
       } yield {
         logger.debug(s"Filtered periodic submission details: $propertyPeriodicSubmissions")
         propertyPeriodicSubmissions
@@ -218,7 +217,7 @@ class PropertyService @Inject() (
 
   private def getAnnualSubmission(ctx: JourneyContext, nino: Nino)(implicit hc: HeaderCarrier) = {
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
-    getPropertyAnnualSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value).leftFlatMap {
+    getPropertyAnnualSubmission(ctx.taxYear, nino, ctx.incomeSourceId).leftFlatMap {
       case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
       case error             => ITPEnvelope.liftEither(error.asLeft[PropertyAnnualSubmission])
     }
@@ -231,7 +230,7 @@ class PropertyService @Inject() (
       annualSubmission <- getAnnualSubmission(ctx, nino)
       annualSubmissionRequest <-
         ITPEnvelope.liftPure(PropertyAnnualSubmission.fromUkRentARoomAbout(rarAbout, annualSubmission))
-      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       submissionResponse <- savePeriodicSubmission(
                               ctx.toJourneyContextWithNino(nino),
                               maybePeriodicSubmission,
@@ -259,7 +258,7 @@ class PropertyService @Inject() (
         ITPEnvelope.liftPure(
           PropertyAnnualSubmission.fromRentalsAndRentARoomAbout(rentalsAndRaRAbout, annualSubmission)
         )
-      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       submissionResponse <- savePeriodicSubmission(
                               ctx.toJourneyContextWithNino(nino),
                               maybePeriodicSubmission,
@@ -286,7 +285,7 @@ class PropertyService @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
-      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       updatePeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(UpdatePropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, expenses))
       createPeriodicSubmissionRequest <-
@@ -296,16 +295,16 @@ class PropertyService @Inject() (
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
                                 createPeriodicSubmission(
-                                  nino.value,
-                                  ctx.incomeSourceId.value,
-                                  ctx.taxYear.endYear,
+                                  nino,
+                                  ctx.incomeSourceId,
+                                  ctx.taxYear,
                                   createPeriodicSubmissionRequest
                                 )
                               case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
-                                  nino.value,
-                                  ctx.incomeSourceId.value,
-                                  ctx.taxYear.endYear,
+                                  nino,
+                                  ctx.incomeSourceId,
+                                  ctx.taxYear,
                                   submissionId.submissionId,
                                   updatePeriodicSubmissionRequest
                                 ).map(_ => Some(submissionId))
@@ -326,7 +325,7 @@ class PropertyService @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
-      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear.endYear, nino.value, ctx.incomeSourceId.value)
+      maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       updatePeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
           UpdatePropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, raRExpenses)
@@ -338,16 +337,16 @@ class PropertyService @Inject() (
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
                                 createPeriodicSubmission(
-                                  nino.value,
-                                  ctx.incomeSourceId.value,
-                                  ctx.taxYear.endYear,
+                                  nino,
+                                  ctx.incomeSourceId,
+                                  ctx.taxYear,
                                   createPeriodicSubmissionRequest
                                 )
                               case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
-                                  nino.value,
-                                  ctx.incomeSourceId.value,
-                                  ctx.taxYear.endYear,
+                                  nino,
+                                  ctx.incomeSourceId,
+                                  ctx.taxYear,
                                   submissionId.submissionId,
                                   updatePeriodicSubmissionRequest
                                 ).map(_ => Some(submissionId))
@@ -364,17 +363,17 @@ class PropertyService @Inject() (
            }
     } yield submissionResponse
 
-  def getCurrentPeriodicSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
+  def getCurrentPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Option[PropertyPeriodicSubmission]] =
-    getPropertyPeriodicSubmissions(taxYear, taxableEntityId, incomeSourceId)
+    getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId)
       .map(_.periodicSubmissions.headOption)
       .flatMap {
         case Some(newest) => ITPEnvelope.liftPure(Some(newest))
         case None         => ITPEnvelope.liftPure(None)
       }
 
-  def getPropertyAnnualSubmission(taxYear: Int, taxableEntityId: String, incomeSourceId: String)(implicit
+  def getPropertyAnnualSubmission(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[PropertyAnnualSubmission] =
     EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
@@ -385,16 +384,16 @@ class PropertyService @Inject() (
         )(_.asRight[ServiceError])
       }
 
-  def deletePropertyAnnualSubmission(incomeSourceId: String, taxableEntityId: String, taxYear: Int)(implicit
+  def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Unit] =
     EitherT(connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear))
       .bimap(error => ApiServiceError(error.status), result => result)
 
   def createPeriodicSubmission(
-    nino: String,
-    incomeSourceId: String,
-    taxYear: Int,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
     body: CreatePropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
     EitherT(connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
@@ -402,9 +401,9 @@ class PropertyService @Inject() (
     )
 
   def updatePeriodicSubmission(
-    nino: String,
-    incomeSourceId: String,
-    taxYear: Int,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
     submissionId: String,
     updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
   )(implicit
@@ -432,15 +431,15 @@ class PropertyService @Inject() (
     }
 
   private def getPropertySubmissions(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     periodicSubmissionIds: List[PeriodicSubmissionIdModel]
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): ITPEnvelope[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds
       .filter(submissionId =>
-        submissionId.fromDate.equals(TaxYear.startDate(taxYear)) && submissionId.toDate
-          .equals(TaxYear.endDate(taxYear))
+        submissionId.fromDate.equals(TaxYear.startDate(taxYear.endYear)) && submissionId.toDate
+          .equals(TaxYear.endDate(taxYear.endYear))
       )
       .map { submissionId =>
         connector
@@ -500,9 +499,9 @@ class PropertyService @Inject() (
     )
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(
-                                   context.taxYear.endYear,
-                                   nino.value,
-                                   context.incomeSourceId.value
+                                   context.taxYear,
+                                   nino,
+                                   context.incomeSourceId
                                  )
       _ <- savePeriodicSubmission(
              context.toJourneyContextWithNino(nino),
@@ -541,16 +540,16 @@ class PropertyService @Inject() (
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
                                 createPeriodicSubmission(
-                                  contextWithNino.nino.value,
-                                  contextWithNino.incomeSourceId.value,
-                                  contextWithNino.taxYear.endYear,
+                                  contextWithNino.nino,
+                                  contextWithNino.incomeSourceId,
+                                  contextWithNino.taxYear,
                                   createPeriodicSubmissionRequest
                                 )
                               case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
                                 updatePeriodicSubmission(
-                                  contextWithNino.nino.value,
-                                  contextWithNino.incomeSourceId.value,
-                                  contextWithNino.taxYear.endYear,
+                                  contextWithNino.nino,
+                                  contextWithNino.incomeSourceId,
+                                  contextWithNino.taxYear,
                                   submissionId.submissionId,
                                   updatePeriodicSubmissionRequest
                                 ).map(_ => Some(submissionId))
@@ -574,9 +573,9 @@ class PropertyService @Inject() (
       propertyAnnualSubmissionFromDownstream <-
         this
           .getPropertyAnnualSubmission(
-            ctx.taxYear.endYear,
-            nino.value,
-            ctx.incomeSourceId.value
+            ctx.taxYear,
+            nino,
+            ctx.incomeSourceId
           )
           .leftFlatMap {
             case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
@@ -612,16 +611,14 @@ class PropertyService @Inject() (
       propertyAnnualSubmissionFromDownstream <-
         this
           .getPropertyAnnualSubmission(
-            ctx.taxYear.endYear,
-            ctx.nino.value,
-            ctx.incomeSourceId.value
+            ctx.taxYear,
+            ctx.nino,
+            ctx.incomeSourceId
           )
-          .leftFlatMap(e =>
-            e match {
-              case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-              case _                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-            }
-          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+          }
       _ <- createOrUpdateAnnualSubmission(
              ctx.taxYear,
              ctx.incomeSourceId,
@@ -647,9 +644,9 @@ class PropertyService @Inject() (
       propertyAnnualSubmissionFromDownstream <-
         this
           .getPropertyAnnualSubmission(
-            ctx.taxYear.endYear,
-            ctx.nino.value,
-            ctx.incomeSourceId.value
+            ctx.taxYear,
+            ctx.nino,
+            ctx.incomeSourceId
           )
           .leftFlatMap {
             case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
