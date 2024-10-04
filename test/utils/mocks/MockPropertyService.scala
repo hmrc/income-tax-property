@@ -34,63 +34,66 @@ import services.PropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MockPropertyService extends MockFactory {
 
   protected val mockPropertyService: PropertyService = mock[PropertyService]
 
   def mockGetAllPeriodicSubmissions(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     result: Either[ServiceError, PropertyPeriodicSubmissionResponse]
-  ): CallHandler4[Int, String, String, HeaderCarrier, EitherT[
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     PropertyPeriodicSubmissionResponse
   ]] =
     (mockPropertyService
-      .getPropertyPeriodicSubmissions(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .getPropertyPeriodicSubmissions(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetCurrentPeriodicSubmission(
-    taxYear: Int,
-    nino: String,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
     result: Either[ServiceError, Option[PropertyPeriodicSubmission]]
-  ): CallHandler4[Int, String, String, HeaderCarrier, ITPEnvelope[Option[PropertyPeriodicSubmission]]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, ITPEnvelope[Option[PropertyPeriodicSubmission]]] =
     (mockPropertyService
-      .getCurrentPeriodicSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .getCurrentPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, nino, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetAnnualSubmission(
-    taxYear: Int,
-    taxableEntityId: String,
-    incomeSourceId: String,
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
     result: Either[ServiceError, PropertyAnnualSubmission]
-  ): CallHandler4[Int, String, String, HeaderCarrier, EitherT[Future, ServiceError, PropertyAnnualSubmission]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    PropertyAnnualSubmission
+  ]] =
     (mockPropertyService
-      .getPropertyAnnualSubmission(_: Int, _: String, _: String)(_: HeaderCarrier))
+      .getPropertyAnnualSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
   def mockCreatePeriodicSubmissions(
-    taxableEntityId: String,
-    incomeSourceId: String,
-    taxYear: Int,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
     body: CreatePropertyPeriodicSubmissionRequest,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[String, String, Int, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
+  ): CallHandler5[Nino, IncomeSourceId, TaxYear, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Option[PeriodicSubmissionId]
   ]] =
     (mockPropertyService
-      .createPeriodicSubmission(_: String, _: String, _: Int, _: CreatePropertyPeriodicSubmissionRequest)(
+      .createPeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: CreatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
@@ -182,32 +185,46 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockUpdatePeriodicSubmissions(
-    taxableEntityId: String,
-    incomeSourceId: String,
-    taxYear: Int,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
     submissionId: String,
     body: UpdatePropertyPeriodicSubmissionRequest,
     result: Either[ServiceError, String]
-  ): CallHandler6[String, String, Int, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    String
-  ]] =
+  ): CallHandler6[
+    Nino,
+    IncomeSourceId,
+    TaxYear,
+    String,
+    UpdatePropertyPeriodicSubmissionRequest,
+    HeaderCarrier,
+    EitherT[
+      Future,
+      ServiceError,
+      String
+    ]
+  ] =
     (mockPropertyService
-      .updatePeriodicSubmission(_: String, _: String, _: Int, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
+      .updatePeriodicSubmission(
+        _: Nino,
+        _: IncomeSourceId,
+        _: TaxYear,
+        _: String,
+        _: UpdatePropertyPeriodicSubmissionRequest
+      )(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, body, *)
       .returning(EitherT.fromEither(result))
 
   def mockDeleteAnnualSubmission(
-    incomeSourceId: String,
-    taxableEntityId: String,
-    taxYear: Int,
+    incomeSourceId: IncomeSourceId,
+    taxableEntityId: Nino,
+    taxYear: TaxYear,
     result: Either[ServiceError, Unit]
-  ): CallHandler4[String, String, Int, HeaderCarrier, EitherT[Future, ServiceError, Unit]] =
+  ): CallHandler4[IncomeSourceId, Nino, TaxYear, HeaderCarrier, EitherT[Future, ServiceError, Unit]] =
     (mockPropertyService
-      .deletePropertyAnnualSubmission(_: String, _: String, _: Int)(_: HeaderCarrier))
+      .deletePropertyAnnualSubmission(_: IncomeSourceId, _: Nino, _: TaxYear)(_: HeaderCarrier))
       .expects(incomeSourceId, taxableEntityId, taxYear, *)
       .returning(EitherT.fromEither[Future](result))
 
@@ -234,15 +251,15 @@ trait MockPropertyService extends MockFactory {
     incomeSourceId: IncomeSourceId,
     mtdItId: Mtditid,
     result: Either[ServiceError, FetchedPropertyData]
-  ): CallHandler5[JourneyContext, Nino, String, ExecutionContext, HeaderCarrier, EitherT[
+  ): CallHandler4[JourneyContext, Nino, IncomeSourceId, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     FetchedPropertyData
   ]] = {
     val ctx = JourneyContext(taxYear, incomeSourceId, mtdItId, JourneyName.AllJourneys)
     (mockPropertyService
-      .getFetchedPropertyDataMerged(_: JourneyContext, _: Nino, _: String)(_: ExecutionContext, _: HeaderCarrier))
-      .expects(ctx, *, incomeSourceId.value, *, *)
+      .getFetchedPropertyDataMerged(_: JourneyContext, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
+      .expects(ctx, *, incomeSourceId, *)
       .returning(ITPEnvelope.liftEither(result))
   }
 

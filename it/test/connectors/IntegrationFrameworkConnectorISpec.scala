@@ -30,9 +30,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with MockFactory {
 
-  private val nino = "some-nino"
-  private val taxableEntityId = "some-taxable-entity-id"
-  private val incomeSourceId = "some-income-source-id"
+  private val nino = Nino("some-nino")
+  private val taxableEntityId = Nino("some-taxable-entity-id")
+  private val incomeSourceId = IncomeSourceId("some-income-source-id")
   private val submissionId = "some-submission-id"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
@@ -68,9 +68,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     )
 
     "a call is made to the backend API it" should {
-      "return correct submissions data for the APIs used before 2024" in {
+      "return correct submissions data for the APIs used before TaxYear(2024)" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
-        val taxYear = 2021
+        val taxYear = TaxYear(2021)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/$taxableEntityId/$incomeSourceId/period\\?taxYear=2020-21",
@@ -82,9 +82,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         )
       }
 
-      "return correct submissions data for 2024 onwards" in {
+      "return correct submissions data for TaxYear(2024) onwards" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPeriodicSubmissionModel).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period",
@@ -98,7 +98,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
       "return Data Not Found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(List.empty[PeriodicSubmissionIdModel]).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period",
@@ -113,7 +113,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return Service Unavailable Error from Upstream" in {
         val httpResponse =
           HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period",
@@ -132,7 +132,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         val httpResponse =
           HttpResponse(BAD_GATEWAY, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
 
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/period",
@@ -161,9 +161,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     )
 
     "when we call the IF" should {
-      "return correct IF data when correct parameters are passed before 2024" in {
+      "return correct IF data when correct parameters are passed before TaxYear(2024)" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
-        val taxYear = 2021
+        val taxYear = TaxYear(2021)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/periodic\\?" +
@@ -177,9 +177,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
           Right(Some(aPropertyPeriodicSubmission))
       }
 
-      "return correct submissions data for 2024 onwards" in {
+      "return correct submissions data for TaxYear(2024) onwards" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/periodic/$submissionId",
@@ -195,7 +195,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return IF error when Left is returned" in {
         val httpResponse =
           HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/23-24/$taxableEntityId/$incomeSourceId/periodic/$submissionId",
@@ -220,9 +220,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     )
 
     "when we call the IF" should {
-      "return correct IF data when correct parameters are passed before 2024" in {
+      "return correct IF data when correct parameters are passed before TaxYear(2024)" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
-        val taxYear = 2021
+        val taxYear = TaxYear(2021)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/annual\\?" +
@@ -234,9 +234,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
           Right(Some(aPropertyAnnualSubmission))
       }
 
-      "return correct submissions data for 2024 onwards" in {
+      "return correct submissions data for TaxYear(2024) onwards" in {
         val httpResponse = HttpResponse(OK, Json.toJson(aPropertyAnnualSubmission).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$taxableEntityId/$incomeSourceId",
@@ -250,7 +250,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return IF error when Left is returned" in {
         val httpResponse =
           HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubGetHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$taxableEntityId/$incomeSourceId",
@@ -264,9 +264,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
   }
 
   "Delete annual submission" should {
-    "update submissions data for the APIs used before 2024" in {
+    "update submissions data for the APIs used before TaxYear(2024)" in {
       val httpResponse = HttpResponse(NO_CONTENT, "")
-      val taxYear = 2021
+      val taxYear = TaxYear(2021)
 
       stubDeleteHttpClientCall(
         s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
@@ -276,9 +276,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       await(underTest.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear)(hc)) shouldBe Right(())
     }
 
-    "Delete annual submission for 2024 onwards" in {
+    "Delete annual submission for TaxYear(2024) onwards" in {
       val httpResponse = HttpResponse(NO_CONTENT, "")
-      val taxYear = 2024
+      val taxYear = TaxYear(2024)
 
       stubDeleteHttpClientCall(
         s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
@@ -290,7 +290,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
     "return not found from Upstream" in {
       val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
-      val taxYear = 2024
+      val taxYear = TaxYear(2024)
 
       stubDeleteHttpClientCall(
         s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
@@ -305,7 +305,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     "return unprocessable-entity from Upstream" in {
       val httpResponse =
         HttpResponse(UNPROCESSABLE_ENTITY, Json.toJson(SingleErrorBody("some-code", "unprocessable-entity")).toString())
-      val taxYear = 2024
+      val taxYear = TaxYear(2024)
 
       stubDeleteHttpClientCall(
         s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
@@ -320,7 +320,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     "return Service Unavailable Error from Upstream" in {
       val httpResponse =
         HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-      val taxYear = 2024
+      val taxYear = TaxYear(2024)
 
       stubDeleteHttpClientCall(
         s"/income-tax/business/property/annual/23-24\\?taxableEntityId=$taxableEntityId&incomeSourceId=$incomeSourceId",
@@ -343,8 +343,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     )
 
     "create Annual Submission" should {
-      "create submissions data for the APIs used before 2024" in {
-        val taxYear = 2021
+      "create submissions data for the APIs used before TaxYear(2024)" in {
+        val taxYear = TaxYear(2021)
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
@@ -356,16 +356,16 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
           Json.toJson(aPropertyAnnualSubmission).as[PropertyAnnualSubmission]
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(taxableEntityId),
+            taxYear,
+            incomeSourceId,
+            taxableEntityId,
             propertyAnnualSubmission
           )(hc)
         ) shouldBe Right()
       }
 
-      "create submissions data for 2024 onwards" in {
-        val taxYear = 2024
+      "create submissions data for TaxYear(2024) onwards" in {
+        val taxYear = TaxYear(2024)
 
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
 
@@ -378,9 +378,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(
           underTest
             .createOrUpdateAnnualSubmission(
-              TaxYear(taxYear),
-              IncomeSourceId(incomeSourceId),
-              Nino(nino),
+              taxYear,
+              incomeSourceId,
+              nino,
               aPropertyAnnualSubmission
             )(hc)
         ) shouldBe Right()
@@ -388,7 +388,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
       "return Conflict from Upstream" in {
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -399,16 +399,16 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(
           underTest
             .createOrUpdateAnnualSubmission(
-              TaxYear(taxYear),
-              IncomeSourceId(incomeSourceId),
-              Nino(nino),
+              taxYear,
+              incomeSourceId,
+              nino,
               aPropertyAnnualSubmission
             )(hc)
         ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -419,9 +419,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(
           underTest
             .createOrUpdateAnnualSubmission(
-              TaxYear(taxYear),
-              IncomeSourceId(incomeSourceId),
-              Nino(nino),
+              taxYear,
+              incomeSourceId,
+              nino,
               aPropertyAnnualSubmission
             )(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
@@ -430,7 +430,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return Service Unavailable Error from Upstream" in {
         val httpResponse =
           HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -441,9 +441,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         await(
           underTest
             .createOrUpdateAnnualSubmission(
-              TaxYear(taxYear),
-              IncomeSourceId(incomeSourceId),
-              Nino(nino),
+              taxYear,
+              incomeSourceId,
+              nino,
               aPropertyAnnualSubmission
             )(hc)
         ) shouldBe
@@ -464,8 +464,8 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
     )
 
     "create Annual Submission" should {
-      "create submissions data for the APIs used before 2024" in {
-        val taxYear = 2021
+      "create submissions data for the APIs used before TaxYear(2024)" in {
+        val taxYear = TaxYear(2021)
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
@@ -475,16 +475,16 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(taxableEntityId),
+            taxYear,
+            incomeSourceId,
+            taxableEntityId,
             aPropertyAnnualSubmission
           )(hc)
         ) shouldBe Right()
       }
 
-      "create submissions data for 2024 onwards" in {
-        val taxYear = 2024
+      "create submissions data for TaxYear(2024) onwards" in {
+        val taxYear = TaxYear(2024)
 
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
 
@@ -496,9 +496,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             aPropertyAnnualSubmission
           )(hc)
         ) shouldBe Right()
@@ -506,7 +506,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
       "return Conflict from Upstream" in {
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -516,16 +516,16 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             aPropertyAnnualSubmission
           )(hc)
         ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -535,9 +535,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             aPropertyAnnualSubmission
           )(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
@@ -546,7 +546,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return Service Unavailable Error from Upstream" in {
         val httpResponse =
           HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
@@ -556,9 +556,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
         await(
           underTest.createOrUpdateAnnualSubmission(
-            TaxYear(taxYear),
-            IncomeSourceId(incomeSourceId),
-            Nino(nino),
+            taxYear,
+            incomeSourceId,
+            nino,
             aPropertyAnnualSubmission
           )(hc)
         ) shouldBe
@@ -590,9 +590,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
                                              |""".stripMargin)
 
     "create periodic submission" should {
-      "create submissions data for the APIs used before 2024" in {
+      "create submissions data for the APIs used before TaxYear(2024)" in {
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
-        val taxYear = 2021
+        val taxYear = TaxYear(2021)
 
         stubPostHttpClientCall(
           s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
@@ -610,9 +610,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         ) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
 
-      "create submissions data for 2024 onwards" in {
+      "create submissions data for TaxYear(2024) onwards" in {
         val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPostHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
@@ -628,7 +628,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
       "return Conflict from Upstream" in {
         val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPostHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
@@ -643,7 +643,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       }
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPostHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
@@ -660,7 +660,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return Service Unavailable Error from Upstream" in {
         val httpResponse =
           HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPostHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
@@ -694,9 +694,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
                                              |""".stripMargin)
 
     "update periodic submission" should {
-      "update submissions data for the APIs used before 2024" in {
+      "update submissions data for the APIs used before TaxYear(2024)" in {
         val httpResponse = HttpResponse(NO_CONTENT, "")
-        val taxYear = 2021
+        val taxYear = TaxYear(2021)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
@@ -715,9 +715,9 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
         ) shouldBe Right(None)
       }
 
-      "update submissions data for 2024 onwards" in {
+      "update submissions data for TaxYear(2024) onwards" in {
         val httpResponse = HttpResponse(NO_CONTENT, "")
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
@@ -738,7 +738,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
 
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
@@ -762,7 +762,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
           UNPROCESSABLE_ENTITY,
           Json.toJson(SingleErrorBody("some-code", "unprocessable-entity")).toString()
         )
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
@@ -784,7 +784,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
       "return Service Unavailable Error from Upstream" in {
         val httpResponse =
           HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
-        val taxYear = 2024
+        val taxYear = TaxYear(2024)
 
         stubPutHttpClientCall(
           s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
