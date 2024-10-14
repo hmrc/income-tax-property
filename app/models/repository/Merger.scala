@@ -492,7 +492,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             SbaInfo(
-              claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance,
+              claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance.getOrElse(false),
               allowances = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )
