@@ -490,9 +490,9 @@ object Merger {
     ): Option[SbaInfo] =
       (extractedMaybe, fromDownstreamMaybe) match {
         case (Some(extracted), Some(fromDownstream)) =>
-          Some(
+          extracted.claimStructureBuildingAllowance.map(csba =>
             SbaInfo(
-              claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance.getOrElse(false),
+              claimStructureBuildingAllowance = csba,
               allowances = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )
