@@ -181,7 +181,7 @@ class SbaInfoSpec extends UnitTest {
 
     "convert to from SbaInfo to SbaInfoToSave" in {
       sbaInfo.toSbaToSave shouldBe SbaInfoToSave(
-        sbaInfo.claimStructureBuildingAllowance,
+        Some(sbaInfo.claimStructureBuildingAllowance),
         sbaInfo.allowances
       )
     }

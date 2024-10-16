@@ -20,7 +20,7 @@ import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanc
 import play.api.libs.json.{Json, OFormat}
 
 final case class SbaInfoToSave(
-  claimStructureBuildingAllowance: Boolean,
+  claimStructureBuildingAllowance: Option[Boolean],
   structureBuildingFormGroup: List[Sba]
 )
 
@@ -31,7 +31,7 @@ object SbaInfoToSave {
 object SbaInfoExtensions {
   implicit class SbaExtensions(sbaInfo: SbaInfo) {
     def toSbaToSave: SbaInfoToSave =
-      SbaInfoToSave(sbaInfo.claimStructureBuildingAllowance, sbaInfo.allowances)
+      SbaInfoToSave(Some(sbaInfo.claimStructureBuildingAllowance), sbaInfo.allowances)
 
     def toSba: List[StructuredBuildingAllowance] = sbaInfo.allowances.map(structureBuildingFormGroup =>
       StructuredBuildingAllowance(
