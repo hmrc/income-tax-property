@@ -89,7 +89,7 @@ object Merger {
               ),
               claimPropertyIncomeAllowanceYesOrNo =
                 claimPropertyIncomeAllowanceYesOrNo.map(_.claimPropertyIncomeAllowanceYesOrNo).getOrElse(false),
-              incomeFromPropertyRentals = ukOtherProperty.income.flatMap(x => x.periodAmount).getOrElse(0)
+              propertyRentalIncome = ukOtherProperty.income.flatMap(x => x.periodAmount).getOrElse(0)
             )
           )
         case _ => None

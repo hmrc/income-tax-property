@@ -169,7 +169,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
         UkOtherPropertyIncome(
           None,
           None,
-          Some(rentalsAndRaRAbout.incomeFromPropertyRentals),
+          Some(rentalsAndRaRAbout.propertyRentalIncome),
           None,
           None,
           Some(RentARoomIncome(rentalsAndRaRAbout.totalIncomeAmount))

@@ -805,7 +805,7 @@ class JourneyAnswersControllerSpec
                                                  |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimPropertyIncomeAllowanceYesOrNo": true,
-                                                 |    "incomeFromPropertyRentals": 22.33,
+                                                 |    "propertyRentalIncome": 22.33,
                                                  |    "claimExpensesOrRelief" : {
                                                  |        "claimExpensesOrReliefYesNo" : true,
                                                  |        "rentARoomAmount" : 10.22
