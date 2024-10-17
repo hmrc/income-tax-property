@@ -327,7 +327,7 @@ class JourneyAnswersControllerSpec
   "create property income section" should {
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "propertyRentalIncome" : 15,
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {
@@ -841,7 +841,7 @@ class JourneyAnswersControllerSpec
   "create property rentals and rent a room income section" should {
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "propertyRentalIncome" : 15,
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {
