@@ -20,7 +20,7 @@ import play.api.libs.json.{Format, Json, OFormat}
 
 final case class PropertyRentalsIncome(
   isNonUKLandlord: Boolean,
-  incomeFromPropertyRentals: BigDecimal,
+  propertyRentalIncome: BigDecimal,
   otherIncomeFromProperty: BigDecimal,
   deductingTax: Option[DeductingTax],
   calculatedFigureYourself: Option[CalculatedFigureYourself],

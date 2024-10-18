@@ -327,7 +327,7 @@ class JourneyAnswersControllerSpec
   "create property income section" should {
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "propertyRentalIncome" : 15,
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {
@@ -805,7 +805,7 @@ class JourneyAnswersControllerSpec
                                                  |    "jointlyLetYesOrNo" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimPropertyIncomeAllowanceYesOrNo": true,
-                                                 |    "incomeFromPropertyRentals": 22.33,
+                                                 |    "propertyRentalIncome": 22.33,
                                                  |    "claimExpensesOrRelief" : {
                                                  |        "claimExpensesOrReliefYesNo" : true,
                                                  |        "rentARoomAmount" : 10.22
@@ -841,7 +841,7 @@ class JourneyAnswersControllerSpec
   "create property rentals and rent a room income section" should {
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |            "incomeFromPropertyRentals" : 15,
+                                                 |            "propertyRentalIncome" : 15,
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {

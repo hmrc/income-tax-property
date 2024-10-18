@@ -40,7 +40,7 @@ class RequestHandlerSpec
   val requestHandler = new RequestHandler with Logging {}
   val validRequestBody: JsValue = Json.parse("""
                                                |{
-                                               |            "incomeFromPropertyRentals" : 15,
+                                               |            "propertyRentalIncome" : 15,
                                                |            "isNonUKLandlord" : false,
                                                |            "otherIncomeFromProperty" : 25,
                                                |            "deductingTax" : {

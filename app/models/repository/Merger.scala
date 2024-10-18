@@ -66,9 +66,7 @@ object Merger {
         Option[RentalsAndRaRAbout],
         (
           Option[ClaimPropertyIncomeAllowanceYesOrNo],
-          Option[
-            ClaimExpensesOrRRRYesNo
-          ]
+          Option[ClaimExpensesOrRRRYesNo]
         ),
         (Option[Boolean], Option[UkOtherProperty])
       ] {
@@ -91,7 +89,7 @@ object Merger {
               ),
               claimPropertyIncomeAllowanceYesOrNo =
                 claimPropertyIncomeAllowanceYesOrNo.map(_.claimPropertyIncomeAllowanceYesOrNo).getOrElse(false),
-              incomeFromPropertyRentals = ukOtherProperty.income.flatMap(x => x.periodAmount).getOrElse(0)
+              propertyRentalIncome = ukOtherProperty.income.flatMap(x => x.periodAmount).getOrElse(0)
             )
           )
         case _ => None
@@ -124,8 +122,9 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses =
-                fromDownstream.consolidatedExpenses.map(ce => ConsolidatedExpenses(true, Some(ce))),
+              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce =>
+                ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(ce))
+              ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
               repairsAndMaintenanceCosts = fromDownstream.repairsAndMaintenance,
               loanInterestOrOtherFinancialCost = fromDownstream.financialCosts,
@@ -191,7 +190,7 @@ object Merger {
           Some(
             PropertyRentalsIncome(
               isNonUKLandlord = extracted.isNonUKLandlord,
-              incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
+              propertyRentalIncome = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
               deductingTax =
                 fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
@@ -210,7 +209,7 @@ object Merger {
           Some(
             PropertyRentalsIncome(
               isNonUKLandlord = false,
-              incomeFromPropertyRentals = fromDownstream.periodAmount.getOrElse(0),
+              propertyRentalIncome = fromDownstream.periodAmount.getOrElse(0),
               otherIncomeFromProperty = fromDownstream.otherIncome.getOrElse(0),
               deductingTax =
                 fromDownstream.taxDeducted.map(amount => DeductingTax(taxDeductedYesNo = true, Some(amount))),
@@ -337,8 +336,9 @@ object Merger {
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
-              capitalAllowancesForACar =
-                fromDownstream.otherCapitalAllowance.map(amount => CapitalAllowancesForACar(true, Some(amount)))
+              capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map(amount =>
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(amount))
+              )
             )
           )
         case _ => None
