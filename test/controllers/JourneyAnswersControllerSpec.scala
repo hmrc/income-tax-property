@@ -202,13 +202,6 @@ class JourneyAnswersControllerSpec
                                                      |}
                                                      |""".stripMargin)
 
-    val ctx = JourneyContext(
-      taxYear = TaxYear(2023),
-      incomeSourceId = IncomeSourceId("incomeSourceId"),
-      mtditid = Mtditid("1234567890"),
-      journey = JourneyName.RentARoomExpenses
-    )
-
     "should return no_content for valid request body where a field named status is present in the body request" in {
 
       mockAuthorisation()

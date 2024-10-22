@@ -33,20 +33,18 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import support.stubs.AuthStub._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
+import uk.gov.hmrc.http.HttpResponse
 
 import java.time.{LocalDate, LocalDateTime}
 class JourneyAnswersIntegrationSpec
     extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
     with ConnectorIntegrationTest {
 
-  private val nino = "some-nino"
   private val taxableEntityId = "some-taxable-entity-id"
   private val incomeSourceId = "some-income-source-id"
-  private val submissionId = "some-submission-id"
+
   private val submissionId1 = "some-submission-id-1"
   private val submissionId2 = "some-submission-id-2"
-  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
     CreatePropertyPeriodicSubmissionRequest(

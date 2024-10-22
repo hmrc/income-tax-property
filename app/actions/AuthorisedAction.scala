@@ -32,9 +32,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class AuthorisationRequest[T](user: User, request: Request[T]) extends WrappedRequest[T](request)
 
-class AuthorisedAction @Inject()(defaultActionBuilder: DefaultActionBuilder,
-                                 val authConnector: AuthConnector,
-                                 cc: ControllerComponents) extends AuthorisedFunctions {
+class AuthorisedAction @Inject() (
+  defaultActionBuilder: DefaultActionBuilder,
+  val authConnector: AuthConnector,
+  cc: ControllerComponents
+) extends AuthorisedFunctions {
 
   private lazy val logger: Logger = Logger.apply(this.getClass)
   private implicit val executionContext: ExecutionContext = cc.executionContext
@@ -43,42 +45,49 @@ class AuthorisedAction @Inject()(defaultActionBuilder: DefaultActionBuilder,
   private val minimumConfidenceLevel: Int = ConfidenceLevel.L250.level
   private val unauthorized: Future[Result] = Future.successful(Unauthorized)
 
-  def async(block: AuthorisationRequest[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { implicit request =>
-    request.headers.get("mtditid").fold {
-      val logMessage = "[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised."
-      logger.warn(logMessage)
-      unauthorized
-    } {
-      mtdItId =>
-        implicit val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-        authorised().retrieve(affinityGroup) {
-          case Some(AffinityGroup.Agent) => agentAuthentication(block, mtdItId)(request, headerCarrier)
-          case Some(AffinityGroup.Individual) => individualAuthentication(block, mtdItId)(request, headerCarrier)
-        } recover {
-          case _: NoActiveSession =>
-            val logMessage = s"[AuthorisedAction][async] - No active session."
-            logger.info(logMessage)
-            Unauthorized
-          case _: AuthorisationException =>
-            val logMessage = s"[AuthorisedAction][async] - User failed to authenticate"
-            logger.info(logMessage)
-            Unauthorized
+  def async(block: AuthorisationRequest[AnyContent] => Future[Result]): Action[AnyContent] =
+    defaultActionBuilder.async { implicit request =>
+      request.headers
+        .get("mtditid")
+        .fold {
+          val logMessage = "[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised."
+          logger.warn(logMessage)
+          unauthorized
+        } { mtdItId =>
+          implicit val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+          authorised().retrieve(affinityGroup) {
+            case Some(AffinityGroup.Agent)      => agentAuthentication(block, mtdItId)(request, headerCarrier)
+            case Some(AffinityGroup.Individual) => individualAuthentication(block, mtdItId)(request, headerCarrier)
+            case _                              => unauthorized
+          } recover {
+            case _: NoActiveSession =>
+              val logMessage = s"[AuthorisedAction][async] - No active session."
+              logger.info(logMessage)
+              Unauthorized
+            case _: AuthorisationException =>
+              val logMessage = s"[AuthorisedAction][async] - User failed to authenticate"
+              logger.info(logMessage)
+              Unauthorized
+          }
         }
     }
-  }
 
-  private[actions] def individualAuthentication[A](block: AuthorisationRequest[A] => Future[Result], requestMtdItId: String)
-                                                  (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
+  private[actions] def individualAuthentication[A](
+    block: AuthorisationRequest[A] => Future[Result],
+    requestMtdItId: String
+  )(implicit request: Request[A], hc: HeaderCarrier): Future[Result] =
     authorised().retrieve(allEnrolments and confidenceLevel) {
       case enrolments ~ userConfidence if userConfidence.level >= minimumConfidenceLevel =>
         val optionalMtdItId: Option[String] = enrolmentGetIdentifierValue(Individual.key, Individual.value, enrolments)
-        val optionalNino: Option[String] = enrolmentGetIdentifierValue(auth.Enrolment.Nino.key, auth.Enrolment.Nino.value, enrolments)
+        val optionalNino: Option[String] =
+          enrolmentGetIdentifierValue(auth.Enrolment.Nino.key, auth.Enrolment.Nino.value, enrolments)
 
         (optionalMtdItId, optionalNino) match {
           case (Some(authMTDITID), Some(_)) =>
             enrolments.enrolments.collectFirst {
               case Enrolment(Individual.key, enrolmentIdentifiers, _, _)
-                if enrolmentIdentifiers.exists(identifier => identifier.key == Individual.value && identifier.value == requestMtdItId) =>
+                  if enrolmentIdentifiers
+                    .exists(identifier => identifier.key == Individual.value && identifier.value == requestMtdItId) =>
                 block(AuthorisationRequest(User(requestMtdItId, None), request))
             } getOrElse {
               val logMessage = s"[AuthorisedAction][individualAuthentication] Non-agent with an invalid MTDITID. " +
@@ -100,10 +109,11 @@ class AuthorisedAction @Inject()(defaultActionBuilder: DefaultActionBuilder,
         logger.info(logMessage)
         unauthorized
     }
-  }
 
-  private[actions] def agentAuthentication[A](block: AuthorisationRequest[A] => Future[Result], mtdItId: String)
-                                             (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
+  private[actions] def agentAuthentication[A](
+    block: AuthorisationRequest[A] => Future[Result],
+    mtdItId: String
+  )(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
     lazy val agentAuthPredicate: String => Enrolment = identifierId =>
       Enrolment(Individual.key)
         .withIdentifier(Individual.value, identifierId)
@@ -125,18 +135,20 @@ class AuthorisedAction @Inject()(defaultActionBuilder: DefaultActionBuilder,
         logger.info(logMessage)
         Unauthorized
       case _: AuthorisationException =>
-        val logMessage = s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client."
+        val logMessage =
+          s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client."
         logger.info(logMessage)
         Unauthorized
     }
   }
 
-  private[actions] def enrolmentGetIdentifierValue(checkedKey: String,
-                                                   checkedIdentifier: String,
-                                                   enrolments: Enrolments): Option[String] = enrolments.enrolments.collectFirst {
-    case Enrolment(`checkedKey`, enrolmentIdentifiers, _, _) => enrolmentIdentifiers.collectFirst {
-      case EnrolmentIdentifier(`checkedIdentifier`, identifierValue) => identifierValue
+  private[actions] def enrolmentGetIdentifierValue(
+    checkedKey: String,
+    checkedIdentifier: String,
+    enrolments: Enrolments
+  ): Option[String] = enrolments.enrolments.collectFirst { case Enrolment(`checkedKey`, enrolmentIdentifiers, _, _) =>
+    enrolmentIdentifiers.collectFirst { case EnrolmentIdentifier(`checkedIdentifier`, identifierValue) =>
+      identifierValue
     }
   }.flatten
 }
-

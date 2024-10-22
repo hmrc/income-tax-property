@@ -361,7 +361,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             taxableEntityId,
             propertyAnnualSubmission
           )(hc)
-        ) shouldBe Right()
+        ) shouldBe Right((): Unit)
       }
 
       "create submissions data for TaxYear(2024) onwards" in {
@@ -383,7 +383,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
               nino,
               aPropertyAnnualSubmission
             )(hc)
-        ) shouldBe Right()
+        ) shouldBe Right((): Unit)
       }
 
       "return Conflict from Upstream" in {
@@ -480,7 +480,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             taxableEntityId,
             aPropertyAnnualSubmission
           )(hc)
-        ) shouldBe Right()
+        ) shouldBe Right((): Unit)
       }
 
       "create submissions data for TaxYear(2024) onwards" in {
@@ -501,7 +501,7 @@ class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with M
             nino,
             aPropertyAnnualSubmission
           )(hc)
-        ) shouldBe Right()
+        ) shouldBe Right((): Unit)
       }
 
       "return Conflict from Upstream" in {
