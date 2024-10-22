@@ -22,7 +22,7 @@ import org.scalamock.scalatest.MockFactory
 import services.MergeService
 
 trait MockMergeService extends MockFactory {
-  protected val mergeService = mock[MergeService]
+  protected val mergeService: MergeService = mock[MergeService]
 
   def mockMergeServiceMergeAll(returnValue: FetchedPropertyData) =
     (mergeService

@@ -32,13 +32,11 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConf: AppConfig)(implicit
+class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: AppConfig)(implicit
   ec: ExecutionContext
-) extends IFConnector {
+) {
 
   lazy val logger: Logger = LoggerFactory.getLogger("connector")
-
-  override protected[connectors] val appConfig: AppConfig = appConf
 
   def getAllPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier

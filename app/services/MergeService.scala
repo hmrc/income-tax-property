@@ -16,7 +16,6 @@
 
 package services
 
-import connectors.IntegrationFrameworkConnector
 import models._
 import models.common._
 import models.domain.{FetchedPropertyData, JourneyAnswers, JourneyWithStatus}
@@ -26,13 +25,12 @@ import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import repositories.MongoJourneyAnswersRepository
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class MergeService @Inject() (connector: IntegrationFrameworkConnector, repository: MongoJourneyAnswersRepository)(
-  implicit ec: ExecutionContext
+class MergeService @Inject() (implicit
+  ec: ExecutionContext
 ) {
   def mergeAll(
     resultFromAnnualDownstream: PropertyAnnualSubmission,
@@ -319,13 +317,10 @@ class MergeService @Inject() (connector: IntegrationFrameworkConnector, reposito
   }
 
   def mergeStatuses(resultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
-    JourneyName.values.toList
-      .map(journeyName =>
-        resultFromRepository
-          .get(journeyName.entryName)
-          .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
-      )
-      .flatten
+    JourneyName.values.toList.flatMap(journeyName =>
+      resultFromRepository
+        .get(journeyName.entryName)
+        .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName)))
 
   def mergeAdjustments(
     resultFromDownstream: PropertyAnnualSubmission,

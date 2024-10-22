@@ -156,7 +156,6 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-
       mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
@@ -361,7 +360,7 @@ class PropertyServiceSpec
 
     "return no content for valid request" in {
 
-      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right((): Unit))
       await(
         underTest
           .createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, validRequest)

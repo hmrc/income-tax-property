@@ -328,16 +328,15 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         )
     }
     "convert income having all None values to None for update" in {
-      val fakeDate = LocalDate.now()
 
       UpdatePropertyPeriodicSubmissionRequest
         .fromEntity(
           None,
           RaRAbout(
-            false,
+            jointlyLetYesOrNo = false,
             12.34,
             ClaimExpensesOrRelief(
-              false,
+              claimExpensesOrReliefYesNo = false,
               None
             )
           )

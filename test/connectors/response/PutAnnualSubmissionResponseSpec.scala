@@ -16,11 +16,11 @@
 
 package connectors.response
 
-import play.api.http.Status.{BAD_REQUEST, FAILED_DEPENDENCY, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SERVICE_UNAVAILABLE}
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.HttpResponse
 import connectors.response.PutAnnualSubmissionResponse.putAnnualSubmission
 import models.errors.{ApiError, SingleErrorBody}
+import play.api.http.Status._
+import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
 
@@ -42,7 +42,7 @@ class PutAnnualSubmissionResponseSpec extends UnitTest{
 
           underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutAnnualSubmissionResponse(
             httpResponse,
-            Right()
+            Right((): Unit)
           )
         }
 
