@@ -56,7 +56,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -87,7 +87,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None,None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -258,7 +258,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -269,7 +269,6 @@ object PropertyAnnualSubmission {
     val zeroEmissionCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
     val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
     val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
-    val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
 
     // Focuses
     val focusFromRequestOnTozeroEmissionCarAllowanceLens =
@@ -280,8 +279,7 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
     val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
-    val focusFromRequestOnToelectricChargePointAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(electricChargePointAllowanceLens)
+
 
     // Results
     val resultWithzeroEmissionCarAllowance = focusFromRequestOnTozeroEmissionCarAllowanceLens.replace(
@@ -303,14 +301,7 @@ object PropertyAnnualSubmission {
     val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
       rentARoomAllowances.replacementOfDomesticGoodsAllowance
     )(resultWithotherCapitalAllowance)
-
-    val resultWithelectricChargePointAllowance = focusFromRequestOnToelectricChargePointAllowanceLens.replace(
-      rentARoomAllowances.electricChargePointAllowance
-    )(
-      resultWithcostOfReplacingDomesticGoods
-    )
-
-    resultWithelectricChargePointAllowance
+    resultWithcostOfReplacingDomesticGoods
   }
 
   def fromRentalAllowances(
@@ -327,7 +318,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -338,7 +329,6 @@ object PropertyAnnualSubmission {
     val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
     val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
     val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
-    val electricChargePointAllowanceLens = GenLens[UkOtherAllowances](_.electricChargePointAllowance)
     val businessPremisesRenovationAllowanceLens = GenLens[UkOtherAllowances](_.businessPremisesRenovationAllowance)
 
     // Focuses
@@ -354,8 +344,6 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
     val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
-    val focusFromRequestOnToelectricChargePointAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(electricChargePointAllowanceLens)
     val focusFromRequestOnTobusinessPremisesRenovationAllowanceLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(businessPremisesRenovationAllowanceLens)
 
@@ -386,13 +374,7 @@ object PropertyAnnualSubmission {
       rentalAllowances.replacementOfDomesticGoodsAllowance
     )(resultWithotherCapitalAllowance)
 
-    val resultWithelectricChargePointAllowance = focusFromRequestOnToelectricChargePointAllowanceLens.replace(
-      rentalAllowances.electricChargePointAllowance.flatMap(_.electricChargePointAllowanceAmount)
-    )(
-      resultWithcostOfReplacingDomesticGoods
-    )
-
-    resultWithelectricChargePointAllowance
+    resultWithcostOfReplacingDomesticGoods
   }
 
 }
@@ -418,7 +400,6 @@ case class ForeignPropertyAllowances(
   costOfReplacingDomesticItems: Option[BigDecimal],
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
   structuredBuildingAllowance: Option[BigDecimal],
   zeroEmissionsCarAllowance: Option[BigDecimal],
   propertyAllowance: Option[BigDecimal]
@@ -462,7 +443,6 @@ case class UkOtherAllowances(
   businessPremisesRenovationAllowance: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
   costOfReplacingDomesticGoods: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
   structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
   enhancedStructuredBuildingAllowance: Option[Seq[Esba]],
   zeroEmissionsCarAllowance: Option[BigDecimal],

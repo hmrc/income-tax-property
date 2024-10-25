@@ -55,9 +55,7 @@ trait RequestHandler {
     val requestBody = parseBody[T](authorisationRequest)
     requestBody match {
       case Success(validatedRes) =>
-        validatedRes.fold[Future[Result]] {
-          Future.successful(BadRequest)
-        } {
+        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
           case JsSuccess(value, _) =>
             block(value)
           case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))

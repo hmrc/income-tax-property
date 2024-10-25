@@ -56,7 +56,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(78.90),
               Some(12.34),
               Some(56.78),
-              Some(90.12),
               Some(34.56),
               Some(78.90),
               Some(12.34)
@@ -77,7 +76,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(178.90),
               Some(112.34),
               Some(156.78),
-              Some(190.12),
               Some(134.56),
               Some(178.90),
               Some(112.34)
@@ -105,7 +103,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(90.12),
             Some(34.56),
             Some(78.90),
-            Some(12.34),
             Some(
               Seq(
                 StructuredBuildingAllowance(
@@ -175,7 +172,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           ),
           Some(
             UkOtherAllowances(
-              None,
               None,
               None,
               None,
@@ -326,7 +322,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rental allowances and not override existing other fields" in {
       val rentalAllowances = RentalAllowances(
         annualInvestmentAllowance = Some(11.22),
-        electricChargePointAllowance = Some(ElectricChargePointAllowance(true, Some(22.33))),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
         replacementOfDomesticGoodsAllowance = Some(55.66),
@@ -367,7 +362,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           "businessPremisesRenovationAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "electricChargePointAllowance",
           "zeroEmissionsCarAllowance"
         )
       )
@@ -375,7 +369,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar allowances and not override existing other fields" in {
       val raRAllowances = RentARoomAllowances(
         capitalAllowancesForACar = None,
-        electricChargePointAllowance = Some(22.33),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
         replacementOfDomesticGoodsAllowance = Some(55.66),
@@ -413,7 +406,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           "zeroEmissionGoodsVehicleAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "electricChargePointAllowance",
           "zeroEmissionsCarAllowance"
         )
       )
@@ -421,7 +413,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar allowances(with CapitalAllowancesForACar) and not override existing other fields" in {
 
       val raRAllowancesCapitalAllowancesForACar =
-        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None, None)
+        RentARoomAllowances(Some(CapitalAllowancesForACar(true, Some(55.66))), None, None, None, None)
 
       val pas = PropertyAnnualSubmission
         .fromRaRAllowances(
@@ -454,7 +446,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           "zeroEmissionGoodsVehicleAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "electricChargePointAllowance",
           "zeroEmissionsCarAllowance"
         )
       )
