@@ -286,13 +286,6 @@ object Merger {
           Some(
             RentalAllowances(
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
-              electricChargePointAllowance =
-                Some( // Todo: To be removed completely in related ticket. For Not, temporarily made optional)
-                  ElectricChargePointAllowance(
-                    fromDownstream.electricChargePointAllowance.isDefined,
-                    fromDownstream.electricChargePointAllowance
-                  )
-                ),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
@@ -304,12 +297,6 @@ object Merger {
           Some(
             RentalAllowances(
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
-              electricChargePointAllowance = Some(
-                ElectricChargePointAllowance(
-                  fromDownstream.electricChargePointAllowance.isDefined,
-                  fromDownstream.electricChargePointAllowance
-                )
-              ),
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
@@ -331,7 +318,6 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             RentARoomAllowances(
-              electricChargePointAllowance = fromDownstream.electricChargePointAllowance,
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,

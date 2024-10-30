@@ -120,7 +120,6 @@ class SbaInfoSpec extends UnitTest {
             None,
             None,
             None,
-            None,
             Some(
               List(
                 Esba(

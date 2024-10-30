@@ -603,7 +603,7 @@ class PropertyService @Inject() (
     rentalAllowances: RentalAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers.fromJourneyAnswers(rentalAllowances)
+    val rentalAllowancesStoreAnswers = rentalAllowances
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 

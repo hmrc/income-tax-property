@@ -82,7 +82,6 @@ class JourneyAnswersIntegrationSpec
             Some(3),
             Some(4),
             Some(5),
-            Some(6),
             None,
             Some(
               Seq(
@@ -251,7 +250,6 @@ class JourneyAnswersIntegrationSpec
         allowances = Some(
           RentalAllowances(
             Some(1),
-            Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(6))),
             Some(7),
             Some(2),
             Some(3),
@@ -317,7 +315,6 @@ class JourneyAnswersIntegrationSpec
         rentARoomAllowances = Some(
           RentARoomAllowances(
             Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
-            Some(6),
             Some(7),
             Some(2),
             Some(5),
@@ -346,7 +343,6 @@ class JourneyAnswersIntegrationSpec
         rentalsAndRaRAllowances = Some(
           RentalAllowances(
             Some(1),
-            Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(6))),
             Some(7),
             Some(2),
             Some(3),

@@ -31,6 +31,7 @@ import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
@@ -277,10 +278,6 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
                                                  |  "annualInvestmentAllowance": 11,
-                                                 |  "electricChargePointAllowance": {
-                                                 |    "electricChargePointAllowanceYesOrNo": true,
-                                                 |    "electricChargePointAllowanceAmount": 11
-                                                 |  },
                                                  |  "zeroEmissionCarAllowance": 11,
                                                  |  "zeroEmissionGoodsVehicleAllowance": 11,
                                                  |  "businessPremisesRenovationController": 11,
@@ -297,7 +294,6 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
           Some(11),
@@ -1027,10 +1023,6 @@ class JourneyAnswersControllerSpec
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
                                                  |  "annualInvestmentAllowance": 11,
-                                                 |  "electricChargePointAllowance": {
-                                                 |    "electricChargePointAllowanceYesOrNo": true,
-                                                 |    "electricChargePointAllowanceAmount": 11
-                                                 |  },
                                                  |  "zeroEmissionCarAllowance": 11,
                                                  |  "zeroEmissionGoodsVehicleAllowance": 11,
                                                  |  "businessPremisesRenovationController": 11,
@@ -1047,7 +1039,6 @@ class JourneyAnswersControllerSpec
         ctx,
         RentalAllowances(
           Some(11),
-          Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
           Some(11),
           Some(11),
           Some(11),

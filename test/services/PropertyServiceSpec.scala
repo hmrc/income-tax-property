@@ -583,7 +583,6 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
     val allowances = RentalAllowances(
       Some(11),
-      Some(ElectricChargePointAllowance(electricChargePointAllowanceYesOrNo = true, Some(11))),
       Some(11),
       Some(11),
       Some(11),
@@ -640,7 +639,6 @@ class PropertyServiceSpec
           ),
           Some(
             UkOtherAllowances(
-              None,
               None,
               None,
               None,
@@ -1378,7 +1376,6 @@ class PropertyServiceSpec
               None,
               None,
               None,
-              None,
               Some(
                 Seq(
                   Esba(
@@ -1484,7 +1481,7 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          Some(RentalAllowances(None, Some(ElectricChargePointAllowance(false, None)), None, None, None, None, None)),
+          Some(RentalAllowances(None, None, None, None, None, None)),
           esbaInfoRetrieved,
           None,
           None,
