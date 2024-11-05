@@ -24,6 +24,7 @@ import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfo._
+import models.request.foreign.ForeignPropertiesInformation
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
 import play.api.Logging
@@ -355,6 +356,16 @@ class JourneyAnswersController @Inject() (
         (ctx, esbaInfo) =>
           handleResponse(NO_CONTENT) {
             propertyService.saveEsbas(ctx, nino, esbaInfo)
+          }
+      }
+    }
+
+  def saveForeignPropertiesInformation(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[ForeignPropertiesInformation](taxYear, incomeSourceId, nino, JourneyName.ForeignPropertySelectCountries, request) {
+        (ctx, foreignPropertiesInformation) =>
+          handleResponse(NO_CONTENT) {
+            propertyService.saveForeignPropertiesInformation(ctx, nino, foreignPropertiesInformation)
           }
       }
     }

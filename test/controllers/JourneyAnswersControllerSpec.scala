@@ -24,6 +24,7 @@ import models.domain.FetchedPropertyData
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
+import models.request.foreign.ForeignPropertiesInformation
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -31,7 +32,6 @@ import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
@@ -98,7 +98,16 @@ class JourneyAnswersControllerSpec
     "return CREATED for valid request body" in {
 
       mockAuthorisation()
-      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRelief(true, Some(10.22))), true)
+      mockSaveUkRentARoomAbout(
+        ctx,
+        nino,
+        RaRAbout(
+          jointlyLetYesOrNo = true,
+          55.22,
+          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+        ),
+        result = true
+      )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.saveRentARoomAbout(taxYear, incomeSourceId, nino)(request))
@@ -811,8 +820,14 @@ class JourneyAnswersControllerSpec
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RentalsAndRaRAbout(true, 55.22, true, 22.33, ClaimExpensesOrRelief(true, Some(10.22))),
-        true
+        RentalsAndRaRAbout(
+          jointlyLetYesOrNo = true,
+          55.22,
+          claimPropertyIncomeAllowanceYesOrNo = true,
+          22.33,
+          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+        ),
+        result = true
       )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
@@ -1280,4 +1295,64 @@ class JourneyAnswersControllerSpec
     }
   }
 
+  "create or update foreign property section " should {
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |
+                                                 |     "countryCodes" : ["ESP", "USA"],
+                                                 |     "foreignTotalIncome" : "More than £1,000",
+                                                 |     "claimPropertyIncomeAllowanceOrExpenses" : "Property income Allowance"
+                                                 |
+                                                 |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.ForeignPropertySelectCountries)
+
+    "return boolean true for valid request body" in {
+      val foreignPropertyInformation = validRequestBody.as[ForeignPropertiesInformation]
+
+      mockAuthorisation()
+      mockSaveForeignPropertiesInformation(
+        ctx,
+        nino,
+        foreignPropertyInformation,
+        true.asRight[ServiceError]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveForeignPropertiesInformation(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return serviceError BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        val foreignPropertyInformation = validRequestBody.as[ForeignPropertiesInformation]
+
+        mockAuthorisation()
+        mockSaveForeignPropertiesInformation(
+          ctx,
+          nino,
+          foreignPropertyInformation,
+          serviceError.asLeft[Boolean]
+        )
+
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.saveForeignPropertiesInformation(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignPropertiesInformation(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
 }

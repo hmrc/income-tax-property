@@ -48,3 +48,8 @@ POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-sba/:ni
 POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-adjustments/:nino/answers                                 controllers.JourneyAnswersController.saveRentalsAndRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-esba/:nino/answers                                        controllers.JourneyAnswersController.saveRentalsAndRaREsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+
+############################  Foreign Property ###################################
+
+POST          /foreign-property/:taxYear/:incomeSourceId/select-income-country/:nino/answers                                              controllers.JourneyAnswersController.saveForeignPropertiesInformation(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

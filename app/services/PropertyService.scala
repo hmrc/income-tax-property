@@ -28,6 +28,7 @@ import models.repository.Extractor.GeneralExtractor
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.esba.EsbaInfoExtensions._
+import models.request.foreign.ForeignPropertiesInformation
 import models.request.sba.SbaInfo
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.ukrentaroom.RaRAdjustments
@@ -662,4 +663,18 @@ class PropertyService @Inject() (
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
     } yield res
   }
+
+  def saveForeignPropertiesInformation(
+    ctx: JourneyContext,
+    nino: Nino,
+    foreignPropertiesInformation: ForeignPropertiesInformation
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    for {
+      // Persist Answers to Mongo
+      res <- persistAnswers(
+             ctx,
+             foreignPropertiesInformation
+           )
+    } yield res
+
 }
