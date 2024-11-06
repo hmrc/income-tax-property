@@ -26,6 +26,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
+import models.request.foreign.ForeignPropertiesSelectCountry
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
@@ -2179,4 +2180,5 @@ class PropertyServiceSpec
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
+
 }

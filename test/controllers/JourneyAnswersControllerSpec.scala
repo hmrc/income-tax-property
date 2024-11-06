@@ -31,7 +31,6 @@ import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
@@ -98,7 +97,16 @@ class JourneyAnswersControllerSpec
     "return CREATED for valid request body" in {
 
       mockAuthorisation()
-      mockSaveUkRentARoomAbout(ctx, nino, RaRAbout(true, 55.22, ClaimExpensesOrRelief(true, Some(10.22))), true)
+      mockSaveUkRentARoomAbout(
+        ctx,
+        nino,
+        RaRAbout(
+          jointlyLetYesOrNo = true,
+          55.22,
+          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+        ),
+        result = true
+      )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.saveRentARoomAbout(taxYear, incomeSourceId, nino)(request))
@@ -811,8 +819,14 @@ class JourneyAnswersControllerSpec
       mockSaveRentalsAndRentARoomAbout(
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
-        RentalsAndRaRAbout(true, 55.22, true, 22.33, ClaimExpensesOrRelief(true, Some(10.22))),
-        true
+        RentalsAndRaRAbout(
+          jointlyLetYesOrNo = true,
+          55.22,
+          claimPropertyIncomeAllowanceYesOrNo = true,
+          22.33,
+          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+        ),
+        result = true
       )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)

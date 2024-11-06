@@ -662,4 +662,5 @@ class PropertyService @Inject() (
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
     } yield res
   }
+
 }
