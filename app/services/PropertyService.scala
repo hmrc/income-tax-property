@@ -132,7 +132,7 @@ class PropertyService @Inject() (
   private def getValidJourneysPerJourneyName(
     journeyAnswers: List[JourneyAnswers]
   ): Either[ServiceError, Map[String, JourneyAnswers]] = {
-    val journeyAnswersGrouped = journeyAnswers.toList.groupBy(j => j.journey.entryName)
+    val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
     journeyAnswersGrouped.foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (acc, kv) =>
       acc match {
         case Right(ja) =>
@@ -626,7 +626,7 @@ class PropertyService @Inject() (
              PropertyAnnualSubmission
                .fromRentalAllowances(propertyAnnualSubmissionFromDownstream, rentalAllowances)
            )
-      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentalAllowancesStoreAnswers)
+      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), rentalAllowancesStoreAnswers)
     } yield res
   }
 
