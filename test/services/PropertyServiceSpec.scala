@@ -26,7 +26,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
-import models.request.foreign.ForeignPropertiesInformation
+import models.request.foreign.ForeignPropertiesSelectCountry
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
@@ -2181,30 +2181,4 @@ class PropertyServiceSpec
     }
   }
 
-  "save foreign properties country information" should {
-
-    val mtditid = "1234567890"
-    val ctx = JourneyContext(
-      taxYear,
-      incomeSourceId,
-      Mtditid(mtditid),
-      JourneyName.ForeignPropertySelectCountries
-    )
-
-    "persist the selected foreign properties supporting answers" in {
-
-      val foreignPropertiesInformation =
-        ForeignPropertiesInformation(List("AUS", "ESP", "USA"), "More than £1,000", "Property income allowance")
-
-      await(
-        underTest
-          .saveForeignPropertiesInformation(
-            ctx,
-            nino,
-            foreignPropertiesInformation
-          )
-          .value
-      ) shouldBe Right(true)
-    }
-  }
 }

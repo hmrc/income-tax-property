@@ -18,12 +18,12 @@ package models.request.foreign
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ForeignPropertiesInformation(
+final case class ForeignPropertiesSelectCountry(
   countryCodes: List[String],
   foreignTotalIncome: String,
   claimPropertyIncomeAllowanceOrExpenses: String
 )
 
-object ForeignPropertiesInformation {
-  implicit val format: OFormat[ForeignPropertiesInformation] = Json.format[ForeignPropertiesInformation]
+object ForeignPropertiesSelectCountry {
+  implicit val format: OFormat[ForeignPropertiesSelectCountry] = Json.format[ForeignPropertiesSelectCountry]
 }

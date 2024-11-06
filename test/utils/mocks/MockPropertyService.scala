@@ -23,7 +23,6 @@ import models.domain.FetchedPropertyData
 import models.errors.ServiceError
 import models.request._
 import models.request.esba.EsbaInfo
-import models.request.foreign.ForeignPropertiesInformation
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -340,24 +339,4 @@ trait MockPropertyService extends MockFactory {
       .saveRaRAdjustments(_: JourneyContext, _: Nino, _: RaRAdjustments)(_: HeaderCarrier))
       .expects(journeyContext, nino, raRAdjustments, *)
       .returning(EitherT.fromEither(result))
-
-  def mockSaveForeignPropertiesInformation(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertiesInformation: ForeignPropertiesInformation,
-    result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertiesInformation, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Boolean
-  ]] =
-    (mockPropertyService
-      .saveForeignPropertiesInformation(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertiesInformation
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertiesInformation, *)
-      .returning(EitherT.fromEither(result))
-
 }
