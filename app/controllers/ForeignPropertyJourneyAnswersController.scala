@@ -18,26 +18,16 @@ package controllers
 
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
-import models.RentalsAndRaRAbout
 import models.common._
-import models.errors.{CannotParseJsonError, CannotReadJsonError}
-import models.request._
-import models.request.esba.EsbaInfo
-import models.request.esba.EsbaInfo._
-import models.request.foreign.ForeignPropertiesSelectCountry
-import models.request.sba.SbaInfo
-import models.request.ukrentaroom.RaRAdjustments
+import models.request.foreign.ForeignPropertySelectCountry
 import play.api.Logging
-import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.{ForeignPropertyService, PropertyService}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import services.ForeignPropertyService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.JsonSupport._
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 
 class ForeignPropertyJourneyAnswersController @Inject() (
   propertyService: ForeignPropertyService,
@@ -49,15 +39,15 @@ class ForeignPropertyJourneyAnswersController @Inject() (
 
   def saveSelectCountrySection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[ForeignPropertiesSelectCountry](
+      withJourneyContextAndEntity[ForeignPropertySelectCountry](
         taxYear,
         incomeSourceId,
         nino,
         JourneyName.ForeignPropertySelectCountry,
         request
-      ) { (ctx, foreignPropertiesSelectCountry: ForeignPropertiesSelectCountry) =>
+      ) { (ctx, foreignPropertySelectCountry: ForeignPropertySelectCountry) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertiesSelectCountry(ctx, nino, foreignPropertiesSelectCountry)
+          propertyService.saveForeignPropertySelectCountry(ctx, nino, foreignPropertySelectCountry)
         }
       }
     }

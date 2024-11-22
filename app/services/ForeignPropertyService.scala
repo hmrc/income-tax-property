@@ -21,7 +21,7 @@ import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.common._
 import models.errors._
-import models.request.foreign.ForeignPropertiesSelectCountry
+import models.request.foreign.ForeignPropertySelectCountry
 import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -47,14 +47,14 @@ class ForeignPropertyService @Inject() (
       }
     )
 
-  def saveForeignPropertiesSelectCountry(
+  def saveForeignPropertySelectCountry(
     ctx: JourneyContext,
     nino: Nino,
-    foreignPropertiesSelectCountry: ForeignPropertiesSelectCountry
+    foreignPropertySelectCountry: ForeignPropertySelectCountry
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     persistAnswers(
       ctx,
-      foreignPropertiesSelectCountry
+      foreignPropertySelectCountry
     )
 
 }

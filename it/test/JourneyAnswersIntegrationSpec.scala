@@ -17,10 +17,11 @@
 import connectors.ConnectorIntegrationTest
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
-import models.domain.FetchedPropertyData
+import models.domain.{FetchedPropertyData, JourneyWithStatus}
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
+import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -389,8 +390,9 @@ class JourneyAnswersIntegrationSpec
             Some(14)
           )
         ),
-        journeyStatuses = List()
-      )
+        journeyStatuses = List(),
+        foreignPropertySelectCountry = None)
+
     }
     "the downstream receives the expected payload when upload happens" in {
 

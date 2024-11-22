@@ -19,7 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
-import models.request.foreign.ForeignPropertiesSelectCountry
+import models.request.foreign.ForeignPropertySelectCountry
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import services.ForeignPropertyService
@@ -35,18 +35,18 @@ trait MockForeignPropertyService extends MockFactory {
   def mockSaveSelectCountrySection(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignPropertiesInformation: ForeignPropertiesSelectCountry,
+    foreignPropertiesInformation: ForeignPropertySelectCountry,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertiesSelectCountry, HeaderCarrier, EitherT[
+  ): CallHandler4[JourneyContext, Nino, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Boolean
   ]] =
     (mockForeignPropertyService
-      .saveForeignPropertiesSelectCountry(
+      .saveForeignPropertySelectCountry(
         _: JourneyContext,
         _: Nino,
-        _: ForeignPropertiesSelectCountry
+        _: ForeignPropertySelectCountry
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignPropertiesInformation, *)
       .returning(EitherT.fromEither(result))

@@ -19,6 +19,7 @@ package models.domain
 import models.RentalsAndRaRAbout
 import models.request._
 import models.request.esba.EsbaInfo
+import models.request.foreign.ForeignPropertySelectCountry
 import models.request.sba.SbaInfo
 import models.request.ukrentaroom.RaRAdjustments
 import play.api.libs.json.{Json, OFormat}
@@ -44,7 +45,8 @@ final case class FetchedPropertyData(
   rarExpenses: Option[RentARoomExpenses],
   raRAdjustments: Option[RaRAdjustments],
   rentARoomAllowances: Option[RentARoomAllowances],
-  journeyStatuses: List[JourneyWithStatus]
+  journeyStatuses: List[JourneyWithStatus],
+  foreignPropertySelectCountry: Option[ForeignPropertySelectCountry]
 )
 
 object FetchedPropertyData {

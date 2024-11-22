@@ -24,6 +24,7 @@ import models.domain.FetchedPropertyData
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
+import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -776,7 +777,8 @@ class JourneyAnswersControllerSpec
         None,
         None,
         None,
-        List()
+        List(),
+        Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
