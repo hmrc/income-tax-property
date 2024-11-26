@@ -26,7 +26,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
-import models.request.foreign.ForeignPropertiesSelectCountry
+import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
@@ -200,7 +200,7 @@ class PropertyServiceSpec
     }
   }
 
-  val validCreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
+  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
     None,
@@ -211,7 +211,7 @@ class PropertyServiceSpec
       )
     )
   )
-  val validUpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
+  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
     None,
     Some(
       UkOtherProperty(
@@ -731,7 +731,7 @@ class PropertyServiceSpec
       val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
 
       val annualSubmissionAfterAdditionOfEsbas =
-        createAnnualSubmission(Some(sbaInfo.toSba.toList), None)
+        createAnnualSubmission(Some(sbaInfo.toSba), None)
 
       mockGetPropertyAnnualSubmission(
         taxYear,
@@ -759,15 +759,15 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val propertyRentalsIncome = PropertyRentalsIncome(
-      true,
+      isNonUKLandlord = true,
       12.34,
       13.46,
-      Some(DeductingTax(true, Some(14.51))),
-      Some(CalculatedFigureYourself(true, Some(14.75))),
+      Some(DeductingTax(taxDeductedYesNo = true, Some(14.51))),
+      Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(14.75))),
       Some(98.78),
       Some(64.23),
-      Some(PremiumsGrantLease(true, Some(93.85))),
-      Some(ReversePremiumsReceived(true, Some(913.84)))
+      Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(93.85))),
+      Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
     )
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
@@ -1495,7 +1495,8 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          List()
+          List(),
+          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
         )
       forAll(scenarios) {
         (
@@ -1790,10 +1791,10 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val ukRaRAbout = RaRAbout(
-      true,
+      jointlyLetYesOrNo = true,
       55.22,
       ClaimExpensesOrRelief(
-        true,
+        claimExpensesOrReliefYesNo = true,
         Some(22.55)
       )
     )
@@ -1934,12 +1935,12 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val rentalsAndRaRAbout = RentalsAndRaRAbout(
-      true,
+      jointlyLetYesOrNo = true,
       55.22,
-      true,
+      claimPropertyIncomeAllowanceYesOrNo = true,
       22.33,
       ClaimExpensesOrRelief(
-        true,
+        claimExpensesOrReliefYesNo = true,
         Some(22.55)
       )
     )

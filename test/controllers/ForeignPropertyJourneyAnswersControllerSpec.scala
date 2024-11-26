@@ -19,7 +19,7 @@ package controllers
 import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
-import models.request.foreign.ForeignPropertiesSelectCountry
+import models.request.foreign.ForeignPropertySelectCountry
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -51,9 +51,8 @@ class ForeignPropertyJourneyAnswersControllerSpec
     val validRequestBody: JsValue =
       Json.parse("""{
                    |
-                   |     "countryCodes" : ["ESP", "USA"],
-                   |     "foreignTotalIncome" : "More than £1,000",
-                   |     "claimPropertyIncomeAllowanceOrExpenses" : "Property income Allowance"
+                   |     "totalIncome" : "lessThanOneThousand",
+                   |     "claimPropertyIncomeAllowance" : false
                    |
                    |}""".stripMargin)
 
@@ -63,7 +62,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return boolean true for valid request body" in {
-      val foreignPropertyInformation = validRequestBody.as[ForeignPropertiesSelectCountry]
+      val foreignPropertyInformation = validRequestBody.as[ForeignPropertySelectCountry]
 
       mockAuthorisation()
       mockSaveSelectCountrySection(
@@ -87,7 +86,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
       forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
-        val foreignPropertyInformation = validRequestBody.as[ForeignPropertiesSelectCountry]
+        val foreignPropertyInformation = validRequestBody.as[ForeignPropertySelectCountry]
 
         mockAuthorisation()
         mockSaveSelectCountrySection(

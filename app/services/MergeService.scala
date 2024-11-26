@@ -22,6 +22,7 @@ import models.domain.{FetchedPropertyData, JourneyAnswers, JourneyWithStatus}
 import models.repository.Merger._
 import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
+import models.request.foreign.ForeignPropertySelectCountry
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -50,6 +51,10 @@ class MergeService @Inject() (implicit
       mergeSbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalsAndRaRESBA.entryName))
 
     val propertyAboutMaybe = mergePropertyAbout(resultFromRepository.get(JourneyName.About.entryName))
+
+    val foreignPropertySelectCountryMaybe = mergeForeignPropertySelectCountry(
+      resultFromRepository.get(JourneyName.ForeignPropertySelectCountry.entryName)
+    )
 
     val propertyRentalsAboutMaybe = mergePropertyRentalsAbout(
       resultFromRepository.get(JourneyName.RentalAbout.entryName)
@@ -160,7 +165,8 @@ class MergeService @Inject() (implicit
       rarExpenses = rarExpensesMaybe,
       raRAdjustments = raRAdjustmentsMaybe,
       rentARoomAllowances = rentARoomAllowancesMaybe,
-      journeyStatuses = journeyStatuses
+      journeyStatuses = journeyStatuses,
+      foreignPropertySelectCountry = foreignPropertySelectCountryMaybe
     )
 
     data
@@ -258,6 +264,14 @@ class MergeService @Inject() (implicit
       case None                 => None
     }
 
+  def mergeForeignPropertySelectCountry(
+    resultFromRepository: Option[JourneyAnswers]
+  ): Option[ForeignPropertySelectCountry] =
+    resultFromRepository match {
+      case Some(journeyAnswers: JourneyAnswers) => Some(journeyAnswers.data.as[ForeignPropertySelectCountry])
+      case None                                 => None
+    }
+
   def mergePropertyRentalsAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyRentalsAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyRentalsAbout])
@@ -320,7 +334,8 @@ class MergeService @Inject() (implicit
     JourneyName.values.toList.flatMap(journeyName =>
       resultFromRepository
         .get(journeyName.entryName)
-        .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName)))
+        .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
+    )
 
   def mergeAdjustments(
     resultFromDownstream: PropertyAnnualSubmission,
