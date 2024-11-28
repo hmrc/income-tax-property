@@ -19,7 +19,8 @@ package controllers
 import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
-import models.request.foreign.ForeignPropertySelectCountry
+import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
+import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -107,5 +108,87 @@ class ForeignPropertyJourneyAnswersControllerSpec
       val result = underTest.saveSelectCountrySection(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
+  }
+
+  "create or update foreign tax section " should {
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
+        JourneyName.ForeignPropertyTax
+      )
+    val validRequestBody: JsValue =
+      Json.parse("""
+                   |{
+                   |  "countryCode": "USA",
+                   |  "foreignIncomeTax": {
+                   |    "foreignIncomeTaxYesNo": true,
+                   |    "foreignTaxPaidOrDeducted": 65
+                   |     },
+                   |  "foreignTaxCreditRelief": true
+                   |}
+                   |""".stripMargin)
+
+    val foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode =
+      validRequestBody.as[ForeignPropertyTaxWithCountryCode]
+
+    "saveForeignPropertyTax" should {
+
+      "return NO_CONTENT when save operation is successful" in {
+        mockAuthorisation()
+        mockSaveForeignPropertyTax(
+          ctx,
+          nino,
+          foreignPropertyTaxWithCountryCode,
+          Right(Some(PeriodicSubmissionId("submissionId")))
+        )
+
+        val request = fakePostRequest.withJsonBody(validRequestBody)
+        val result = await(underTest.saveForeignPropertyTax(taxYear, incomeSourceId, nino)(request))
+
+        result.header.status shouldBe NO_CONTENT
+      }
+
+      "return service error when downstream API responds with an error" in {
+        val scenarios = Table[ServiceError, Int](
+          ("Service Error", "Expected Response"),
+          (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+          (ApiServiceError(CONFLICT), CONFLICT),
+          (InvalidJsonFormatError("ForeignPropertyTax", "Invalid data", Nil), INTERNAL_SERVER_ERROR)
+        )
+
+        forAll(scenarios) { (serviceError: ServiceError, expectedResponse: Int) =>
+          mockAuthorisation()
+          mockSaveForeignPropertyTax(
+            ctx,
+            nino,
+            foreignPropertyTaxWithCountryCode,
+            Left(serviceError)          )
+
+          val request = fakePostRequest.withJsonBody(validRequestBody)
+          val result = await(underTest.saveForeignPropertyTax(taxYear, incomeSourceId, nino)(request))
+
+          result.header.status shouldBe expectedResponse
+        }
+      }
+
+      "return BAD_REQUEST when request body is invalid" in {
+        val invalidRequestBody: JsValue = Json.obj("invalid" -> "data")
+
+        mockAuthorisation()
+        val request = fakePostRequest.withJsonBody(invalidRequestBody)
+        val result = underTest.saveForeignPropertyTax(taxYear, incomeSourceId, nino)(request)
+
+        status(result) shouldBe BAD_REQUEST
+      }
+
+      "return BAD_REQUEST when request body is missing" in {
+        mockAuthorisation()
+        val request = fakePostRequest
+        val result = underTest.saveForeignPropertyTax(taxYear, incomeSourceId, nino)(request)
+
+        status(result) shouldBe BAD_REQUEST
+      }
+    }
+
   }
 }

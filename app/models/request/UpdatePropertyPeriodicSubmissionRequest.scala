@@ -18,9 +18,11 @@ package models.request
 
 import cats.implicits.catsSyntaxEitherId
 import models.errors.{InternalError, ServiceError}
+import models.request.foreign.ForeignPropertyTaxWithCountryCode
 import models.responses._
 import models.{RentalsAndRaRAbout, responses}
-import monocle.Optional
+import monocle.macros.GenLens
+import monocle.{Lens, Optional}
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 
@@ -89,7 +91,8 @@ object UpdatePropertyPeriodicSubmissionRequest {
       case e @ RentalsAndRaRIncome(_, _, _, _, _, _, _, _)      => fromRentalsAndRaRIncome(periodicSubmissionMaybe, e)
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(periodicSubmissionMaybe, e).asRight[ServiceError]
-      case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
+      case e @ RentalsAndRaRAbout(_, _, _, _, _)          => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
+      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
           .asLeft[UpdatePropertyPeriodicSubmissionRequest]
@@ -337,6 +340,75 @@ object UpdatePropertyPeriodicSubmissionRequest {
     val result: UpdatePropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
     result.asRight[ServiceError]
+  }
+
+  def fromForeignPropertyTax(
+    maybeSubmission: Option[PropertyPeriodicSubmission],
+    foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode
+  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+
+    val targetCountryCode = foreignPropertyTaxWithCountryCode.countryCode
+
+    val foreignPropertyLens: Lens[UpdatePropertyPeriodicSubmissionRequest, Option[Seq[ForeignProperty]]] =
+      GenLens[UpdatePropertyPeriodicSubmissionRequest](_.foreignProperty)
+
+    val foreignPropertyIncomeLens: Lens[ForeignProperty, Option[ForeignPropertyIncome]] =
+      GenLens[ForeignProperty](_.income)
+
+    val filteredForeignPropertyLens: Optional[UpdatePropertyPeriodicSubmissionRequest, ForeignProperty] =
+      foreignPropertyLens.some.andThen(
+        Optional[Seq[ForeignProperty], ForeignProperty](_.find(_.countryCode == targetCountryCode)) { fp => seq =>
+          seq.map(existing => if (existing.countryCode == targetCountryCode) fp else existing)
+        }
+      )
+
+    val filteredForeignPropertyIncomeLens: Optional[UpdatePropertyPeriodicSubmissionRequest, ForeignPropertyIncome] =
+      filteredForeignPropertyLens.andThen(foreignPropertyIncomeLens.some)
+
+    val (periodicSubmission, maybeForeignPropertyExpenses, maybeForeignPropertyIncome)
+      : (Option[PropertyPeriodicSubmission], Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
+      maybeSubmission match {
+        case Some(
+              pps @ PropertyPeriodicSubmission(
+                _,
+                _,
+                _,
+                _,
+                Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _
+              )
+            ) =>
+          (Some(pps), Some(expenses), Some(income))
+        case Some(pps) => (Some(pps), None, None)
+        case _         => (None, None, None)
+      }
+
+    val foreignPropertyIncome = ForeignPropertyIncome(
+      rentIncome = maybeForeignPropertyIncome.flatMap(_.rentIncome),
+      foreignTaxCreditRelief = foreignPropertyTaxWithCountryCode.foreignTaxCreditRelief,
+      premiumsOfLeaseGrant = maybeForeignPropertyIncome.flatMap(_.premiumsOfLeaseGrant),
+      otherPropertyIncome = maybeForeignPropertyIncome.flatMap(_.otherPropertyIncome),
+      foreignTaxPaidOrDeducted =
+        Some(foreignPropertyTaxWithCountryCode.foreignIncomeTax.flatMap(_.foreignTaxPaidOrDeducted).getOrElse(0)),
+      specialWithholdingTaxOrUkTaxPaid = maybeForeignPropertyIncome.flatMap(_.specialWithholdingTaxOrUkTaxPaid)
+    )
+
+    val requestWithEmptyForeignPropertyIncome = UpdatePropertyPeriodicSubmissionRequest(
+      Some(
+        Seq(
+          ForeignProperty(
+            targetCountryCode,
+            Some(ForeignPropertyIncome(None, None, None, None, None, None)),
+            maybeForeignPropertyExpenses
+          )
+        )
+      ),
+      ukOtherProperty = periodicSubmission.flatMap(_.ukOtherProperty)
+    )
+
+    val updatedRequest =
+      filteredForeignPropertyIncomeLens.replace(foreignPropertyIncome)(requestWithEmptyForeignPropertyIncome)
+    Right(updatedRequest)
   }
 
   def fromRentalsAndRaRIncome(
