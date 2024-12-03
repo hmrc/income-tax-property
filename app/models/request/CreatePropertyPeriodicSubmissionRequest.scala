@@ -62,7 +62,7 @@ object CreatePropertyPeriodicSubmissionRequest {
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
       case e @ RentalsAndRaRAbout(_, _, _, _, _)          => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => foreignPropertyTax(taxYear, periodicSubmissionMaybe, e)
+      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
 
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
@@ -370,7 +370,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     result.asRight[ServiceError]
   }
 
-  def foreignPropertyTax(
+  def fromForeignPropertyTax(
     taxYear: TaxYear,
     maybeSubmission: Option[PropertyPeriodicSubmission],
     foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode

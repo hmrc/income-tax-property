@@ -124,7 +124,7 @@ class ForeignPropertyServiceSpec
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.foreignPropertyTax(
+        CreatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
           taxYear,
           Some(emptyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode
@@ -168,7 +168,7 @@ class ForeignPropertyServiceSpec
         )
 
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.foreignPropertyTax(
+        CreatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
           taxYear,
           Some(emptyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode
