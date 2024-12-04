@@ -50,8 +50,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
             .name("TTL_UpdatedAt_Index")
         ),
         IndexModel(
-          Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey"),
-          IndexOptions().name("mtditid_taxYear_incomeSourceId_journey").unique(true)
+          Indexes.ascending("mtditid", "taxYear", "incomeSourceId", "journey", "countryCode"),
+          IndexOptions().name("mtditid_taxYear_incomeSourceId_journey_countryCode").unique(true)
         )
       )
     ) with Logging {
@@ -62,9 +62,24 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     Filters.eq("incomeSourceId", ctx.incomeSourceId.value),
     Filters.eq("journey", ctx.journey.entryName)
   )
+  private def foreignFilterJourney(ctx: JourneyContext, countryCode: String) = Filters.and(
+    Filters.eq("mtditid", ctx.mtditid.value),
+    Filters.eq("taxYear", ctx.taxYear.endYear),
+    Filters.eq("incomeSourceId", ctx.incomeSourceId.value),
+    Filters.eq("journey", ctx.journey.entryName),
+    Filters.eq("countryCode", countryCode)
+  )
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[Boolean] = {
     val filter = filterJourney(ctx)
+    val bson = BsonDocument(Json.stringify(newData))
+    val update = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture().map(_ => true)
+  }
+  def foreignUpsertAnswers(ctx: JourneyContext, newData: JsValue, countryCode: String): Future[Boolean] = {
+    val filter = foreignFilterJourney(ctx, countryCode)
     val bson = BsonDocument(Json.stringify(newData))
     val update = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
     val options = new UpdateOptions().upsert(true)
