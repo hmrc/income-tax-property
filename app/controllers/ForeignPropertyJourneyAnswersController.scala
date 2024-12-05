@@ -19,8 +19,8 @@ package controllers
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
+import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ForeignPropertyService
@@ -46,7 +46,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertySelectCountry: ForeignPropertySelectCountry) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertySelectCountry(ctx,foreignPropertySelectCountry)
+          propertyService.saveForeignPropertySelectCountry(ctx, foreignPropertySelectCountry)
         }
       }
     }
@@ -81,6 +81,21 @@ class ForeignPropertyJourneyAnswersController @Inject() (
       ) { (ctx, foreignPropertyExpenses: ForeignPropertyExpenses) =>
         handleResponse(NO_CONTENT) {
           propertyService.saveForeignPropertyExpenses(ctx, foreignPropertyExpenses)
+        }
+      }
+    }
+
+  def saveForeignIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[ForeignIncome](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.ForeignIncomeJourney,
+        request
+      ) { (ctx, foreignPropertyIncome: ForeignIncome) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.saveForeignIncome(ctx, nino, foreignPropertyIncome)
         }
       }
     }
