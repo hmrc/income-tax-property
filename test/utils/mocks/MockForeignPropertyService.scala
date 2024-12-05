@@ -19,6 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
+import models.request.foreign.expenses.ForeignPropertyExpenses
 import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
@@ -35,10 +36,9 @@ trait MockForeignPropertyService extends MockFactory {
 
   def mockSaveSelectCountrySection(
     journeyContext: JourneyContext,
-    nino: Nino,
     foreignPropertiesInformation: ForeignPropertySelectCountry,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
+  ): CallHandler3[JourneyContext, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Boolean
@@ -46,10 +46,9 @@ trait MockForeignPropertyService extends MockFactory {
     (mockForeignPropertyService
       .saveForeignPropertySelectCountry(
         _: JourneyContext,
-        _: Nino,
         _: ForeignPropertySelectCountry
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertiesInformation, *)
+      .expects(journeyContext, foreignPropertiesInformation, *)
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignPropertyTax(
@@ -69,6 +68,23 @@ trait MockForeignPropertyService extends MockFactory {
         _: ForeignPropertyTaxWithCountryCode
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignPropertyTaxWithCountryCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveForeignPropertyExpenses(
+    journeyContext: JourneyContext,
+    foreignPropertyExpenses: ForeignPropertyExpenses,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler3[JourneyContext, ForeignPropertyExpenses, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockForeignPropertyService
+      .saveForeignPropertyExpenses(
+        _: JourneyContext,
+        _: ForeignPropertyExpenses
+      )(_: HeaderCarrier))
+      .expects(journeyContext, foreignPropertyExpenses, *)
       .returning(EitherT.fromEither(result))
 
 }

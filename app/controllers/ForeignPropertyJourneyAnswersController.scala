@@ -19,11 +19,11 @@ package controllers
 import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
+import models.request.foreign.expenses.ForeignPropertyExpenses
 import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ForeignPropertyService
-import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -31,7 +31,6 @@ import scala.concurrent.ExecutionContext
 
 class ForeignPropertyJourneyAnswersController @Inject() (
   propertyService: ForeignPropertyService,
-  journeyStatusService: JourneyStatusService,
   auth: AuthorisedAction,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -47,7 +46,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertySelectCountry: ForeignPropertySelectCountry) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertySelectCountry(ctx, nino, foreignPropertySelectCountry)
+          propertyService.saveForeignPropertySelectCountry(ctx,foreignPropertySelectCountry)
         }
       }
     }
@@ -67,6 +66,21 @@ class ForeignPropertyJourneyAnswersController @Inject() (
       ) { (ctx, foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode) =>
         handleResponse(NO_CONTENT) {
           propertyService.saveForeignPropertyTax(ctx, nino, foreignPropertyTaxWithCountryCode)
+        }
+      }
+    }
+
+  def saveForeignPropertyExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[ForeignPropertyExpenses](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.ForeignPropertyExpenses,
+        request
+      ) { (ctx, foreignPropertyExpenses: ForeignPropertyExpenses) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.saveForeignPropertyExpenses(ctx, foreignPropertyExpenses)
         }
       }
     }
