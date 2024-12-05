@@ -32,7 +32,6 @@ import scala.concurrent.ExecutionContext
 
 class ForeignPropertyJourneyAnswersController @Inject() (
   propertyService: ForeignPropertyService,
-  journeyStatusService: JourneyStatusService,
   auth: AuthorisedAction,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -48,7 +47,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertySelectCountry: ForeignPropertySelectCountry) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertySelectCountry(ctx, nino, foreignPropertySelectCountry)
+          propertyService.saveForeignPropertySelectCountry(ctx,foreignPropertySelectCountry)
         }
       }
     }
@@ -82,7 +81,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertyExpenses: ForeignPropertyExpenses) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertyExpenses(ctx, nino, foreignPropertyExpenses)
+          propertyService.saveForeignPropertyExpenses(ctx, foreignPropertyExpenses)
         }
       }
     }

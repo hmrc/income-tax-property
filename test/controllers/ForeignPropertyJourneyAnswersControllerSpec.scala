@@ -37,7 +37,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
 
   private val underTest = new ForeignPropertyJourneyAnswersController(
     mockForeignPropertyService,
-    journeyStatusService,
     mockAuthorisedAction,
     cc
   )
@@ -69,7 +68,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
       mockAuthorisation()
       mockSaveSelectCountrySection(
         ctx,
-        nino,
         foreignPropertyInformation,
         true.asRight[ServiceError]
       )
@@ -93,7 +91,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
         mockAuthorisation()
         mockSaveSelectCountrySection(
           ctx,
-          nino,
           foreignPropertyInformation,
           serviceError.asLeft[Boolean]
         )
@@ -218,7 +215,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
       mockAuthorisation()
       mockSaveForeignPropertyExpenses(
         ctx,
-        nino,
         foreignPropertyExpenses,
         true.asRight[ServiceError]
       )

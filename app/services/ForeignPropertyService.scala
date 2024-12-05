@@ -63,7 +63,6 @@ class ForeignPropertyService @Inject() (
 
   def saveForeignPropertySelectCountry(
     ctx: JourneyContext,
-    nino: Nino,
     foreignPropertySelectCountry: ForeignPropertySelectCountry
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     persistAnswers(
@@ -73,7 +72,6 @@ class ForeignPropertyService @Inject() (
 
   def saveForeignPropertyExpenses(
     ctx: JourneyContext,
-    nino: Nino,
     foreignPropertyExpenses: ForeignPropertyExpenses
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     persistForeignAnswers(ctx, foreignPropertyExpenses, foreignPropertyExpenses.countryCode)

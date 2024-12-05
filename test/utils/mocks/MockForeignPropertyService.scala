@@ -36,10 +36,9 @@ trait MockForeignPropertyService extends MockFactory {
 
   def mockSaveSelectCountrySection(
     journeyContext: JourneyContext,
-    nino: Nino,
     foreignPropertiesInformation: ForeignPropertySelectCountry,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
+  ): CallHandler3[JourneyContext, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Boolean
@@ -47,10 +46,9 @@ trait MockForeignPropertyService extends MockFactory {
     (mockForeignPropertyService
       .saveForeignPropertySelectCountry(
         _: JourneyContext,
-        _: Nino,
         _: ForeignPropertySelectCountry
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertiesInformation, *)
+      .expects(journeyContext, foreignPropertiesInformation, *)
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignPropertyTax(
@@ -74,10 +72,9 @@ trait MockForeignPropertyService extends MockFactory {
 
   def mockSaveForeignPropertyExpenses(
     journeyContext: JourneyContext,
-    nino: Nino,
     foreignPropertyExpenses: ForeignPropertyExpenses,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyExpenses, HeaderCarrier, EitherT[
+  ): CallHandler3[JourneyContext, ForeignPropertyExpenses, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Boolean
@@ -85,10 +82,9 @@ trait MockForeignPropertyService extends MockFactory {
     (mockForeignPropertyService
       .saveForeignPropertyExpenses(
         _: JourneyContext,
-        _: Nino,
         _: ForeignPropertyExpenses
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyExpenses, *)
+      .expects(journeyContext, foreignPropertyExpenses, *)
       .returning(EitherT.fromEither(result))
 
 }

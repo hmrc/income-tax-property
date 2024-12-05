@@ -82,7 +82,6 @@ class ForeignPropertyServiceSpec
         underTest
           .saveForeignPropertySelectCountry(
             ctx,
-            nino,
             foreignPropertySelectCountry
           )
           .value
@@ -174,7 +173,6 @@ class ForeignPropertyServiceSpec
           underTest
             .saveForeignPropertyExpenses(
               ctx,
-              nino,
               foreignPropertyExpenses
             )
             .value
