@@ -24,7 +24,6 @@ import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxW
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ForeignPropertyService
-import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
