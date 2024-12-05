@@ -22,6 +22,7 @@ import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
+import models.request.foreign.expenses.ForeignPropertyExpenses
 import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
@@ -69,6 +70,14 @@ class ForeignPropertyService @Inject() (
       ctx,
       foreignPropertySelectCountry
     )
+
+  def saveForeignPropertyExpenses(
+    ctx: JourneyContext,
+    nino: Nino,
+    foreignPropertyExpenses: ForeignPropertyExpenses
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    persistForeignAnswers(ctx, foreignPropertyExpenses, foreignPropertyExpenses.countryCode)
+
   def saveForeignPropertyTax(
     journeyContext: JourneyContext,
     nino: Nino,

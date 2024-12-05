@@ -19,10 +19,10 @@ package services
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
-import models.common.JourneyName.ForeignPropertyTax
 import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import models.request.foreign._
+import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -146,6 +146,40 @@ class ForeignPropertyServiceSpec
           )
           .value
       ) shouldBe Right(Some(PeriodicSubmissionId("")))
+    }
+
+    "save foreign property expenses" should {
+
+      val mtditid = "1234567890"
+      val ctx = JourneyContext(
+        taxYear,
+        incomeSourceId,
+        Mtditid(mtditid),
+        JourneyName.ForeignPropertyExpenses
+      )
+
+      "persist the foreign expenses" in {
+
+        val foreignPropertyExpenses = ForeignPropertyExpenses(
+          countryCode = "BRA",
+          consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
+          premisesRunningCosts = Some(50),
+          repairsAndMaintenance = Some(60),
+          financialCosts = Some(675),
+          professionalFees = Some(85),
+          costOfServices = Some(234),
+          other = Some(99)
+        )
+        await(
+          underTest
+            .saveForeignPropertyExpenses(
+              ctx,
+              nino,
+              foreignPropertyExpenses
+            )
+            .value
+        ) shouldBe Right(true)
+      }
     }
 
     "return ApiError for invalid request" in {
