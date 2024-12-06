@@ -22,7 +22,9 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "response.*",
     "logging.*",
     "utils.*",
-    "Mock*.scala"
+    "Mock*.scala",
+    "foreign.Routes",
+    "foreign.RoutesPrefix"
   )
 
   Seq(
