@@ -17,12 +17,17 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*",
     "controllers.testOnly.*",
-    "models.*"
+    "models.*",
+    "request.*",
+    "response.*",
+    "logging.*",
+    "utils.*",
+    "Mock*.scala"
   )
 
   Seq(
     ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 70,
+    ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )

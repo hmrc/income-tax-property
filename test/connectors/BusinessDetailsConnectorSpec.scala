@@ -25,7 +25,7 @@ import utils.builders.IncomeSourceDetailsBuilder.anIncomeSourceDetails
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessDetailsConnectorISpec extends ConnectorIntegrationTest with MockFactory {
+class BusinessDetailsConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
   private val nino = "some-nino"
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))

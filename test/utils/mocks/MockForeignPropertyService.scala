@@ -92,7 +92,7 @@ trait MockForeignPropertyService extends MockFactory {
     nino: Nino,
     foreignIncome: ForeignIncome,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignIncome, HeaderCarrier, EitherT[
+  ): CallHandler3[JourneyContext, ForeignIncome, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Boolean
@@ -100,10 +100,9 @@ trait MockForeignPropertyService extends MockFactory {
     (mockForeignPropertyService
       .saveForeignIncome(
         _: JourneyContext,
-        _: Nino,
         _: ForeignIncome
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignIncome, *)
+      .expects(journeyContext, foreignIncome, *)
       .returning(EitherT.fromEither(result))
 
 }

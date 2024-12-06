@@ -269,7 +269,6 @@ class ForeignPropertyService @Inject() (
 
   def saveForeignIncome(
     ctx: JourneyContext,
-    nino: Nino,
     foreignPropertyIncome: ForeignIncome
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     persistForeignAnswers(

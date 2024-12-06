@@ -95,7 +95,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertyIncome: ForeignIncome) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignIncome(ctx, nino, foreignPropertyIncome)
+          propertyService.saveForeignIncome(ctx, foreignPropertyIncome)
         }
       }
     }

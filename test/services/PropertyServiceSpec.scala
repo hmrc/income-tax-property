@@ -43,7 +43,7 @@ import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import java.time.{Clock, LocalDate, LocalDateTime}
@@ -51,13 +51,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
+  private val underTest = new PropertyService(mergeService, mockIntegrationConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"
@@ -200,26 +200,28 @@ class PropertyServiceSpec
     }
   }
 
-  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
-    LocalDate.now(),
-    LocalDate.now(),
-    None,
-    Some(
-      UkOtherProperty(
-        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-        None
+  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
+    CreatePropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      None,
+      Some(
+        UkOtherProperty(
+          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+          None
+        )
       )
     )
-  )
-  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest = UpdatePropertyPeriodicSubmissionRequest(
-    None,
-    Some(
-      UkOtherProperty(
-        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-        None
+  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
+    UpdatePropertyPeriodicSubmissionRequest(
+      None,
+      Some(
+        UkOtherProperty(
+          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+          None
+        )
       )
     )
-  )
 
   val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,
@@ -854,6 +856,113 @@ class PropertyServiceSpec
             ctx.toJourneyContext(JourneyName.RentalIncome),
             nino,
             propertyRentalsIncome
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "save rentals and rar income" should {
+
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+
+    val rentalsAndRaRIncome = RentalsAndRaRIncome(
+      isNonUKLandlord = true,
+      otherIncomeFromProperty = 98.45,
+      deductingTax = Some(DeductingTax(taxDeductedYesNo = true, Some(125.50))),
+      calculatedFigureYourself = Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(58.75))),
+      yearLeaseAmount = Some(55.78),
+      receivedGrantLeaseAmount = Some(65.05),
+      premiumsGrantLease = Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(93.85))),
+      reversePremiumsReceived = Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
+    )
+
+    "return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
+        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
+          taxYear,
+          Some(emptyPeriodicSubmission),
+          rentalsAndRaRIncome
+        )
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("")).asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveRentalsAndRaRIncome(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            nino,
+            rentalsAndRaRIncome
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("")))
+    }
+
+    "return ApiError for invalid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
+        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
+          taxYear,
+          Some(emptyPeriodicSubmission),
+          rentalsAndRaRIncome
+        )
+
+      mockCreatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Option[PeriodicSubmissionId]]
+      )
+      await(
+        underTest
+          .saveRentalsAndRaRIncome(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            nino,
+            rentalsAndRaRIncome
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
