@@ -23,27 +23,27 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import models.request.foreign._
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
+import models.request._
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
+  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   val taxYear: TaxYear = TaxYear(2024)
@@ -89,6 +89,38 @@ class ForeignPropertyServiceSpec
     }
   }
 
+  "save the foreign income supporting answers" in {
+
+    val ctx = JourneyContext(
+      taxYear,
+      incomeSourceId,
+      Mtditid(mtditid),
+      JourneyName.ForeignPropertySelectCountry
+    )
+
+    val foreignIncome = ForeignIncome(
+      countryCode = "AUS",
+      rentIncome = 1.0,
+      premiumsGrantLeaseReceived = true,
+      reversePremiumsReceived = ReversePremiumsReceived(reversePremiumsReceived = true, Some(BigDecimal(2.50))),
+      otherPropertyIncome = BigDecimal(54.94),
+      calculatedPremiumLeaseTaxable =
+        Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+      receivedGrantLeaseAmount = Some(3.45),
+      twelveMonthPeriodsInLease = Some(5),
+      premiumsOfLeaseGrantAgreed =
+        Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
+    )
+
+    await(
+      underTest
+        .saveForeignIncome(
+          ctx,
+          foreignIncome
+        )
+        .value
+    ) shouldBe Right(true)
+  }
   "save foreign property tax" should {
 
     val foreignPropertyTaxWithCountryCode =

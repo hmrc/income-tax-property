@@ -22,8 +22,8 @@ import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
+import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
@@ -266,5 +266,15 @@ class ForeignPropertyService @Inject() (
     submissions: List[PropertyPeriodicSubmission]
   ): Either[ServiceError, PropertyPeriodicSubmissionResponse] =
     Right(PropertyPeriodicSubmissionResponse(submissions))
+
+  def saveForeignIncome(
+    ctx: JourneyContext,
+    foreignPropertyIncome: ForeignIncome
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    persistForeignAnswers(
+      ctx,
+      foreignPropertyIncome,
+      foreignPropertyIncome.countryCode
+    )
 
 }

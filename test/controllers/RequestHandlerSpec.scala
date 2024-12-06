@@ -53,7 +53,7 @@ class RequestHandlerSpec
                                                |            },
                                                |            "reversePremiumsReceived" : {
                                                |                "reversePremiumsReceived" : true,
-                                               |                "amount" : 10
+                                               |                "reversePremiums" : 10
                                                |            }
                                                |        }
                                                |""".stripMargin)
