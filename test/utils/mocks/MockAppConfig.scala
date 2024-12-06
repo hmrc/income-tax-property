@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package models.auth
+package utils.mocks
 
-sealed abstract class Enrolment(val key: String, val value: String)
+import config.AppConfig
+import org.scalamock.handlers.CallHandler0
+import org.scalamock.scalatest.MockFactory
 
-object Enrolment {
-  case object Individual extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
-  case object SupportingAgent extends Enrolment(key = "HMRC-MTD-IT-SUPP", value = "MTDITID")
-  case object Agent extends Enrolment(key = "HMRC-AS-AGENT", value = "AgentReferenceNumber")
-  case object Nino extends Enrolment(key = "HMRC-NI", value = "NINO")
-}
+trait MockAppConfig extends MockFactory {
 
-object DelegatedAuthRules {
-  val agentDelegatedAuthRule = "mtd-it-auth"
-  val supportingAgentDelegatedAuthRule = "mtd-it-auth-supp"
+  lazy val mockAppConfig: AppConfig = mock[AppConfig]
+
+  object MockAppConfig {
+
+    def emaSupportingAgentsEnabled(response: Boolean): CallHandler0[Boolean] =
+      (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returns(response)
+  }
 }
