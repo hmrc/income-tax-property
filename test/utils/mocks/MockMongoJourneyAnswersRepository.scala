@@ -32,10 +32,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait MockMongoJourneyAnswersRepository
     extends MockFactory with CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues {
 
-  val mockAppConfig: AppConfig = new AppConfigStub().config()
+  val stubAppConfig: AppConfig = new AppConfigStub().config()
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
-  protected val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
+  protected val repository = new MongoJourneyAnswersRepository(mongoComponent, stubAppConfig, stubClock)
   protected val journeyStatusService: JourneyStatusService = new JourneyStatusService(repository)
 }
