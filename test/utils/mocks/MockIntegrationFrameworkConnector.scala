@@ -27,17 +27,19 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockIntegrationConnector extends MockFactory {
+trait MockIntegrationFrameworkConnector extends MockFactory {
 
-  protected val mockIntegrationConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
+  protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
 
   def mockGetAllPeriodicSubmission(
     taxYear: TaxYear,
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
     result: Either[ApiError, List[PeriodicSubmissionIdModel]]
-  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, List[PeriodicSubmissionIdModel]]]] =
-    (mockIntegrationConnector
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[
+    Either[ApiError, List[PeriodicSubmissionIdModel]]
+  ]] =
+    (mockIntegrationFrameworkConnector
       .getAllPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
@@ -51,7 +53,7 @@ trait MockIntegrationConnector extends MockFactory {
   ): CallHandler5[TaxYear, Nino, IncomeSourceId, String, HeaderCarrier, Future[
     Either[ApiError, Option[PropertyPeriodicSubmission]]
   ]] =
-    (mockIntegrationConnector
+    (mockIntegrationFrameworkConnector
       .getPropertyPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: String)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, submissionId, *)
       .returning(Future.successful(result))
@@ -61,8 +63,10 @@ trait MockIntegrationConnector extends MockFactory {
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
     result: Either[ApiError, Option[PropertyAnnualSubmission]]
-  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, Option[PropertyAnnualSubmission]]]] =
-    (mockIntegrationConnector
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[
+    Either[ApiError, Option[PropertyAnnualSubmission]]
+  ]] =
+    (mockIntegrationFrameworkConnector
       .getPropertyAnnualSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
@@ -76,7 +80,7 @@ trait MockIntegrationConnector extends MockFactory {
   ): CallHandler5[TaxYear, Nino, IncomeSourceId, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[PeriodicSubmissionId]]
   ]] =
-    (mockIntegrationConnector
+    (mockIntegrationFrameworkConnector
       .createPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: CreatePropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
@@ -93,8 +97,14 @@ trait MockIntegrationConnector extends MockFactory {
   ): CallHandler6[Nino, IncomeSourceId, TaxYear, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[String]]
   ]] =
-    (mockIntegrationConnector
-      .updatePeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
+    (mockIntegrationFrameworkConnector
+      .updatePeriodicSubmission(
+        _: Nino,
+        _: IncomeSourceId,
+        _: TaxYear,
+        _: String,
+        _: UpdatePropertyPeriodicSubmissionRequest
+      )(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, updateRequest, *)
@@ -106,7 +116,7 @@ trait MockIntegrationConnector extends MockFactory {
     taxYear: TaxYear,
     result: Either[ApiError, Unit]
   ): CallHandler4[IncomeSourceId, Nino, TaxYear, HeaderCarrier, Future[Either[ApiError, Unit]]] =
-    (mockIntegrationConnector
+    (mockIntegrationFrameworkConnector
       .deletePropertyAnnualSubmission(_: IncomeSourceId, _: Nino, _: TaxYear)(_: HeaderCarrier))
       .expects(incomeSourceId, taxableEntityId, taxYear, *)
       .returning(Future.successful(result))
@@ -119,7 +129,7 @@ trait MockIntegrationConnector extends MockFactory {
   ): CallHandler5[TaxYear, IncomeSourceId, Nino, PropertyAnnualSubmission, HeaderCarrier, Future[
     Either[ApiError, Unit]
   ]] =
-    (mockIntegrationConnector
+    (mockIntegrationFrameworkConnector
       .createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(
         _: HeaderCarrier
       ))
@@ -137,7 +147,7 @@ trait MockIntegrationConnector extends MockFactory {
   ]] =
     propertyAnnualSubmission match {
       case Some(pas) =>
-        (mockIntegrationConnector
+        (mockIntegrationFrameworkConnector
           .createOrUpdateAnnualSubmission(_: TaxYear, _: IncomeSourceId, _: Nino, _: PropertyAnnualSubmission)(
             _: HeaderCarrier
           ))

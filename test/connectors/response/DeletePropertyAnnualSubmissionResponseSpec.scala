@@ -18,15 +18,10 @@ package connectors.response
 
 import connectors.response.DeletePropertyAnnualSubmissionResponse.deletePropertyAnnualSubmissionDataReads
 import models.errors.{ApiError, SingleErrorBody}
-import models.responses.IncomeSourceDetailsModel
-import models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
-
-import java.time.LocalDateTime
-
 
 class DeletePropertyAnnualSubmissionResponseSpec extends UnitTest {
 

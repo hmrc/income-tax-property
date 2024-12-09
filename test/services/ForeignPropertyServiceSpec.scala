@@ -29,21 +29,21 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyServiceSpec
-    extends UnitTest with MockIntegrationConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationConnector, repository)
+  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   val taxYear: TaxYear = TaxYear(2024)
@@ -95,7 +95,7 @@ class ForeignPropertyServiceSpec
       taxYear,
       incomeSourceId,
       Mtditid(mtditid),
-      JourneyName.ForeignPropertySelectCountry
+      JourneyName.ForeignIncomeJourney
     )
 
     val foreignIncome = ForeignIncome(

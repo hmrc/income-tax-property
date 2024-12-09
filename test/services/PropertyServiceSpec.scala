@@ -43,7 +43,7 @@ import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import java.time.{Clock, LocalDate, LocalDateTime}
@@ -51,13 +51,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
-    extends UnitTest with MockIntegrationConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new PropertyService(mergeService, mockIntegrationConnector, repository)
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"

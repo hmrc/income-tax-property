@@ -18,8 +18,6 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "testOnlyDoNotUseInAppConf.*",
     "controllers.testOnly.*",
     "models.*",
-    "request.*",
-    "response.*",
     "logging.*",
     "utils.*",
     "Mock*.scala",

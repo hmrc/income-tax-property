@@ -16,7 +16,7 @@
 
 package models.request
 
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
 final case class RentalsAndRaRIncome(
   isNonUKLandlord: Boolean,
