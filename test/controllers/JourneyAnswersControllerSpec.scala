@@ -338,7 +338,7 @@ class JourneyAnswersControllerSpec
                                                  |            },
                                                  |            "reversePremiumsReceived" : {
                                                  |                "reversePremiumsReceived" : true,
-                                                 |                "amount" : 10
+                                                 |                "reversePremiums" : 10
                                                  |            }
                                                  |        }
                                                  |""".stripMargin)
@@ -859,7 +859,7 @@ class JourneyAnswersControllerSpec
                                                  |            },
                                                  |            "reversePremiumsReceived" : {
                                                  |                "reversePremiumsReceived" : true,
-                                                 |                "amount" : 10
+                                                 |                "reversePremiums" : 10
                                                  |            }
                                                  |        }
                                                  |""".stripMargin)

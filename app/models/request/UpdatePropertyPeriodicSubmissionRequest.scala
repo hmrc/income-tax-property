@@ -320,7 +320,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
       premiumsOfLeaseGrant = propertyRentalsIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
-      reversePremiums = propertyRentalsIncome.reversePremiumsReceived.flatMap(_.amount),
+      reversePremiums = propertyRentalsIncome.reversePremiumsReceived.flatMap(_.reversePremiums),
       periodAmount = Some(propertyRentalsIncome.propertyRentalIncome),
       taxDeducted = propertyRentalsIncome.deductingTax.flatMap(_.taxDeductedAmount),
       otherIncome = Some(propertyRentalsIncome.otherIncomeFromProperty),
@@ -427,7 +427,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
       premiumsOfLeaseGrant = rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
-      reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.amount),
+      reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.reversePremiums),
       periodAmount = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.periodAmount))),
       taxDeducted = rentalsAndRaRIncome.deductingTax.flatMap(_.taxDeductedAmount),
       otherIncome = Some(rentalsAndRaRIncome.otherIncomeFromProperty),

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import connectors.ConnectorIntegrationTest
+import connectors.ConnectorIntegrationSpec
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
 import models.domain.{FetchedPropertyData, JourneyWithStatus}
@@ -39,7 +39,7 @@ import uk.gov.hmrc.http.HttpResponse
 import java.time.{LocalDate, LocalDateTime}
 class JourneyAnswersIntegrationSpec
     extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
-    with ConnectorIntegrationTest {
+    with ConnectorIntegrationSpec {
 
   private val taxableEntityId = "some-taxable-entity-id"
   private val incomeSourceId = "some-income-source-id"
