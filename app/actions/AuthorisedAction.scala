@@ -122,7 +122,7 @@ class AuthorisedAction @Inject() (
                                              (implicit request: Request[A], hc: HeaderCarrier): Future[Result] =
     authorised(agentAuthPredicate(mtdItId))
       .retrieve(allEnrolments) {
-        populateAgent(block, mtdItId, _)
+        populateAgent(block, mtdItId, _, isSecondaryAgent = false)
       }.recoverWith(agentRecovery(block, mtdItId))
 
   private def agentRecovery[A](block: AuthorisationRequest[A] => Future[Result], mtdItId: String)
@@ -133,7 +133,7 @@ class AuthorisedAction @Inject() (
     case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
       authorised(secondaryAgentPredicate(mtdItId))
         .retrieve(allEnrolments) {
-          populateAgent(block, mtdItId, _)
+          populateAgent(block, mtdItId, _, isSecondaryAgent = true)
         }
         .recoverWith { case _ =>
           logger.info("[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
@@ -144,11 +144,13 @@ class AuthorisedAction @Inject() (
       unauthorized
   }
 
-  private def populateAgent[A](block: AuthorisationRequest[A] => Future[Result], mtdItId: String, enrolments: Enrolments)
-                              (implicit request: Request[A]): Future[Result] =
+  private def populateAgent[A](block: AuthorisationRequest[A] => Future[Result],
+                               mtdItId: String,
+                               enrolments: Enrolments,
+                               isSecondaryAgent: Boolean)(implicit request: Request[A]): Future[Result] =
     enrolmentGetIdentifierValue(Agent.key, Agent.value, enrolments) match {
       case Some(arn) =>
-        block(AuthorisationRequest(User(mtdItId, Some(arn)), request))
+        block(AuthorisationRequest(User(mtdItId, Some(arn), isSecondaryAgent), request))
       case None =>
         val logMessage = "[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment."
         logger.info(logMessage)
