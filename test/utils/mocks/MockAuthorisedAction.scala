@@ -16,34 +16,35 @@
 
 package utils.mocks
 
-import org.scalamock.handlers.CallHandler4
+import actions.AuthorisedAction
+import models.auth.Enrolment.{Individual, Nino}
 import org.scalamock.scalatest.MockFactory
 import play.api.mvc._
 import play.api.test.Helpers.stubMessagesControllerComponents
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.http.HeaderCarrier
-import actions.AuthorisedAction
-import models.auth.Enrolment.{Individual, Nino}
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
+import utils.AppConfigStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
-trait MockAuthorisedAction extends MockFactory
-  with MockAuthConnector {
+trait MockAuthorisedAction extends MockFactory with MockAuthConnector {
 
   private val mcc = stubMessagesControllerComponents()
   private val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mcc.parsers.default)
 
-  protected val mockAuthorisedAction: AuthorisedAction = new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mcc)
+  protected val mockAuthorisedAction: AuthorisedAction =
+    new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mcc, new AppConfigStub().config())
 
-  def mockAuthorisation(): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
-    val individualEnrolments: Enrolments = Enrolments(Set(
-      Enrolment(Individual.key, Seq(EnrolmentIdentifier(Individual.value, "1234567890")), "Activated"),
-      Enrolment(Nino.key, Seq(EnrolmentIdentifier(Nino.value, "1234567890")), "Activated")
-    ))
+  def mockAuthorisation(): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] = {
+    val individualEnrolments: Enrolments = Enrolments(
+      Set(
+        Enrolment(Individual.key, Seq(EnrolmentIdentifier(Individual.value, "1234567890")), "Activated"),
+        Enrolment(Nino.key, Seq(EnrolmentIdentifier(Nino.value, "1234567890")), "Activated")
+      )
+    )
 
-    mockAuth(individualEnrolments)
+    mockAuthAffinityGroup(AffinityGroup.Individual)
+    mockAuthAsIndividual(individualEnrolments and ConfidenceLevel.L250)
   }
 }
