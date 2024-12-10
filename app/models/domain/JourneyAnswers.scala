@@ -29,6 +29,7 @@ case class JourneyAnswers(
   incomeSourceId: IncomeSourceId,
   taxYear: TaxYear,
   journey: JourneyName,
+  countryCode: Option[String],
   status: JourneyStatus,
   data: JsObject,
   createdAt: Instant,

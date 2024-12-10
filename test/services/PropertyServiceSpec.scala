@@ -1714,6 +1714,7 @@ class PropertyServiceSpec
               ctx.incomeSourceId,
               ctx.taxYear,
               ctx.journey,
+              None,
               JourneyStatus.NotStarted,
               newData,
               now,
