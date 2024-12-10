@@ -74,6 +74,15 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
 
       result.getDocument("$set").getDocument("data").getString("foo") shouldBe BsonString("bar")
     }
+
+    "create or upsert foreign journey answers" in {
+      val countryCode = "USA"
+      val bson = BsonDocument(Json.stringify(Json.obj("foo" -> "bar")))
+      val result: BsonDocument = repository.foreignCreateUpsert(ctx)("data", bson, JourneyStatus.NotStarted, countryCode)
+        .toBsonDocument
+
+      result.getDocument("$set").getDocument("data").getString("foo") shouldBe BsonString("bar")
+    }
   }
 
   "upsertData" should {
@@ -90,6 +99,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         incomeSourceId,
         taxYear,
         JourneyName.About,
+        None,
         InProgress,
         Json.obj("field" -> "value"),
         instant,
@@ -109,6 +119,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
         incomeSourceId,
         taxYear,
         JourneyName.About,
+        None,
         InProgress,
         Json.obj("field" -> "updated"),
         instant,

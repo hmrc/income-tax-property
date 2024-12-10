@@ -21,6 +21,7 @@ import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
+import models.domain.{ForeignFetchedPropertyData, JourneyAnswers}
 import models.errors._
 import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
@@ -36,11 +37,81 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignPropertyService @Inject() (
-  mergeService: MergeService,
+  mergeService: ForeignMergeService,
   connector: IntegrationFrameworkConnector,
   repository: MongoJourneyAnswersRepository
 )(implicit ec: ExecutionContext)
     extends Logging {
+
+  def getFetchedPropertyDataMerged(
+                                    ctx: JourneyContext,
+                                    nino: Nino,
+                                    incomeSourceId: IncomeSourceId
+                                  )(implicit
+                                    hc: HeaderCarrier
+                                  ): EitherT[Future, ServiceError, ForeignFetchedPropertyData] = {
+    val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear, nino, incomeSourceId)
+
+    val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear, nino, incomeSourceId)
+
+    for {
+      resultFromDownstreamAnnual        <- resultAnnual
+      resultFromDownstreamPeriodicMaybe <- resultPeriodic
+      foreignResultFromRepository       <- fetchAllForeignJourneyDataFromRepository(ctx)
+    } yield mergeService.mergeAll(resultFromDownstreamAnnual, resultFromDownstreamPeriodicMaybe, foreignResultFromRepository)
+
+  }
+
+  private def fetchAllForeignJourneyDataFromRepository(ctx: JourneyContext): ITPEnvelope[Map[String, Map[String, JourneyAnswers]]] = {
+    val result: Future[Either[ServiceError, Map[String, Map[String, JourneyAnswers]]]] = if (ctx.journey == JourneyName.NoJourney) {
+      Future.successful(
+        InternalError(s"Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}")
+          .asLeft[Map[String, Map[String, JourneyAnswers]]]
+      )
+    } else {
+      repository
+        .fetchAllJourneys(ctx)
+        .map(ja => getForeignJourneysPerJourneyName(ja.toList))
+    }
+    ITPEnvelope.liftFuture(result)
+  }
+
+  private def getForeignJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers]): Either[ServiceError, Map[String, Map[String, JourneyAnswers]]] = {
+    val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
+    journeyAnswersGrouped.foldLeft(Map[String, Map[String, JourneyAnswers]]().asRight[ServiceError]) { (acc, kv) =>
+      acc match {
+        case Right(validJourneys) =>
+          val (journeyName, journeys) = kv
+          val foreignJourneyMap: Either[ServiceError, Map[String, JourneyAnswers]] =
+            journeys.groupBy(_.countryCode).foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (innerAcc, innerKV) =>
+              innerAcc match {
+                case Right(innerValidJourneys) =>
+                  innerKV match {
+                    case (Some(countryCode), List(foreignJourneyAnswers)) => (innerValidJourneys + (countryCode -> foreignJourneyAnswers)).asRight[ServiceError]
+                    case _ => innerValidJourneys.asRight[ServiceError]
+                  }
+                case left => left
+              }
+            }
+          foreignJourneyMap match {
+            case Right(fjm) => (validJourneys + (journeyName -> fjm)).asRight[ServiceError]
+            case _ => validJourneys.asRight[ServiceError]
+          }
+        case left => left
+      }
+    }
+  }
+
+  def getPropertyAnnualSubmission(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(implicit
+                                                                                                           hc: HeaderCarrier
+  ): ITPEnvelope[PropertyAnnualSubmission] =
+    EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
+      .leftMap(error => ApiServiceError(error.status))
+      .subflatMap { annualSubmission =>
+        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]](
+          DataNotFoundError.asLeft[PropertyAnnualSubmission]
+        )(_.asRight[ServiceError])
+      }
 
   def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
     writes: Writes[A]

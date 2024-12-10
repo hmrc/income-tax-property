@@ -1,10 +1,10 @@
 # Foreign Property specific routes #######################
 
+GET           /property/:taxYear/foreign-income/:nino/:incomeSourceId                                    controllers.ForeignPropertyJourneyAnswersController.fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
+
 POST          /property/:taxYear/:incomeSourceId/foreign-property-select-country/:nino/answers           controllers.ForeignPropertyJourneyAnswersController.saveSelectCountrySection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/foreign-property-tax/:nino/answers                      controllers.ForeignPropertyJourneyAnswersController.saveForeignPropertyTax(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/foreign-property-select-country/:nino/answers           controllers.ForeignPropertyJourneyAnswersController.saveSelectCountrySection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/foreign-property-income/:nino/answers                   controllers.ForeignPropertyJourneyAnswersController.saveForeignIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 

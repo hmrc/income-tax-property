@@ -17,10 +17,12 @@
 package utils.mocks
 
 import cats.data.EitherT
+import models.ITPEnvelope
 import models.common._
+import models.domain.ForeignFetchedPropertyData
 import models.errors.ServiceError
-import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
+import models.request.foreign._
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
@@ -105,4 +107,20 @@ trait MockForeignPropertyService extends MockFactory {
       .expects(journeyContext, foreignIncome, *)
       .returning(EitherT.fromEither(result))
 
+  def mockGetForeignFetchedPropertyDataMerged(
+                                        taxYear: TaxYear,
+                                        incomeSourceId: IncomeSourceId,
+                                        mtdItId: Mtditid,
+                                        result: Either[ServiceError, ForeignFetchedPropertyData]
+                                      ): CallHandler4[JourneyContext, Nino, IncomeSourceId, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    ForeignFetchedPropertyData
+  ]] = {
+    val ctx = JourneyContext(taxYear, incomeSourceId, mtdItId, JourneyName.AllJourneys)
+    (mockForeignPropertyService
+      .getFetchedPropertyDataMerged(_: JourneyContext, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
+      .expects(ctx, *, incomeSourceId, *)
+      .returning(ITPEnvelope.liftEither(result))
+  }
 }

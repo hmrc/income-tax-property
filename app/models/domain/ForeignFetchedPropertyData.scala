@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package models.responses
+package models.domain
 
-import play.api.libs.json.{Format, Json, OFormat}
+import models.request.foreign.ForeignPropertyTax
+import play.api.libs.json.{Json, OFormat}
 
-case class ForeignPropertyTaxStoreAnswers(foreignIncomeTaxYesNo: Option[Boolean])
+final case class ForeignFetchedPropertyData(
+  foreignPropertyTax: Option[Map[String, ForeignPropertyTax]],
+  foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
+)
 
-object ForeignPropertyTaxStoreAnswers {
-  implicit val format: OFormat[ForeignPropertyTaxStoreAnswers] = Json.format
+object ForeignFetchedPropertyData {
+  implicit val format: OFormat[ForeignFetchedPropertyData] = Json.format[ForeignFetchedPropertyData]
 }

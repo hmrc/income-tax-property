@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+import config.AppConfig
 import connectors.ConnectorIntegrationSpec
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
-import models.domain.{FetchedPropertyData, JourneyWithStatus}
+import models.domain.FetchedPropertyData
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -30,16 +30,22 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.http.Status.{NO_CONTENT, OK}
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
+import repositories.MongoJourneyAnswersRepository
 import support.stubs.AuthStub._
 import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
+import utils.AppConfigStub
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time._
+import java.time.temporal.ChronoUnit
+import scala.concurrent.ExecutionContext.Implicits.global
 class JourneyAnswersIntegrationSpec
     extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
-    with ConnectorIntegrationSpec {
+    with ConnectorIntegrationSpec with CleanMongoCollectionSupport  {
 
   private val taxableEntityId = "some-taxable-entity-id"
   private val incomeSourceId = "some-income-source-id"
@@ -111,13 +117,18 @@ class JourneyAnswersIntegrationSpec
   val httpResponseOk: HttpResponse = HttpResponse(NO_CONTENT, "")
   val taxYear = 2021
   private val wiremockPort = 11111
-
+  val mockAppConfig: AppConfig = new AppConfigStub().config()
+  private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
+  private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
   override def fakeApplication(): Application = GuiceApplicationBuilder()
     .configure("microservice.services.integration-framework.host" -> "localhost")
     .configure("microservice.services.integration-framework.port" -> wiremockPort)
     .configure("microservice.services.auth.port" -> wiremockPort)
     .configure("integration-framework.host" -> "localhost")
     .configure("integration-framework.port" -> wiremockPort)
+    .overrides(
+      bind[MongoJourneyAnswersRepository].toInstance(new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock))
+    )
     .build()
 
   private val baseUrl =

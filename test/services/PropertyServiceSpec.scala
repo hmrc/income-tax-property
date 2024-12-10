@@ -1746,7 +1746,7 @@ class PropertyServiceSpec
             .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.NoJourney), nino, incomeSourceId)
       } yield r
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
-        response shouldBe InternalError("Journey Repo 'should' not be accessed, journey name: no-journey")
+        response shouldBe InternalError("Journey Repo could not be accessed, journey name: no-journey")
           .asLeft[FetchedPropertyData]
 
       }
@@ -1823,6 +1823,7 @@ class PropertyServiceSpec
               ctx.incomeSourceId,
               ctx.taxYear,
               ctx.journey,
+              None,
               JourneyStatus.NotStarted,
               newData,
               now,
