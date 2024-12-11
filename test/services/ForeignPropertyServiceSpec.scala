@@ -23,7 +23,7 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import models.request.foreign._
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
+import models.request._
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
@@ -89,6 +89,38 @@ class ForeignPropertyServiceSpec
     }
   }
 
+  "save the foreign income supporting answers" in {
+
+    val ctx = JourneyContext(
+      taxYear,
+      incomeSourceId,
+      Mtditid(mtditid),
+      JourneyName.ForeignIncomeJourney
+    )
+
+    val foreignIncome = ForeignIncome(
+      countryCode = "AUS",
+      rentIncome = 1.0,
+      premiumsGrantLeaseReceived = true,
+      reversePremiumsReceived = ReversePremiumsReceived(reversePremiumsReceived = true, Some(BigDecimal(2.50))),
+      otherPropertyIncome = BigDecimal(54.94),
+      calculatedPremiumLeaseTaxable =
+        Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+      receivedGrantLeaseAmount = Some(3.45),
+      twelveMonthPeriodsInLease = Some(5),
+      premiumsOfLeaseGrantAgreed =
+        Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
+    )
+
+    await(
+      underTest
+        .saveForeignIncome(
+          ctx,
+          foreignIncome
+        )
+        .value
+    ) shouldBe Right(true)
+  }
   "save foreign property tax" should {
 
     val foreignPropertyTaxWithCountryCode =

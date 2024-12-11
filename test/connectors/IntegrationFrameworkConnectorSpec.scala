@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IntegrationFrameworkConnectorISpec extends ConnectorIntegrationTest with MockFactory {
+class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
   private val nino = Nino("some-nino")
   private val taxableEntityId = Nino("some-taxable-entity-id")

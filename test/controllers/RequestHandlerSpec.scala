@@ -48,12 +48,12 @@ class RequestHandlerSpec
                                                |                "taxDeductedAmount" : 20
                                                |            },
                                                |            "premiumsGrantLease" : {
-                                               |                "premiumsGrantLeaseYesOrNo" : true,
+                                               |                "premiumsGrantLeaseReceived" : true,
                                                |                "premiumsGrantLease" : 5
                                                |            },
                                                |            "reversePremiumsReceived" : {
                                                |                "reversePremiumsReceived" : true,
-                                               |                "amount" : 10
+                                               |                "reversePremiums" : 10
                                                |            }
                                                |        }
                                                |""".stripMargin)
