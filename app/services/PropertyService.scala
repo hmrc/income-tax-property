@@ -139,6 +139,8 @@ class PropertyService @Inject() (
           val (k, v) = kv
           val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.size == 1) {
             (ja + (k -> v.head)).asRight[ServiceError]
+          } else if(v.forall(_.countryCode.isDefined)) {
+            ja.asRight[ServiceError]
           } else {
             RepositoryError.asLeft[Map[String, JourneyAnswers]]
           }

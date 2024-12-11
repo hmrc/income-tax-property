@@ -43,7 +43,7 @@ class ForeignPropertyServiceSpec
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
+  private val underTest = new ForeignPropertyService(foreignMergeService, mockIntegrationFrameworkConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   val taxYear: TaxYear = TaxYear(2024)

@@ -81,7 +81,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   def foreignUpsertAnswers(ctx: JourneyContext, newData: JsValue, countryCode: String): Future[Boolean] = {
     val filter = foreignFilterJourney(ctx, countryCode)
     val bson = BsonDocument(Json.stringify(newData))
-    val update = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
+    val update = foreignCreateUpsert(ctx)("data", bson, JourneyStatus.InProgress, countryCode)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
@@ -122,6 +122,24 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       Updates.setOnInsert("incomeSourceId", ctx.incomeSourceId.value),
       Updates.setOnInsert("status", statusOnInsert.entryName),
       Updates.setOnInsert("journey", ctx.journey.entryName),
+      Updates.setOnInsert("createdAt", now)
+    )
+  }
+
+  private[repositories] def foreignCreateUpsert(
+                                          ctx: JourneyContext
+                                        )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus, countryCode: String) = {
+    val now = Instant.now(clock)
+
+    Updates.combine(
+      Updates.set(fieldName, bsonValue),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("mtditid", ctx.mtditid.value),
+      Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
+      Updates.setOnInsert("incomeSourceId", ctx.incomeSourceId.value),
+      Updates.setOnInsert("status", statusOnInsert.entryName),
+      Updates.setOnInsert("journey", ctx.journey.entryName),
+      Updates.setOnInsert("countryCode", countryCode),
       Updates.setOnInsert("createdAt", now)
     )
   }
