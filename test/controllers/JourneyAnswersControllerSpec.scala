@@ -333,7 +333,7 @@ class JourneyAnswersControllerSpec
                                                  |                "taxDeductedAmount" : 20
                                                  |            },
                                                  |            "premiumsGrantLease" : {
-                                                 |                "premiumsGrantLeaseYesOrNo" : true,
+                                                 |                "premiumsGrantLeaseReceived" : true,
                                                  |                "premiumsGrantLease" : 5
                                                  |            },
                                                  |            "reversePremiumsReceived" : {
@@ -854,7 +854,7 @@ class JourneyAnswersControllerSpec
                                                  |                "taxDeductedAmount" : 20
                                                  |            },
                                                  |            "premiumsGrantLease" : {
-                                                 |                "premiumsGrantLeaseYesOrNo" : true,
+                                                 |                "premiumsGrantLeaseReceived" : true,
                                                  |                "premiumsGrantLease" : 5
                                                  |            },
                                                  |            "reversePremiumsReceived" : {

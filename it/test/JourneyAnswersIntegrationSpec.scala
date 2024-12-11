@@ -282,7 +282,7 @@ class JourneyAnswersIntegrationSpec
             None,
             None,
             None,
-            Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(1))),
+            Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
             Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
           )
         ),
@@ -374,7 +374,7 @@ class JourneyAnswersIntegrationSpec
             None,
             None,
             None,
-            Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(1))),
+            Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
             Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
           )
         ),

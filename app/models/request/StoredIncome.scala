@@ -37,7 +37,7 @@ object StoredIncome {
       calculatedFigureYourself = rentalsIncome.calculatedFigureYourself,
       yearLeaseAmount = rentalsIncome.yearLeaseAmount,
       receivedGrantLeaseAmount = rentalsIncome.receivedGrantLeaseAmount,
-      premiumsGrantLeaseYesNo = rentalsIncome.premiumsGrantLease.map(_.premiumsGrantLeaseYesOrNo)
+      premiumsGrantLeaseYesNo = rentalsIncome.premiumsGrantLease.map(_.premiumsGrantLeaseReceived)
     )
 
   def fromRentalsAndRaRIncome(rentalsAndRaRIncome: RentalsAndRaRIncome): StoredIncome =
@@ -47,11 +47,11 @@ object StoredIncome {
       calculatedFigureYourself = rentalsAndRaRIncome.calculatedFigureYourself,
       yearLeaseAmount = rentalsAndRaRIncome.yearLeaseAmount,
       receivedGrantLeaseAmount = rentalsAndRaRIncome.receivedGrantLeaseAmount,
-      premiumsGrantLeaseYesNo = rentalsAndRaRIncome.premiumsGrantLease.map(_.premiumsGrantLeaseYesOrNo)
+      premiumsGrantLeaseYesNo = rentalsAndRaRIncome.premiumsGrantLease.map(_.premiumsGrantLeaseReceived)
     )
 }
 
-final case class PremiumsGrantLease(premiumsGrantLeaseYesOrNo: Boolean, premiumsGrantLease: Option[BigDecimal])
+final case class PremiumsGrantLease(premiumsGrantLeaseReceived: Boolean, premiumsGrantLease: Option[BigDecimal])
 
 object PremiumsGrantLease {
   implicit val format: OFormat[PremiumsGrantLease] = Json.format[PremiumsGrantLease]

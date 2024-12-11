@@ -18,7 +18,7 @@ package models.request
 
 import cats.implicits.catsSyntaxEitherId
 import models.errors.{InternalError, ServiceError}
-import models.request.foreign.ForeignPropertyTaxWithCountryCode
+import models.request.foreign.{ForeignIncome, ForeignPropertyTaxWithCountryCode}
 import models.responses._
 import models.{RentalsAndRaRAbout, responses}
 import monocle.macros.GenLens

@@ -768,7 +768,7 @@ class PropertyServiceSpec
       Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(14.75))),
       Some(98.78),
       Some(64.23),
-      Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(93.85))),
+      Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(93.85))),
       Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
     )
     "return no content for valid request" in {
@@ -874,7 +874,7 @@ class PropertyServiceSpec
       calculatedFigureYourself = Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(58.75))),
       yearLeaseAmount = Some(55.78),
       receivedGrantLeaseAmount = Some(65.05),
-      premiumsGrantLease = Some(PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(93.85))),
+      premiumsGrantLease = Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(93.85))),
       reversePremiumsReceived = Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
     )
 
