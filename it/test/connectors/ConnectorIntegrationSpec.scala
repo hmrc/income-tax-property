@@ -25,7 +25,7 @@ import support.stubs.WireMockStubs
 import uk.gov.hmrc.http.test.{HttpClientSupport, HttpClientV2Support}
 import utils.providers.AppConfigStubProvider
 
-trait ConnectorIntegrationTest
+trait ConnectorIntegrationSpec
     extends AnyWordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout with HttpClientSupport
     with HttpClientV2Support with AppConfigStubProvider with WireMockServer with WireMockStubs with BeforeAndAfterAll {
 

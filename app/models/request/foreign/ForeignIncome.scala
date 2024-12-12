@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package models.request
+package models.request.foreign
 
+import models.request.ReversePremiumsReceived
 import play.api.libs.json.{Format, Json}
 
-final case class RentalsAndRaRIncome(
-  isNonUKLandlord: Boolean,
-  otherIncomeFromProperty: BigDecimal,
-  deductingTax: Option[DeductingTax],
-  calculatedFigureYourself: Option[CalculatedFigureYourself],
-  yearLeaseAmount: Option[BigDecimal],
+case class ForeignIncome(
+  countryCode: String,
+  rentIncome: BigDecimal,
+  premiumsGrantLeaseReceived: Boolean,
+  reversePremiumsReceived: ReversePremiumsReceived,
+  otherPropertyIncome: BigDecimal,
+  calculatedPremiumLeaseTaxable: Option[CalculatedPremiumLeaseTaxable],
   receivedGrantLeaseAmount: Option[BigDecimal],
-  premiumsGrantLease: Option[PremiumsGrantLease],
-  reversePremiumsReceived: Option[ReversePremiumsReceived]
+  twelveMonthPeriodsInLease: Option[BigDecimal],
+  premiumsOfLeaseGrantAgreed: Option[PremiumsOfLeaseGrantAgreed]
 )
 
-case object RentalsAndRaRIncome {
-
-  implicit val formats: Format[RentalsAndRaRIncome] = Json.format[RentalsAndRaRIncome]
+object ForeignIncome {
+  implicit val format: Format[ForeignIncome] = Json.format[ForeignIncome]
 }

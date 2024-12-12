@@ -36,7 +36,9 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
     result: Either[ApiError, List[PeriodicSubmissionIdModel]]
-  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, List[PeriodicSubmissionIdModel]]]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[
+    Either[ApiError, List[PeriodicSubmissionIdModel]]
+  ]] =
     (mockIntegrationFrameworkConnector
       .getAllPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
@@ -61,7 +63,9 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
     result: Either[ApiError, Option[PropertyAnnualSubmission]]
-  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, Option[PropertyAnnualSubmission]]]] =
+  ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[
+    Either[ApiError, Option[PropertyAnnualSubmission]]
+  ]] =
     (mockIntegrationFrameworkConnector
       .getPropertyAnnualSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
@@ -94,7 +98,13 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     Either[ApiError, Option[String]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .updatePeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: String, _: UpdatePropertyPeriodicSubmissionRequest)(
+      .updatePeriodicSubmission(
+        _: Nino,
+        _: IncomeSourceId,
+        _: TaxYear,
+        _: String,
+        _: UpdatePropertyPeriodicSubmissionRequest
+      )(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, updateRequest, *)

@@ -19,8 +19,8 @@ package utils.mocks
 import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
+import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
@@ -85,6 +85,24 @@ trait MockForeignPropertyService extends MockFactory {
         _: ForeignPropertyExpenses
       )(_: HeaderCarrier))
       .expects(journeyContext, foreignPropertyExpenses, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveForeignIncomeSection(
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignIncome: ForeignIncome,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler3[JourneyContext, ForeignIncome, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockForeignPropertyService
+      .saveForeignIncome(
+        _: JourneyContext,
+        _: ForeignIncome
+      )(_: HeaderCarrier))
+      .expects(journeyContext, foreignIncome, *)
       .returning(EitherT.fromEither(result))
 
 }

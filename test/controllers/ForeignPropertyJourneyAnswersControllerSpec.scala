@@ -19,8 +19,8 @@ package controllers
 import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTaxWithCountryCode}
 import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
@@ -184,6 +184,83 @@ class ForeignPropertyJourneyAnswersControllerSpec
       }
     }
 
+  }
+
+  "save foreign income section " should {
+
+    val validForeignIncome: JsValue =
+      Json.parse("""{
+                   |    "countryCode": "AUS",
+                   |    "rentIncome": 541.65,
+                   |    "premiumsGrantLeaseReceived": true,
+                   |    "reversePremiumsReceived": {
+                   |      "reversePremiumsReceived": true,
+                   |      "reversePremiums": 434.45
+                   |    },
+                   |    "otherPropertyIncome": 102.50,
+                   |    "calculatedPremiumLeaseTaxable": {
+                   |      "calculatedPremiumLeaseTaxable": true,
+                   |      "premiumsOfLeaseGrant": 23.85
+                   |    },
+                   |    "receivedGrantLeaseAmount": 54.25,
+                   |    "twelveMonthPeriodsInLease": 6,
+                   |    "premiumsOfLeaseGrantAgreed" : {
+                   |      "premiumsOfLeaseGrantAgreed": true,
+                   |      "premiumsOfLeaseGrant": 9
+                   |    }
+                   |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
+        JourneyName.ForeignIncomeJourney
+      )
+
+    "return boolean true for valid request body" in {
+      val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+
+      mockAuthorisation()
+      mockSaveForeignIncomeSection(
+        ctx,
+        nino,
+        foreignIncomeInformation,
+        true.asRight[ServiceError]
+      )
+
+      val request = fakePostRequest.withJsonBody(validForeignIncome)
+      val result = await(underTest.saveForeignIncome(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return serviceError BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+
+        mockAuthorisation()
+        mockSaveForeignIncomeSection(
+          ctx,
+          nino,
+          foreignIncomeInformation,
+          serviceError.asLeft[Boolean]
+        )
+
+        val request = fakePostRequest.withJsonBody(validForeignIncome)
+        val result = await(underTest.saveForeignIncome(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignIncome(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
   }
 
   "save foreign property expenses " should {

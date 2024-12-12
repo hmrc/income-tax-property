@@ -198,7 +198,7 @@ object Merger {
               yearLeaseAmount = extracted.receivedGrantLeaseAmount,
               receivedGrantLeaseAmount = extracted.yearLeaseAmount,
               premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
-                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+                PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(polg))
               ),
               reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
                 ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
@@ -217,7 +217,7 @@ object Merger {
               yearLeaseAmount = None,
               receivedGrantLeaseAmount = None,
               premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
-                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+                PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(polg))
               ),
               reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
                 ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
@@ -246,7 +246,7 @@ object Merger {
               yearLeaseAmount = extracted.receivedGrantLeaseAmount,
               receivedGrantLeaseAmount = extracted.yearLeaseAmount,
               premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
-                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+                PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(polg))
               ),
               reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
                 ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
@@ -264,7 +264,7 @@ object Merger {
               yearLeaseAmount = None,
               receivedGrantLeaseAmount = None,
               premiumsGrantLease = fromDownstream.premiumsOfLeaseGrant.map(polg =>
-                PremiumsGrantLease(premiumsGrantLeaseYesOrNo = true, Some(polg))
+                PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(polg))
               ),
               reversePremiumsReceived = fromDownstream.reversePremiums.map(rp =>
                 ReversePremiumsReceived(reversePremiumsReceived = true, Some(rp))
