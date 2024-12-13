@@ -42,6 +42,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
     val result = entity match {
 
       case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(periodicSubmissionMaybe, e)
+      case e @ ForeignIncome(_, _, _, _, _, _, _, _, _)   => fromForeignIncome(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdateForeignPropertyPeriodicSubmissionRequest)")
           .asLeft[UpdateForeignPropertyPeriodicSubmissionRequest]
@@ -78,7 +79,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
       : (Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
       maybeSubmission match {
         case Some(
-        PropertyPeriodicSubmission(
+              PropertyPeriodicSubmission(
                 _,
                 _,
                 _,
@@ -118,4 +119,74 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
     Right(updatedRequest)
   }
 
+  def fromForeignIncome(
+    maybeSubmission: Option[PropertyPeriodicSubmission],
+    foreignIncome: ForeignIncome
+  ): Either[ServiceError, UpdateForeignPropertyPeriodicSubmissionRequest] = {
+
+    val targetCountryCode = foreignIncome.countryCode
+
+    val foreignPropertyLens: Lens[UpdateForeignPropertyPeriodicSubmissionRequest, Option[Seq[ForeignProperty]]] =
+      GenLens[UpdateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)
+
+    val foreignPropertyIncomeLens: Lens[ForeignProperty, Option[ForeignPropertyIncome]] =
+      GenLens[ForeignProperty](_.income)
+
+    val filteredForeignPropertyLens: Optional[UpdateForeignPropertyPeriodicSubmissionRequest, ForeignProperty] =
+      foreignPropertyLens.some.andThen(
+        Optional[Seq[ForeignProperty], ForeignProperty](_.find(_.countryCode == targetCountryCode)) { fp => seq =>
+          seq.map(existing => if (existing.countryCode == targetCountryCode) fp else existing)
+        }
+      )
+
+    val filteredForeignPropertyIncomeLens
+      : Optional[UpdateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyIncome] =
+      filteredForeignPropertyLens.andThen(foreignPropertyIncomeLens.some)
+
+    val (periodicSubmission, maybeForeignPropertyExpenses, maybeForeignPropertyIncome)
+      : (Option[PropertyPeriodicSubmission], Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
+      maybeSubmission match {
+        case Some(
+              pps @ PropertyPeriodicSubmission(
+                _,
+                _,
+                _,
+                _,
+                Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _
+              )
+            ) =>
+          (Some(pps), Some(expenses), Some(income))
+        case Some(pps) => (Some(pps), None, None)
+        case _         => (None, None, None)
+      }
+
+    val newForeignPropertyIncome = ForeignPropertyIncome(
+      rentIncome = Some(ForeignPropertyRentIncome(foreignIncome.rentIncome)),
+      otherPropertyIncome = Some(foreignIncome.otherPropertyIncome),
+      premiumsOfLeaseGrant = foreignIncome.premiumsOfLeaseGrantAgreed.fold(
+        maybeForeignPropertyIncome.flatMap(_.premiumsOfLeaseGrant)
+      )(_.premiumsOfLeaseGrant),
+      foreignTaxCreditRelief = maybeForeignPropertyIncome.flatMap(_.foreignTaxCreditRelief),
+      foreignTaxPaidOrDeducted = maybeForeignPropertyIncome.flatMap(_.foreignTaxPaidOrDeducted),
+      specialWithholdingTaxOrUkTaxPaid = maybeForeignPropertyIncome.flatMap(_.specialWithholdingTaxOrUkTaxPaid)
+    )
+
+    val periodicSubmissionRequestRetainingExpenses = UpdateForeignPropertyPeriodicSubmissionRequest(
+      Some(
+        Seq(
+          ForeignProperty(
+            targetCountryCode,
+            Some(ForeignPropertyIncome(None, None, None, None, None, None)), // This is required for Lens to work
+            maybeForeignPropertyExpenses
+          )
+        )
+      )
+    )
+
+    val periodicSubmissionRequestWithNewForeignIncome =
+      filteredForeignPropertyIncomeLens.replace(newForeignPropertyIncome)(periodicSubmissionRequestRetainingExpenses)
+
+    Right(periodicSubmissionRequestWithNewForeignIncome)
+  }
 }

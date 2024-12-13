@@ -21,7 +21,7 @@ import models.auth.DelegatedAuthRules
 import models.auth.Enrolment.{Agent, Individual, SupportingAgent}
 import models.{User, auth}
 import play.api.Logger
-import play.api.mvc.Results.{Redirect, Unauthorized}
+import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
