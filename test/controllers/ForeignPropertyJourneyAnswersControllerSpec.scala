@@ -46,7 +46,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
 
   val taxYear: TaxYear = TaxYear(2024)
   val incomeSourceId: IncomeSourceId = IncomeSourceId("incomeSourceId")
-  val incomeSubmissionId: SubmissionId = SubmissionId("submissionId")
+  val incomeSubmissionId: SubmissionId = SubmissionId("submissionId123")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
 
@@ -142,7 +142,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
           ctx,
           nino,
           foreignPropertyTaxWithCountryCode,
-          Right(Some(PeriodicSubmissionId("submissionId")))
+          Right(Some(PeriodicSubmissionId(incomeSubmissionId.value)))
         )
 
         val request = fakePostRequest.withJsonBody(validRequestBody)
@@ -217,18 +217,18 @@ class ForeignPropertyJourneyAnswersControllerSpec
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
-        JourneyName.ForeignIncomeJourney
+        JourneyName.ForeignPropertyIncome
       )
 
-    "return boolean true for valid request body" in {
-      val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+    "return a header status with NO_CONTENT for a valid request" in {
+      val foreignIncome = validForeignIncome.as[ForeignIncome]
 
       mockAuthorisation()
       mockSaveForeignIncomeSection(
         ctx,
         nino,
-        foreignIncomeInformation,
-        true.asRight[ServiceError]
+        foreignIncome,
+        Right(Some(PeriodicSubmissionId(incomeSubmissionId.value)))
       )
 
       val request = fakePostRequest.withJsonBody(validForeignIncome)
@@ -236,7 +236,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       result.header.status shouldBe NO_CONTENT
     }
 
-    "return serviceError BAD_REQUEST when BAD_REQUEST returns from Downstream Api" in {
+    "return serviceError when there is an error in Downstream Api or error in Parsing" in {
       val scenarios = Table[ServiceError, Int](
         ("Error", "Expected Response"),
         (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
@@ -252,7 +252,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
           ctx,
           nino,
           foreignIncomeInformation,
-          serviceError.asLeft[Boolean]
+          serviceError.asLeft[Option[PeriodicSubmissionId]]
         )
 
         val request = fakePostRequest.withJsonBody(validForeignIncome)

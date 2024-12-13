@@ -76,6 +76,6 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object ForeignPropertyExpenses extends JourneyName("foreign-property-expenses")
 
-  case object ForeignIncomeJourney extends JourneyName("foreign-property-income")
+  case object ForeignPropertyIncome extends JourneyName("foreign-property-income")
 
 }
