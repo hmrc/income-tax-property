@@ -32,31 +32,31 @@ import uk.gov.hmrc.http.test.HttpClientSupport
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyServiceSpec
-  extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-
-  private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
-  val taxYear: TaxYear = TaxYear(2024)
-  val mtditid = "1234567890"
+  private val taxYear: TaxYear = TaxYear(2024)
+  private val foreignPropertyIncome = ForeignPropertyIncome(None, Some(true), None, None, Some(456.75),Some(678.95))
   val foreignProperty: Option[Seq[ForeignProperty]] = Some(
     Seq(
       ForeignProperty(
-        "USA",
-        Some(ForeignPropertyIncome(None, Some(true), None, None, Some(BigDecimal(54)), None)),
+        "AUS",
+        Some(foreignPropertyIncome),
         None
       )
     )
   )
+
+  lazy val appConfigStub: AppConfig = new AppConfigStub().config()
+  private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, repository)
 
   "save foreign properties select country information" should {
 
@@ -89,38 +89,6 @@ class ForeignPropertyServiceSpec
     }
   }
 
-  "save the foreign income supporting answers" in {
-
-    val ctx = JourneyContext(
-      taxYear,
-      incomeSourceId,
-      Mtditid(mtditid),
-      JourneyName.ForeignIncomeJourney
-    )
-
-    val foreignIncome = ForeignIncome(
-      countryCode = "AUS",
-      rentIncome = 1.0,
-      premiumsGrantLeaseReceived = true,
-      reversePremiumsReceived = ReversePremiumsReceived(reversePremiumsReceived = true, Some(BigDecimal(2.50))),
-      otherPropertyIncome = BigDecimal(54.94),
-      calculatedPremiumLeaseTaxable =
-        Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
-      receivedGrantLeaseAmount = Some(3.45),
-      twelveMonthPeriodsInLease = Some(5),
-      premiumsOfLeaseGrantAgreed =
-        Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
-    )
-
-    await(
-      underTest
-        .saveForeignIncome(
-          ctx,
-          foreignIncome
-        )
-        .value
-    ) shouldBe Right(true)
-  }
   "save foreign property tax" should {
 
     val foreignPropertyTaxWithCountryCode =
@@ -434,6 +402,250 @@ class ForeignPropertyServiceSpec
           )
           .value
       ) shouldBe Right(Some(periodicSubmissionId))
+    }
+  }
+
+  "save foreign income should" should {
+
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+
+    val foreignIncome = ForeignIncome(
+      countryCode = "AUS",
+      rentIncome = 1.0,
+      premiumsGrantLeaseReceived = true,
+      reversePremiumsReceived = ReversePremiumsReceived(reversePremiumsReceived = true, Some(BigDecimal(2.50))),
+      otherPropertyIncome = BigDecimal(54.94),
+      calculatedPremiumLeaseTaxable =
+        Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+      receivedGrantLeaseAmount = Some(3.45),
+      twelveMonthPeriodsInLease = Some(5),
+      premiumsOfLeaseGrantAgreed =
+        Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
+    )
+
+    "call create foreign periodic submission request when periodic submission is empty and return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(
+          taxYear,
+          Some(emptyPeriodicSubmission),
+          foreignIncome
+        )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("create123")).asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveForeignIncome(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignIncome
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("create123")))
+    }
+
+    "call update periodic submission request when there is an existing periodic submission" in {
+
+      val existingPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          submissionId = Some(PeriodicSubmissionId("456")),
+          submittedOn = Some(LocalDateTime.of(LocalDate.parse(TaxYear.startDate(taxYear)), LocalTime.of(10, 11))),
+          fromDate = LocalDate.parse(TaxYear.startDate(taxYear)),
+          toDate = LocalDate.parse(TaxYear.endDate(taxYear)),
+          foreignProperty = Some(
+            Seq(
+              ForeignProperty(
+                countryCode = "AUS",
+                income = Some(
+                  ForeignPropertyIncome(
+                    rentIncome = Some(ForeignPropertyRentIncome(rentAmount = 12345.75)),
+                    foreignTaxCreditRelief = Some(true),
+                    premiumsOfLeaseGrant = Some(234.50),
+                    otherPropertyIncome = Some(345.65),
+                    foreignTaxPaidOrDeducted = Some(456.75),
+                    specialWithholdingTaxOrUkTaxPaid = Some(678.95)
+                  )
+                ),
+                expenses = None
+              )
+            )
+          ),
+          ukOtherProperty = Some(
+            UkOtherProperty(
+              Some(UkOtherPropertyIncome(Some(200.0), Some(200.0), Some(200.0), Some(200.0), Some(200.0), None)),
+              None
+            )
+          )
+        )
+
+      val Right(requestForUpdate: UpdateForeignPropertyPeriodicSubmissionRequest) =
+        UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(
+          Some(existingPeriodicSubmission),
+          foreignIncome
+        )
+
+      val fromDate = LocalDate.of(taxYear.endYear - 1, 4, 6)
+      val toDate = LocalDate.of(taxYear.endYear, 4, 5)
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("456", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "456",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+
+      mockUpdateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForUpdate,
+        "456",
+        Some("456").asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveForeignIncome(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignIncome
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("456")))
+    }
+
+    "persist the foreign income supporting answers into the backend mongo" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+
+      val ctx = JourneyContext(
+        taxYear,
+        incomeSourceId,
+        Mtditid(mtditid),
+        JourneyName.ForeignPropertyIncome
+      )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      val existingPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(
+          taxYear,
+          maybeSubmission = Some(existingPeriodicSubmission),
+          foreignIncome = foreignIncome
+        )
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("25")).asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveForeignIncome(
+            ctx,
+            nino,
+            foreignIncome
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("25")))
+    }
+
+    "return ApiError for invalid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(
+          taxYear,
+          Some(emptyPeriodicSubmission),
+          foreignIncome
+        )
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Option[PeriodicSubmissionId]]
+      )
+
+      await(
+        underTest
+          .saveForeignIncome(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            nino,
+            foreignIncome
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
