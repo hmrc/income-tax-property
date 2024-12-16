@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
 import models.common._
-import models.domain.{FetchedPropertyData, JourneyAnswers}
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, JourneyAnswers}
 import models.errors._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
@@ -1582,8 +1582,8 @@ class PropertyServiceSpec
         )
       )
 
-      def createFetchedPropertyData(esbaInfoRetrieved: Option[EsbaInfo]) =
-        FetchedPropertyData(
+      def createFetchedPropertyData(esbaInfoRetrieved: Option[EsbaInfo]) = {
+        val ukPropertyData = FetchedUKPropertyData(
           None,
           None,
           None,
@@ -1605,8 +1605,11 @@ class PropertyServiceSpec
           None,
           None,
           List(),
-          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
-        )
+          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None)))
+        val foreignPropertyData = FetchedForeignPropertyData(None, None)
+        FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData)
+      }
+
       forAll(scenarios) {
         (
           isJourneyPresentInDb: Boolean,

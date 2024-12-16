@@ -18,7 +18,7 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{ForeignFetchedPropertyData, JourneyWithStatus}
+import models.domain.{JourneyWithStatus}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
@@ -312,31 +312,5 @@ class ForeignPropertyJourneyAnswersControllerSpec
       val result = underTest.saveForeignPropertyExpenses(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
-  }
-
-  "fetch foreign merged property data" should {
-    "return success when services returns success" in {
-      mockAuthorisation()
-      val resultFromService = ForeignFetchedPropertyData(
-        foreignPropertyTax = Some(Map("ESP" -> ForeignPropertyTax(
-          foreignIncomeTax = Some(ForeignIncomeTax(
-            foreignIncomeTaxYesNo = true,
-            foreignTaxPaidOrDeducted = Some(BigDecimal(12.35))
-          )),
-          foreignTaxCreditRelief = Some(true)
-        ))),
-        foreignJourneyStatuses = Some(Map("ESP" -> List(
-          JourneyWithStatus(JourneyName.ForeignPropertyTax.entryName, JourneyStatus.InProgress.entryName)
-        )))
-      )
-      mockGetForeignFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
-      val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
-
-      status(result) shouldBe 200
-
-      val timeout: Timeout = Timeout(Span(250, Millis))
-      contentAsJson(result)(timeout) shouldBe Json.toJson(resultFromService)
-    }
-
   }
 }

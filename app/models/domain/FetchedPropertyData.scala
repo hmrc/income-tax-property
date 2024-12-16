@@ -16,37 +16,11 @@
 
 package models.domain
 
-import models.RentalsAndRaRAbout
-import models.request._
-import models.request.esba.EsbaInfo
-import models.request.foreign.ForeignPropertySelectCountry
-import models.request.sba.SbaInfo
-import models.request.ukrentaroom.RaRAdjustments
 import play.api.libs.json.{Json, OFormat}
 
 final case class FetchedPropertyData(
-  capitalAllowancesForACar: Option[CapitalAllowancesForACar],
-  propertyAbout: Option[PropertyAbout],
-  propertyRentalsAbout: Option[PropertyRentalsAbout],
-  rentalsAndRaRAbout: Option[RentalsAndRaRAbout],
-  adjustments: Option[PropertyRentalAdjustments],
-  rentalsAndRaRAdjustments: Option[PropertyRentalAdjustments],
-  allowances: Option[RentalAllowances],
-  rentalsAndRaRAllowances: Option[RentalAllowances],
-  esbasWithSupportingQuestions: Option[EsbaInfo],
-  rentalsAndRaREsbasWithSupportingQuestions: Option[EsbaInfo],
-  sbasWithSupportingQuestions: Option[SbaInfo],
-  rentalsAndRaRSbasWithSupportingQuestions: Option[SbaInfo],
-  propertyRentalsIncome: Option[PropertyRentalsIncome],
-  rentalsAndRaRIncome: Option[RentalsAndRaRIncome],
-  propertyRentalsExpenses: Option[PropertyRentalsExpense],
-  rentalsAndRaRExpenses: Option[PropertyRentalsExpense],
-  raRAbout: Option[RaRAbout],
-  rarExpenses: Option[RentARoomExpenses],
-  raRAdjustments: Option[RaRAdjustments],
-  rentARoomAllowances: Option[RentARoomAllowances],
-  journeyStatuses: List[JourneyWithStatus],
-  foreignPropertySelectCountry: Option[ForeignPropertySelectCountry]
+  ukPropertyData: FetchedUKPropertyData,
+  foreignPropertyData: FetchedForeignPropertyData
 )
 
 object FetchedPropertyData {

@@ -18,7 +18,7 @@ import config.AppConfig
 import connectors.ConnectorIntegrationSpec
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
-import models.domain.FetchedPropertyData
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData}
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
@@ -246,163 +246,167 @@ class JourneyAnswersIntegrationSpec
       val fetchedPropertyData = response.json.as[FetchedPropertyData]
       response.status shouldBe 200
       fetchedPropertyData shouldBe FetchedPropertyData(
-        capitalAllowancesForACar = None,
-        propertyAbout = None,
-        propertyRentalsAbout = None,
-        adjustments = Some(
-          PropertyRentalAdjustments(
-            23,
-            BalancingCharge(balancingChargeYesNo = true, Some(32)),
-            Some(0),
-            RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
-            21,
-            Some(34.56)
-          )
-        ),
-        allowances = Some(
-          RentalAllowances(
-            Some(1),
-            Some(7),
-            Some(2),
-            Some(3),
-            Some(5),
-            Some(4)
-          )
-        ),
-        esbasWithSupportingQuestions = Some(
-          EsbaInfo(
-            claimEnhancedStructureBuildingAllowance = true,
-            esbaClaims = Some(false),
-            List(
-              EsbaInUpstream(
-                LocalDate.parse("2024-01-01"),
-                35,
-                25,
-                Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+        foreignPropertyData = FetchedForeignPropertyData(None, None),
+        ukPropertyData = FetchedUKPropertyData(
+          capitalAllowancesForACar = None,
+          propertyAbout = None,
+          propertyRentalsAbout = None,
+          adjustments = Some(
+            PropertyRentalAdjustments(
+              23,
+              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              Some(0),
+              RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
+              21,
+              Some(34.56)
+            )
+          ),
+          allowances = Some(
+            RentalAllowances(
+              Some(1),
+              Some(7),
+              Some(2),
+              Some(3),
+              Some(5),
+              Some(4)
+            )
+          ),
+          esbasWithSupportingQuestions = Some(
+            EsbaInfo(
+              claimEnhancedStructureBuildingAllowance = true,
+              esbaClaims = Some(false),
+              List(
+                EsbaInUpstream(
+                  LocalDate.parse("2024-01-01"),
+                  35,
+                  25,
+                  Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+                )
               )
             )
-          )
-        ),
-        sbasWithSupportingQuestions = None,
-        propertyRentalsIncome = Some(
-          PropertyRentalsIncome(
-            isNonUKLandlord = false,
-            3,
-            12,
-            Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
-            None,
-            None,
-            None,
-            Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
-            Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
-          )
-        ),
-        propertyRentalsExpenses = Some(
-          PropertyRentalsExpense(
-            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
-            Some(1),
-            Some(2),
-            Some(3),
-            Some(11),
-            Some(13),
-            Some(12),
-            Some(14)
-          )
-        ),
-        raRAbout = Some(
-          RaRAbout(jointlyLetYesOrNo = true, 7, ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44)))
-        ),
-        rarExpenses = Some(
-          RentARoomExpenses(
-            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
-            Some(1),
-            Some(2),
-            Some(11),
-            Some(13),
-            Some(14)
-          )
-        ),
-        raRAdjustments =
-          Some(RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(32))), Some(34.56))),
-        rentARoomAllowances = Some(
-          RentARoomAllowances(
-            Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
-            Some(7),
-            Some(2),
-            Some(5),
-            Some(4)
-          )
-        ),
-        rentalsAndRaRAbout = Some(
-          RentalsAndRaRAbout(
-            jointlyLetYesOrNo = true,
-            7,
-            claimPropertyIncomeAllowanceYesOrNo = false,
-            3,
-            ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44))
-          )
-        ),
-        rentalsAndRaRAdjustments = Some(
-          PropertyRentalAdjustments(
-            23,
-            BalancingCharge(balancingChargeYesNo = true, Some(32)),
-            None,
-            RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
-            21,
-            Some(34.56)
-          )
-        ),
-        rentalsAndRaRAllowances = Some(
-          RentalAllowances(
-            Some(1),
-            Some(7),
-            Some(2),
-            Some(3),
-            Some(5),
-            Some(4)
-          )
-        ),
-        rentalsAndRaREsbasWithSupportingQuestions = Some(
-          EsbaInfo(
-            claimEnhancedStructureBuildingAllowance = true,
-            esbaClaims = Some(false),
-            List(
-              EsbaInUpstream(
-                LocalDate.parse("2024-01-01"),
-                35,
-                25,
-                Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+          ),
+          sbasWithSupportingQuestions = None,
+          propertyRentalsIncome = Some(
+            PropertyRentalsIncome(
+              isNonUKLandlord = false,
+              3,
+              12,
+              Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
+              None,
+              None,
+              None,
+              Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
+              Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
+            )
+          ),
+          propertyRentalsExpenses = Some(
+            PropertyRentalsExpense(
+              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(1),
+              Some(2),
+              Some(3),
+              Some(11),
+              Some(13),
+              Some(12),
+              Some(14)
+            )
+          ),
+          raRAbout = Some(
+            RaRAbout(jointlyLetYesOrNo = true, 7, ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44)))
+          ),
+          rarExpenses = Some(
+            RentARoomExpenses(
+              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(1),
+              Some(2),
+              Some(11),
+              Some(13),
+              Some(14)
+            )
+          ),
+          raRAdjustments =
+            Some(RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(32))), Some(34.56))),
+          rentARoomAllowances = Some(
+            RentARoomAllowances(
+              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
+              Some(7),
+              Some(2),
+              Some(5),
+              Some(4)
+            )
+          ),
+          rentalsAndRaRAbout = Some(
+            RentalsAndRaRAbout(
+              jointlyLetYesOrNo = true,
+              7,
+              claimPropertyIncomeAllowanceYesOrNo = false,
+              3,
+              ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44))
+            )
+          ),
+          rentalsAndRaRAdjustments = Some(
+            PropertyRentalAdjustments(
+              23,
+              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              None,
+              RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
+              21,
+              Some(34.56)
+            )
+          ),
+          rentalsAndRaRAllowances = Some(
+            RentalAllowances(
+              Some(1),
+              Some(7),
+              Some(2),
+              Some(3),
+              Some(5),
+              Some(4)
+            )
+          ),
+          rentalsAndRaREsbasWithSupportingQuestions = Some(
+            EsbaInfo(
+              claimEnhancedStructureBuildingAllowance = true,
+              esbaClaims = Some(false),
+              List(
+                EsbaInUpstream(
+                  LocalDate.parse("2024-01-01"),
+                  35,
+                  25,
+                  Address(BuildingName("name1"), BuildingNumber("name2"), Postcode("AB1 XY2"))
+                )
               )
             )
-          )
-        ),
-        rentalsAndRaRSbasWithSupportingQuestions = None,
-        rentalsAndRaRIncome = Some(
-          RentalsAndRaRIncome(
-            isNonUKLandlord = false,
-            12,
-            Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
-            None,
-            None,
-            None,
-            Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
-            Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
-          )
-        ),
-        rentalsAndRaRExpenses = Some(
-          PropertyRentalsExpense(
-            Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
-            Some(1),
-            Some(2),
-            Some(3),
-            Some(11),
-            Some(13),
-            Some(12),
-            Some(14)
-          )
-        ),
-        journeyStatuses = List(),
-        foreignPropertySelectCountry = None)
+          ),
+          rentalsAndRaRSbasWithSupportingQuestions = None,
+          rentalsAndRaRIncome = Some(
+            RentalsAndRaRIncome(
+              isNonUKLandlord = false,
+              12,
+              Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
+              None,
+              None,
+              None,
+              Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(1))),
+              Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(2)))
+            )
+          ),
+          rentalsAndRaRExpenses = Some(
+            PropertyRentalsExpense(
+              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(1),
+              Some(2),
+              Some(3),
+              Some(11),
+              Some(13),
+              Some(12),
+              Some(14)
+            )
+          ),
+          journeyStatuses = List(),
+          foreignPropertySelectCountry = None
+        )
+      )
 
     }
     "the downstream receives the expected payload when upload happens" in {

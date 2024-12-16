@@ -36,15 +36,6 @@ class ForeignPropertyJourneyAnswersController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
 
-  def fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId): Action[AnyContent] = auth.async {
-    implicit request =>
-      withJourneyContext(taxYear, incomeSourceId, nino, JourneyName.AllJourneys, request) { ctx =>
-        handleResponse(OK) {
-          propertyService.getFetchedPropertyDataMerged(ctx, nino, incomeSourceId)
-        }
-      }
-  }
-
   def saveSelectCountrySection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[ForeignPropertySelectCountry](

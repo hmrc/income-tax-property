@@ -108,18 +108,20 @@ class PropertyService @Inject() (
     val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear, nino, incomeSourceId)
 
     for {
-      resultFromDownstreamAnnual        <- resultAnnual
-      resultFromDownstreamPeriodicMaybe <- resultPeriodic
-      resultFromRepository              <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
-    } yield mergeService.mergeAll(resultFromDownstreamAnnual, resultFromDownstreamPeriodicMaybe, resultFromRepository)
+      resultFromDownstreamAnnual                            <- resultAnnual
+      resultFromDownstreamPeriodicMaybe                     <- resultPeriodic
+      resultFromRepository <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
+      (ukResultFromRepository, foreignResultFromRepository) = resultFromRepository
+    } yield mergeService.mergeAll(resultFromDownstreamAnnual, resultFromDownstreamPeriodicMaybe, ukResultFromRepository, foreignResultFromRepository)
 
   }
 
-  private def fetchAllJourneyDataFromRepository(ctx: JourneyContext): ITPEnvelope[Map[String, JourneyAnswers]] = {
-    val result: Future[Either[ServiceError, Map[String, JourneyAnswers]]] = if (ctx.journey == JourneyName.NoJourney) {
+  private def fetchAllJourneyDataFromRepository(ctx: JourneyContext)
+  : ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
+    val result: Future[Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]] = if (ctx.journey == JourneyName.NoJourney) {
       Future.successful(
         InternalError(s"Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}")
-          .asLeft[Map[String, JourneyAnswers]]
+          .asLeft[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]
       )
     } else {
       repository
@@ -129,7 +131,7 @@ class PropertyService @Inject() (
     ITPEnvelope.liftFuture(result)
   }
 
-  private def getValidJourneysPerJourneyName(
+  private def getValidUKJourneysPerJourneyName(
     journeyAnswers: List[JourneyAnswers]
   ): Either[ServiceError, Map[String, JourneyAnswers]] = {
     val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
@@ -149,6 +151,40 @@ class PropertyService @Inject() (
       }
     }
 
+  }
+
+  private def getForeignJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers]): Either[ServiceError, Map[String, Map[String, JourneyAnswers]]] = {
+    val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
+    journeyAnswersGrouped.foldLeft(Map[String, Map[String, JourneyAnswers]]().asRight[ServiceError]) { (acc, kv) =>
+      acc match {
+        case Right(validJourneys) =>
+          val (journeyName, journeys) = kv
+          val foreignJourneyMap: Either[ServiceError, Map[String, JourneyAnswers]] =
+            journeys.groupBy(_.countryCode).foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (innerAcc, innerKV) =>
+              innerAcc match {
+                case Right(innerValidJourneys) =>
+                  innerKV match {
+                    case (Some(countryCode), List(foreignJourneyAnswers)) => (innerValidJourneys + (countryCode -> foreignJourneyAnswers)).asRight[ServiceError]
+                    case _ => innerValidJourneys.asRight[ServiceError]
+                  }
+                case left => left
+              }
+            }
+          foreignJourneyMap match {
+            case Right(fjm) => (validJourneys + (journeyName -> fjm)).asRight[ServiceError]
+            case _ => validJourneys.asRight[ServiceError]
+          }
+        case left => left
+      }
+    }
+  }
+
+  private def getValidJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers])
+  : Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
+    for {
+      ukJourneyMap <- getValidUKJourneysPerJourneyName(journeyAnswers)
+      foreignJourneyMap <- getForeignJourneysPerJourneyName(journeyAnswers)
+    } yield (ukJourneyMap, foreignJourneyMap)
   }
 
   def getPropertyPeriodicSubmissions(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
