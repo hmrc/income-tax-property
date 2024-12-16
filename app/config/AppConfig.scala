@@ -16,52 +16,70 @@
 
 package config
 
+import com.google.inject.ImplementedBy
 import play.api.Configuration
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 
+@ImplementedBy(classOf[AppConfigImpl])
+trait AppConfig {
+  def appName: String
+  def ifBaseUrl: String
+  def timeToLive: Int
+  def ifEnvironment: String
+  def authorisationTokenKey: String
+  def authorisationTokenFor(apiVersion: String): String
+  def baseUrl(serviceName: String): String
+  protected def rootServices: String
+  protected def defaultProtocol: String
+  def getConfString(confKey: String, defString: => String): String
+  def getConfInt(confKey: String, defInt: => Int): Int
+  def throwConfigNotFoundError(key: String): RuntimeException
+  def emaSupportingAgentsEnabled: Boolean
+}
+
 @Singleton
-class AppConfig @Inject()(config: Configuration) {
+class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
-  lazy val appName: String = config.get[String]("appName")
+  override lazy val appName: String = config.get[String]("appName")
+  override lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
+  override lazy val timeToLive: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 
-  lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
+  override def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 
-  lazy val timeToLive: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
+  override lazy val authorisationTokenKey: String = "microservice.services.integration-framework.authorisation-token"
 
-  def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+  override def authorisationTokenFor(apiVersion: String): String =
+    config.get[String](authorisationTokenKey + s".$apiVersion")
 
-  private lazy val authorisationTokenKey: String = "microservice.services.integration-framework.authorisation-token"
-
-  def authorisationTokenFor(apiVersion: String): String = config.get[String](authorisationTokenKey + s".$apiVersion")
-
-
-  def baseUrl(serviceName: String): String = {
+  override def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
     val host = getConfString(s"$serviceName.host", throwConfigNotFoundError(s"$serviceName.host"))
     val port = getConfInt(s"$serviceName.port", throwConfigNotFoundError(s"$serviceName.port"))
     s"$protocol://$host:$port"
   }
 
-  protected lazy val rootServices = "microservice.services"
+  override protected lazy val rootServices = "microservice.services"
 
-  protected lazy val defaultProtocol: String =
+  override protected lazy val defaultProtocol: String =
     config
       .getOptional[String](s"$rootServices.protocol")
       .getOrElse("http")
 
-  private def getConfString(confKey: String, defString: => String) =
+  override def getConfString(confKey: String, defString: => String) =
     config
       .getOptional[String](s"$rootServices.$confKey")
       .getOrElse(defString)
 
-  private def getConfInt(confKey: String, defInt: => Int) =
+  override def getConfInt(confKey: String, defInt: => Int) =
     config
       .getOptional[Int](s"$rootServices.$confKey")
       .getOrElse(defInt)
 
-  private def throwConfigNotFoundError(key: String) =
+  override def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
+
+  override def emaSupportingAgentsEnabled: Boolean = config.get[Boolean]("feature-switch.ema-supporting-agents-enabled")
 
 }

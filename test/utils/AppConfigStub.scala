@@ -16,7 +16,7 @@
 
 package utils
 
-import config.AppConfig
+import config.{AppConfig, AppConfigImpl}
 import org.scalamock.scalatest.MockFactory
 import play.api.Configuration
 
@@ -24,7 +24,7 @@ import scala.concurrent.duration.Duration
 
 class AppConfigStub extends MockFactory {
 
-  def config(environment: String = "test"): AppConfig = new AppConfig(mock[Configuration]) {
+  def config(environment: String = "test"): AppConfig = new AppConfigImpl(mock[Configuration]) {
     private val wireMockPort = 11111
 
     private lazy val authorisationToken: String = "secret"

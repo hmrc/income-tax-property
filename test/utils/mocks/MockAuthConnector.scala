@@ -16,13 +16,14 @@
 
 package utils.mocks
 
+import models.auth.DelegatedAuthRules
+import models.auth.Enrolment.{Individual, SupportingAgent}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, ConfidenceLevel, Enrolments}
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,29 +32,36 @@ trait MockAuthConnector extends MockFactory {
 
   protected val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
-      .returning(Future.failed(exception))
-  }
+  type AuthConnectorResponse[A] = CallHandler4[Predicate, Retrieval[A], HeaderCarrier, ExecutionContext, Future[A]]
 
-  def mockAuthAsAgent(enrolments: Enrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Agent)))
+  val primaryAgentPredicate: String => Enrolment = mtdId =>
+    Enrolment(Individual.key)
+      .withIdentifier(Individual.value, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
 
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.allEnrolments, *, *)
-      .returning(Future.successful(enrolments))
-  }
+  val secondaryAgentPredicate: String => Enrolment = mtdId =>
+    Enrolment(SupportingAgent.key)
+      .withIdentifier(SupportingAgent.value, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
 
-  def mockAuth(enrolments: Enrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Individual)))
+  def mockAuthConnectorResponse[A](predicate: Predicate, retrieval: Retrieval[A])
+                                  (returnValue: Future[A]): CallHandler4[Predicate, Retrieval[A], HeaderCarrier, ExecutionContext, Future[A]] =
+    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[A])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(predicate, retrieval, *, *)
+      .returning(returnValue)
 
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
-      .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-  }
+  def mockAuthAffinityGroup(affinityGroup: AffinityGroup): AuthConnectorResponse[Option[AffinityGroup]] =
+    mockAuthConnectorResponse(EmptyPredicate, Retrievals.affinityGroup)(Future.successful(Some(affinityGroup)))
+
+  def mockAuthReturnException[A](predicate: Predicate, retrieval: Retrieval[A])(exception: Exception): AuthConnectorResponse[A] =
+    mockAuthConnectorResponse(predicate, retrieval)(Future.failed(exception))
+
+  def mockAuthAsPrimaryAgent(mtdId: String)(enrolments: Enrolments): AuthConnectorResponse[Enrolments] =
+    mockAuthConnectorResponse(primaryAgentPredicate(mtdId), Retrievals.allEnrolments)(Future.successful(enrolments))
+
+  def mockAuthAsSecondaryAgent(mtdId: String)(enrolments: Enrolments): AuthConnectorResponse[Enrolments] =
+    mockAuthConnectorResponse(secondaryAgentPredicate(mtdId), Retrievals.allEnrolments)(Future.successful(enrolments))
+
+  def mockAuthAsIndividual(response: Enrolments ~ ConfidenceLevel): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] =
+    mockAuthConnectorResponse(EmptyPredicate, Retrievals.allEnrolments and Retrievals.confidenceLevel)(Future.successful(response))
 }

@@ -18,6 +18,6 @@ package models
 
 import models.common.Mtditid
 
-case class User(mtditid: String, arn: Option[String]) {
+case class User(mtditid: String, arn: Option[String], isSecondaryAgent: Boolean = false) {
   def getMtditid: Mtditid = Mtditid(mtditid)
 }
