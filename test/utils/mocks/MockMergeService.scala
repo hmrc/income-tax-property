@@ -26,8 +26,12 @@ trait MockMergeService extends MockFactory {
 
   def mockMergeServiceMergeAll(returnValue: FetchedPropertyData) =
     (mergeService
-      .mergeAll(_: PropertyAnnualSubmission, _: Option[PropertyPeriodicSubmission], _: Map[String, JourneyAnswers]))
-      .expects(*, *, *)
+      .mergeAll(_: PropertyAnnualSubmission,
+        _: Option[PropertyPeriodicSubmission],
+        _: Map[String, JourneyAnswers],
+        _: Map[String, Map[String, JourneyAnswers]]
+      ))
+      .expects(*, *, *, *)
       .returning(
         returnValue
       )

@@ -20,6 +20,7 @@ import models._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
+import models.request.foreign.{ForeignIncomeTax, ForeignPropertyTax}
 import models.request.sba.{Sba, SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._

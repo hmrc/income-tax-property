@@ -20,7 +20,7 @@ import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
-import models.domain.FetchedPropertyData
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
@@ -750,7 +750,7 @@ class JourneyAnswersControllerSpec
   "fetch merged property data" should {
     "return success when service returns success " in {
       mockAuthorisation()
-      val resultFromService = FetchedPropertyData(
+      val uKPropertyData = FetchedUKPropertyData(
         None,
         None,
         None,
@@ -779,6 +779,12 @@ class JourneyAnswersControllerSpec
         None,
         List(),
         Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
+      )
+      val foreignPropertyData = FetchedForeignPropertyData(
+        None, None
+      )
+      val resultFromService = FetchedPropertyData(
+        ukPropertyData = uKPropertyData, foreignPropertyData = foreignPropertyData
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

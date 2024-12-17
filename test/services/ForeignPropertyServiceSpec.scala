@@ -21,12 +21,15 @@ import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
 import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
+import models.request._
 import models.request.foreign._
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
-import models.request._
 import models.responses._
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Filters
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
+import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
@@ -34,9 +37,10 @@ import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class ForeignPropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+  extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
@@ -177,6 +181,87 @@ class ForeignPropertyServiceSpec
           )
           .value
       ) shouldBe Right(Some(PeriodicSubmissionId("")))
+    }
+
+    "update pre-existing periodic submissions" in {
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
+      val periodicSubmissionId = "1"
+      val countryCode = "USA"
+      val foreignIncomeTaxYesNo = true
+      val foreignTaxCreditRelief = Some(foreignIncomeTaxYesNo)
+      val foreignTaxPaidOrDeducted = Some(BigDecimal(56.78))
+      val foreignProperty = ForeignProperty(
+        countryCode = countryCode,
+        income = Some(ForeignPropertyIncome(
+          rentIncome = Some(ForeignPropertyRentIncome(rentAmount = BigDecimal(12.34))),
+          foreignTaxCreditRelief = foreignTaxCreditRelief,
+          premiumsOfLeaseGrant = Some(BigDecimal(13.34)),
+          otherPropertyIncome = Some(BigDecimal(24.56)),
+          foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted,
+          specialWithholdingTaxOrUkTaxPaid = Some(BigDecimal(89.10))
+        )),
+        expenses = Some(models.responses.ForeignPropertyExpenses(
+          premisesRunningCosts = Some(BigDecimal(23.34)),
+          repairsAndMaintenance = Some(BigDecimal(32.21)),
+          financialCosts = Some(BigDecimal(54.32)),
+          professionalFees = Some(BigDecimal(65.43)),
+          travelCosts = Some(BigDecimal(22.22)),
+          costOfServices = Some(BigDecimal(10.10)),
+          residentialFinancialCost = Some(BigDecimal(11.11)),
+          broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
+          other = Some(BigDecimal(44.44)),
+          consolidatedExpense = Some(BigDecimal(90.05))
+        ))
+      )
+      val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
+        countryCode = countryCode,
+        foreignIncomeTax = Some(ForeignIncomeTax(
+          foreignIncomeTaxYesNo = foreignIncomeTaxYesNo, foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
+        )),
+        foreignTaxCreditRelief = foreignTaxCreditRelief
+      )
+
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        Some(PeriodicSubmissionId(periodicSubmissionId)),
+        submittedOn = Some(LocalDateTime.now),
+        fromDate = fromDate,
+        toDate = toDate,
+        foreignProperty = Some(Seq(foreignProperty)),
+        None
+      )
+
+      val Right(updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest) =
+        UpdatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
+          maybeSubmission = Some(propertyPeriodicSubmission),
+          foreignPropertyTaxWithCountryCode = foreignPropertyTaxWithCountryCode
+      )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel(periodicSubmissionId, fromDate, toDate)).asRight[ApiError]
+      )
+      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, periodicSubmissionId, Some(propertyPeriodicSubmission).asRight[ApiError])
+      mockUpdatePeriodicSubmission(
+        taxYear = taxYear,
+        taxableEntityId = nino,
+        incomeSourceId = incomeSourceId,
+        updateRequest = updatePropertyPeriodicSubmissionRequest,
+        submissionId = periodicSubmissionId,
+        result = Right(Some(periodicSubmissionId))
+      )
+
+      await(
+        underTest
+          .saveForeignPropertyTax(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignPropertyTaxWithCountryCode
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId(periodicSubmissionId)))
     }
 
     "save foreign property expenses" should {
@@ -403,5 +488,4 @@ class ForeignPropertyServiceSpec
     }
 
   }
-
 }

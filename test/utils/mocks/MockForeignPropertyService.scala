@@ -104,5 +104,5 @@ trait MockForeignPropertyService extends MockFactory {
       )(_: HeaderCarrier))
       .expects(journeyContext, foreignIncome, *)
       .returning(EitherT.fromEither(result))
-
+      
 }

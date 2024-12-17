@@ -16,13 +16,14 @@
 
 package models.domain
 
+import models.request.foreign.ForeignPropertyTax
 import play.api.libs.json.{Json, OFormat}
 
-final case class FetchedPropertyData(
-  ukPropertyData: FetchedUKPropertyData,
-  foreignPropertyData: FetchedForeignPropertyData
+final case class FetchedForeignPropertyData(
+  foreignPropertyTax: Option[Map[String, ForeignPropertyTax]],
+  foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
 )
 
-object FetchedPropertyData {
-  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+object FetchedForeignPropertyData {
+  implicit val format: OFormat[FetchedForeignPropertyData] = Json.format[FetchedForeignPropertyData]
 }
