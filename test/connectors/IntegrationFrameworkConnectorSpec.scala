@@ -18,6 +18,7 @@ package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
+import models.request.foreign.UpdateForeignPropertyPeriodicSubmissionRequest
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
@@ -56,6 +57,21 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
         UkOtherProperty(
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
           None
+        )
+      )
+    )
+
+  val validUpdateForeignPropertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest =
+    UpdateForeignPropertyPeriodicSubmissionRequest(
+      Some(
+        Seq(
+          ForeignProperty(
+            "FR",
+            Some(ForeignPropertyIncome(None, Some(true), None, None, Some(BigDecimal(543.00)), None)),
+            Some(
+              ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, Some(BigDecimal(123.00)))
+            )
+          )
         )
       )
     )
@@ -802,6 +818,49 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           )(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+  }
+
+  "Given a need to update Foreign Periodic Submission Data" when {
+
+    val requestBody: JsValue = Json.parse(s"""
+                                             |{
+                                             |      "foreignProperty": [
+                                             |    {
+                                             |      "countryCode": "FR",
+                                             |      "income": {
+                                             |        "foreignTaxCreditRelief": true,
+                                             |        "foreignTaxPaidOrDeducted": 543
+                                             |      },
+                                             |      "expenses": {
+                                             |        "consolidatedExpense" : 123
+                                             |      }
+                                             |    }
+                                             |  ]
+                                             |}
+                                             |""".stripMargin)
+    "update foreign periodic submission" should {
+      "update foreign submissions data for the APIs used before TaxYear(2024)" in {
+
+        val httpResponse = HttpResponse(NO_CONTENT, "")
+        val taxYear = TaxYear(2023)
+
+        stubPutHttpClientCall(
+          s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2022-23&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
+          requestBody.toString(),
+          httpResponse
+        )
+
+        await(
+          underTest.updateForeignPeriodicSubmission(
+            taxableEntityId,
+            incomeSourceId,
+            taxYear,
+            submissionId,
+            validUpdateForeignPropertyPeriodicSubmissionRequest
+          )(hc)
+        ) shouldBe Right(None)
       }
     }
   }
