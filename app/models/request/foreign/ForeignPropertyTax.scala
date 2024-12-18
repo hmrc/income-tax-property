@@ -23,5 +23,3 @@ case class ForeignPropertyTax(foreignIncomeTax: Option[ForeignIncomeTax],foreign
 object ForeignPropertyTax {
   implicit val format:Format[ForeignPropertyTax] = Json.format
 }
-
-
