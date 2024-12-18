@@ -16,13 +16,13 @@
 
 package models.repository
 
-import models.request.foreign.{ForeignIncomeTax, ForeignPropertyTax}
+import models.request.ReversePremiumsReceived
+import models.request.foreign._
 import models.responses._
 
 // T: to return (merge into)
 // U: saved (extract from)
 // X: from downstream
-
 
 object ForeignMerger {
 
@@ -55,6 +55,64 @@ object ForeignMerger {
                 foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
               )),
               foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
+            )
+          }
+          Option.when(result.nonEmpty)(result)
+        case _ => None
+      }
+  }
+
+  implicit object ForeignPropertyIncomeMerger
+    extends Merger[Option[Map[String, ForeignIncomeAnswers]], Option[Map[String, ForeignIncomeStoreAnswers]], Option[Map[String, ForeignPropertyIncome]]] {
+
+    override def merge(
+      extractedMaybe: Option[Map[String, ForeignIncomeStoreAnswers]],
+      fromDownstreamMaybe: Option[Map[String, ForeignPropertyIncome]]
+    ): Option[Map[String, ForeignIncomeAnswers]] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extractedMap), Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignIncomeAnswers] = fromDownstreamMap.map {
+            case (countryCode, foreignPropertyIncome) =>
+              val storeAnswersMaybe = extractedMap.get(countryCode)
+              countryCode -> ForeignIncomeAnswers(
+                rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
+                premiumsGrantLeaseReceived = storeAnswersMaybe
+                  .map(_.premiumsGrantLeaseReceived)
+                  .getOrElse(foreignPropertyIncome.premiumsOfLeaseGrant.isDefined),
+                reversePremiumsReceived = storeAnswersMaybe.map(answers =>
+                  ReversePremiumsReceived(answers.reversePremiumsReceived, None)
+                ),
+                otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
+                calculatedPremiumLeaseTaxable = storeAnswersMaybe.map(storeAnswers =>
+                  CalculatedPremiumLeaseTaxable(storeAnswers.calculatedPremiumLeaseTaxable, None)
+                ),
+                receivedGrantLeaseAmount = storeAnswersMaybe.flatMap(_.receivedGrantLeaseAmount),
+                twelveMonthPeriodsInLease = storeAnswersMaybe.flatMap(_.twelveMonthPeriodsInLease),
+                premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
+                  PremiumsOfLeaseGrantAgreed(
+                    premiumsOfLeaseGrantAgreed = true,
+                    premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
+                  )
+                )
+            )
+          }
+          Option.when(result.nonEmpty)(result)
+        case (_, Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignIncomeAnswers] = fromDownstreamMap.map {
+            case (countryCode, foreignPropertyIncome) => countryCode -> ForeignIncomeAnswers(
+              rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
+              premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
+              reversePremiumsReceived = None,
+              otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
+              calculatedPremiumLeaseTaxable = None,
+              receivedGrantLeaseAmount = None,
+              twelveMonthPeriodsInLease = None,
+              premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
+                PremiumsOfLeaseGrantAgreed(
+                  premiumsOfLeaseGrantAgreed = true,
+                  premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
+                )
+              )
             )
           }
           Option.when(result.nonEmpty)(result)
