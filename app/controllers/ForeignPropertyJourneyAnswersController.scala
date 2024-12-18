@@ -87,13 +87,13 @@ class ForeignPropertyJourneyAnswersController @Inject() (
 
   def saveForeignIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[ForeignIncome](
+      withJourneyContextAndEntity[ForeignIncomeWithCountryCode](
         taxYear,
         incomeSourceId,
         nino,
         JourneyName.ForeignIncomeJourney,
         request
-      ) { (ctx, foreignPropertyIncome: ForeignIncome) =>
+      ) { (ctx, foreignPropertyIncome: ForeignIncomeWithCountryCode) =>
         handleResponse(NO_CONTENT) {
           propertyService.saveForeignIncome(ctx, foreignPropertyIncome)
         }

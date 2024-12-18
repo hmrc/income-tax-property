@@ -18,13 +18,10 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{JourneyWithStatus}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
 import models.responses.PeriodicSubmissionId
-import org.apache.pekko.util.Timeout
-import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -221,7 +218,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return boolean true for valid request body" in {
-      val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+      val foreignIncomeInformation = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
       mockAuthorisation()
       mockSaveForeignIncomeSection(
@@ -245,7 +242,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
       forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
-        val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+        val foreignIncomeInformation = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
         mockAuthorisation()
         mockSaveForeignIncomeSection(
