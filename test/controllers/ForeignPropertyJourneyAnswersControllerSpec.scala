@@ -18,13 +18,10 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{JourneyWithStatus}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
 import models.responses.PeriodicSubmissionId
-import org.apache.pekko.util.Timeout
-import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -35,7 +32,7 @@ import utils.providers.FakeRequestProvider
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyJourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockForeignPropertyService with MockMongoJourneyAnswersRepository
+    extends ControllerUnitTest with MockForeignPropertyService with MockMongoJourneyAnswersRepository
     with MockAuthorisedAction with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   private val underTest = new ForeignPropertyJourneyAnswersController(

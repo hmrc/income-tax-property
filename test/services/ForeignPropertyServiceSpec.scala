@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.test.HttpClientSupport
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -310,7 +310,7 @@ class ForeignPropertyServiceSpec
     }
   }
 
-  "save foreign income should create or update the periodic submission and" should {
+  "save foreign income should" should {
 
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
@@ -329,16 +329,9 @@ class ForeignPropertyServiceSpec
         Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
     )
 
-    "return no content for valid request and call create periodic submission request" in {
+    "call create periodic submission request when periodic submission is empty and return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-
-      mockGetAllPeriodicSubmission(
-        taxYear,
-        nino,
-        incomeSourceId,
-        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
-      )
 
       val emptyPeriodicSubmission =
         PropertyPeriodicSubmission(
@@ -356,6 +349,14 @@ class ForeignPropertyServiceSpec
           Some(emptyPeriodicSubmission),
           foreignIncome
         )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
       mockCreatePeriodicSubmission(
         taxYear,
         nino,
@@ -373,6 +374,84 @@ class ForeignPropertyServiceSpec
           )
           .value
       ) shouldBe Right(Some(PeriodicSubmissionId("create123")))
+    }
+
+    "call update periodic submission request when there is an existing periodic submission" in {
+
+      val existingPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          submissionId = Some(PeriodicSubmissionId("456")),
+          submittedOn = Some(LocalDateTime.of(LocalDate.parse(TaxYear.startDate(taxYear)), LocalTime.of(10, 11))),
+          fromDate = LocalDate.parse(TaxYear.startDate(taxYear)),
+          toDate = LocalDate.parse(TaxYear.endDate(taxYear)),
+          foreignProperty = Some(
+            Seq(
+              ForeignProperty(
+                countryCode = "AUS",
+                income = Some(
+                  ForeignPropertyIncome(
+                    rentIncome = Some(ForeignPropertyRentIncome(rentAmount = 12345.75)),
+                    foreignTaxCreditRelief = Some(true),
+                    premiumsOfLeaseGrant = Some(234.50),
+                    otherPropertyIncome = Some(345.65),
+                    foreignTaxPaidOrDeducted = Some(456.75),
+                    specialWithholdingTaxOrUkTaxPaid = Some(678.95)
+                  )
+                ),
+                expenses = None
+              )
+            )
+          ),
+          ukOtherProperty = Some(
+            UkOtherProperty(
+              Some(UkOtherPropertyIncome(Some(200.0), Some(200.0), Some(200.0), Some(200.0), Some(200.0), None)),
+              None
+            )
+          )
+        )
+
+      val Right(requestForUpdate: UpdatePropertyPeriodicSubmissionRequest) =
+        UpdatePropertyPeriodicSubmissionRequest.fromForeignIncome(
+          Some(existingPeriodicSubmission),
+          foreignIncome
+        )
+
+      val fromDate = LocalDate.of(taxYear.endYear - 1, 4, 6)
+      val toDate = LocalDate.of(taxYear.endYear, 4, 5)
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("456", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        "456",
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+
+      mockUpdatePeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForUpdate,
+        "456",
+        Some("456").asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveForeignIncome(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignIncome
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("456")))
     }
 
     "persist the foreign income supporting answers into the backend mongo" in {
@@ -393,7 +472,7 @@ class ForeignPropertyServiceSpec
         List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
       )
 
-      val emptyPeriodicSubmission =
+      val existingPeriodicSubmission =
         PropertyPeriodicSubmission(
           None,
           None,
@@ -406,8 +485,8 @@ class ForeignPropertyServiceSpec
       val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
         CreatePropertyPeriodicSubmissionRequest.fromForeignIncome(
           taxYear,
-          Some(emptyPeriodicSubmission),
-          foreignIncome
+          maybeSubmission = Some(existingPeriodicSubmission),
+          foreignIncome = foreignIncome
         )
 
       mockCreatePeriodicSubmission(
