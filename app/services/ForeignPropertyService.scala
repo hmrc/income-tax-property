@@ -269,11 +269,20 @@ class ForeignPropertyService @Inject() (
 
   def saveForeignIncome(
     ctx: JourneyContext,
-    foreignPropertyIncome: ForeignIncome
+    foreignPropertyIncome: ForeignIncomeWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     persistForeignAnswers(
       ctx,
-      foreignPropertyIncome,
+      ForeignIncomeStoreAnswers(
+        premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsGrantLeaseReceived,
+        premiumsOfLeaseGrantAgreed =
+          foreignPropertyIncome.premiumsOfLeaseGrantAgreed.fold(false)(_.premiumsOfLeaseGrantAgreed),
+        reversePremiumsReceived = foreignPropertyIncome.reversePremiumsReceived.reversePremiumsReceived,
+        calculatedPremiumLeaseTaxable =
+          foreignPropertyIncome.calculatedPremiumLeaseTaxable.fold(false)(_.calculatedPremiumLeaseTaxable),
+        twelveMonthPeriodsInLease = foreignPropertyIncome.twelveMonthPeriodsInLease,
+        receivedGrantLeaseAmount = foreignPropertyIncome.receivedGrantLeaseAmount
+      ),
       foreignPropertyIncome.countryCode
     )
 

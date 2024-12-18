@@ -221,7 +221,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return boolean true for valid request body" in {
-      val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+      val foreignIncomeInformation = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
       mockAuthorisation()
       mockSaveForeignIncomeSection(
@@ -245,7 +245,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
       forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
-        val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+        val foreignIncomeInformation = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
         mockAuthorisation()
         mockSaveForeignIncomeSection(
