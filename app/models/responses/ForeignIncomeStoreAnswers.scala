@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-package models.request.foreign
+package models.responses
 
 import play.api.libs.json.{Format, Json}
 
-case class ForeignPropertyTax(foreignIncomeTax: Option[ForeignIncomeTax],foreignTaxCreditRelief:Option[Boolean])
+case class ForeignIncomeStoreAnswers(
+  premiumsGrantLeaseReceived: Boolean,
+  premiumsOfLeaseGrantAgreed: Boolean,
+  reversePremiumsReceived: Boolean,
+  calculatedPremiumLeaseTaxable: Boolean,
+  twelveMonthPeriodsInLease: Option[BigDecimal],
+  receivedGrantLeaseAmount: Option[BigDecimal]
+)
 
-object ForeignPropertyTax {
-  implicit val format:Format[ForeignPropertyTax] = Json.format
+object ForeignIncomeStoreAnswers {
+  implicit val format: Format[ForeignIncomeStoreAnswers] = Json.format
 }
