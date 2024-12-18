@@ -160,9 +160,24 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     collection.updateOne(filter, update, options).toFuture()
   }
 
+  private[repositories] def updateForeignStatus(ctx: JourneyContext, status: JourneyStatus, countryCode: String): Future[UpdateResult] = {
+    val filter = foreignFilterJourney(ctx, countryCode)
+    val update = createUpsertStatus(status)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
   def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
     val result = updateStatus(ctx, status)
+    // TODO return a more descriptive data type
+    result.map(_ => ())
+  }
+
+  def setForeignStatus(ctx: JourneyContext, status: JourneyStatus, countryCode: String): Future[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
+    val result = updateForeignStatus(ctx, status, countryCode)
     // TODO return a more descriptive data type
     result.map(_ => ())
   }

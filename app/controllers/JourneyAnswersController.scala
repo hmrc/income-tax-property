@@ -324,6 +324,24 @@ class JourneyAnswersController @Inject() (
       }
     }
 
+  def setForeignStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String, countryCode: String): Action[AnyContent] =
+    auth.async { implicit request =>
+      val ctx =
+        JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
+      val requestBody = parseBody[JourneyStatusData](request)
+
+      requestBody match {
+        case Success(validatedRes) =>
+          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+            case JsSuccess(value, _) =>
+              journeyStatusService.setForeignStatus(ctx, value, countryCode).value.map(_ => NoContent)
+            case JsError(err) =>
+              Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+          }
+        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      }
+    }
+
   def savRentalsAndRaRSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
       withJourneyContextAndEntity[SbaInfo](taxYear, incomeSourceId, nino, JourneyName.RentalsAndRaRSBA, request) {

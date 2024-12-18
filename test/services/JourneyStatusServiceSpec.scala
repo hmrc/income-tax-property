@@ -40,5 +40,22 @@ class JourneyStatusServiceSpec extends UnitTest with MockMongoJourneyAnswersRepo
 
       result shouldBe ().asRight[ServiceError]
     }
+
+    ".setForeignStatus" in {
+
+      val result = await(
+        journeyStatusService.setForeignStatus(JourneyContext(
+          taxYear = TaxYear(2023),
+          incomeSourceId = IncomeSourceId("incomeSourceId"),
+          mtditid = Mtditid("1234567890"),
+          journey = JourneyName.RentARoomExpenses
+        ),
+          JourneyStatusData(JourneyStatus.InProgress),
+          countryCode = "GRC"
+        ).value
+      )
+
+      result shouldBe ().asRight[ServiceError]
+    }
   }
 }
