@@ -16,7 +16,7 @@
 
 package models.responses
 
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 
 case class ForeignPropertyTaxStoreAnswers(foreignIncomeTaxYesNo: Option[Boolean])
 

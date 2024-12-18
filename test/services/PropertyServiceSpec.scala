@@ -200,11 +200,10 @@ class PropertyServiceSpec
     }
   }
 
-  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
-    CreatePropertyPeriodicSubmissionRequest(
+  val validCreateUKPropertyPeriodicSubmissionRequest: CreateUKPropertyPeriodicSubmissionRequest =
+    CreateUKPropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
-      None,
       Some(
         UkOtherProperty(
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
@@ -212,9 +211,8 @@ class PropertyServiceSpec
         )
       )
     )
-  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
-    UpdatePropertyPeriodicSubmissionRequest(
-      None,
+  val validUpdateUKPropertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest =
+    UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
@@ -246,13 +244,13 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        validCreatePropertyPeriodicSubmissionRequest,
+        validCreateUKPropertyPeriodicSubmissionRequest,
         Right(Some(periodicSubmissionId))
       )
 
       await(
         underTest
-          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreateUKPropertyPeriodicSubmissionRequest)
           .value
       ) shouldBe
         Right(Some(periodicSubmissionId))
@@ -264,12 +262,12 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        validCreatePropertyPeriodicSubmissionRequest,
+        validCreateUKPropertyPeriodicSubmissionRequest,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
         underTest
-          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreateUKPropertyPeriodicSubmissionRequest)
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
@@ -284,7 +282,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        validUpdatePropertyPeriodicSubmissionRequest,
+        validUpdateUKPropertyPeriodicSubmissionRequest,
         submissionId,
         Right(None)
       )
@@ -296,7 +294,7 @@ class PropertyServiceSpec
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )
           .value
       ) shouldBe
@@ -309,7 +307,7 @@ class PropertyServiceSpec
         taxYear,
         nino,
         incomeSourceId,
-        validUpdatePropertyPeriodicSubmissionRequest,
+        validUpdateUKPropertyPeriodicSubmissionRequest,
         submissionId,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
@@ -320,7 +318,7 @@ class PropertyServiceSpec
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
@@ -480,8 +478,8 @@ class PropertyServiceSpec
           None
         )
 
-      val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
-        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+      val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
+        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
           taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalAdjustments
@@ -552,8 +550,8 @@ class PropertyServiceSpec
           None
         )
 
-      val requestForCreate: CreatePropertyPeriodicSubmissionRequest =
-        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+      val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
+        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
           taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalAdjustments
@@ -792,8 +790,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
           taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalsIncome
@@ -836,8 +834,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalsIncome(
           taxYear,
           Some(emptyPeriodicSubmission),
           propertyRentalsIncome
@@ -899,8 +897,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
           taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRIncome
@@ -943,8 +941,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromRentalsAndRaRIncome(
           taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRIncome
@@ -1024,7 +1022,7 @@ class PropertyServiceSpec
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
       val Right(expensesForUpdate) =
-        UpdatePropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses)
+        UpdateUKPropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses)
       mockUpdatePeriodicSubmission(
         taxYear,
         nino,
@@ -1162,7 +1160,7 @@ class PropertyServiceSpec
       )
 
       val Right(expensesForUpdate) =
-        UpdatePropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses)
+        UpdateUKPropertyPeriodicSubmissionRequest.fromExpenses(Some(propertyPeriodicSubmission), expenses)
       mockUpdatePeriodicSubmission(
         taxYear,
         nino,
@@ -1229,8 +1227,8 @@ class PropertyServiceSpec
         Nil.asRight[ApiError]
       )
 
-      val Right(raRExpensesForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromRaRExpenses(
+      val Right(raRExpensesForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromRaRExpenses(
           taxYear,
           None,
           raRExpenses
@@ -1305,7 +1303,7 @@ class PropertyServiceSpec
       )
 
       val Right(raRExpensesForUpdate) =
-        UpdatePropertyPeriodicSubmissionRequest.fromRaRExpenses(Some(propertyPeriodicSubmission), raRExpenses)
+        UpdateUKPropertyPeriodicSubmissionRequest.fromRaRExpenses(Some(propertyPeriodicSubmission), raRExpenses)
       mockUpdatePeriodicSubmission(
         taxYear,
         nino,
@@ -1440,7 +1438,7 @@ class PropertyServiceSpec
       )
 
       val Right(raRExpensesForUpdate) =
-        UpdatePropertyPeriodicSubmissionRequest.fromRaRExpenses(Some(propertyPeriodicSubmission), raRExpenses)
+        UpdateUKPropertyPeriodicSubmissionRequest.fromRaRExpenses(Some(propertyPeriodicSubmission), raRExpenses)
 
       mockUpdatePeriodicSubmission(
         taxYear,
@@ -1605,7 +1603,8 @@ class PropertyServiceSpec
           None,
           None,
           List(),
-          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None)))
+          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
+        )
         val foreignPropertyData = FetchedForeignPropertyData(None, None)
         FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData)
       }
@@ -1940,8 +1939,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromUkRaRAbout(
           taxYear,
           Some(emptyPeriodicSubmission),
           ukRaRAbout
@@ -2016,8 +2015,8 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(annualSubmission).asRight[ApiError]
       )
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromUkRaRAbout(
           taxYear,
           Some(emptyPeriodicSubmission),
           ukRaRAbout
@@ -2086,8 +2085,8 @@ class PropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
           taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRAbout
@@ -2162,8 +2161,8 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(annualSubmission).asRight[ApiError]
       )
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
+      val Right(requestForCreate: CreateUKPropertyPeriodicSubmissionRequest) =
+        CreateUKPropertyPeriodicSubmissionRequest.fromRentalsAndRaRAbout(
           taxYear,
           Some(emptyPeriodicSubmission),
           rentalsAndRaRAbout

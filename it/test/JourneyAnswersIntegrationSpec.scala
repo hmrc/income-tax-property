@@ -53,11 +53,10 @@ class JourneyAnswersIntegrationSpec
   private val submissionId1 = "some-submission-id-1"
   private val submissionId2 = "some-submission-id-2"
 
-  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
-    CreatePropertyPeriodicSubmissionRequest(
+  val validCreateUKPropertyPeriodicSubmissionRequest: CreateUKPropertyPeriodicSubmissionRequest =
+    CreateUKPropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
-      None,
       None
     )
 

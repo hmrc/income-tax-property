@@ -27,17 +27,16 @@ import play.api.libs.ws.BodyWritable
 
 import java.time.LocalDate
 
-final case class CreatePropertyPeriodicSubmissionRequest(
+final case class CreateUKPropertyPeriodicSubmissionRequest(
   fromDate: LocalDate,
   toDate: LocalDate,
-  foreignProperty: Option[Seq[ForeignProperty]],
   ukOtherProperty: Option[UkOtherProperty]
 )
 
-object CreatePropertyPeriodicSubmissionRequest {
+object CreateUKPropertyPeriodicSubmissionRequest {
 
-  implicit val writes: Writes[CreatePropertyPeriodicSubmissionRequest] =
-    Json.writes[CreatePropertyPeriodicSubmissionRequest]
+  implicit val writes: Writes[CreateUKPropertyPeriodicSubmissionRequest] =
+    Json.writes[CreateUKPropertyPeriodicSubmissionRequest]
 
   implicit def jsonBodyWritable[T](implicit
     writes: Writes[T],
@@ -48,7 +47,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     entity: T
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
     val result = entity match {
       case e @ RaRAbout(_, _, _)                   => fromUkRaRAbout(taxYear, periodicSubmissionMaybe, e)
       case e @ Expenses(_, _, _, _, _, _, _, _)    => fromExpenses(taxYear, periodicSubmissionMaybe, e)
@@ -60,9 +59,10 @@ object CreatePropertyPeriodicSubmissionRequest {
       case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
       case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
+
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
-          .asLeft[CreatePropertyPeriodicSubmissionRequest]
+          .asLeft[CreateUKPropertyPeriodicSubmissionRequest]
     }
 
     result.map(r => r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone)))
@@ -72,19 +72,17 @@ object CreatePropertyPeriodicSubmissionRequest {
   private def fromPropertyPeriodicSubmission(
     taxYear: TaxYear,
     maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]
-  ): CreatePropertyPeriodicSubmissionRequest = maybePropertyPeriodicSubmission match {
+  ): CreateUKPropertyPeriodicSubmissionRequest = maybePropertyPeriodicSubmission match {
     case Some(propertyPeriodicSubmission) =>
-      CreatePropertyPeriodicSubmissionRequest(
+      CreateUKPropertyPeriodicSubmissionRequest(
         LocalDate.parse(TaxYear.startDate(taxYear)),
         LocalDate.parse(TaxYear.endDate(taxYear)),
-        propertyPeriodicSubmission.foreignProperty,
         propertyPeriodicSubmission.ukOtherProperty
       )
     case None =>
-      CreatePropertyPeriodicSubmissionRequest(
+      CreateUKPropertyPeriodicSubmissionRequest(
         LocalDate.parse(TaxYear.startDate(taxYear)),
         LocalDate.parse(TaxYear.endDate(taxYear)),
-        None,
         None
       )
   }
@@ -93,7 +91,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
     propertyRentalAdjustments: PropertyRentalAdjustments
-  ): CreatePropertyPeriodicSubmissionRequest = {
+  ): CreateUKPropertyPeriodicSubmissionRequest = {
 
     val propertyPeriodicSubmission = fromPropertyPeriodicSubmission(taxYear, maybePeriodicSubmission)
     val expensesMaybe: Option[UkOtherPropertyExpenses] = propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
@@ -113,7 +111,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     ukRaRAbout: RaRAbout
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
     val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
       periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
 
@@ -146,10 +144,9 @@ object CreatePropertyPeriodicSubmissionRequest {
         )
       )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
 
-    val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmissionMaybe.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           None,
@@ -158,7 +155,7 @@ object CreatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val resultWithIncome: CreatePropertyPeriodicSubmissionRequest =
+    val resultWithIncome: CreateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
 
     val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
@@ -170,7 +167,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     rentalsAndRaRAbout: RentalsAndRaRAbout
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
     val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
       periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
 
@@ -210,10 +207,9 @@ object CreatePropertyPeriodicSubmissionRequest {
         )
       )(_.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
 
-    val requestWithEmptyOtherPropertyIncomeAndExpenses = CreatePropertyPeriodicSubmissionRequest(
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmissionMaybe.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           None,
@@ -222,7 +218,7 @@ object CreatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val resultWithIncome: CreatePropertyPeriodicSubmissionRequest =
+    val resultWithIncome: CreateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
 
     val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
@@ -234,7 +230,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     expenses: Expenses
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
@@ -243,10 +239,9 @@ object CreatePropertyPeriodicSubmissionRequest {
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
       }
-    CreatePropertyPeriodicSubmissionRequest(
+    CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -282,7 +277,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     raRExpenses: RentARoomExpenses
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
@@ -292,10 +287,9 @@ object CreatePropertyPeriodicSubmissionRequest {
         case _         => (None, None)
       }
 
-    CreatePropertyPeriodicSubmissionRequest(
+    CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -329,7 +323,7 @@ object CreatePropertyPeriodicSubmissionRequest {
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     propertyRentalsIncome: PropertyRentalsIncome
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
@@ -349,10 +343,9 @@ object CreatePropertyPeriodicSubmissionRequest {
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
-    val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(
+    val requestWithEmptyRentalsIncome = CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           None,
@@ -361,15 +354,16 @@ object CreatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val result: CreatePropertyPeriodicSubmissionRequest =
+    val result: CreateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
     result.asRight[ServiceError]
   }
+
   def fromRentalsAndRaRIncome(
     taxYear: TaxYear,
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     rentalsAndRaRIncome: RentalsAndRaRIncome
-  ): Either[ServiceError, CreatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, CreateUKPropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
@@ -389,10 +383,9 @@ object CreatePropertyPeriodicSubmissionRequest {
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
-    val requestWithEmptyRentalsIncome = CreatePropertyPeriodicSubmissionRequest(
+    val requestWithEmptyRentalsIncome = CreateUKPropertyPeriodicSubmissionRequest(
       periodicSubmissionMaybe.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
       periodicSubmissionMaybe.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
-      periodicSubmission.flatMap(_.foreignProperty),
       Some(
         UkOtherProperty(
           None,
@@ -401,19 +394,19 @@ object CreatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val result: CreatePropertyPeriodicSubmissionRequest =
+    val result: CreateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
     result.asRight[ServiceError]
   }
 
   private def updateUkOtherPropertiesIncome(
     ukOtherPropertyIncome: UkOtherPropertyIncome,
-    request: CreatePropertyPeriodicSubmissionRequest
-  ): CreatePropertyPeriodicSubmissionRequest = {
-    val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, None) => Some(UkOtherProperty(None, None))
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, uopi) => uopi
+    request: CreateUKPropertyPeriodicSubmissionRequest
+  ): CreateUKPropertyPeriodicSubmissionRequest = {
+    val ukOtherPropertyLens: Optional[CreateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] =
+      Optional[CreateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case CreateUKPropertyPeriodicSubmissionRequest(_, _, None) => Some(UkOtherProperty(None, None))
+        case CreateUKPropertyPeriodicSubmissionRequest(_, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
@@ -433,12 +426,12 @@ object CreatePropertyPeriodicSubmissionRequest {
 
   private def updateUkOtherPropertiesExpenses(
     ukOtherPropertyExpenses: UkOtherPropertyExpenses,
-    request: CreatePropertyPeriodicSubmissionRequest
-  ): CreatePropertyPeriodicSubmissionRequest = {
-    val ukOtherPropertyLens: Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[CreatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, None) => Some(UkOtherProperty(None, None))
-        case CreatePropertyPeriodicSubmissionRequest(_, _, _, uopi) => uopi
+    request: CreateUKPropertyPeriodicSubmissionRequest
+  ): CreateUKPropertyPeriodicSubmissionRequest = {
+    val ukOtherPropertyLens: Optional[CreateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] =
+      Optional[CreateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case CreateUKPropertyPeriodicSubmissionRequest(_, _, None) => Some(UkOtherProperty(None, None))
+        case CreateUKPropertyPeriodicSubmissionRequest(_, _, uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }

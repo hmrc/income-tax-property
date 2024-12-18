@@ -24,20 +24,18 @@ import monocle.Optional
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 
-final case class UpdatePropertyPeriodicSubmissionRequest(
-  foreignProperty: Option[Seq[ForeignProperty]],
+final case class UpdateUKPropertyPeriodicSubmissionRequest(
   ukOtherProperty: Option[UkOtherProperty]
 )
 
-object UpdatePropertyPeriodicSubmissionRequest {
+object UpdateUKPropertyPeriodicSubmissionRequest {
 
 //propertyIncomeAllowance: BigDecimal, // ToDo: Where is this used?
 //  renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge, //
 //  residentialFinanceCost: BigDecimal,
 //  unusedResidentialFinanceCost: BigDecimal
-  implicit val writes: Writes[UpdatePropertyPeriodicSubmissionRequest] =
-    Json.writes[UpdatePropertyPeriodicSubmissionRequest]
-
+  implicit val writes: Writes[UpdateUKPropertyPeriodicSubmissionRequest] =
+    Json.writes[UpdateUKPropertyPeriodicSubmissionRequest]
 
   implicit def jsonBodyWritable[T](implicit
     writes: Writes[T],
@@ -46,23 +44,19 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
   private def fromPropertyPeriodicSubmission(
     maybePropertyPeriodicSubmission: Option[PropertyPeriodicSubmission]
-  ): UpdatePropertyPeriodicSubmissionRequest = maybePropertyPeriodicSubmission match {
+  ): UpdateUKPropertyPeriodicSubmissionRequest = maybePropertyPeriodicSubmission match {
     case Some(propertyPeriodicSubmission) =>
-      UpdatePropertyPeriodicSubmissionRequest(
-        propertyPeriodicSubmission.foreignProperty,
+      UpdateUKPropertyPeriodicSubmissionRequest(
         propertyPeriodicSubmission.ukOtherProperty
       )
     case None =>
-      UpdatePropertyPeriodicSubmissionRequest(
-        None,
-        None
-      )
+      UpdateUKPropertyPeriodicSubmissionRequest(None)
   }
 
   def fromPropertyRentalAdjustments(
     maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
     propertyRentalAdjustments: PropertyRentalAdjustments
-  ): UpdatePropertyPeriodicSubmissionRequest = {
+  ): UpdateUKPropertyPeriodicSubmissionRequest = {
 
     val propertyPeriodicSubmission = fromPropertyPeriodicSubmission(maybePeriodicSubmission)
     val expensesMaybe: Option[UkOtherPropertyExpenses] = propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
@@ -81,7 +75,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromEntity[T](
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     entity: T
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
     val result = entity match {
       case e @ RaRAbout(_, _, _)                                => fromUkRaRAbout(periodicSubmissionMaybe, e)
       case e @ Expenses(_, _, _, _, _, _, _, _)                 => fromExpenses(periodicSubmissionMaybe, e)
@@ -92,10 +86,9 @@ object UpdatePropertyPeriodicSubmissionRequest {
         fromPropertyRentalAdjustments(periodicSubmissionMaybe, e).asRight[ServiceError]
       case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
       case _ =>
-        InternalError("No relevant entity found to convert from (to UpdatePropertyPeriodicSubmissionRequest)")
-          .asLeft[UpdatePropertyPeriodicSubmissionRequest]
+        InternalError("No relevant entity found to convert from (to UpdateUKPropertyPeriodicSubmissionRequest)")
+          .asLeft[UpdateUKPropertyPeriodicSubmissionRequest]
     }
-
     result.map(r =>
       r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone(_)))
     )
@@ -104,7 +97,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromUkRaRAbout(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     ukRaRAbout: RaRAbout
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
     val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
       periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
 
@@ -137,8 +130,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
         )
       )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
 
-    val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmissionMaybe.flatMap(_.foreignProperty),
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           None,
@@ -147,7 +139,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val resultWithIncome: UpdatePropertyPeriodicSubmissionRequest =
+    val resultWithIncome: UpdateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
 
     val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
@@ -158,7 +150,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromRentalsAndRaRAbout(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     rentalsAndRaRAbout: RentalsAndRaRAbout
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
     val ukOtherPropertyIncomeMaybe: Option[responses.UkOtherPropertyIncome] =
       periodicSubmissionMaybe.flatMap(_.ukOtherProperty.flatMap(_.income))
 
@@ -198,8 +190,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
         )
       )(_.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
 
-    val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmissionMaybe.flatMap(_.foreignProperty),
+    val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           None,
@@ -208,7 +199,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val resultWithIncome: UpdatePropertyPeriodicSubmissionRequest =
+    val resultWithIncome: UpdateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyOtherPropertyIncomeAndExpenses)
 
     val result = updateUkOtherPropertiesExpenses(ukOtherPropertyExpenses, resultWithIncome)
@@ -219,7 +210,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromExpenses(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     expenses: Expenses
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
@@ -228,8 +219,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
       }
-    UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmission.flatMap(_.foreignProperty),
+    UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -262,7 +252,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromRaRExpenses(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     raRExpenses: RentARoomExpenses
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
@@ -271,8 +261,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
       }
-    UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmission.flatMap(_.foreignProperty),
+    UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           ukOtherPropertyIncome,
@@ -305,7 +294,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromPropertyRentalsIncome(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     propertyRentalsIncome: PropertyRentalsIncome
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
@@ -325,8 +314,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
-    val requestWithEmptyRentalsIncome = UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmission.flatMap(_.foreignProperty),
+    val requestWithEmptyRentalsIncome = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           None,
@@ -335,7 +323,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val result: UpdatePropertyPeriodicSubmissionRequest =
+    val result: UpdateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
     result.asRight[ServiceError]
   }
@@ -343,7 +331,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
   def fromRentalsAndRaRIncome(
     periodicSubmissionMaybe: Option[PropertyPeriodicSubmission],
     rentalsAndRaRIncome: RentalsAndRaRIncome
-  ): Either[ServiceError, UpdatePropertyPeriodicSubmissionRequest] = {
+  ): Either[ServiceError, UpdateUKPropertyPeriodicSubmissionRequest] = {
 
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
@@ -363,8 +351,7 @@ object UpdatePropertyPeriodicSubmissionRequest {
       ukOtherRentARoom = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.ukOtherRentARoom)))
     )
 
-    val requestWithEmptyRentalsIncome = UpdatePropertyPeriodicSubmissionRequest(
-      periodicSubmission.flatMap(_.foreignProperty),
+    val requestWithEmptyRentalsIncome = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           None,
@@ -373,19 +360,19 @@ object UpdatePropertyPeriodicSubmissionRequest {
       )
     )
 
-    val result: UpdatePropertyPeriodicSubmissionRequest =
+    val result: UpdateUKPropertyPeriodicSubmissionRequest =
       updateUkOtherPropertiesIncome(ukOtherPropertyIncome, requestWithEmptyRentalsIncome)
     result.asRight[ServiceError]
   }
 
   private def updateUkOtherPropertiesIncome(
     ukOtherPropertyIncome: UkOtherPropertyIncome,
-    request: UpdatePropertyPeriodicSubmissionRequest
-  ): UpdatePropertyPeriodicSubmissionRequest = {
-    val ukOtherPropertyLens: Optional[UpdatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[UpdatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case UpdatePropertyPeriodicSubmissionRequest(_, None) => Some(UkOtherProperty(None, None))
-        case UpdatePropertyPeriodicSubmissionRequest(_, uopi) => uopi
+    request: UpdateUKPropertyPeriodicSubmissionRequest
+  ): UpdateUKPropertyPeriodicSubmissionRequest = {
+    val ukOtherPropertyLens: Optional[UpdateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] =
+      Optional[UpdateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case UpdateUKPropertyPeriodicSubmissionRequest(None) => Some(UkOtherProperty(None, None))
+        case UpdateUKPropertyPeriodicSubmissionRequest(uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }
@@ -405,12 +392,12 @@ object UpdatePropertyPeriodicSubmissionRequest {
 
   private def updateUkOtherPropertiesExpenses(
     ukOtherPropertyExpenses: UkOtherPropertyExpenses,
-    request: UpdatePropertyPeriodicSubmissionRequest
-  ): UpdatePropertyPeriodicSubmissionRequest = {
-    val ukOtherPropertyLens: Optional[UpdatePropertyPeriodicSubmissionRequest, UkOtherProperty] =
-      Optional[UpdatePropertyPeriodicSubmissionRequest, UkOtherProperty] {
-        case UpdatePropertyPeriodicSubmissionRequest(_, None) => Some(UkOtherProperty(None, None))
-        case UpdatePropertyPeriodicSubmissionRequest(_, uopi) => uopi
+    request: UpdateUKPropertyPeriodicSubmissionRequest
+  ): UpdateUKPropertyPeriodicSubmissionRequest = {
+    val ukOtherPropertyLens: Optional[UpdateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] =
+      Optional[UpdateUKPropertyPeriodicSubmissionRequest, UkOtherProperty] {
+        case UpdateUKPropertyPeriodicSubmissionRequest(None) => Some(UkOtherProperty(None, None))
+        case UpdateUKPropertyPeriodicSubmissionRequest(uopi) => uopi
       } { ukop => ppsr =>
         ppsr.copy(ukOtherProperty = Some(ukop))
       }

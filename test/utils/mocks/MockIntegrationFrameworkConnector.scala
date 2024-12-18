@@ -20,7 +20,7 @@ import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
+import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
@@ -76,13 +76,13 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     taxYear: TaxYear,
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
-    createRequest: CreatePropertyPeriodicSubmissionRequest,
+    createRequest: CreateUKPropertyPeriodicSubmissionRequest,
     result: Either[ApiError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[TaxYear, Nino, IncomeSourceId, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
+  ): CallHandler5[TaxYear, Nino, IncomeSourceId, CreateUKPropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
     Either[ApiError, Option[PeriodicSubmissionId]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .createPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: CreatePropertyPeriodicSubmissionRequest)(
+      .createPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId, _: CreateUKPropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxYear, taxableEntityId, incomeSourceId, createRequest, *)
@@ -113,19 +113,27 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     taxYear: TaxYear,
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
-    updateRequest: UpdatePropertyPeriodicSubmissionRequest,
+    updateRequest: UpdateUKPropertyPeriodicSubmissionRequest,
     submissionId: String,
     result: Either[ApiError, Option[String]]
-  ): CallHandler6[Nino, IncomeSourceId, TaxYear, String, UpdatePropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
-    Either[ApiError, Option[String]]
-  ]] =
+  ): CallHandler6[
+    Nino,
+    IncomeSourceId,
+    TaxYear,
+    String,
+    UpdateUKPropertyPeriodicSubmissionRequest,
+    HeaderCarrier,
+    Future[
+      Either[ApiError, Option[String]]
+    ]
+  ] =
     (mockIntegrationFrameworkConnector
       .updatePeriodicSubmission(
         _: Nino,
         _: IncomeSourceId,
         _: TaxYear,
         _: String,
-        _: UpdatePropertyPeriodicSubmissionRequest
+        _: UpdateUKPropertyPeriodicSubmissionRequest
       )(
         _: HeaderCarrier
       ))

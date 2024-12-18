@@ -23,7 +23,7 @@ import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
+import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
@@ -170,7 +170,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     taxYear: TaxYear,
     nino: Nino,
     incomeSourceId: IncomeSourceId,
-    body: CreatePropertyPeriodicSubmissionRequest
+    body: CreateUKPropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
@@ -191,7 +191,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .post(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .withBody[CreatePropertyPeriodicSubmissionRequest](body)
+      .withBody[CreateUKPropertyPeriodicSubmissionRequest](body)
       .execute[PostPeriodicSubmissionResponse]
       .map { response: PostPeriodicSubmissionResponse =>
         if (response.result.isLeft) {
@@ -251,7 +251,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
     submissionId: String,
-    propertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
+    propertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
