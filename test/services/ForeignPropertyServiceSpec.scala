@@ -40,14 +40,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ForeignPropertyServiceSpec
-  extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new ForeignPropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
+  private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, repository)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   val taxYear: TaxYear = TaxYear(2024)
@@ -158,13 +158,13 @@ class ForeignPropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
           taxYear,
           Some(emptyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode
         )
-      mockCreatePeriodicSubmission(
+      mockCreateForeignPeriodicSubmission(
         taxYear,
         nino,
         incomeSourceId,
@@ -193,32 +193,39 @@ class ForeignPropertyServiceSpec
       val foreignTaxPaidOrDeducted = Some(BigDecimal(56.78))
       val foreignProperty = ForeignProperty(
         countryCode = countryCode,
-        income = Some(ForeignPropertyIncome(
-          rentIncome = Some(ForeignPropertyRentIncome(rentAmount = BigDecimal(12.34))),
-          foreignTaxCreditRelief = foreignTaxCreditRelief,
-          premiumsOfLeaseGrant = Some(BigDecimal(13.34)),
-          otherPropertyIncome = Some(BigDecimal(24.56)),
-          foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted,
-          specialWithholdingTaxOrUkTaxPaid = Some(BigDecimal(89.10))
-        )),
-        expenses = Some(models.responses.ForeignPropertyExpenses(
-          premisesRunningCosts = Some(BigDecimal(23.34)),
-          repairsAndMaintenance = Some(BigDecimal(32.21)),
-          financialCosts = Some(BigDecimal(54.32)),
-          professionalFees = Some(BigDecimal(65.43)),
-          travelCosts = Some(BigDecimal(22.22)),
-          costOfServices = Some(BigDecimal(10.10)),
-          residentialFinancialCost = Some(BigDecimal(11.11)),
-          broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
-          other = Some(BigDecimal(44.44)),
-          consolidatedExpense = Some(BigDecimal(90.05))
-        ))
+        income = Some(
+          ForeignPropertyIncome(
+            rentIncome = Some(ForeignPropertyRentIncome(rentAmount = BigDecimal(12.34))),
+            foreignTaxCreditRelief = foreignTaxCreditRelief,
+            premiumsOfLeaseGrant = Some(BigDecimal(13.34)),
+            otherPropertyIncome = Some(BigDecimal(24.56)),
+            foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted,
+            specialWithholdingTaxOrUkTaxPaid = Some(BigDecimal(89.10))
+          )
+        ),
+        expenses = Some(
+          models.responses.ForeignPropertyExpenses(
+            premisesRunningCosts = Some(BigDecimal(23.34)),
+            repairsAndMaintenance = Some(BigDecimal(32.21)),
+            financialCosts = Some(BigDecimal(54.32)),
+            professionalFees = Some(BigDecimal(65.43)),
+            travelCosts = Some(BigDecimal(22.22)),
+            costOfServices = Some(BigDecimal(10.10)),
+            residentialFinancialCost = Some(BigDecimal(11.11)),
+            broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
+            other = Some(BigDecimal(44.44)),
+            consolidatedExpense = Some(BigDecimal(90.05))
+          )
+        )
       )
       val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = countryCode,
-        foreignIncomeTax = Some(ForeignIncomeTax(
-          foreignIncomeTaxYesNo = foreignIncomeTaxYesNo, foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
-        )),
+        foreignIncomeTax = Some(
+          ForeignIncomeTax(
+            foreignIncomeTaxYesNo = foreignIncomeTaxYesNo,
+            foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
+          )
+        ),
         foreignTaxCreditRelief = foreignTaxCreditRelief
       )
 
@@ -231,11 +238,11 @@ class ForeignPropertyServiceSpec
         None
       )
 
-      val Right(updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest) =
-        UpdatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
+      val Right(updatePropertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest) =
+        UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
           maybeSubmission = Some(propertyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode = foreignPropertyTaxWithCountryCode
-      )
+        )
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -243,8 +250,14 @@ class ForeignPropertyServiceSpec
         incomeSourceId,
         List(PeriodicSubmissionIdModel(periodicSubmissionId, fromDate, toDate)).asRight[ApiError]
       )
-      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, periodicSubmissionId, Some(propertyPeriodicSubmission).asRight[ApiError])
-      mockUpdatePeriodicSubmission(
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        periodicSubmissionId,
+        Some(propertyPeriodicSubmission).asRight[ApiError]
+      )
+      mockUpdateForeignPeriodicSubmission(
         taxYear = taxYear,
         taxableEntityId = nino,
         incomeSourceId = incomeSourceId,
@@ -316,14 +329,14 @@ class ForeignPropertyServiceSpec
           None
         )
 
-      val Right(requestForCreate: CreatePropertyPeriodicSubmissionRequest) =
-        CreatePropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
           taxYear,
           Some(emptyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode
         )
 
-      mockCreatePeriodicSubmission(
+      mockCreateForeignPeriodicSubmission(
         taxYear,
         nino,
         incomeSourceId,
@@ -425,6 +438,13 @@ class ForeignPropertyServiceSpec
         )
       )
     )
+
+  val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
+    CreateForeignPropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      foreignProperty
+    )
   val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
     UpdatePropertyPeriodicSubmissionRequest(
       foreignProperty,
@@ -455,17 +475,22 @@ class ForeignPropertyServiceSpec
     "return submissionId for valid request" in {
       val periodicSubmissionId = PeriodicSubmissionId("submissionId")
 
-      mockCreatePeriodicSubmission(
+      mockCreateForeignPeriodicSubmission(
         taxYear,
         nino,
         incomeSourceId,
-        validCreatePropertyPeriodicSubmissionRequest,
+        validCreateForeignPropertyPeriodicSubmissionRequest,
         Right(Some(periodicSubmissionId))
       )
 
       await(
         underTest
-          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .createForeignPeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            validCreateForeignPropertyPeriodicSubmissionRequest
+          )
           .value
       ) shouldBe
         Right(Some(periodicSubmissionId))
@@ -473,16 +498,21 @@ class ForeignPropertyServiceSpec
 
     "return ApiError for invalid request" in {
 
-      mockCreatePeriodicSubmission(
+      mockCreateForeignPeriodicSubmission(
         taxYear,
         nino,
         incomeSourceId,
-        validCreatePropertyPeriodicSubmissionRequest,
+        validCreateForeignPropertyPeriodicSubmissionRequest,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
       await(
         underTest
-          .createPeriodicSubmission(nino, incomeSourceId, taxYear, validCreatePropertyPeriodicSubmissionRequest)
+          .createForeignPeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            validCreateForeignPropertyPeriodicSubmissionRequest
+          )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }

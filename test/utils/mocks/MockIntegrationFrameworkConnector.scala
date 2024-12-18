@@ -19,6 +19,7 @@ package utils.mocks
 import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
+import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
@@ -87,6 +88,27 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .expects(taxYear, taxableEntityId, incomeSourceId, createRequest, *)
       .returning(Future.successful(result))
 
+  def mockCreateForeignPeriodicSubmission(
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
+    createRequest: CreateForeignPropertyPeriodicSubmissionRequest,
+    result: Either[ApiError, Option[PeriodicSubmissionId]]
+  ): CallHandler5[TaxYear, Nino, IncomeSourceId, CreateForeignPropertyPeriodicSubmissionRequest, HeaderCarrier, Future[
+    Either[ApiError, Option[PeriodicSubmissionId]]
+  ]] =
+    (mockIntegrationFrameworkConnector
+      .createForeignPeriodicSubmission(
+        _: TaxYear,
+        _: Nino,
+        _: IncomeSourceId,
+        _: CreateForeignPropertyPeriodicSubmissionRequest
+      )(
+        _: HeaderCarrier
+      ))
+      .expects(taxYear, taxableEntityId, incomeSourceId, createRequest, *)
+      .returning(Future.successful(result))
+
   def mockUpdatePeriodicSubmission(
     taxYear: TaxYear,
     taxableEntityId: Nino,
@@ -104,6 +126,37 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
         _: TaxYear,
         _: String,
         _: UpdatePropertyPeriodicSubmissionRequest
+      )(
+        _: HeaderCarrier
+      ))
+      .expects(taxableEntityId, incomeSourceId, taxYear, submissionId, updateRequest, *)
+      .returning(Future.successful(result))
+
+  def mockUpdateForeignPeriodicSubmission(
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId,
+    updateRequest: UpdateForeignPropertyPeriodicSubmissionRequest,
+    submissionId: String,
+    result: Either[ApiError, Option[String]]
+  ): CallHandler6[
+    Nino,
+    IncomeSourceId,
+    TaxYear,
+    String,
+    UpdateForeignPropertyPeriodicSubmissionRequest,
+    HeaderCarrier,
+    Future[
+      Either[ApiError, Option[String]]
+    ]
+  ] =
+    (mockIntegrationFrameworkConnector
+      .updateForeignPeriodicSubmission(
+        _: Nino,
+        _: IncomeSourceId,
+        _: TaxYear,
+        _: String,
+        _: UpdateForeignPropertyPeriodicSubmissionRequest
       )(
         _: HeaderCarrier
       ))

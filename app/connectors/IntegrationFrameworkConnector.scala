@@ -22,6 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
+import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
@@ -205,6 +206,46 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       }
   }
 
+  def createForeignPeriodicSubmission(
+                                taxYear: TaxYear,
+                                nino: Nino,
+                                incomeSourceId: IncomeSourceId,
+                                body: CreateForeignPropertyPeriodicSubmissionRequest
+                              )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
+          s"/${asTys(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
+        "1861"
+      )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property" +
+          s"/periodic?taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId",
+        "1593"
+      )
+    }
+    logger.debug(s"createPeriodicSubmission with url: $url, body: ${Json.toJson(body)}")
+
+    http
+      .post(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody[CreateForeignPropertyPeriodicSubmissionRequest](body)
+      .execute[PostPeriodicSubmissionResponse]
+      .map { response: PostPeriodicSubmissionResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error creating a foreign property periodic submission from the Integration Framework:" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
   def updatePeriodicSubmission(
     nino: Nino,
     incomeSourceId: IncomeSourceId,
@@ -241,6 +282,50 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
             s"Error updating a property periodic submission from the Integration Framework:" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+
+  }
+
+  def updateForeignPeriodicSubmission(
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    taxYear: TaxYear,
+    submissionId: String,
+    propertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
+          s"/${asTys(taxYear)}?taxableEntityId=$nino&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
+        "1958"
+      )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property" +
+          s"/periodic?taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId&submissionId=$submissionId",
+        "1594"
+      )
+    }
+    logger.debug(
+      s"updatePeriodicSubmission with url: $url, body: ${Json.toJson(propertyPeriodicSubmissionRequest)}"
+    )
+
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(propertyPeriodicSubmissionRequest)
+      .execute[PutPeriodicSubmissionResponse]
+      .map { response: PutPeriodicSubmissionResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error updating a foreign property periodic submission from the Integration Framework:" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }

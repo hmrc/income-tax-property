@@ -24,7 +24,6 @@ import models.common._
 import models.errors._
 import models.request.foreign._
 import models.request.foreign.expenses.ForeignPropertyExpenses
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
 import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import play.api.Logging
@@ -36,8 +35,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignPropertyService @Inject() (
-  mergeService: MergeService,
-  connector: IntegrationFrameworkConnector,
+                                         connector: IntegrationFrameworkConnector,
   repository: MongoJourneyAnswersRepository
 )(implicit ec: ExecutionContext)
     extends Logging {
@@ -51,8 +49,8 @@ class ForeignPropertyService @Inject() (
         case true  => true.asRight[ServiceError]
       }
     )
-  def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
-    writes: Writes[A]
+  private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
+                                                                                             writes: Writes[A]
   ): EitherT[Future, ServiceError, Boolean] =
     EitherT(
       repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
@@ -128,24 +126,24 @@ class ForeignPropertyService @Inject() (
     for {
       updatePeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          UpdatePropertyPeriodicSubmissionRequest
+          UpdateForeignPropertyPeriodicSubmissionRequest
             .fromEntity(maybePeriodicSubmission, entity)
         )
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          CreatePropertyPeriodicSubmissionRequest
+          CreateForeignPropertyPeriodicSubmissionRequest
             .fromEntity(contextWithNino.taxYear, maybePeriodicSubmission, entity)
         )
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
-                                createPeriodicSubmission(
+                                createForeignPeriodicSubmission(
                                   contextWithNino.nino,
                                   contextWithNino.incomeSourceId,
                                   contextWithNino.taxYear,
                                   createPeriodicSubmissionRequest
                                 )
                               case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
-                                updatePeriodicSubmission(
+                                updateForeignPeriodicSubmission(
                                   contextWithNino.nino,
                                   contextWithNino.incomeSourceId,
                                   contextWithNino.taxYear,
@@ -177,28 +175,34 @@ class ForeignPropertyService @Inject() (
         ).leftMap(e => ApiServiceError(e.status))
     }
 
-  def createPeriodicSubmission(
+  def createForeignPeriodicSubmission(
     nino: Nino,
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
-    body: CreatePropertyPeriodicSubmissionRequest
+    body: CreateForeignPropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
-    EitherT(connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
+    EitherT(connector.createForeignPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
       ApiServiceError(e.status)
     )
 
-  def updatePeriodicSubmission(
+  private def updateForeignPeriodicSubmission(
     nino: Nino,
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
     submissionId: String,
-    updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
+    updateForeignPropertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest
   )(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[String] =
     EitherT(
       connector
-        .updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, updatePropertyPeriodicSubmissionRequest)
+        .updateForeignPeriodicSubmission(
+          nino,
+          incomeSourceId,
+          taxYear,
+          submissionId,
+          updateForeignPropertyPeriodicSubmissionRequest
+        )
     )
       .bimap(error => ApiServiceError(error.status), _ => "")
 
