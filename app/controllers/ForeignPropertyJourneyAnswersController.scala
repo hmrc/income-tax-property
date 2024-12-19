@@ -91,11 +91,11 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         taxYear,
         incomeSourceId,
         nino,
-        JourneyName.ForeignIncomeJourney,
+        JourneyName.ForeignPropertyIncome,
         request
-      ) { (ctx, foreignPropertyIncome: ForeignIncome) =>
+      ) { (ctx, foreignIncome: ForeignIncome) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignIncome(ctx, foreignPropertyIncome)
+          propertyService.saveForeignIncome(ctx, nino, foreignIncome)
         }
       }
     }
