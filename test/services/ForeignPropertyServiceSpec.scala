@@ -23,7 +23,7 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import models.request._
 import models.request.foreign._
-import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
+import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
@@ -285,8 +285,12 @@ class ForeignPropertyServiceSpec
       )
 
       "persist the foreign expenses" in {
+        val submissionId = "test-periodic-submission-id"
+        val periodicSubmissionId = PeriodicSubmissionId(submissionId)
+        val fromDate = TaxYear.startDate(taxYear.endYear)
+        val toDate = TaxYear.endDate(taxYear.endYear)
 
-        val foreignPropertyExpenses = ForeignPropertyExpenses(
+        val foreignPropertyExpenses = ForeignPropertyExpensesWithCountryCode(
           countryCode = "BRA",
           consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
           premisesRunningCosts = Some(50),
@@ -296,14 +300,47 @@ class ForeignPropertyServiceSpec
           costOfServices = Some(234),
           other = Some(99)
         )
+        val emptyPeriodicSubmission =
+          PropertyPeriodicSubmission(
+            None,
+            None,
+            LocalDate.parse(TaxYear.startDate(taxYear)),
+            LocalDate.parse(TaxYear.endDate(taxYear)),
+            None,
+            None
+          )
+        val Right(requestForUpdate: UpdateForeignPropertyPeriodicSubmissionRequest) =
+          UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyExpenses(
+            Some(emptyPeriodicSubmission),
+            foreignPropertyExpenses
+          )
+        mockUpdateForeignPeriodicSubmission(
+          taxYear,
+          nino,
+          incomeSourceId,
+          requestForUpdate,
+          submissionId,
+          Some(submissionId).asRight[ApiError]
+        )
+
+        mockGetAllPeriodicSubmission(
+          taxYear,
+          nino,
+          incomeSourceId,
+          List(PeriodicSubmissionIdModel(submissionId, fromDate, toDate)).asRight[ApiError]
+        )
+
+        mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Some(emptyPeriodicSubmission).asRight[ApiError])
+
         await(
           underTest
             .saveForeignPropertyExpenses(
               ctx,
+              nino,
               foreignPropertyExpenses
             )
             .value
-        ) shouldBe Right(true)
+        ) shouldBe Right(Some(periodicSubmissionId))
       }
     }
 
