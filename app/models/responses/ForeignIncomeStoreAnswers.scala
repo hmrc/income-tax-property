@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.responses
 
-import models.request.foreign.{ForeignIncome, ForeignPropertyTax}
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-final case class FetchedForeignPropertyData(
-  foreignPropertyTax: Option[Map[String, ForeignPropertyTax]],
-  foreignPropertyIncome: Option[Map[String, ForeignIncome]],
-  foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
+case class ForeignIncomeStoreAnswers(
+  premiumsGrantLeaseReceived: Boolean,
+  premiumsOfLeaseGrantAgreed: Boolean,
+  reversePremiumsReceived: Boolean,
+  calculatedPremiumLeaseTaxable: Boolean,
+  twelveMonthPeriodsInLease: Option[BigDecimal],
+  receivedGrantLeaseAmount: Option[BigDecimal]
 )
 
-object FetchedForeignPropertyData {
-  implicit val format: OFormat[FetchedForeignPropertyData] = Json.format[FetchedForeignPropertyData]
+object ForeignIncomeStoreAnswers {
+  implicit val format: Format[ForeignIncomeStoreAnswers] = Json.format
 }

@@ -98,7 +98,7 @@ class ForeignPropertyServiceSpec
       JourneyName.ForeignIncomeJourney
     )
 
-    val foreignIncome = ForeignIncome(
+    val foreignIncome = ForeignIncomeWithCountryCode(
       countryCode = "AUS",
       rentIncome = 1.0,
       premiumsGrantLeaseReceived = true,
