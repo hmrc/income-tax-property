@@ -18,14 +18,14 @@ package models
 
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
+import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 
 class ForeignPropertyExpensesSpec extends PlaySpec {
 
   "ForeignPropertyExpenses" should {
 
     "serialize to JSON correctly" in {
-      val expenses = ForeignPropertyExpenses(
+      val expenses = ForeignPropertyExpensesWithCountryCode(
         countryCode = "US",
         consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
         premisesRunningCosts = Some(150.50),
@@ -70,7 +70,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
           |""".stripMargin
       )
 
-      val expectedExpenses = ForeignPropertyExpenses(
+      val expectedExpenses = ForeignPropertyExpensesWithCountryCode(
         countryCode = "US",
         consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false,None)),
         premisesRunningCosts = Some(150.50),
@@ -81,7 +81,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
         other = Some(35)
       )
 
-      json.validate[ForeignPropertyExpenses] mustEqual JsSuccess(expectedExpenses)
+      json.validate[ForeignPropertyExpensesWithCountryCode] mustEqual JsSuccess(expectedExpenses)
     }
 
     "return a JsError for invalid JSON" in {
@@ -94,7 +94,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
           |""".stripMargin
       )
 
-      invalidJson.validate[ForeignPropertyExpenses] mustBe a[JsError]
+      invalidJson.validate[ForeignPropertyExpensesWithCountryCode] mustBe a[JsError]
     }
 
     "handle optional fields correctly" in {
@@ -106,7 +106,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
           |""".stripMargin
       )
 
-      val expectedExpenses = ForeignPropertyExpenses(
+      val expectedExpenses = ForeignPropertyExpensesWithCountryCode(
         countryCode = "US",
         consolidatedExpenses = None,
         premisesRunningCosts = None,
@@ -117,7 +117,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
         other = None
       )
 
-      jsonWithMissingFields.validate[ForeignPropertyExpenses] mustEqual JsSuccess(expectedExpenses)
+      jsonWithMissingFields.validate[ForeignPropertyExpensesWithCountryCode] mustEqual JsSuccess(expectedExpenses)
     }
   }
 }
