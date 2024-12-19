@@ -18,6 +18,7 @@ package models.request.foreign
 
 import cats.implicits.catsSyntaxEitherId
 import models.errors.{InternalError, ServiceError}
+import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
 import monocle.macros.GenLens
 import monocle.{Lens, Optional}
@@ -42,6 +43,8 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
     val result = entity match {
 
       case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(periodicSubmissionMaybe, e)
+      case e @ ForeignPropertyExpensesWithCountryCode(_, _, _, _, _, _, _, _) =>
+        fromForeignPropertyExpenses(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdateForeignPropertyPeriodicSubmissionRequest)")
           .asLeft[UpdateForeignPropertyPeriodicSubmissionRequest]
@@ -116,6 +119,68 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
     val updatedRequest =
       filteredForeignPropertyIncomeLens.replace(foreignPropertyIncome)(requestWithEmptyForeignPropertyIncome)
     Right(updatedRequest)
+  }
+
+  def fromForeignPropertyExpenses(
+                                   maybeSubmission: Option[PropertyPeriodicSubmission],
+                                   foreignPropertyExpenses: ForeignPropertyExpensesWithCountryCode
+                                 ): Either[ServiceError, UpdateForeignPropertyPeriodicSubmissionRequest] = {
+
+    val targetCountryCode = foreignPropertyExpenses.countryCode
+
+    val foreignPropertyLens = GenLens[UpdateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)
+    val foreignPropertyExpenseLens = GenLens[ForeignProperty](_.expenses)
+    val filteredForeignPropertyLens: Optional[UpdateForeignPropertyPeriodicSubmissionRequest, ForeignProperty] =
+      foreignPropertyLens.some.andThen(
+        Optional[Seq[ForeignProperty], ForeignProperty](_.find(_.countryCode == targetCountryCode)) {
+          fp => seq =>
+            seq.map(existing => if (existing.countryCode == targetCountryCode) fp else existing)
+        }
+      )
+    val filteredForeignPropertyExpensesLens: Optional[UpdateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyExpenses] =
+      filteredForeignPropertyLens.andThen(foreignPropertyExpenseLens.some)
+    val (maybeForeignPropertyExpenses, maybeForeignPropertyIncome)
+    : (Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
+      maybeSubmission match {
+        case Some(
+        pps @ PropertyPeriodicSubmission(
+        _,
+        _,
+        _,
+        _,
+        Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+        _
+        )
+        ) =>
+          (Some(expenses), Some(income))
+        case _         => (None, None)
+      }
+    val newForeignPropertyExpenses = ForeignPropertyExpenses(
+      premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
+      repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
+      financialCosts = foreignPropertyExpenses.financialCosts,
+      professionalFees = foreignPropertyExpenses.professionalFees,
+      travelCosts = maybeForeignPropertyExpenses.flatMap(_.travelCosts),
+      costOfServices = foreignPropertyExpenses.costOfServices,
+      residentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.residentialFinancialCost),
+      broughtFwdResidentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.broughtFwdResidentialFinancialCost),
+      other = foreignPropertyExpenses.other,
+      consolidatedExpense = foreignPropertyExpenses.consolidatedExpenses.flatMap(_.consolidatedExpense)
+    )
+    val periodicSubmissionRequestRetainingIncome = UpdateForeignPropertyPeriodicSubmissionRequest(
+      Some(
+        Seq(
+          ForeignProperty(
+            targetCountryCode,
+            maybeForeignPropertyIncome,
+            Some(ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, None))
+          )
+        )
+      )
+    )
+    val periodicSubmissionRequestWithNewForeignExpenses =
+      filteredForeignPropertyExpensesLens.replace(newForeignPropertyExpenses)(periodicSubmissionRequestRetainingIncome)
+    Right(periodicSubmissionRequestWithNewForeignExpenses)
   }
 
 }
