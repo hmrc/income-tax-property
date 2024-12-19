@@ -23,7 +23,7 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
 import models.request._
 import models.request.foreign._
-import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
+import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
@@ -211,7 +211,8 @@ class ForeignPropertyServiceSpec
             residentialFinancialCost = Some(BigDecimal(11.11)),
             broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
             other = Some(BigDecimal(44.44)),
-            consolidatedExpense = Some(BigDecimal(90.05))
+            consolidatedExpense = Some(BigDecimal(90.05)),
+            consolidatedExpenseAmount = None
           )
         )
       )
@@ -274,39 +275,6 @@ class ForeignPropertyServiceSpec
       ) shouldBe Right(Some(PeriodicSubmissionId(periodicSubmissionId)))
     }
 
-    "save foreign property expenses" should {
-
-      val mtditid = "1234567890"
-      val ctx = JourneyContext(
-        taxYear,
-        incomeSourceId,
-        Mtditid(mtditid),
-        JourneyName.ForeignPropertyExpenses
-      )
-
-      "persist the foreign expenses" in {
-
-        val foreignPropertyExpenses = ForeignPropertyExpenses(
-          countryCode = "BRA",
-          consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
-          premisesRunningCosts = Some(50),
-          repairsAndMaintenance = Some(60),
-          financialCosts = Some(675),
-          professionalFees = Some(85),
-          costOfServices = Some(234),
-          other = Some(99)
-        )
-        await(
-          underTest
-            .saveForeignPropertyExpenses(
-              ctx,
-              foreignPropertyExpenses
-            )
-            .value
-        ) shouldBe Right(true)
-      }
-    }
-
     "return ApiError for invalid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
@@ -349,6 +317,123 @@ class ForeignPropertyServiceSpec
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "save foreign property expenses" should {
+
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(
+      taxYear,
+      incomeSourceId,
+      Mtditid(mtditid),
+      nino
+    )
+
+    val foreignPropertyExpenses = ForeignPropertyExpensesWithCountryCode(
+      countryCode = "BRA",
+      consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
+      premisesRunningCosts = Some(50),
+      repairsAndMaintenance = Some(60),
+      financialCosts = Some(675),
+      professionalFees = Some(85),
+      costOfServices = Some(234),
+      other = Some(99)
+    )
+
+    "call create foreign periodic submission request when periodic submission is empty and return no content for valid request" in {
+      val fromDate = LocalDate.now().minusMonths(1)
+      val toDate = fromDate.plusMonths(3)
+
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+
+      val Right(requestForCreate: CreateForeignPropertyPeriodicSubmissionRequest) =
+        CreateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyExpenses(
+          taxYear,
+          Some(emptyPeriodicSubmission),
+          foreignPropertyExpenses
+        )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel("", fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForCreate,
+        Some(PeriodicSubmissionId("create123")).asRight[ApiError]
+      )
+
+      await(
+        underTest
+          .saveForeignPropertyExpenses(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyExpenses),
+            nino,
+            foreignPropertyExpenses
+          )
+          .value
+      ) shouldBe Right(Some(PeriodicSubmissionId("create123")))
+    }
+
+    "call update periodic submission request when there is an existing periodic submission" in {
+      val submissionId = "test-periodic-submission-id"
+      val periodicSubmissionId = PeriodicSubmissionId(submissionId)
+      val fromDate = TaxYear.startDate(taxYear.endYear)
+      val toDate = TaxYear.endDate(taxYear.endYear)
+      val emptyPeriodicSubmission =
+        PropertyPeriodicSubmission(
+          None,
+          None,
+          LocalDate.parse(TaxYear.startDate(taxYear)),
+          LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
+          None
+        )
+      val Right(requestForUpdate: UpdateForeignPropertyPeriodicSubmissionRequest) =
+        UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyExpenses(
+          Some(emptyPeriodicSubmission),
+          foreignPropertyExpenses
+        )
+      mockUpdateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        requestForUpdate,
+        submissionId,
+        Some(submissionId).asRight[ApiError]
+      )
+
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        List(PeriodicSubmissionIdModel(submissionId, fromDate, toDate)).asRight[ApiError]
+      )
+
+      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Some(emptyPeriodicSubmission).asRight[ApiError])
+
+      await(
+        underTest
+          .saveForeignPropertyExpenses(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyExpenses),
+            nino,
+            foreignPropertyExpenses
+          )
+          .value
+      ) shouldBe Right(Some(periodicSubmissionId))
     }
   }
 

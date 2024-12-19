@@ -71,7 +71,8 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
         costOfServices = Some(99),
         residentialFinancialCost = Some(45),
         broughtFwdResidentialFinancialCost = Some(10),
-        consolidatedExpense = None
+        consolidatedExpense = None,
+        consolidatedExpenseAmount = None
       )
 
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(

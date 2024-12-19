@@ -21,7 +21,7 @@ import models.common._
 import models.domain.{JourneyWithStatus}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
-import models.request.foreign.expenses.ForeignPropertyExpenses
+import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
@@ -293,13 +293,14 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return boolean true for valid request body" in {
-      val foreignPropertyExpenses = validRequestBody.as[ForeignPropertyExpenses]
+      val foreignPropertyExpenses = validRequestBody.as[ForeignPropertyExpensesWithCountryCode]
 
       mockAuthorisation()
       mockSaveForeignPropertyExpenses(
         ctx,
+        nino,
         foreignPropertyExpenses,
-        true.asRight[ServiceError]
+        Right(Some(PeriodicSubmissionId("submissionId")))
       )
 
       val request = fakePostRequest.withJsonBody(validRequestBody)
