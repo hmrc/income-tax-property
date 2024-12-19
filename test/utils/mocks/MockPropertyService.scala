@@ -82,18 +82,18 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockCreatePeriodicSubmissions(
-    taxableEntityId: Nino,
-    incomeSourceId: IncomeSourceId,
-    taxYear: TaxYear,
-    body: CreatePropertyPeriodicSubmissionRequest,
-    result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler5[Nino, IncomeSourceId, TaxYear, CreatePropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
+                                     taxableEntityId: Nino,
+                                     incomeSourceId: IncomeSourceId,
+                                     taxYear: TaxYear,
+                                     body: CreateUKPropertyPeriodicSubmissionRequest,
+                                     result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler5[Nino, IncomeSourceId, TaxYear, CreateUKPropertyPeriodicSubmissionRequest, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Option[PeriodicSubmissionId]
   ]] =
     (mockPropertyService
-      .createPeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: CreatePropertyPeriodicSubmissionRequest)(
+      .createPeriodicSubmission(_: Nino, _: IncomeSourceId, _: TaxYear, _: CreateUKPropertyPeriodicSubmissionRequest)(
         _: HeaderCarrier
       ))
       .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
@@ -185,18 +185,18 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockUpdatePeriodicSubmissions(
-    taxableEntityId: Nino,
-    incomeSourceId: IncomeSourceId,
-    taxYear: TaxYear,
-    submissionId: String,
-    body: UpdatePropertyPeriodicSubmissionRequest,
-    result: Either[ServiceError, String]
+                                     taxableEntityId: Nino,
+                                     incomeSourceId: IncomeSourceId,
+                                     taxYear: TaxYear,
+                                     submissionId: String,
+                                     body: UpdateUKPropertyPeriodicSubmissionRequest,
+                                     result: Either[ServiceError, String]
   ): CallHandler6[
     Nino,
     IncomeSourceId,
     TaxYear,
     String,
-    UpdatePropertyPeriodicSubmissionRequest,
+    UpdateUKPropertyPeriodicSubmissionRequest,
     HeaderCarrier,
     EitherT[
       Future,
@@ -210,7 +210,7 @@ trait MockPropertyService extends MockFactory {
         _: IncomeSourceId,
         _: TaxYear,
         _: String,
-        _: UpdatePropertyPeriodicSubmissionRequest
+        _: UpdateUKPropertyPeriodicSubmissionRequest
       )(
         _: HeaderCarrier
       ))

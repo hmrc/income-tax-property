@@ -325,10 +325,10 @@ class PropertyService @Inject() (
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       updatePeriodicSubmissionRequest <-
-        ITPEnvelope.liftEither(UpdatePropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, expenses))
+        ITPEnvelope.liftEither(UpdateUKPropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, expenses))
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          CreatePropertyPeriodicSubmissionRequest.fromEntity(ctx.taxYear, maybePeriodicSubmission, expenses)
+          CreateUKPropertyPeriodicSubmissionRequest.fromEntity(ctx.taxYear, maybePeriodicSubmission, expenses)
         )
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
@@ -366,11 +366,11 @@ class PropertyService @Inject() (
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(ctx.taxYear, nino, ctx.incomeSourceId)
       updatePeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          UpdatePropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, raRExpenses)
+          UpdateUKPropertyPeriodicSubmissionRequest.fromEntity(maybePeriodicSubmission, raRExpenses)
         )
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          CreatePropertyPeriodicSubmissionRequest.fromEntity(ctx.taxYear, maybePeriodicSubmission, raRExpenses)
+          CreateUKPropertyPeriodicSubmissionRequest.fromEntity(ctx.taxYear, maybePeriodicSubmission, raRExpenses)
         )
       submissionResponse <- maybePeriodicSubmission match {
                               case None =>
@@ -432,7 +432,7 @@ class PropertyService @Inject() (
     nino: Nino,
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
-    body: CreatePropertyPeriodicSubmissionRequest
+    body: CreateUKPropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
     EitherT(connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
       ApiServiceError(e.status)
@@ -443,7 +443,7 @@ class PropertyService @Inject() (
     incomeSourceId: IncomeSourceId,
     taxYear: TaxYear,
     submissionId: String,
-    updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest
+    updatePropertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest
   )(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[String] =
@@ -567,12 +567,12 @@ class PropertyService @Inject() (
     for {
       updatePeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          UpdatePropertyPeriodicSubmissionRequest
+          UpdateUKPropertyPeriodicSubmissionRequest
             .fromEntity(maybePeriodicSubmission, entity)
         )
       createPeriodicSubmissionRequest <-
         ITPEnvelope.liftEither(
-          CreatePropertyPeriodicSubmissionRequest
+          CreateUKPropertyPeriodicSubmissionRequest
             .fromEntity(contextWithNino.taxYear, maybePeriodicSubmission, entity)
         )
       submissionResponse <- maybePeriodicSubmission match {

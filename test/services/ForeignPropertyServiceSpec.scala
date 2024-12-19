@@ -25,11 +25,8 @@ import models.request._
 import models.request.foreign._
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpenses}
 import models.responses._
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
@@ -37,10 +34,9 @@ import utils.{AppConfigStub, UnitTest}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class ForeignPropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
+  extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
     with HttpClientSupport with ScalaCheckPropertyChecks {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
@@ -164,6 +160,7 @@ class ForeignPropertyServiceSpec
           Some(emptyPeriodicSubmission),
           foreignPropertyTaxWithCountryCode
         )
+
       mockCreateForeignPeriodicSubmission(
         taxYear,
         nino,
@@ -426,35 +423,13 @@ class ForeignPropertyServiceSpec
     }
   }
 
-  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
-    CreatePropertyPeriodicSubmissionRequest(
-      LocalDate.now(),
-      LocalDate.now(),
-      foreignProperty,
-      Some(
-        UkOtherProperty(
-          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-          None
-        )
-      )
-    )
-
   val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
     CreateForeignPropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
       foreignProperty
     )
-  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
-    UpdatePropertyPeriodicSubmissionRequest(
-      foreignProperty,
-      Some(
-        UkOtherProperty(
-          Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-          None
-        )
-      )
-    )
+
 
   val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     None,

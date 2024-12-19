@@ -35,7 +35,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignPropertyService @Inject() (
-                                         connector: IntegrationFrameworkConnector,
+  connector: IntegrationFrameworkConnector,
   repository: MongoJourneyAnswersRepository
 )(implicit ec: ExecutionContext)
     extends Logging {
@@ -50,7 +50,7 @@ class ForeignPropertyService @Inject() (
       }
     )
   private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
-                                                                                             writes: Writes[A]
+    writes: Writes[A]
   ): EitherT[Future, ServiceError, Boolean] =
     EitherT(
       repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {

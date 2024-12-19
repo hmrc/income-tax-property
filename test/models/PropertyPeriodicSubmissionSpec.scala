@@ -66,11 +66,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
     )
   )
-  val createPropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
-    CreatePropertyPeriodicSubmissionRequest(
+  val createUKPropertyPeriodicSubmissionRequest: CreateUKPropertyPeriodicSubmissionRequest =
+    CreateUKPropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
-      None,
       Some(
         UkOtherProperty(
           Some(ukOtherPropertyIncome),
@@ -93,9 +92,8 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
     )
 
-  val updatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
-    UpdatePropertyPeriodicSubmissionRequest(
-      None,
+  val updateUKPropertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest =
+    UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           Some(ukOtherPropertyIncome),
@@ -189,18 +187,16 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   private def generateUpdateRequestWithSameValues(
     propertyPeriodicSubmission: PropertyPeriodicSubmission
   ) =
-    UpdatePropertyPeriodicSubmissionRequest(
-      propertyPeriodicSubmission.foreignProperty,
+    UpdateUKPropertyPeriodicSubmissionRequest(
       propertyPeriodicSubmission.ukOtherProperty
     )
 
   def propertyPeriodicSubmissionRequest(
     ukOtherPropertyIncomeMaybe: Option[UkOtherPropertyIncome],
     ukOtherPropertyExpensesMaybe: Option[UkOtherPropertyExpenses]
-  ): CreatePropertyPeriodicSubmissionRequest = CreatePropertyPeriodicSubmissionRequest(
+  ): CreateUKPropertyPeriodicSubmissionRequest = CreateUKPropertyPeriodicSubmissionRequest(
     LocalDate.now(),
     LocalDate.now(),
-    None,
     Some(
       UkOtherProperty(
         ukOtherPropertyIncomeMaybe,
@@ -212,11 +208,11 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
   "PropertyPeriodicSubmission" should {
     "be generated from expenses" in {
 
-      CreatePropertyPeriodicSubmissionRequest.fromExpenses(
+      CreateUKPropertyPeriodicSubmissionRequest.fromExpenses(
         TaxYear(taxYear),
         Some(propertyPeriodicSubmission),
         expenses
-      ) shouldBe createPropertyPeriodicSubmissionRequest.asRight[ServiceError]
+      ) shouldBe createUKPropertyPeriodicSubmissionRequest.asRight[ServiceError]
     }
 
     "be generated from uk rent a room" in {
@@ -225,7 +221,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         1.23,
         ClaimExpensesOrRelief(true, Some(4.56))
       )
-      CreatePropertyPeriodicSubmissionRequest.fromUkRaRAbout(
+      CreateUKPropertyPeriodicSubmissionRequest.fromUkRaRAbout(
         TaxYear(taxYear),
         Some(propertyPeriodicSubmission),
         ukRaRAbout
@@ -244,7 +240,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "convert expenses having all None values to None for create" in {
       val fakeDate = LocalDate.now()
 
-      CreatePropertyPeriodicSubmissionRequest
+      CreateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
           TaxYear(2024),
           Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
@@ -257,10 +253,9 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         ) shouldBe
         Right(
-          CreatePropertyPeriodicSubmissionRequest(
+          CreateUKPropertyPeriodicSubmissionRequest(
             fakeDate,
             fakeDate,
-            None,
             Some(
               UkOtherProperty(
                 Some(UkOtherPropertyIncome(None, None, Some(22.33), None, None, Some(RentARoomIncome(12.34)))),
@@ -273,7 +268,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "convert income having all None values to None for create" in {
       val fakeDate = LocalDate.now()
 
-      CreatePropertyPeriodicSubmissionRequest
+      CreateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
           TaxYear(2024),
           None,
@@ -287,10 +282,9 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         )
         .map(_.copy(fromDate = fakeDate, toDate = fakeDate)) shouldBe Right(
-        CreatePropertyPeriodicSubmissionRequest(
+        CreateUKPropertyPeriodicSubmissionRequest(
           fakeDate,
           fakeDate,
-          None,
           Some(
             UkOtherProperty(
               Some(UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(12.34)))),
@@ -304,7 +298,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "convert expenses having all None values to None for update" in {
       val fakeDate = LocalDate.now()
 
-      UpdatePropertyPeriodicSubmissionRequest
+      UpdateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
           Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
           RentalsAndRaRAbout(
@@ -316,8 +310,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         ) shouldBe
         Right(
-          UpdatePropertyPeriodicSubmissionRequest(
-            None,
+          UpdateUKPropertyPeriodicSubmissionRequest(
             Some(
               UkOtherProperty(
                 Some(UkOtherPropertyIncome(None, None, Some(22.33), None, None, Some(RentARoomIncome(12.34)))),
@@ -329,7 +322,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     }
     "convert income having all None values to None for update" in {
 
-      UpdatePropertyPeriodicSubmissionRequest
+      UpdateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
           None,
           RaRAbout(
@@ -341,8 +334,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             )
           )
         ) shouldBe Right(
-        UpdatePropertyPeriodicSubmissionRequest(
-          None,
+        UpdateUKPropertyPeriodicSubmissionRequest(
           Some(
             UkOtherProperty(
               Some(UkOtherPropertyIncome(None, None, None, None, None, Some(RentARoomIncome(12.34)))),
@@ -356,7 +348,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from rar about and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
-      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdatePropertyPeriodicSubmissionRequest
+      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdateUKPropertyPeriodicSubmissionRequest
         .fromUkRaRAbout(
           Some(propertyPeriodicSubmissionWithAllFieldsExisting),
           RaRAbout(
@@ -408,7 +400,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from rentals and rar about and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
-      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdatePropertyPeriodicSubmissionRequest
+      val Right(propertyPeriodicSubmissionWithNewRaRAbout) = UpdateUKPropertyPeriodicSubmissionRequest
         .fromRentalsAndRaRAbout(
           Some(propertyPeriodicSubmissionWithAllFieldsExisting),
           RentalsAndRaRAbout(
@@ -462,7 +454,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from rentals expenses and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
-      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdatePropertyPeriodicSubmissionRequest
+      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdateUKPropertyPeriodicSubmissionRequest
         .fromExpenses(
           Some(propertyPeriodicSubmissionWithAllFieldsExisting),
           Expenses(
@@ -520,7 +512,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from rar expenses and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
-      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdatePropertyPeriodicSubmissionRequest
+      val Right(propertyPeriodicSubmissionWithNewRentARoomExpenses) = UpdateUKPropertyPeriodicSubmissionRequest
         .fromRaRExpenses(
           Some(propertyPeriodicSubmissionWithAllFieldsExisting),
           RentARoomExpenses(
@@ -575,7 +567,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     "be generated from rentals income and not override existing other fields" in {
       val updateRequestWithOriginalSubmissionValues =
         generateUpdateRequestWithSameValues(propertyPeriodicSubmissionWithAllFieldsExisting)
-      val Right(propertyPeriodicSubmissionWithNewRentalsIncome) = UpdatePropertyPeriodicSubmissionRequest
+      val Right(propertyPeriodicSubmissionWithNewRentalsIncome) = UpdateUKPropertyPeriodicSubmissionRequest
         .fromPropertyRentalsIncome(
           Some(propertyPeriodicSubmissionWithAllFieldsExisting),
           PropertyRentalsIncome(

@@ -18,7 +18,7 @@ package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.{CreatePropertyPeriodicSubmissionRequest, UpdatePropertyPeriodicSubmissionRequest}
+import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
@@ -37,11 +37,10 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new IntegrationFrameworkConnector(httpClientV2, appConfigStub)
-  val validCreatePropertyPeriodicSubmissionRequest: CreatePropertyPeriodicSubmissionRequest =
-    CreatePropertyPeriodicSubmissionRequest(
+  val validCreateUKPropertyPeriodicSubmissionRequest: CreateUKPropertyPeriodicSubmissionRequest =
+    CreateUKPropertyPeriodicSubmissionRequest(
       LocalDate.now(),
       LocalDate.now(),
-      None,
       Some(
         UkOtherProperty(
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
@@ -49,9 +48,8 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
         )
       )
     )
-  val validUpdatePropertyPeriodicSubmissionRequest: UpdatePropertyPeriodicSubmissionRequest =
-    UpdatePropertyPeriodicSubmissionRequest(
-      None,
+  val validUpdateUKPropertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest =
+    UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
         UkOtherProperty(
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
@@ -605,7 +603,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             taxYear,
             taxableEntityId,
             incomeSourceId,
-            validCreatePropertyPeriodicSubmissionRequest
+            validCreateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
@@ -622,7 +620,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
 
         await(
           underTest
-            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateUKPropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Right(Some(aPeriodicSubmissionModel))
       }
 
@@ -638,7 +636,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
 
         await(
           underTest
-            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateUKPropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Left(ApiError(CONFLICT, SingleErrorBody("some-code", "Conflict")))
       }
       "return not found from Upstream" in {
@@ -653,7 +651,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
 
         await(
           underTest
-            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateUKPropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
 
@@ -670,7 +668,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
 
         await(
           underTest
-            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreatePropertyPeriodicSubmissionRequest)(hc)
+            .createPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateUKPropertyPeriodicSubmissionRequest)(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
@@ -710,7 +708,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(None)
       }
@@ -731,7 +729,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Right(None)
       }
@@ -752,7 +750,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
       }
@@ -776,7 +774,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("some-code", "unprocessable-entity")))
       }
@@ -798,7 +796,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             taxYear,
             submissionId,
-            validUpdatePropertyPeriodicSubmissionRequest
+            validUpdateUKPropertyPeriodicSubmissionRequest
           )(hc)
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
