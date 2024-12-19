@@ -23,9 +23,9 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
 import models.request.foreign._
-import models.request.foreign.expenses.ForeignPropertyExpenses
+import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
-import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse}
+import models.{ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -69,10 +69,37 @@ class ForeignPropertyService @Inject() (
     )
 
   def saveForeignPropertyExpenses(
-    ctx: JourneyContext,
-    foreignPropertyExpenses: ForeignPropertyExpenses
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
-    persistForeignAnswers(ctx, foreignPropertyExpenses, foreignPropertyExpenses.countryCode)
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertyExpensesWithCountryCode: ForeignPropertyExpensesWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+    for {
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+        journeyContext.taxYear,
+        nino,
+        journeyContext.incomeSourceId
+      )
+      submissionResponse <- savePeriodicSubmission(
+        journeyContext.toJourneyContextWithNino(nino),
+        currentPeriodicSubmission,
+        foreignPropertyExpensesWithCountryCode
+      )
+      _ <- foreignPropertyExpensesWithCountryCode.consolidatedExpenses match {
+        case Some(consolidatedExpenses) =>
+          persistForeignAnswers(journeyContext, ForeignPropertyExpensesStoreAnswers(
+            consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
+          ), foreignPropertyExpensesWithCountryCode.countryCode).map(isPersistSuccess =>
+            if (!isPersistSuccess){
+              logger.error("Could not persist Foreign Expenses")
+            } else {
+              logger.info("Foreign Expenses persisted successfully")
+            }
+          )
+        case _ =>
+          ITPEnvelope.liftPure(None)
+      }
+    } yield submissionResponse
+  }
 
   def saveForeignPropertyTax(
     journeyContext: JourneyContext,
