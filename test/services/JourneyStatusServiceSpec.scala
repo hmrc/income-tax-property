@@ -38,7 +38,7 @@ class JourneyStatusServiceSpec extends UnitTest with MockMongoJourneyAnswersRepo
         ).value
       )
 
-      result shouldBe ().asRight[ServiceError]
+      result shouldBe Right(())
     }
 
     ".setForeignStatus" in {
@@ -55,7 +55,7 @@ class JourneyStatusServiceSpec extends UnitTest with MockMongoJourneyAnswersRepo
         ).value
       )
 
-      result shouldBe ().asRight[ServiceError]
+      result shouldBe Right(())
     }
   }
 }
