@@ -49,12 +49,10 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
     entity: T
   ): Either[ServiceError, CreateForeignPropertyPeriodicSubmissionRequest] = {
     val result = entity match {
-      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) =>
-        fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
+      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
       case e @ ForeignPropertyExpensesWithCountryCode(_, _, _, _, _, _, _, _) =>
         fromForeignPropertyExpenses(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignIncome(_, _, _, _, _, _, _, _, _)   => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
+      case e @ ForeignIncome(_, _, _, _, _, _, _, _, _) => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
 
       case _ =>
         InternalError("No relevant entity found to convert from (to CreateForeignPropertyPeriodicSubmissionRequest)")
@@ -131,54 +129,59 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
   ): Either[ServiceError, CreateForeignPropertyPeriodicSubmissionRequest] = {
     val foreignPropertyLens = GenLens[CreateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)
     val foreignPropertyExpenseLens = GenLens[ForeignProperty](_.expenses)
-    val firstForeignPropertyExpenseLens: Optional[CreateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyExpenses] =
+    val firstForeignPropertyExpenseLens
+      : Optional[CreateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyExpenses] =
       foreignPropertyLens.some.index(0).andThen(foreignPropertyExpenseLens.some)
 
     val (periodicSubmission, maybeForeignPropertyExpenses, maybeForeignPropertyIncome)
-    : (Option[PropertyPeriodicSubmission], Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
+      : (Option[PropertyPeriodicSubmission], Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
       maybeSubmission match {
         case Some(
-        pps @ PropertyPeriodicSubmission(
-        _,
-        _,
-        _,
-        _,
-        Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
-        _
-        )
-        ) =>
+              pps @ PropertyPeriodicSubmission(
+                _,
+                _,
+                _,
+                _,
+                Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _
+              )
+            ) =>
           (Some(pps), Some(expenses), Some(income))
         case Some(pps) => (Some(pps), None, None)
         case _         => (None, None, None)
       }
 
     val newForeignPropertyExpenses = foreignPropertyExpenses.consolidatedExpenses match {
-      case Some(ConsolidatedExpenses(_, Some(consolidatedExpense))) => ForeignPropertyExpenses(
-        premisesRunningCosts = None,
-        repairsAndMaintenance = None,
-        financialCosts = None,
-        professionalFees = None,
-        travelCosts = None,
-        costOfServices = None,
-        residentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.residentialFinancialCost),
-        broughtFwdResidentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.broughtFwdResidentialFinancialCost),
-        other = None,
-        consolidatedExpense = None,
-        consolidatedExpenseAmount = Some(consolidatedExpense)
-      )
-      case _ => ForeignPropertyExpenses(
-        premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
-        repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
-        financialCosts = foreignPropertyExpenses.financialCosts,
-        professionalFees = foreignPropertyExpenses.professionalFees,
-        travelCosts = maybeForeignPropertyExpenses.flatMap(_.travelCosts),
-        costOfServices = foreignPropertyExpenses.costOfServices,
-        residentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.residentialFinancialCost),
-        broughtFwdResidentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.broughtFwdResidentialFinancialCost),
-        other = foreignPropertyExpenses.other,
-        consolidatedExpense = None,
-        consolidatedExpenseAmount = None
-      )
+      case Some(ConsolidatedExpenses(_, Some(consolidatedExpense))) =>
+        ForeignPropertyExpenses(
+          premisesRunningCosts = None,
+          repairsAndMaintenance = None,
+          financialCosts = None,
+          professionalFees = None,
+          travelCosts = None,
+          costOfServices = None,
+          residentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.residentialFinancialCost),
+          broughtFwdResidentialFinancialCost =
+            maybeForeignPropertyExpenses.flatMap(_.broughtFwdResidentialFinancialCost),
+          other = None,
+          consolidatedExpense = None,
+          consolidatedExpenseAmount = Some(consolidatedExpense)
+        )
+      case _ =>
+        ForeignPropertyExpenses(
+          premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
+          repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
+          financialCosts = foreignPropertyExpenses.financialCosts,
+          professionalFees = foreignPropertyExpenses.professionalFees,
+          travelCosts = maybeForeignPropertyExpenses.flatMap(_.travelCosts),
+          costOfServices = foreignPropertyExpenses.costOfServices,
+          residentialFinancialCost = maybeForeignPropertyExpenses.flatMap(_.residentialFinancialCost),
+          broughtFwdResidentialFinancialCost =
+            maybeForeignPropertyExpenses.flatMap(_.broughtFwdResidentialFinancialCost),
+          other = foreignPropertyExpenses.other,
+          consolidatedExpense = None,
+          consolidatedExpenseAmount = None
+        )
     }
 
     val periodicSubmissionRequestRetainingIncome = CreateForeignPropertyPeriodicSubmissionRequest(
