@@ -56,7 +56,8 @@ class ForeignMergerSpec extends UnitTest {
             residentialFinancialCost = Some(BigDecimal(11.11)),
             broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
             other = Some(BigDecimal(44.44)),
-            consolidatedExpense = Some(BigDecimal(90.05))
+            consolidatedExpense = Some(BigDecimal(90.05)),
+            None
           ))
         )
       )),

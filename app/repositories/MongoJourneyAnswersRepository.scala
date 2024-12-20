@@ -127,8 +127,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   }
 
   private[repositories] def foreignCreateUpsert(
-                                          ctx: JourneyContext
-                                        )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus, countryCode: String) = {
+    ctx: JourneyContext
+  )(fieldName: String, bsonValue: BsonValue, statusOnInsert: JourneyStatus, countryCode: String) = {
     val now = Instant.now(clock)
 
     Updates.combine(

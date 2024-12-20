@@ -145,7 +145,8 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
               Some(19.75),
               Some(31.97),
               Some(53.19),
-              Some(75.31)
+              Some(75.31),
+              None
             )
           )
         )

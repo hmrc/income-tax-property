@@ -66,7 +66,8 @@ case class ForeignPropertyExpenses(
   residentialFinancialCost: Option[BigDecimal],
   broughtFwdResidentialFinancialCost: Option[BigDecimal],
   other: Option[BigDecimal],
-  consolidatedExpense: Option[BigDecimal]
+  consolidatedExpense: Option[BigDecimal],      // API#1958 (Update) expects consolidatedExpense
+  consolidatedExpenseAmount: Option[BigDecimal] // API#1861 (Create) expects consolidatedExpenseAmount
 )
 
 object ForeignPropertyExpenses {

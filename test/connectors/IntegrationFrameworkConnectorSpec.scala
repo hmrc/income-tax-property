@@ -67,7 +67,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             "FR",
             Some(ForeignPropertyIncome(None, Some(true), None, None, Some(BigDecimal(543.00)), None)),
             Some(
-              ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, Some(BigDecimal(123.00)))
+              ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, Some(BigDecimal(123.00)), None)
             )
           )
         )
