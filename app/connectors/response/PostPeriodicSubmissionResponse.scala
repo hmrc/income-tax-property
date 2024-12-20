@@ -41,7 +41,7 @@ object PostPeriodicSubmissionResponse extends Logging {
 
     private def extractResult(response: HttpResponse): Either[ApiError, Option[PeriodicSubmissionId]] = {
       val json = response.json
-      logger.error("PostPeriodicSubmissionResponse: " + json.toString())
+      logger.info("PostPeriodicSubmissionResponse: " + json.toString())
       json.validate[PeriodicSubmissionId]
         .fold[Either[ApiError, Option[PeriodicSubmissionId]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
     }
