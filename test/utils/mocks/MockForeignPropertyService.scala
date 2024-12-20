@@ -93,18 +93,19 @@ trait MockForeignPropertyService extends MockFactory {
     journeyContext: JourneyContext,
     nino: Nino,
     foreignIncome: ForeignIncome,
-    result: Either[ServiceError, Boolean]
-  ): CallHandler3[JourneyContext, ForeignIncome, HeaderCarrier, EitherT[
+    result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler4[JourneyContext, Nino, ForeignIncome, HeaderCarrier, EitherT[
     Future,
     ServiceError,
-    Boolean
+    Option[PeriodicSubmissionId]
   ]] =
     (mockForeignPropertyService
       .saveForeignIncome(
         _: JourneyContext,
+        _: Nino,
         _: ForeignIncome
       )(_: HeaderCarrier))
-      .expects(journeyContext, foreignIncome, *)
+      .expects(journeyContext, nino, foreignIncome, *)
       .returning(EitherT.fromEither(result))
       
 }

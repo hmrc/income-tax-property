@@ -79,7 +79,7 @@ class ForeignPropertyService @Inject() (
         nino,
         journeyContext.incomeSourceId
       )
-      submissionResponse <- savePeriodicSubmission(
+      submissionResponse <- createOrUpdatePeriodicSubmission(
         journeyContext.toJourneyContextWithNino(nino),
         currentPeriodicSubmission,
         foreignPropertyExpensesWithCountryCode
@@ -115,7 +115,7 @@ class ForeignPropertyService @Inject() (
                                      journeyContext.incomeSourceId
                                    )
 
-      submissionResponse <- savePeriodicSubmission(
+      submissionResponse <- createOrUpdatePeriodicSubmission(
                               journeyContext.toJourneyContextWithNino(nino),
                               currentPeriodicSubmission,
                               foreignPropertyTaxWithCountryCode
@@ -145,7 +145,7 @@ class ForeignPropertyService @Inject() (
         case None         => ITPEnvelope.liftPure(None)
       }
 
-  private def savePeriodicSubmission[T](
+  private def createOrUpdatePeriodicSubmission[T](
     contextWithNino: JourneyContextWithNino,
     maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
     entity: T
@@ -299,13 +299,42 @@ class ForeignPropertyService @Inject() (
     Right(PropertyPeriodicSubmissionResponse(submissions))
 
   def saveForeignIncome(
-    ctx: JourneyContext,
-    foreignPropertyIncome: ForeignIncome
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
-    persistForeignAnswers(
-      ctx,
-      foreignPropertyIncome,
-      foreignPropertyIncome.countryCode
-    )
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignIncome: ForeignIncome
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    for {
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+                                     journeyContext.taxYear,
+                                     nino,
+                                     journeyContext.incomeSourceId
+                                   )
+
+      submissionResponse <- createOrUpdatePeriodicSubmission(
+                              journeyContext.toJourneyContextWithNino(nino),
+                              currentPeriodicSubmission,
+                              foreignIncome
+                            )
+      _ <- persistForeignAnswers(
+             journeyContext,
+             ForeignIncomeStoreAnswers(
+               premiumsGrantLeaseReceived = foreignIncome.premiumsGrantLeaseReceived,
+               premiumsOfLeaseGrantAgreed =
+                 foreignIncome.premiumsOfLeaseGrantAgreed.fold(false)(_.premiumsOfLeaseGrantAgreed),
+               reversePremiumsReceived = foreignIncome.reversePremiumsReceived.reversePremiumsReceived,
+               calculatedPremiumLeaseTaxable =
+                 foreignIncome.calculatedPremiumLeaseTaxable.fold(false)(_.calculatedPremiumLeaseTaxable),
+               twelveMonthPeriodsInLease = foreignIncome.twelveMonthPeriodsInLease,
+               receivedGrantLeaseAmount = foreignIncome.receivedGrantLeaseAmount
+             ),
+             foreignIncome.countryCode
+           ).map(isPersistSuccess =>
+             if (!isPersistSuccess) {
+               logger.error("Could not persist Foreign Income")
+             } else {
+               logger.info("Foreign Income persisted successfully")
+             }
+           )
+    } yield submissionResponse
 
 }
