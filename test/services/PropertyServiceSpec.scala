@@ -367,7 +367,7 @@ class PropertyServiceSpec
           .createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, validRequest)
           .value
       ) shouldBe
-        Right()
+        ().asRight[ApiError]
     }
 
     "return ApiError for invalid request" in {
@@ -397,7 +397,7 @@ class PropertyServiceSpec
     )
 
     "return no content for valid request" in {
-      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, ().asRight[ApiError])
       await(
         underTest
           .createOrUpdateAnnualSubmission(
@@ -408,7 +408,7 @@ class PropertyServiceSpec
           )
           .value
       ) shouldBe
-        Right()
+        ().asRight[ApiError]
     }
 
     "return ApiError for invalid request" in {
@@ -506,7 +506,7 @@ class PropertyServiceSpec
         incomeSourceId,
         nino,
         Some(updatedAnnualSubmission),
-        Right()
+        ().asRight[ApiError]
       )
       await(
         underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
@@ -598,7 +598,7 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(annualSubmission).asRight[ApiError]
       )
-      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, Right())
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, ().asRight[ApiError])
       await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
     }
 
@@ -1605,7 +1605,7 @@ class PropertyServiceSpec
           List(),
           Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
         )
-        val foreignPropertyData = FetchedForeignPropertyData(None, None)
+        val foreignPropertyData = FetchedForeignPropertyData(None, None, None)
         FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData)
       }
 
