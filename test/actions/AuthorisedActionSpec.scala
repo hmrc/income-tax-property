@@ -125,6 +125,13 @@ class AuthorisedActionSpec extends UnitTest
         await(underTest.async(block)(FakeRequest())).header.status shouldBe UNAUTHORIZED
       }
     }
+
+    "return ISE" when {
+      "the authorisation service returns an unexpected exception" in {
+        mockAuthReturnException(EmptyPredicate, Retrievals.affinityGroup)(new Exception("bang"))
+        await(underTest.async(block)(requestWithMtditid)).header.status shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
   }
 
   ".individualAuthentication" should {
@@ -297,6 +304,29 @@ class AuthorisedActionSpec extends UnitTest
         val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
 
         await(result).header.status shouldBe UNAUTHORIZED
+      }
+    }
+
+    "return ISE" when {
+
+      "the authorisation service returns an non-Auth related Exception for primary agent check" in {
+
+        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
+
+        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
+
+        await(result).header.status shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "the authorisation service returns a nonAuth related Exception for secondary agent check" in {
+
+        MockAppConfig.emaSupportingAgentsEnabled(true)
+        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
+        mockAuthReturnException(secondaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
+
+        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
+
+        await(result).header.status shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }
