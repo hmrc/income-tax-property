@@ -21,7 +21,7 @@ import models.auth.DelegatedAuthRules
 import models.auth.Enrolment.{Agent, Individual, SupportingAgent}
 import models.{User, auth}
 import play.api.Logger
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -66,7 +66,7 @@ class AuthorisedAction @Inject() (
               logger.info("[AuthorisedAction][async] - No active session.")
               Unauthorized
             case _: AuthorisationException =>
-              logger.info("[AuthorisedAction][async] - User failed to authenticate")
+              logger.warn("[AuthorisedAction][async] - User failed to authenticate")
               Unauthorized
           }
         }
@@ -90,21 +90,21 @@ class AuthorisedAction @Inject() (
             } getOrElse {
               val logMessage = s"[AuthorisedAction][individualAuthentication] Non-agent with an invalid MTDITID. " +
                 s"MTDITID in auth matches MTDITID in request: ${authMTDITID == requestMtdItId}"
-              logger.info(logMessage)
+              logger.warn(logMessage)
               unauthorized
             }
           case (_, None) =>
             val logMessage = s"[AuthorisedAction][individualAuthentication] - User has no nino."
-            logger.info(logMessage)
+            logger.warn(logMessage)
             unauthorized
           case (None, _) =>
             val logMessage = s"[AuthorisedAction][individualAuthentication] - User has no MTD IT enrolment."
-            logger.info(logMessage)
+            logger.warn(logMessage)
             unauthorized
         }
       case _ =>
         val logMessage = "[AuthorisedAction][individualAuthentication] User has confidence level below 250."
-        logger.info(logMessage)
+        logger.warn(logMessage)
         unauthorized
     }
 
@@ -135,13 +135,20 @@ class AuthorisedAction @Inject() (
         .retrieve(allEnrolments) {
           populateAgent(block, mtdItId, _, isSecondaryAgent = true)
         }
-        .recoverWith { case _ =>
-          logger.info("[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
-          unauthorized
+        .recover {
+          case _: AuthorisationException =>
+            logger.warn("[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
+            Unauthorized
+          case e =>
+            logger.error(s"[AuthorisedAction][agentAuthentication] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            InternalServerError
         }
     case _: AuthorisationException =>
-      logger.info("[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+      logger.warn("[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
       unauthorized
+    case e =>
+      logger.error(s"[AuthorisedAction][agentAuthentication] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+      Future(InternalServerError)
   }
 
   private def populateAgent[A](block: AuthorisationRequest[A] => Future[Result],
@@ -153,7 +160,7 @@ class AuthorisedAction @Inject() (
         block(AuthorisationRequest(User(mtdItId, Some(arn), isSecondaryAgent), request))
       case None =>
         val logMessage = "[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment."
-        logger.info(logMessage)
+        logger.warn(logMessage)
         unauthorized
     }
 

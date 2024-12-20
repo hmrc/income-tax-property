@@ -299,6 +299,29 @@ class AuthorisedActionSpec extends UnitTest
         await(result).header.status shouldBe UNAUTHORIZED
       }
     }
+
+    "return ISE" when {
+
+      "the authorisation service returns an non-Auth related Exception for primary agent check" in {
+
+        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
+
+        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
+
+        await(result).header.status shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "the authorisation service returns a nonAuth related Exception for secondary agent check" in {
+
+        MockAppConfig.emaSupportingAgentsEnabled(true)
+        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
+        mockAuthReturnException(secondaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
+
+        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
+
+        await(result).header.status shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
   }
 
   ".enrolmentGetIdentifierValue" should {
