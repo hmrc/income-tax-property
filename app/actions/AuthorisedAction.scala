@@ -68,6 +68,9 @@ class AuthorisedAction @Inject() (
             case _: AuthorisationException =>
               logger.warn("[AuthorisedAction][async] - User failed to authenticate")
               Unauthorized
+            case e =>
+              logger.error(s"[AuthorisedAction][async] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+              InternalServerError
           }
         }
     }
