@@ -125,6 +125,13 @@ class AuthorisedActionSpec extends UnitTest
         await(underTest.async(block)(FakeRequest())).header.status shouldBe UNAUTHORIZED
       }
     }
+
+    "return ISE" when {
+      "the authorisation service returns an unexpected exception" in {
+        mockAuthReturnException(EmptyPredicate, Retrievals.affinityGroup)(new Exception("bang"))
+        await(underTest.async(block)(requestWithMtditid)).header.status shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
   }
 
   ".individualAuthentication" should {
