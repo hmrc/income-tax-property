@@ -24,7 +24,7 @@ import models.repository.Merger._
 import models.repository.ForeignMerger._
 import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignPropertyTax}
+import models.request.foreign._
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -152,7 +152,12 @@ class MergeService @Inject() (implicit
       foreignResultFromRepository.get(JourneyName.ForeignPropertyTax.entryName)
     )
 
-    val foreignJourneyStatuses = foreignMergeStatuses(foreignResultFromRepository)
+    val foreignPropertyIncomeMaybe = mergeForeignPropertyIncome(
+      resultFromPeriodicDownstreamMaybe,
+      foreignResultFromRepository.get(JourneyName.ForeignPropertyIncome.entryName)
+    )
+
+    val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
     val fetchedUKPropertyData = FetchedUKPropertyData(
       None,
@@ -181,6 +186,7 @@ class MergeService @Inject() (implicit
 
     val fetchedForeignPropertyData = FetchedForeignPropertyData(
       foreignPropertyTax = foreignPropertyTaxMaybe,
+      foreignPropertyIncome = foreignPropertyIncomeMaybe,
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
@@ -440,18 +446,18 @@ class MergeService @Inject() (implicit
   }
 
   def mergeForeignPropertyTax(
-                               resultFromDownstream: Option[PropertyPeriodicSubmission],
-                               foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-                             ): Option[Map[String, ForeignPropertyTax]] = {
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignPropertyTax]] = {
     val foreignPropertyTaxStoreAnswers: Option[Map[String, ForeignPropertyTaxStoreAnswers]] =
       foreignResultFromRepository match {
         case Some(journeyAnswers) => Some(journeyAnswers.map {
           case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignPropertyTaxStoreAnswers]
         })
-        case None => None
+        case _ => None
       }
 
-    val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] =  for {
+    val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
       rfd <- resultFromDownstream
       fp <- rfd.foreignProperty
     } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)):_*)
@@ -459,7 +465,27 @@ class MergeService @Inject() (implicit
     foreignPropertyTaxStoreAnswers.merge(foreignPropertiesIncome)
   }
 
-  def foreignMergeStatuses(foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]): Option[Map[String, List[JourneyWithStatus]]] = {
+  def mergeForeignPropertyIncome(
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignIncomeAnswers]] = {
+    val foreignPropertyIncomeStoreAnswers: Option[Map[String, ForeignIncomeStoreAnswers]] =
+      foreignResultFromRepository match {
+        case Some(journeyAnswers) => Some(journeyAnswers.map {
+          case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignIncomeStoreAnswers]
+        })
+        case _ => None
+      }
+
+    val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
+      rfd <- resultFromDownstream
+      fp <- rfd.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)):_*)
+
+    foreignPropertyIncomeStoreAnswers.merge(foreignPropertiesIncome)
+  }
+
+  def mergeForeignStatuses(foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]): Option[Map[String, List[JourneyWithStatus]]] = {
     val foreignJourneyStatusList: Seq[(String, JourneyWithStatus)] = foreignResultFromRepository.toList.flatMap {
       case (journeyName: String, foreignJourneyAnswers: Map[String, JourneyAnswers]) =>
         foreignJourneyAnswers.collect { case (countryCode, answers) =>
