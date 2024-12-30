@@ -16,12 +16,14 @@
 
 package models.repository
 
+import models.ForeignPropertyExpensesStoreAnswers
 import models.repository.ForeignMerger._
 import models.repository.Merger._
 import models.request.ReversePremiumsReceived
 import models.request.foreign._
 import models.responses._
 import utils.UnitTest
+import models.request.foreign.expenses.ConsolidatedExpenses
 
 import java.time.LocalDate
 
@@ -33,6 +35,14 @@ class ForeignMergerSpec extends UnitTest {
   val rentIncome: BigDecimal = BigDecimal(12.34)
   val premiumsOfLeaseGrant: Option[BigDecimal] = Some(BigDecimal(13.34))
   val otherPropertyIncome: Option[BigDecimal] = Some(BigDecimal(24.56))
+  val consolidatedExpenses: Option[ConsolidatedExpenses] = Some(ConsolidatedExpenses(
+    consolidatedOrIndividualExpensesYesNo = true, Some(BigDecimal(90.05))))
+  val premisesRunningCosts: Option[BigDecimal] = Some(BigDecimal(65.43))
+  val repairsAndMaintenance: Option[BigDecimal] = Some(BigDecimal(32.21))
+  val financialCosts: Option[BigDecimal] = Some(BigDecimal(54.32))
+  val costOfServices: Option[BigDecimal] = Some(BigDecimal(22.22))
+  val professionalFees: Option[BigDecimal] = Some(BigDecimal(65.43))
+  val other: Option[BigDecimal] = Some(BigDecimal(44.44))
   val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     submissionId = None,
     submittedOn = None,
@@ -50,16 +60,16 @@ class ForeignMergerSpec extends UnitTest {
           specialWithholdingTaxOrUkTaxPaid = Some(BigDecimal(89.10))
         )),
         expenses = Some(ForeignPropertyExpenses(
-          premisesRunningCosts = Some(BigDecimal(23.34)),
-          repairsAndMaintenance = Some(BigDecimal(32.21)),
-          financialCosts = Some(BigDecimal(54.32)),
-          professionalFees = Some(BigDecimal(65.43)),
+          premisesRunningCosts = premisesRunningCosts,
+          repairsAndMaintenance = repairsAndMaintenance,
+          financialCosts = financialCosts,
+          professionalFees = professionalFees,
           travelCosts = Some(BigDecimal(22.22)),
-          costOfServices = Some(BigDecimal(10.10)),
+          costOfServices = costOfServices,
           residentialFinancialCost = Some(BigDecimal(11.11)),
           broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
-          other = Some(BigDecimal(44.44)),
-          consolidatedExpense = Some(BigDecimal(90.05)),
+          other = other,
+          consolidatedExpense = consolidatedExpenses.flatMap(_.consolidatedExpense),
           consolidatedExpenseAmount = None
         ))
       )
@@ -113,7 +123,7 @@ class ForeignMergerSpec extends UnitTest {
         foreignProperties <- aPropertyPeriodicSubmission.foreignProperty
         foreignProperty <- foreignProperties.headOption
         foreignPropertyIncome <- foreignProperty.income
-      } yield Map(countryCode -> foreignPropertyIncome)
+      } yield Map(foreignProperty.countryCode -> foreignPropertyIncome)
 
       "store answers are available in the repo" in {
         val premiumsGrantLeaseReceived = true
@@ -165,6 +175,48 @@ class ForeignMergerSpec extends UnitTest {
             premiumsOfLeaseGrantAgreed = Some(PremiumsOfLeaseGrantAgreed(
               premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = premiumsOfLeaseGrant
             ))
+          ))
+        )
+      }
+    }
+
+    "merge foreign expenses from downstream response and from repo into response model" when {
+      val fromDownstreamMaybe: Option[Map[String, ForeignPropertyExpenses]] = for {
+        foreignProperties <- aPropertyPeriodicSubmission.foreignProperty
+        foreignProperty <- foreignProperties.headOption
+        foreignPropertyExpenses <- foreignProperty.expenses
+      } yield Map(foreignProperty.countryCode -> foreignPropertyExpenses)
+
+      "store answers are available in the repo" in {
+        val consolidatedExpensesYesOrNo = true
+        val foreignExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
+          Some(Map(countryCode -> ForeignPropertyExpensesStoreAnswers(
+            consolidatedExpensesYesOrNo = consolidatedExpensesYesOrNo
+          )))
+        foreignExpensesStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(countryCode -> ForeignExpensesAnswers(
+            consolidatedExpenses = consolidatedExpenses,
+            premisesRunningCosts = premisesRunningCosts,
+            repairsAndMaintenance = repairsAndMaintenance,
+            financialCosts = financialCosts,
+            professionalFees = professionalFees,
+            costOfServices = costOfServices,
+            other = other
+          ))
+        )
+      }
+
+      "store answers are not available in the repo" in {
+        val foreignExpensesStoreAnswers:  Option[Map[String, ForeignPropertyExpensesStoreAnswers]] = None
+        foreignExpensesStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(countryCode -> ForeignExpensesAnswers(
+            consolidatedExpenses = consolidatedExpenses,
+            premisesRunningCosts = premisesRunningCosts,
+            repairsAndMaintenance = repairsAndMaintenance,
+            financialCosts = financialCosts,
+            professionalFees = professionalFees,
+            costOfServices = costOfServices,
+            other = other
           ))
         )
       }

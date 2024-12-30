@@ -157,6 +157,11 @@ class MergeService @Inject() (implicit
       foreignResultFromRepository.get(JourneyName.ForeignPropertyIncome.entryName)
     )
 
+    val foreignPropertyExpensesMaybe = mergeForeignPropertyExpenses(
+      resultFromPeriodicDownstreamMaybe,
+      foreignResultFromRepository.get(JourneyName.ForeignPropertyIncome.entryName)
+    )
+
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
     val fetchedUKPropertyData = FetchedUKPropertyData(
@@ -187,6 +192,7 @@ class MergeService @Inject() (implicit
     val fetchedForeignPropertyData = FetchedForeignPropertyData(
       foreignPropertyTax = foreignPropertyTaxMaybe,
       foreignPropertyIncome = foreignPropertyIncomeMaybe,
+      foreignPropertyExpenses = foreignPropertyExpensesMaybe,
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
@@ -483,6 +489,25 @@ class MergeService @Inject() (implicit
     } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)):_*)
 
     foreignPropertyIncomeStoreAnswers.merge(foreignPropertiesIncome)
+  }
+
+  def mergeForeignPropertyExpenses(
+    resultFromDownstream: Option[PropertyPeriodicSubmission],
+    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignExpensesAnswers]] = {
+    val foreignPropertyExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
+      foreignResultFromRepository.map { journeyAnswers =>
+        journeyAnswers.map {
+          case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignPropertyExpensesStoreAnswers]
+        }
+      }
+
+    val foreignPropertiesExpenses: Option[Map[String, ForeignPropertyExpenses]] = for {
+      rfd <- resultFromDownstream
+      fp <- rfd.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)):_*)
+
+    foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
   }
 
   def mergeForeignStatuses(foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]): Option[Map[String, List[JourneyWithStatus]]] = {
