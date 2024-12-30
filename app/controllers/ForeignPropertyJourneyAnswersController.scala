@@ -20,6 +20,7 @@ import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
 import models.request.foreign._
+import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -30,7 +31,7 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class ForeignPropertyJourneyAnswersController @Inject() (
-  propertyService: ForeignPropertyService,
+  foreignPropertyService: ForeignPropertyService,
   auth: AuthorisedAction,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -46,7 +47,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertySelectCountry: ForeignPropertySelectCountry) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertySelectCountry(ctx, foreignPropertySelectCountry)
+          foreignPropertyService.saveForeignPropertySelectCountry(ctx, foreignPropertySelectCountry)
         }
       }
     }
@@ -65,7 +66,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertyTax(ctx, nino, foreignPropertyTaxWithCountryCode)
+          foreignPropertyService.saveForeignPropertyTax(ctx, nino, foreignPropertyTaxWithCountryCode)
         }
       }
     }
@@ -80,7 +81,7 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignPropertyExpensesWithCountryCode: ForeignPropertyExpensesWithCountryCode) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignPropertyExpenses(ctx, nino, foreignPropertyExpensesWithCountryCode)
+          foreignPropertyService.saveForeignPropertyExpenses(ctx, nino, foreignPropertyExpensesWithCountryCode)
         }
       }
     }
@@ -95,7 +96,22 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         request
       ) { (ctx, foreignIncome: ForeignIncome) =>
         handleResponse(NO_CONTENT) {
-          propertyService.saveForeignIncome(ctx, nino, foreignIncome)
+          foreignPropertyService.saveForeignIncome(ctx, nino, foreignIncome)
+        }
+      }
+    }
+
+  def saveForeignPropertyAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[ForeignPropertyAllowances](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.ForeignPropertyAllowances,
+        request
+      ) { (ctx, foreignPropertyAllowances: ForeignPropertyAllowances) =>
+        handleResponse(NO_CONTENT) {
+          foreignPropertyService.saveForeignPropertyAllowances(ctx, nino, foreignPropertyAllowances)
         }
       }
     }

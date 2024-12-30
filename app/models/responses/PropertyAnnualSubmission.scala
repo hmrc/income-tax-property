@@ -18,6 +18,7 @@ package models.responses
 
 import models.RentalsAndRaRAbout
 import models.request._
+import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.ukrentaroom.RaRAdjustments
 import monocle.Optional
 import monocle.macros.GenLens
@@ -395,19 +396,6 @@ object ForeignPropertyAdjustments {
   implicit val format: OFormat[ForeignPropertyAdjustments] = Json.format[ForeignPropertyAdjustments]
 }
 
-case class ForeignPropertyAllowances(
-  annualInvestmentAllowance: Option[BigDecimal],
-  costOfReplacingDomesticItems: Option[BigDecimal],
-  zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal],
-  structuredBuildingAllowance: Option[BigDecimal],
-  zeroEmissionsCarAllowance: Option[BigDecimal],
-  propertyAllowance: Option[BigDecimal]
-)
-
-object ForeignPropertyAllowances {
-  implicit val format: OFormat[ForeignPropertyAllowances] = Json.format[ForeignPropertyAllowances]
-}
 
 case class UkRentARoom(jointlyLet: Boolean)
 

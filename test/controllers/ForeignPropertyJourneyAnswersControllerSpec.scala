@@ -20,6 +20,7 @@ import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
+import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -32,7 +33,7 @@ import utils.providers.FakeRequestProvider
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyJourneyAnswersControllerSpec
-  extends ControllerUnitTest with MockForeignPropertyService with MockMongoJourneyAnswersRepository
+    extends ControllerUnitTest with MockForeignPropertyService with MockMongoJourneyAnswersRepository
     with MockAuthorisedAction with FakeRequestProvider with ScalaCheckPropertyChecks {
 
   private val underTest = new ForeignPropertyJourneyAnswersController(
@@ -50,13 +51,12 @@ class ForeignPropertyJourneyAnswersControllerSpec
   "create or update foreign property section " should {
 
     val validRequestBody: JsValue =
-      Json.parse(
-        """{
-          |
-          |     "totalIncome" : "lessThanOneThousand",
-          |     "claimPropertyIncomeAllowance" : false
-          |
-          |}""".stripMargin)
+      Json.parse("""{
+                   |
+                   |     "totalIncome" : "lessThanOneThousand",
+                   |     "claimPropertyIncomeAllowance" : false
+                   |
+                   |}""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
@@ -116,17 +116,16 @@ class ForeignPropertyJourneyAnswersControllerSpec
         JourneyName.ForeignPropertyTax
       )
     val validRequestBody: JsValue =
-      Json.parse(
-        """
-          |{
-          |  "countryCode": "USA",
-          |  "foreignIncomeTax": {
-          |    "foreignIncomeTaxYesNo": true,
-          |    "foreignTaxPaidOrDeducted": 65
-          |     },
-          |  "foreignTaxCreditRelief": true
-          |}
-          |""".stripMargin)
+      Json.parse("""
+                   |{
+                   |  "countryCode": "USA",
+                   |  "foreignIncomeTax": {
+                   |    "foreignIncomeTaxYesNo": true,
+                   |    "foreignTaxPaidOrDeducted": 65
+                   |     },
+                   |  "foreignTaxCreditRelief": true
+                   |}
+                   |""".stripMargin)
 
     val foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode =
       validRequestBody.as[ForeignPropertyTaxWithCountryCode]
@@ -268,21 +267,20 @@ class ForeignPropertyJourneyAnswersControllerSpec
   "save foreign property expenses " should {
 
     val validRequestBody: JsValue =
-      Json.parse(
-        """{
-          |
-          |     "countryCode" : "ESP",
-          |     "consolidatedExpenses": {
-          |        "consolidatedOrIndividualExpensesYesNo": false
-          |     },
-          |      "premisesRunningCosts" : 70,
-          |      "repairsAndMaintenance" : 80,
-          |      "financialCosts" : 550,
-          |      "professionalFees" : 900,
-          |      "costOfServices" : 345,
-          |      "other" : 734
-          |
-          |}""".stripMargin)
+      Json.parse("""{
+                   |
+                   |     "countryCode" : "ESP",
+                   |     "consolidatedExpenses": {
+                   |        "consolidatedOrIndividualExpensesYesNo": false
+                   |     },
+                   |      "premisesRunningCosts" : 70,
+                   |      "repairsAndMaintenance" : 80,
+                   |      "financialCosts" : 550,
+                   |      "professionalFees" : 900,
+                   |      "costOfServices" : 345,
+                   |      "other" : 734
+                   |
+                   |}""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
@@ -311,4 +309,81 @@ class ForeignPropertyJourneyAnswersControllerSpec
       status(result) shouldBe BAD_REQUEST
     }
   }
+
+  "save foreign property allowances section " should {
+
+    val validForeignPropertyAllowances: JsValue =
+      Json.parse("""{
+                   |    "countryCode": "AUS",
+                   |    "zeroEmissionsCarAllowance": 231.45,
+                   |    "zeroEmissionsGoodsVehicleAllowance": 345.65,
+                   |    "costOfReplacingDomesticItems": 490.58,
+                   |    "otherCapitalAllowance": 600
+                   |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
+        JourneyName.ForeignPropertyAllowances
+      )
+
+    "return a header status with NO_CONTENT for a valid request" in {
+      val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowances]
+
+      mockAuthorisation()
+      mockSaveForeignPropertyAllowancesSection(
+        ctx,
+        nino,
+        foreignPropertyAllowances,
+        Right(Some(PeriodicSubmissionId(incomeSubmissionId.value)))
+      )
+
+      val request = fakePostRequest.withJsonBody(validForeignPropertyAllowances)
+      val result = await(underTest.saveForeignPropertyAllowances(taxYear, incomeSourceId, nino)(request))
+
+      foreignPropertyAllowances shouldBe ForeignPropertyAllowances(
+        countryCode = "AUS",
+        zeroEmissionsCarAllowance = Some(231.45),
+        zeroEmissionsGoodsVehicleAllowance = Some(345.65),
+        costOfReplacingDomesticItems = Some(490.58),
+        otherCapitalAllowance = Some(600),
+        annualInvestmentAllowance = None,
+        propertyAllowance = None,
+        structuredBuildingAllowance = None
+      )
+      result.header.status shouldBe NO_CONTENT
+
+    }
+
+    "return serviceError when there is an error in Downstream Api or error in Parsing" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowances]
+
+        mockAuthorisation()
+        mockSaveForeignPropertyAllowancesSection(
+          ctx,
+          nino,
+          foreignPropertyAllowances,
+          serviceError.asLeft[Option[PeriodicSubmissionId]]
+        )
+
+        val request = fakePostRequest.withJsonBody(validForeignPropertyAllowances)
+        val result = await(underTest.saveForeignPropertyAllowances(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignPropertyAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 }
