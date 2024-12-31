@@ -23,6 +23,7 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
 import models.request.foreign._
+import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
 import models.{ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
@@ -72,34 +73,37 @@ class ForeignPropertyService @Inject() (
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertyExpensesWithCountryCode: ForeignPropertyExpensesWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] = {
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-        journeyContext.taxYear,
-        nino,
-        journeyContext.incomeSourceId
-      )
+                                     journeyContext.taxYear,
+                                     nino,
+                                     journeyContext.incomeSourceId
+                                   )
       submissionResponse <- createOrUpdatePeriodicSubmission(
-        journeyContext.toJourneyContextWithNino(nino),
-        currentPeriodicSubmission,
-        foreignPropertyExpensesWithCountryCode
-      )
+                              journeyContext.toJourneyContextWithNino(nino),
+                              currentPeriodicSubmission,
+                              foreignPropertyExpensesWithCountryCode
+                            )
       _ <- foreignPropertyExpensesWithCountryCode.consolidatedExpenses match {
-        case Some(consolidatedExpenses) =>
-          persistForeignAnswers(journeyContext, ForeignPropertyExpensesStoreAnswers(
-            consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
-          ), foreignPropertyExpensesWithCountryCode.countryCode).map(isPersistSuccess =>
-            if (!isPersistSuccess){
-              logger.error("Could not persist Foreign Expenses")
-            } else {
-              logger.info("Foreign Expenses persisted successfully")
-            }
-          )
-        case _ =>
-          ITPEnvelope.liftPure(None)
-      }
+             case Some(consolidatedExpenses) =>
+               persistForeignAnswers(
+                 journeyContext,
+                 ForeignPropertyExpensesStoreAnswers(
+                   consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
+                 ),
+                 foreignPropertyExpensesWithCountryCode.countryCode
+               ).map(isPersistSuccess =>
+                 if (!isPersistSuccess) {
+                   logger.error("Could not persist Foreign Expenses")
+                 } else {
+                   logger.info("Foreign Expenses persisted successfully")
+                 }
+               )
+             case _ =>
+               ITPEnvelope.liftPure(None)
+           }
     } yield submissionResponse
-  }
 
   def saveForeignPropertyTax(
     journeyContext: JourneyContext,
@@ -336,5 +340,24 @@ class ForeignPropertyService @Inject() (
              }
            )
     } yield submissionResponse
+
+  def saveForeignPropertyAllowances(
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertyAllowances: ForeignPropertyAllowances
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    for {
+      submissionResponse <- persistForeignAnswers(
+                              journeyContext,
+                              foreignPropertyAllowances,
+                              foreignPropertyAllowances.countryCode
+                            ).map(isPersistSuccess =>
+                              if (!isPersistSuccess) {
+                                logger.error("Could not persist Foreign property allowances")
+                              } else {
+                                logger.info("Foreign property allowances persisted successfully")
+                              }
+                            )
+    } yield None
 
 }

@@ -7,3 +7,5 @@ POST          /property/:taxYear/:incomeSourceId/foreign-property-tax/:nino/answ
 POST          /property/:taxYear/:incomeSourceId/foreign-property-income/:nino/answers                   controllers.ForeignPropertyJourneyAnswersController.saveForeignIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
 
 POST          /property/:taxYear/:incomeSourceId/foreign-property-expenses/:nino/answers                 controllers.ForeignPropertyJourneyAnswersController.saveForeignPropertyExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /property/:taxYear/:incomeSourceId/foreign-property-allowances/:nino/answers               controllers.ForeignPropertyJourneyAnswersController.saveForeignPropertyAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
