@@ -60,6 +60,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(56.78),
               Some(34.56),
               Some(78.90),
+              Some(94.12),
               None
             )
           )
@@ -81,6 +82,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(156.78),
               Some(134.56),
               Some(178.90),
+              Some(94.12),
               None
             )
           )
