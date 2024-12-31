@@ -348,6 +348,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
         otherCapitalAllowance = Some(600),
         annualInvestmentAllowance = None,
         propertyAllowance = None,
+        electricChargePointAllowance = None,
         structuredBuildingAllowance = None
       )
       result.header.status shouldBe NO_CONTENT
