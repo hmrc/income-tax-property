@@ -16,8 +16,10 @@
 
 package models.repository
 
+import models.ForeignPropertyExpensesStoreAnswers
 import models.request.ReversePremiumsReceived
 import models.request.foreign._
+import models.request.foreign.expenses.ConsolidatedExpenses
 import models.responses._
 
 // T: to return (merge into)
@@ -120,4 +122,51 @@ object ForeignMerger {
       }
   }
 
+  implicit object ForeignPropertyExpensesMerger
+    extends Merger[Option[Map[String, ForeignExpensesAnswers]], Option[Map[String, ForeignPropertyExpensesStoreAnswers]],
+      Option[Map[String, ForeignPropertyExpenses]]] {
+    override def merge(
+                        extractedMaybe: Option[Map[String, ForeignPropertyExpensesStoreAnswers]],
+                        fromDownstreamMaybe: Option[Map[String, ForeignPropertyExpenses]]
+                      ): Option[Map[String, ForeignExpensesAnswers]] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extractedMap), Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignExpensesAnswers] = fromDownstreamMap.map {
+            case (countryCode, foreignPropertyExpenses) =>
+              val storeAnswersMaybe = extractedMap.get(countryCode)
+              countryCode -> ForeignExpensesAnswers(
+                consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense.map { consolidatedExpenseAmount =>
+                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = true,
+                    consolidatedExpense = Some(consolidatedExpenseAmount))
+                }.orElse(storeAnswersMaybe.map(ce =>
+                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = ce.consolidatedExpensesYesOrNo, None))),
+                premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
+                repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
+                financialCosts = foreignPropertyExpenses.financialCosts,
+                professionalFees = foreignPropertyExpenses.professionalFees,
+                costOfServices = foreignPropertyExpenses.costOfServices,
+                other = foreignPropertyExpenses.other
+              )
+          }
+          Option.when(result.nonEmpty)(result)
+        case (_, Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignExpensesAnswers] = fromDownstreamMap.map {
+            case (countryCode, foreignPropertyExpenses) =>
+              countryCode -> ForeignExpensesAnswers(
+                consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense.map { consolidatedExpenseAmount =>
+                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = true,
+                    consolidatedExpense = Some(consolidatedExpenseAmount))
+                },
+                premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
+                repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
+                financialCosts = foreignPropertyExpenses.financialCosts,
+                professionalFees = foreignPropertyExpenses.professionalFees,
+                costOfServices = foreignPropertyExpenses.costOfServices,
+                other = foreignPropertyExpenses.other
+              )
+          }
+          Option.when(result.nonEmpty)(result)
+        case _ => None
+      }
+  }
 }

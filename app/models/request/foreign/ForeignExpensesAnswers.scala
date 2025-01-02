@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.request.foreign
 
-import models.request.foreign._
-import play.api.libs.json.{Json, OFormat}
+import models.request.foreign.expenses.ConsolidatedExpenses
+import play.api.libs.json.{Format, Json}
 
-final case class FetchedForeignPropertyData(
-  foreignPropertyTax: Option[Map[String, ForeignPropertyTax]],
-  foreignPropertyIncome: Option[Map[String, ForeignIncomeAnswers]],
-  foreignPropertyExpenses: Option[Map[String, ForeignExpensesAnswers]],
-  foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
+case class ForeignExpensesAnswers(
+  consolidatedExpenses: Option[ConsolidatedExpenses],
+  premisesRunningCosts: Option[BigDecimal],
+  repairsAndMaintenance: Option[BigDecimal],
+  financialCosts: Option[BigDecimal],
+  professionalFees: Option[BigDecimal],
+  costOfServices: Option[BigDecimal],
+  other: Option[BigDecimal]
 )
 
-object FetchedForeignPropertyData {
-  implicit val format: OFormat[FetchedForeignPropertyData] = Json.format[FetchedForeignPropertyData]
+object ForeignExpensesAnswers {
+  implicit val format: Format[ForeignExpensesAnswers] = Json.format[ForeignExpensesAnswers]
 }
