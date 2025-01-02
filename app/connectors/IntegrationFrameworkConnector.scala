@@ -22,7 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyAnnualSubmission, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
@@ -207,11 +207,11 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   }
 
   def createForeignPeriodicSubmission(
-                                taxYear: TaxYear,
-                                nino: Nino,
-                                incomeSourceId: IncomeSourceId,
-                                body: CreateForeignPropertyPeriodicSubmissionRequest
-                              )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
+    taxYear: TaxYear,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    body: CreateForeignPropertyPeriodicSubmissionRequest
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[PeriodicSubmissionId]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/periodic" +
@@ -369,7 +369,84 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a property annual submission from the Integration Framework:" +
+            s"Error creating a UK property annual submission from the Integration Framework:" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def getForeignPropertyAnnualSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ApiError, Option[ForeignPropertyAnnualSubmission]]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId",
+        "1805"
+      )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/business/property/annual?" +
+          s"taxableEntityId=$nino&taxYear=${asTyBefore24(taxYear)}&incomeSourceId=$incomeSourceId",
+        "1598"
+      )
+    }
+
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetForeignPropertyAnnualSubmissionResponse]
+      .map { response =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error getting a foreign property annual submission from the Integration Framework:" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def createOrUpdateForeignPropertyAnnualSubmission(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    body: ForeignPropertyAnnualSubmission
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
+        "1804"
+      )
+    } else {
+      (
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
+            taxYear
+          )}&incomeSourceId=$incomeSourceId""",
+        "1597"
+      )
+    }
+    logger.debug(s"createOrUpdateForeignPropertyAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
+
+    // refactor: to fix bug
+    val submissionRequest = body.copy(submittedOn = None)
+
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(submissionRequest)
+      .execute[PutAnnualSubmissionResponse]
+      .map { response: PutAnnualSubmissionResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error creating a foreign property annual submission from the Integration Framework:" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }

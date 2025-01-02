@@ -38,7 +38,19 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
               "FR",
               Some(ForeignPropertyIncome(None, Some(true), None, None, Some(BigDecimal(543.00)), None)),
               Some(
-                ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, Some(BigDecimal(123.00)), None)
+                ForeignPropertyExpenses(
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  None,
+                  Some(BigDecimal(123.00)),
+                  None
+                )
               )
             )
           )
@@ -93,7 +105,19 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
                 "FR",
                 Some(ForeignPropertyIncome(None, Some(true), None, None, Some(BigDecimal(543.00)), None)),
                 Some(
-                  ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, Some(BigDecimal(123.00)), None)
+                  ForeignPropertyExpenses(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(BigDecimal(123.00)),
+                    None
+                  )
                 )
               )
             )

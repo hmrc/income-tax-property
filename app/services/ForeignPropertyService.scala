@@ -305,7 +305,7 @@ class ForeignPropertyService @Inject() (
   def saveForeignIncome(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignIncome: ForeignIncome
+    foreignIncome: ForeignIncomeWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
@@ -341,23 +341,77 @@ class ForeignPropertyService @Inject() (
            )
     } yield submissionResponse
 
+  def getForeignPropertyAnnualSubmissionFromDownStream(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(
+    implicit hc: HeaderCarrier
+  ): ITPEnvelope[ForeignPropertyAnnualSubmission] =
+    EitherT(connector.getForeignPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
+      .leftMap(error => ApiServiceError(error.status))
+      .subflatMap { foreignPropertyAnnualSubmission =>
+        foreignPropertyAnnualSubmission.fold[Either[ServiceError, ForeignPropertyAnnualSubmission]](
+          DataNotFoundError.asLeft[ForeignPropertyAnnualSubmission]
+        )(_.asRight[ServiceError])
+      }
+
+  def createOrUpdateForeignPropertyAnnualSubmission(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    body: ForeignPropertyAnnualSubmission
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
+    body match {
+      case ForeignPropertyAnnualSubmission(None, None) =>
+        ITPEnvelope.liftPure(())
+      case _ =>
+        EitherT(
+          connector.createOrUpdateForeignPropertyAnnualSubmission(taxYear, incomeSourceId, nino, body)
+        ).leftMap(e => ApiServiceError(e.status))
+    }
+
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignPropertyAllowancesWithCountyCode: ForeignPropertyAllowancesWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+
+    val emptyForeignPropertyAnnualSubmission = ForeignPropertyAnnualSubmission(None, None)
+
     for {
-      submissionResponse <- persistForeignAnswers(
-                              journeyContext,
-                              foreignPropertyAllowancesWithCountyCode,
-                              foreignPropertyAllowancesWithCountyCode.countryCode
-                            ).map(isPersistSuccess =>
-                              if (!isPersistSuccess) {
-                                logger.error("Could not persist Foreign property allowances")
-                              } else {
-                                logger.info("Foreign property allowances persisted successfully")
-                              }
-                            )
-    } yield None
+      foreignPropertyAnnualSubmissionFromDownstream <-
+        this
+          .getForeignPropertyAnnualSubmissionFromDownStream(
+            journeyContext.taxYear,
+            nino,
+            journeyContext.incomeSourceId
+          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyForeignPropertyAnnualSubmission)
+            case e                 => ITPEnvelope.liftEither(e.asLeft[ForeignPropertyAnnualSubmission])
+          }
+      _ <- createOrUpdateForeignPropertyAnnualSubmission(
+             journeyContext.taxYear,
+             journeyContext.incomeSourceId,
+             nino,
+             ForeignPropertyAnnualSubmission
+               .fromForeignPropertyAllowances(
+                 foreignPropertyAnnualSubmissionFromDownstream,
+                 foreignPropertyAllowancesWithCountryCode
+               )
+           )
+      isPersistSuccess <- persistForeignAnswers(
+                            journeyContext,
+                            foreignPropertyAllowancesWithCountryCode,
+                            foreignPropertyAllowancesWithCountryCode.countryCode
+                          ).map(isPersistSuccess =>
+                            if (!isPersistSuccess) {
+                              logger.error("Could not persist Foreign property allowances")
+                              false
+                            } else {
+                              logger.info("Foreign property allowances persisted successfully")
+                              true
+                            }
+                          )
+    } yield isPersistSuccess
+
+  }
 
 }

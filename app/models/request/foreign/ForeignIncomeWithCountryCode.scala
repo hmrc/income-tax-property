@@ -19,7 +19,7 @@ package models.request.foreign
 import models.request.ReversePremiumsReceived
 import play.api.libs.json.{Format, Json}
 
-case class ForeignIncome(
+case class ForeignIncomeWithCountryCode(
   countryCode: String,
   rentIncome: BigDecimal,
   premiumsGrantLeaseReceived: Boolean,
@@ -31,6 +31,6 @@ case class ForeignIncome(
   premiumsOfLeaseGrantAgreed: Option[PremiumsOfLeaseGrantAgreed]
 )
 
-object ForeignIncome {
-  implicit val format: Format[ForeignIncome] = Json.format[ForeignIncome]
+object ForeignIncomeWithCountryCode {
+  implicit val format: Format[ForeignIncomeWithCountryCode] = Json.format[ForeignIncomeWithCountryCode]
 }
