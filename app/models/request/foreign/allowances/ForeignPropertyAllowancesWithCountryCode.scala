@@ -19,7 +19,7 @@ package models.request.foreign.allowances
 import models.responses.StructuredBuildingAllowance
 import play.api.libs.json.{Format, Json}
 
-case class ForeignPropertyAllowances(
+case class ForeignPropertyAllowancesWithCountryCode(
   countryCode: String,
   zeroEmissionsCarAllowance: Option[BigDecimal],
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
@@ -31,6 +31,6 @@ case class ForeignPropertyAllowances(
   structuredBuildingAllowance: Option[Array[StructuredBuildingAllowance]]
 )
 
-object ForeignPropertyAllowances {
-  implicit val format: Format[ForeignPropertyAllowances] = Json.format[ForeignPropertyAllowances]
+object ForeignPropertyAllowancesWithCountryCode {
+  implicit val format: Format[ForeignPropertyAllowancesWithCountryCode] = Json.format[ForeignPropertyAllowancesWithCountryCode]
 }

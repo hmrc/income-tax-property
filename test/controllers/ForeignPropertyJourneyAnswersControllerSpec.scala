@@ -20,7 +20,7 @@ import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.foreign._
-import models.request.foreign.allowances.ForeignPropertyAllowances
+import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -327,7 +327,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return a header status with NO_CONTENT for a valid request" in {
-      val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowances]
+      val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowancesWithCountryCode]
 
       mockAuthorisation()
       mockSaveForeignPropertyAllowancesSection(
@@ -340,7 +340,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       val request = fakePostRequest.withJsonBody(validForeignPropertyAllowances)
       val result = await(underTest.saveForeignPropertyAllowances(taxYear, incomeSourceId, nino)(request))
 
-      foreignPropertyAllowances shouldBe ForeignPropertyAllowances(
+      foreignPropertyAllowances shouldBe ForeignPropertyAllowancesWithCountryCode(
         countryCode = "AUS",
         zeroEmissionsCarAllowance = Some(231.45),
         zeroEmissionsGoodsVehicleAllowance = Some(345.65),
@@ -364,7 +364,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
       forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
-        val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowances]
+        val foreignPropertyAllowances = validForeignPropertyAllowances.as[ForeignPropertyAllowancesWithCountryCode]
 
         mockAuthorisation()
         mockSaveForeignPropertyAllowancesSection(

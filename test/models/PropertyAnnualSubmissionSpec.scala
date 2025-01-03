@@ -17,7 +17,6 @@
 package models
 
 import models.request._
-import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import utils.CaseClassLevelDifferenceUtil.diff
@@ -53,7 +52,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           ),
           Some(
             ForeignPropertyAllowances(
-              "AUS",
               Some(34.56),
               Some(78.90),
               Some(12.34),
@@ -75,7 +73,6 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           ),
           Some(
             ForeignPropertyAllowances(
-              "AUS",
               Some(134.56),
               Some(178.90),
               Some(112.34),

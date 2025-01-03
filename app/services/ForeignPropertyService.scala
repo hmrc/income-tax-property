@@ -23,7 +23,7 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
 import models.request.foreign._
-import models.request.foreign.allowances.ForeignPropertyAllowances
+import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
 import models.{ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
@@ -344,13 +344,13 @@ class ForeignPropertyService @Inject() (
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignPropertyAllowances: ForeignPropertyAllowances
+    foreignPropertyAllowancesWithCountyCode: ForeignPropertyAllowancesWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       submissionResponse <- persistForeignAnswers(
                               journeyContext,
-                              foreignPropertyAllowances,
-                              foreignPropertyAllowances.countryCode
+                              foreignPropertyAllowancesWithCountyCode,
+                              foreignPropertyAllowancesWithCountyCode.countryCode
                             ).map(isPersistSuccess =>
                               if (!isPersistSuccess) {
                                 logger.error("Could not persist Foreign property allowances")
