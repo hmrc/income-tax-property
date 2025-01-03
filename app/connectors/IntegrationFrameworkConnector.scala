@@ -22,7 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyAnnualSubmission, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, AnnualForeignPropertySubmission, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
@@ -377,9 +377,9 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       }
   }
 
-  def getForeignPropertyAnnualSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ApiError, Option[ForeignPropertyAnnualSubmission]]] = {
+  def getAnnualForeignPropertySubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
+                                                                                                       hc: HeaderCarrier
+  ): Future[Either[ApiError, Option[AnnualForeignPropertySubmission]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId",
@@ -411,11 +411,11 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       }
   }
 
-  def createOrUpdateForeignPropertyAnnualSubmission(
+  def createOrUpdateAnnualForeignPropertySubmission(
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
     nino: Nino,
-    body: ForeignPropertyAnnualSubmission
+    body: AnnualForeignPropertySubmission
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
@@ -430,7 +430,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         "1597"
       )
     }
-    logger.debug(s"createOrUpdateForeignPropertyAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
+    logger.debug(s"createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(body)}")
 
     // refactor: to fix bug
     val submissionRequest = body.copy(submittedOn = None)

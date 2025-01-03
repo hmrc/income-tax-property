@@ -18,11 +18,11 @@ package connectors.response
 
 import connectors.Parser
 import models.errors.ApiError
-import models.request.foreign.ForeignPropertyAnnualSubmission
+import models.request.foreign.AnnualForeignPropertySubmission
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-case class GetForeignPropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[ForeignPropertyAnnualSubmission]])
+case class GetForeignPropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[AnnualForeignPropertySubmission]])
 
 object GetForeignPropertyAnnualSubmissionResponse {
 
@@ -39,10 +39,10 @@ object GetForeignPropertyAnnualSubmissionResponse {
         case _ => GetForeignPropertyAnnualSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
       }
 
-      private def extractResult(response: HttpResponse): Either[ApiError, Option[ForeignPropertyAnnualSubmission]] = {
+      private def extractResult(response: HttpResponse): Either[ApiError, Option[AnnualForeignPropertySubmission]] = {
         val json = response.json
-        json.validate[ForeignPropertyAnnualSubmission]
-          .fold[Either[ApiError, Option[ForeignPropertyAnnualSubmission]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
+        json.validate[AnnualForeignPropertySubmission]
+          .fold[Either[ApiError, Option[AnnualForeignPropertySubmission]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
       }
     }
 }

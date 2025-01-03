@@ -341,29 +341,33 @@ class ForeignPropertyService @Inject() (
            )
     } yield submissionResponse
 
-  def getForeignPropertyAnnualSubmissionFromDownStream(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(
-    implicit hc: HeaderCarrier
-  ): ITPEnvelope[ForeignPropertyAnnualSubmission] =
-    EitherT(connector.getForeignPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
+  def getAnnualForeignPropertySubmissionFromDownStream(
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId
+  )(implicit
+    hc: HeaderCarrier
+  ): ITPEnvelope[AnnualForeignPropertySubmission] =
+    EitherT(connector.getAnnualForeignPropertySubmission(taxYear, taxableEntityId, incomeSourceId))
       .leftMap(error => ApiServiceError(error.status))
-      .subflatMap { foreignPropertyAnnualSubmission =>
-        foreignPropertyAnnualSubmission.fold[Either[ServiceError, ForeignPropertyAnnualSubmission]](
-          DataNotFoundError.asLeft[ForeignPropertyAnnualSubmission]
+      .subflatMap { maybeAnnualForeignPropertySubmission =>
+        maybeAnnualForeignPropertySubmission.fold[Either[ServiceError, AnnualForeignPropertySubmission]](
+          DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
         )(_.asRight[ServiceError])
       }
 
-  def createOrUpdateForeignPropertyAnnualSubmission(
+  def createOrUpdateAnnualForeignPropertySubmission(
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
     nino: Nino,
-    body: ForeignPropertyAnnualSubmission
+    body: AnnualForeignPropertySubmission
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     body match {
-      case ForeignPropertyAnnualSubmission(None, None) =>
+      case AnnualForeignPropertySubmission(None, None) =>
         ITPEnvelope.liftPure(())
       case _ =>
         EitherT(
-          connector.createOrUpdateForeignPropertyAnnualSubmission(taxYear, incomeSourceId, nino, body)
+          connector.createOrUpdateAnnualForeignPropertySubmission(taxYear, incomeSourceId, nino, body)
         ).leftMap(e => ApiServiceError(e.status))
     }
 
@@ -373,40 +377,50 @@ class ForeignPropertyService @Inject() (
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val emptyForeignPropertyAnnualSubmission = ForeignPropertyAnnualSubmission(None, None)
+    val emptyForeignPropertyAnnualSubmission = AnnualForeignPropertySubmission(None, None)
 
     for {
+
       foreignPropertyAnnualSubmissionFromDownstream <-
         this
-          .getForeignPropertyAnnualSubmissionFromDownStream(
+          .getAnnualForeignPropertySubmissionFromDownStream(
             journeyContext.taxYear,
             nino,
             journeyContext.incomeSourceId
           )
           .leftFlatMap {
             case DataNotFoundError => ITPEnvelope.liftPure(emptyForeignPropertyAnnualSubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[ForeignPropertyAnnualSubmission])
+            case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
           }
-      _ <- createOrUpdateForeignPropertyAnnualSubmission(
-             journeyContext.taxYear,
-             journeyContext.incomeSourceId,
-             nino,
-             ForeignPropertyAnnualSubmission
-               .fromForeignPropertyAllowances(
-                 foreignPropertyAnnualSubmissionFromDownstream,
-                 foreignPropertyAllowancesWithCountryCode
-               )
-           )
+
+      _ <- {
+        val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
+          .fromForeignPropertyAllowances(
+            Some(foreignPropertyAnnualSubmissionFromDownstream),
+            foreignPropertyAllowancesWithCountryCode
+          )
+          .fold(
+            _ => emptyForeignPropertyAnnualSubmission, // If Left (ServiceError), return empty submission
+            identity // If Right, return the submission itself
+          )
+
+        createOrUpdateAnnualForeignPropertySubmission(
+          journeyContext.taxYear,
+          journeyContext.incomeSourceId,
+          nino,
+          annualForeignPropertySubmissionWithNewAllowances
+        )
+      }
       isPersistSuccess <- persistForeignAnswers(
                             journeyContext,
                             foreignPropertyAllowancesWithCountryCode,
                             foreignPropertyAllowancesWithCountryCode.countryCode
                           ).map(isPersistSuccess =>
                             if (!isPersistSuccess) {
-                              logger.error("Could not persist Foreign property allowances")
+                              logger.error("Could not persist Foreign property allowances to annual submission")
                               false
                             } else {
-                              logger.info("Foreign property allowances persisted successfully")
+                              logger.info("Foreign property allowances persisted successfully to annual submission")
                               true
                             }
                           )
