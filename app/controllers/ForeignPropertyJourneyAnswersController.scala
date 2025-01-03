@@ -20,7 +20,7 @@ import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
 import models.request.foreign._
-import models.request.foreign.allowances.ForeignPropertyAllowances
+import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -103,15 +103,15 @@ class ForeignPropertyJourneyAnswersController @Inject() (
 
   def saveForeignPropertyAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      withJourneyContextAndEntity[ForeignPropertyAllowances](
+      withJourneyContextAndEntity[ForeignPropertyAllowancesWithCountryCode](
         taxYear,
         incomeSourceId,
         nino,
         JourneyName.ForeignPropertyAllowances,
         request
-      ) { (ctx, foreignPropertyAllowances: ForeignPropertyAllowances) =>
+      ) { (ctx, foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode) =>
         handleResponse(NO_CONTENT) {
-          foreignPropertyService.saveForeignPropertyAllowances(ctx, nino, foreignPropertyAllowances)
+          foreignPropertyService.saveForeignPropertyAllowances(ctx, nino, foreignPropertyAllowancesWithCountryCode)
         }
       }
     }

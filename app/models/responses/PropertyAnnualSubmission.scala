@@ -18,7 +18,6 @@ package models.responses
 
 import models.RentalsAndRaRAbout
 import models.request._
-import models.request.foreign.allowances.ForeignPropertyAllowances
 import models.request.ukrentaroom.RaRAdjustments
 import monocle.Optional
 import monocle.macros.GenLens
@@ -88,7 +87,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None,None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -281,7 +280,6 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
 
-
     // Results
     val resultWithzeroEmissionCarAllowance = focusFromRequestOnTozeroEmissionCarAllowanceLens.replace(
       rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
@@ -386,6 +384,22 @@ case class AnnualForeignProperty(
   allowances: Option[ForeignPropertyAllowances]
 )
 
+case class ForeignPropertyAllowances(
+  zeroEmissionsCarAllowance: Option[BigDecimal],
+  zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
+  costOfReplacingDomesticItems: Option[BigDecimal],
+  otherCapitalAllowance: Option[BigDecimal],
+  annualInvestmentAllowance: Option[BigDecimal],
+  propertyAllowance: Option[BigDecimal],
+  electricChargePointAllowance: Option[BigDecimal],
+  structuredBuildingAllowance: Option[BigDecimal]
+)
+
+object ForeignPropertyAllowances {
+  implicit val format: OFormat[ForeignPropertyAllowances] =
+    Json.format[ForeignPropertyAllowances]
+}
+
 object AnnualForeignProperty {
   implicit val format: OFormat[AnnualForeignProperty] = Json.format[AnnualForeignProperty]
 }
@@ -395,7 +409,6 @@ case class ForeignPropertyAdjustments(privateUseAdjustment: Option[BigDecimal], 
 object ForeignPropertyAdjustments {
   implicit val format: OFormat[ForeignPropertyAdjustments] = Json.format[ForeignPropertyAdjustments]
 }
-
 
 case class UkRentARoom(jointlyLet: Boolean)
 

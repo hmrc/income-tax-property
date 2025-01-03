@@ -20,7 +20,7 @@ import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
 import models.request.foreign._
-import models.request.foreign.allowances.ForeignPropertyAllowances
+import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
@@ -110,11 +110,11 @@ trait MockForeignPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignPropertyAllowancesSection(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertyAllowances: ForeignPropertyAllowances,
-    result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyAllowances, HeaderCarrier, EitherT[
+                                                journeyContext: JourneyContext,
+                                                nino: Nino,
+                                                foreignPropertyAllowances: ForeignPropertyAllowancesWithCountryCode,
+                                                result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Option[PeriodicSubmissionId]
@@ -123,7 +123,7 @@ trait MockForeignPropertyService extends MockFactory {
       .saveForeignPropertyAllowances(
         _: JourneyContext,
         _: Nino,
-        _: ForeignPropertyAllowances
+        _: ForeignPropertyAllowancesWithCountryCode
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignPropertyAllowances, *)
       .returning(EitherT.fromEither(result))
