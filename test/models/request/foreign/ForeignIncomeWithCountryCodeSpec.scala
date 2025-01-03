@@ -22,7 +22,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.{JsSuccess, Json}
 
-class ForeignIncomeSpec extends AnyFreeSpec with Matchers with OptionValues {
+class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with OptionValues {
 
   private val jsonWithAllFields =
     """
@@ -47,10 +47,10 @@ class ForeignIncomeSpec extends AnyFreeSpec with Matchers with OptionValues {
       |  }
       |""".stripMargin
 
-  "ForeignIncome" - {
+  "ForeignIncomeWithCountryCode" - {
 
     "must serialize the JSON supplied from the FE" in {
-      val model: ForeignIncome = ForeignIncome(
+      val model: ForeignIncomeWithCountryCode = ForeignIncomeWithCountryCode(
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
         premiumsGrantLeaseReceived = true,
@@ -70,8 +70,8 @@ class ForeignIncomeSpec extends AnyFreeSpec with Matchers with OptionValues {
       Json.toJson(model) mustBe expectedJson
     }
 
-    "must deserialize the Object ForeignIncome" in {
-      val foreignIncomeModel = ForeignIncome(
+    "must deserialize the Object ForeignIncomeWithCountryCode" in {
+      val foreignIncomeModel = ForeignIncomeWithCountryCode(
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
         premiumsGrantLeaseReceived = true,
@@ -87,7 +87,7 @@ class ForeignIncomeSpec extends AnyFreeSpec with Matchers with OptionValues {
         )
       )
 
-      Json.parse(jsonWithAllFields).validate[ForeignIncome] mustBe JsSuccess(foreignIncomeModel)
+      Json.parse(jsonWithAllFields).validate[ForeignIncomeWithCountryCode] mustBe JsSuccess(foreignIncomeModel)
     }
   }
 

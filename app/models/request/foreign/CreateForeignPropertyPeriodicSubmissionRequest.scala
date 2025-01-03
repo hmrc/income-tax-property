@@ -52,7 +52,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
       case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
       case e @ ForeignPropertyExpensesWithCountryCode(_, _, _, _, _, _, _, _) =>
         fromForeignPropertyExpenses(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignIncome(_, _, _, _, _, _, _, _, _) => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
+      case e @ ForeignIncomeWithCountryCode(_, _, _, _, _, _, _, _, _) => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
 
       case _ =>
         InternalError("No relevant entity found to convert from (to CreateForeignPropertyPeriodicSubmissionRequest)")
@@ -207,7 +207,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
   def fromForeignIncome(
     taxYear: TaxYear,
     maybeSubmission: Option[PropertyPeriodicSubmission],
-    foreignIncome: ForeignIncome
+    foreignIncome: ForeignIncomeWithCountryCode
   ): Either[ServiceError, CreateForeignPropertyPeriodicSubmissionRequest] = {
 
     val foreignPropertyLens = GenLens[CreateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)

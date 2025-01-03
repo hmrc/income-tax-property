@@ -91,11 +91,11 @@ trait MockForeignPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignIncomeSection(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignIncome: ForeignIncome,
-    result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignIncome, HeaderCarrier, EitherT[
+                                    journeyContext: JourneyContext,
+                                    nino: Nino,
+                                    foreignIncome: ForeignIncomeWithCountryCode,
+                                    result: Either[ServiceError, Option[PeriodicSubmissionId]]
+  ): CallHandler4[JourneyContext, Nino, ForeignIncomeWithCountryCode, HeaderCarrier, EitherT[
     Future,
     ServiceError,
     Option[PeriodicSubmissionId]
@@ -104,28 +104,25 @@ trait MockForeignPropertyService extends MockFactory {
       .saveForeignIncome(
         _: JourneyContext,
         _: Nino,
-        _: ForeignIncome
+        _: ForeignIncomeWithCountryCode
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignIncome, *)
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignPropertyAllowancesSection(
-                                                journeyContext: JourneyContext,
-                                                nino: Nino,
-                                                foreignPropertyAllowances: ForeignPropertyAllowancesWithCountryCode,
-                                                result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Option[PeriodicSubmissionId]
-  ]] =
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode,
+    result: Either[ServiceError, Boolean]
+  ):
+  CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
     (mockForeignPropertyService
       .saveForeignPropertyAllowances(
         _: JourneyContext,
         _: Nino,
         _: ForeignPropertyAllowancesWithCountryCode
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyAllowances, *)
+      .expects(journeyContext, nino, foreignPropertyAllowancesWithCountryCode, *)
       .returning(EitherT.fromEither(result))
 
 }

@@ -410,7 +410,7 @@ class ForeignPropertyServiceSpec
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
-    val foreignIncome = ForeignIncome(
+    val foreignIncome = ForeignIncomeWithCountryCode(
       countryCode = "AUS",
       rentIncome = 1.0,
       premiumsGrantLeaseReceived = true,
