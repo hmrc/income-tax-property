@@ -22,7 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, AnnualForeignPropertySubmission, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
@@ -415,7 +415,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
     nino: Nino,
-    body: AnnualForeignPropertySubmission
+    foreignProperty: AnnualForeignPropertySubmission
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
@@ -430,16 +430,13 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         "1597"
       )
     }
-    logger.debug(s"createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(body)}")
-
-    // refactor: to fix bug
-    val submissionRequest = body.copy(submittedOn = None)
+    logger.debug(s"createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(foreignProperty)}")
 
     http
       .put(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .withBody(submissionRequest)
+      .withBody(foreignProperty)
       .execute[PutAnnualSubmissionResponse]
       .map { response: PutAnnualSubmissionResponse =>
         if (response.result.isLeft) {

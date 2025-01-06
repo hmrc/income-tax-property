@@ -363,7 +363,7 @@ class ForeignPropertyService @Inject() (
     body: AnnualForeignPropertySubmission
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     body match {
-      case AnnualForeignPropertySubmission(None, None) =>
+      case AnnualForeignPropertySubmission(None) =>
         ITPEnvelope.liftPure(())
       case _ =>
         EitherT(
@@ -377,7 +377,7 @@ class ForeignPropertyService @Inject() (
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val emptyForeignPropertyAnnualSubmission = AnnualForeignPropertySubmission(None, None)
+    val emptyForeignPropertyAnnualSubmission = AnnualForeignPropertySubmission(None)
 
     for {
 

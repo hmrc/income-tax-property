@@ -18,6 +18,7 @@ package models.responses
 
 import models.RentalsAndRaRAbout
 import models.request._
+import models.request.foreign.AnnualForeignProperty
 import models.request.ukrentaroom.RaRAdjustments
 import monocle.Optional
 import monocle.macros.GenLens
@@ -378,37 +379,6 @@ object PropertyAnnualSubmission {
 
 }
 
-case class AnnualForeignProperty(
-  countryCode: String,
-  adjustments: Option[ForeignPropertyAdjustments],
-  allowances: Option[ForeignPropertyAllowances]
-)
-
-case class ForeignPropertyAllowances(
-  zeroEmissionsCarAllowance: Option[BigDecimal],
-  zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
-  costOfReplacingDomesticItems: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal],
-  annualInvestmentAllowance: Option[BigDecimal],
-  propertyAllowance: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
-  structuredBuildingAllowance: Option[BigDecimal]
-)
-
-object ForeignPropertyAllowances {
-  implicit val format: OFormat[ForeignPropertyAllowances] =
-    Json.format[ForeignPropertyAllowances]
-}
-
-object AnnualForeignProperty {
-  implicit val format: OFormat[AnnualForeignProperty] = Json.format[AnnualForeignProperty]
-}
-
-case class ForeignPropertyAdjustments(privateUseAdjustment: Option[BigDecimal], balancingCharge: Option[BigDecimal])
-
-object ForeignPropertyAdjustments {
-  implicit val format: OFormat[ForeignPropertyAdjustments] = Json.format[ForeignPropertyAdjustments]
-}
 
 case class UkRentARoom(jointlyLet: Boolean)
 

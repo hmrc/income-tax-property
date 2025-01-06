@@ -18,6 +18,7 @@ package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
+import models.request.foreign.{AnnualForeignProperty, AnnualForeignPropertySubmission, ForeignPropertyAllowances}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
@@ -341,6 +342,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     )
 
     "create Annual Submission" should {
+
       "create submissions data for the APIs used before TaxYear(2024)" in {
         val taxYear = TaxYear(2021)
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
@@ -404,6 +406,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             )(hc)
         ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
+
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
         val taxYear = TaxYear(2024)
@@ -462,6 +465,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     )
 
     "create Annual Submission" should {
+
       "create submissions data for the APIs used before TaxYear(2024)" in {
         val taxYear = TaxYear(2021)
         val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(aPropertyAnnualSubmission).toString())
@@ -521,6 +525,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           )(hc)
         ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
       }
+
       "return not found from Upstream" in {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
         val taxYear = TaxYear(2024)
@@ -692,6 +697,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
                                              |""".stripMargin)
 
     "update periodic submission" should {
+
       "update submissions data for the APIs used before TaxYear(2024)" in {
         val httpResponse = HttpResponse(NO_CONTENT, "")
         val taxYear = TaxYear(2021)
@@ -801,6 +807,140 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
         ) shouldBe
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
+    }
+  }
+
+  "Create Annual Foreign Property Annual Submission " should {
+
+    val annualForeignPropertySubmission: AnnualForeignPropertySubmission = AnnualForeignPropertySubmission(
+      foreignProperty = Some(
+        Seq(
+          AnnualForeignProperty(
+            countryCode = "ESP",
+            adjustments = None,
+            allowances = Some(
+              ForeignPropertyAllowances(
+                zeroEmissionsCarAllowance = Some(1),
+                zeroEmissionsGoodsVehicleAllowance = Some(2),
+                costOfReplacingDomesticItems = Some(3),
+                otherCapitalAllowance = Some(4),
+                annualInvestmentAllowance = None,
+                propertyAllowance = None,
+                electricChargePointAllowance = None,
+                structuredBuildingAllowance = None
+              )
+            )
+          )
+        )
+      )
+    )
+
+    "for Year 2020-21 create annual foreign property submissions data for the APIs used before TaxYear(2024)" in {
+      val taxYear = TaxYear(2021)
+      val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(annualForeignPropertySubmission).toString())
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmission).toString(),
+        httpResponse
+      )
+
+      val propertyAnnualSubmission: PropertyAnnualSubmission =
+        Json.toJson(annualForeignPropertySubmission).as[PropertyAnnualSubmission]
+      await(
+        underTest.createOrUpdateAnnualSubmission(
+          taxYear,
+          incomeSourceId,
+          taxableEntityId,
+          propertyAnnualSubmission
+        )(hc)
+      ) shouldBe Right((): Unit)
+    }
+
+    "for TaxYear(2024) onwards create annual foreign property submissions data" in {
+      val taxYear = TaxYear(2024)
+
+      val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(annualForeignPropertySubmission).toString())
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmission).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmission
+          )(hc)
+      ) shouldBe Right((): Unit)
+    }
+
+    "return Conflict from Upstream for annual foreign property" in {
+      val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
+      val taxYear = TaxYear(2024)
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmission).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmission
+          )(hc)
+      ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
+    }
+
+    "return not found from Upstream for annual foreign property" in {
+      val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(SingleErrorBody("some-code", "NotFound")).toString())
+      val taxYear = TaxYear(2024)
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmission).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmission
+          )(hc)
+      ) shouldBe Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "NotFound")))
+    }
+
+    "return Service Unavailable Error from Upstream for annual foreign property" in {
+      val httpResponse =
+        HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+      val taxYear = TaxYear(2024)
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmission).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmission
+          )(hc)
+      ) shouldBe
+        Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
     }
   }
 

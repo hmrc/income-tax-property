@@ -17,6 +17,7 @@
 package models
 
 import models.request._
+import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAdjustments, ForeignPropertyAllowances}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import utils.CaseClassLevelDifferenceUtil.diff

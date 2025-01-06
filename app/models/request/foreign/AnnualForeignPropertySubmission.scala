@@ -18,18 +18,31 @@ package models.request.foreign
 
 import models.errors.ServiceError
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
-import models.responses.ForeignPropertyAllowances
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json._
 import play.api.libs.ws.BodyWritable
 
-import java.time.LocalDateTime
-
 case class ForeignPropertyAdjustments(privateUseAdjustment: Option[BigDecimal], balancingCharge: Option[BigDecimal])
 
 object ForeignPropertyAdjustments {
   implicit val format: OFormat[ForeignPropertyAdjustments] = Json.format[ForeignPropertyAdjustments]
+}
+
+case class ForeignPropertyAllowances(
+  zeroEmissionsCarAllowance: Option[BigDecimal],
+  zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
+  costOfReplacingDomesticItems: Option[BigDecimal],
+  otherCapitalAllowance: Option[BigDecimal],
+  annualInvestmentAllowance: Option[BigDecimal],
+  propertyAllowance: Option[BigDecimal],
+  electricChargePointAllowance: Option[BigDecimal],
+  structuredBuildingAllowance: Option[BigDecimal]
+)
+
+object ForeignPropertyAllowances {
+  implicit val format: OFormat[ForeignPropertyAllowances] =
+    Json.format[ForeignPropertyAllowances]
 }
 
 case class AnnualForeignProperty(
@@ -43,7 +56,6 @@ object AnnualForeignProperty {
 }
 
 case class AnnualForeignPropertySubmission(
-  submittedOn: Option[LocalDateTime],
   foreignProperty: Option[Seq[AnnualForeignProperty]]
 )
 
@@ -75,7 +87,6 @@ object AnnualForeignPropertySubmission {
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
         case Some(
               fpas @ AnnualForeignPropertySubmission(
-                _,
                 Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances))))
               )
             ) =>
@@ -88,7 +99,7 @@ object AnnualForeignPropertySubmission {
       zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
       zeroEmissionsGoodsVehicleAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
       costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
-      otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.annualInvestmentAllowance,
+      otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance,
       annualInvestmentAllowance = maybeForeignPropertyAllowances.flatMap(_.annualInvestmentAllowance),
       propertyAllowance = maybeForeignPropertyAllowances.flatMap(_.propertyAllowance),
       electricChargePointAllowance = maybeForeignPropertyAllowances.flatMap(_.electricChargePointAllowance),
@@ -96,7 +107,6 @@ object AnnualForeignPropertySubmission {
     )
 
     val annualForeignPropertySubmissionRetainingAdjustments = AnnualForeignPropertySubmission(
-      submittedOn = mayBeAnnualForeignPropertySubmission.map(_.submittedOn).getOrElse(Some(LocalDateTime.now())),
       foreignProperty = Some(
         Seq(
           AnnualForeignProperty(
