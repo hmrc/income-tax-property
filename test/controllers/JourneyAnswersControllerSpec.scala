@@ -781,7 +781,7 @@ class JourneyAnswersControllerSpec
         Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
       )
       val foreignPropertyData = FetchedForeignPropertyData(
-        None, None, None, None
+        None, None, None, None,None
       )
       val resultFromService = FetchedPropertyData(
         ukPropertyData = uKPropertyData, foreignPropertyData = foreignPropertyData

@@ -17,7 +17,7 @@
 package services
 import models.domain.JourneyAnswers
 import models.request.{DeductingTax, PropertyRentalsIncome}
-import models.responses.{PeriodicSubmissionId, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
+import models.responses.{AnnualForeignProperty, ForeignPropertyAllowances, PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
@@ -77,5 +77,76 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
 
       result shouldBe None
     }
+  }
+  "mergeForeignPropertyAllowances" should {
+
+    "return a map of foreign property allowances" in {
+      val foreignPropertyAllowances = ForeignPropertyAllowances(
+        annualInvestmentAllowance = Some(15.15),
+        costOfReplacingDomesticItems = Some(25.25),
+        zeroEmissionsGoodsVehicleAllowance = Some(35.35),
+        otherCapitalAllowance = Some(45.45),
+        electricChargePointAllowance = Some(55.55),
+        structuredBuildingAllowance = Some(65.65),
+        zeroEmissionsCarAllowance = Some(75.75),
+        propertyAllowance = Some(85.85)
+      )
+
+      val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(
+          Seq(
+            AnnualForeignProperty(
+              countryCode = "ESP",
+              adjustments = None,
+              allowances = Some(
+                ForeignPropertyAllowances(
+                  annualInvestmentAllowance = Some(15.15),
+                  costOfReplacingDomesticItems = Some(25.25),
+                  zeroEmissionsGoodsVehicleAllowance = Some(35.35),
+                  otherCapitalAllowance = Some(45.45),
+                  electricChargePointAllowance = Some(55.55),
+                  structuredBuildingAllowance = Some(65.65),
+                  zeroEmissionsCarAllowance = Some(75.75),
+                  propertyAllowance = Some(85.85)
+                )
+              )
+            )
+          )
+        )
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyAllowances(aPropertyAnnualSubmission)
+
+      result shouldBe Some(
+        Map(
+          "ESP" -> foreignPropertyAllowances
+        )
+      )
+    }
+
+    "return an empty map when foreign properties have no allowances" in {
+      val foreignProperties = Seq(
+        AnnualForeignProperty(
+          countryCode = "ESP",
+          adjustments = None,
+          allowances = None
+        )
+      )
+
+      val propertyAnnualSubmission = PropertyAnnualSubmission(
+        submittedOn = None,
+        foreignProperty = Some(foreignProperties),
+        ukOtherProperty = None
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyAllowances(propertyAnnualSubmission)
+
+      result shouldBe Some(Map.empty[String, ForeignPropertyAllowances])
+    }
+
   }
 }

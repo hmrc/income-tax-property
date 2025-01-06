@@ -1605,7 +1605,7 @@ class PropertyServiceSpec
           List(),
           Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
         )
-        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None)
+        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None)
         FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData)
       }
 

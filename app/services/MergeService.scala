@@ -162,6 +162,8 @@ class MergeService @Inject() (implicit
       foreignResultFromRepository.get(JourneyName.ForeignPropertyExpenses.entryName)
     )
 
+    val foreignPropertyAllowancesMaybe = mergeForeignPropertyAllowances(resultFromAnnualDownstream)
+
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
     val fetchedUKPropertyData = FetchedUKPropertyData(
@@ -193,6 +195,7 @@ class MergeService @Inject() (implicit
       foreignPropertyTax = foreignPropertyTaxMaybe,
       foreignPropertyIncome = foreignPropertyIncomeMaybe,
       foreignPropertyExpenses = foreignPropertyExpensesMaybe,
+      foreignPropertyAllowances = foreignPropertyAllowancesMaybe,
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
@@ -457,18 +460,28 @@ class MergeService @Inject() (implicit
   ): Option[Map[String, ForeignPropertyTax]] = {
     val foreignPropertyTaxStoreAnswers: Option[Map[String, ForeignPropertyTaxStoreAnswers]] =
       foreignResultFromRepository match {
-        case Some(journeyAnswers) => Some(journeyAnswers.map {
-          case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignPropertyTaxStoreAnswers]
-        })
+        case Some(journeyAnswers) =>
+          Some(journeyAnswers.map { case (countryCode, storeAnswers) =>
+            countryCode -> storeAnswers.data.as[ForeignPropertyTaxStoreAnswers]
+          })
         case _ => None
       }
 
     val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
       rfd <- resultFromDownstream
-      fp <- rfd.foreignProperty
-    } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)):_*)
+      fp  <- rfd.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)): _*)
 
     foreignPropertyTaxStoreAnswers.merge(foreignPropertiesIncome)
+  }
+
+   def mergeForeignPropertyAllowances(
+    resultFromDownstream: PropertyAnnualSubmission
+  ): Option[Map[String, ForeignPropertyAllowances]] = {
+    val foreignAllowances: Option[Map[String, ForeignPropertyAllowances]] = for {
+      fp <- resultFromDownstream.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.allowances.map(fpAllowances => fp.countryCode -> fpAllowances)): _*)
+    foreignAllowances
   }
 
   def mergeForeignPropertyIncome(
@@ -477,16 +490,17 @@ class MergeService @Inject() (implicit
   ): Option[Map[String, ForeignIncomeAnswers]] = {
     val foreignPropertyIncomeStoreAnswers: Option[Map[String, ForeignIncomeStoreAnswers]] =
       foreignResultFromRepository match {
-        case Some(journeyAnswers) => Some(journeyAnswers.map {
-          case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignIncomeStoreAnswers]
-        })
+        case Some(journeyAnswers) =>
+          Some(journeyAnswers.map { case (countryCode, storeAnswers) =>
+            countryCode -> storeAnswers.data.as[ForeignIncomeStoreAnswers]
+          })
         case _ => None
       }
 
     val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
       rfd <- resultFromDownstream
-      fp <- rfd.foreignProperty
-    } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)):_*)
+      fp  <- rfd.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)): _*)
 
     foreignPropertyIncomeStoreAnswers.merge(foreignPropertiesIncome)
   }
@@ -497,20 +511,22 @@ class MergeService @Inject() (implicit
   ): Option[Map[String, ForeignExpensesAnswers]] = {
     val foreignPropertyExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
       foreignResultFromRepository.map { journeyAnswers =>
-        journeyAnswers.map {
-          case (countryCode, storeAnswers) => countryCode -> storeAnswers.data.as[ForeignPropertyExpensesStoreAnswers]
+        journeyAnswers.map { case (countryCode, storeAnswers) =>
+          countryCode -> storeAnswers.data.as[ForeignPropertyExpensesStoreAnswers]
         }
       }
 
     val foreignPropertiesExpenses: Option[Map[String, ForeignPropertyExpenses]] = for {
       rfd <- resultFromDownstream
-      fp <- rfd.foreignProperty
-    } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)):_*)
+      fp  <- rfd.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)): _*)
 
     foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
   }
 
-  def mergeForeignStatuses(foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]): Option[Map[String, List[JourneyWithStatus]]] = {
+  def mergeForeignStatuses(
+    foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]
+  ): Option[Map[String, List[JourneyWithStatus]]] = {
     val foreignJourneyStatusList: Seq[(String, JourneyWithStatus)] = foreignResultFromRepository.toList.flatMap {
       case (journeyName: String, foreignJourneyAnswers: Map[String, JourneyAnswers]) =>
         foreignJourneyAnswers.collect { case (countryCode, answers) =>
@@ -518,12 +534,14 @@ class MergeService @Inject() (implicit
         }
     }
 
-    val foreignJourneyStatusMap: Map[String, List[JourneyWithStatus]] = foreignJourneyStatusList.foldLeft(Map[String, List[JourneyWithStatus]]()) {
-      case (acc, (countryCode: String, journey: JourneyWithStatus)) => acc.get(countryCode) match {
-        case None => acc + (countryCode -> List(journey))
-        case Some(journeys) => acc + (countryCode -> (journeys :+ journey))
+    val foreignJourneyStatusMap: Map[String, List[JourneyWithStatus]] =
+      foreignJourneyStatusList.foldLeft(Map[String, List[JourneyWithStatus]]()) {
+        case (acc, (countryCode: String, journey: JourneyWithStatus)) =>
+          acc.get(countryCode) match {
+            case None           => acc + (countryCode -> List(journey))
+            case Some(journeys) => acc + (countryCode -> (journeys :+ journey))
+          }
       }
-    }
 
     Option.when(foreignJourneyStatusMap.nonEmpty)(foreignJourneyStatusMap)
   }
