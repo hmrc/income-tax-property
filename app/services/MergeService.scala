@@ -159,7 +159,7 @@ class MergeService @Inject() (implicit
 
     val foreignPropertyExpensesMaybe = mergeForeignPropertyExpenses(
       resultFromPeriodicDownstreamMaybe,
-      foreignResultFromRepository.get(JourneyName.ForeignPropertyIncome.entryName)
+      foreignResultFromRepository.get(JourneyName.ForeignPropertyExpenses.entryName)
     )
 
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
