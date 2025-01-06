@@ -1,4 +1,5 @@
 # Add all the application routes to the app.routes file
 ->         /income-tax-property              app.Routes
 ->         /income-tax-property              foreign.Routes
+->         /income-tax-property              ukAndForeignProperty.Routes
 ->         /                                 health.Routes
