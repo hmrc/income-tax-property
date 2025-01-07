@@ -397,7 +397,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .get(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .execute[GetForeignPropertyAnnualSubmissionResponse]
+      .execute[GetAnnualForeignPropertySubmissionResponse]
       .map { response =>
         if (response.result.isLeft) {
           val correlationId =

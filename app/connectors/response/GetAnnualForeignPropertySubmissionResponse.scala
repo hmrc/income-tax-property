@@ -22,21 +22,21 @@ import models.request.foreign.AnnualForeignPropertySubmission
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-case class GetForeignPropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[AnnualForeignPropertySubmission]])
+case class GetAnnualForeignPropertySubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[AnnualForeignPropertySubmission]])
 
-object GetForeignPropertyAnnualSubmissionResponse {
+object GetAnnualForeignPropertySubmissionResponse {
 
-  implicit val getForeignPropertyAnnualSubmissionDataReads: HttpReads[GetForeignPropertyAnnualSubmissionResponse] =
-    new HttpReads[GetForeignPropertyAnnualSubmissionResponse] with Parser {
+  implicit val getAnnualForeignPropertySubmissionDataReads: HttpReads[GetAnnualForeignPropertySubmissionResponse] =
+    new HttpReads[GetAnnualForeignPropertySubmissionResponse] with Parser {
 
       override protected[connectors] val parserName: String = this.getClass.getSimpleName
 
-      override def read(method: String, url: String, response: HttpResponse): GetForeignPropertyAnnualSubmissionResponse = response.status match {
-        case OK => GetForeignPropertyAnnualSubmissionResponse(response, extractResult(response))
-        case NOT_FOUND => GetForeignPropertyAnnualSubmissionResponse(response, Right(None))
+      override def read(method: String, url: String, response: HttpResponse): GetAnnualForeignPropertySubmissionResponse = response.status match {
+        case OK => GetAnnualForeignPropertySubmissionResponse(response, extractResult(response))
+        case NOT_FOUND => GetAnnualForeignPropertySubmissionResponse(response, Right(None))
         case INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
-          GetForeignPropertyAnnualSubmissionResponse(response, handleError(response, response.status))
-        case _ => GetForeignPropertyAnnualSubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+          GetAnnualForeignPropertySubmissionResponse(response, handleError(response, response.status))
+        case _ => GetAnnualForeignPropertySubmissionResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
       }
 
       private def extractResult(response: HttpResponse): Either[ApiError, Option[AnnualForeignPropertySubmission]] = {

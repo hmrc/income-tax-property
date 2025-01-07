@@ -79,8 +79,7 @@ object AnnualForeignPropertySubmission {
     val firstForeignPropertyAllowancesLens: Optional[AnnualForeignPropertySubmission, ForeignPropertyAllowances] =
       foreignPropertyLens.some.index(0).andThen(foreignPropertyAllowancesLens.some)
 
-    val (mayBeAnnualForeignPropertySubmission, maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
-      Option[AnnualForeignPropertySubmission],
+    val (maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
       Option[ForeignPropertyAdjustments],
       Option[ForeignPropertyAllowances]
     ) =
@@ -90,9 +89,9 @@ object AnnualForeignPropertySubmission {
                 Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances))))
               )
             ) =>
-          (Some(fpas), Some(adjustments), Some(allowances))
-        case Some(pps) => (Some(pps), None, None)
-        case _         => (None, None, None)
+          (Some(adjustments), Some(allowances))
+        case Some(fpas) => (None, None)
+        case _          => (None, None)
       }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(

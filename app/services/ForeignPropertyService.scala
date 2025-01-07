@@ -377,11 +377,11 @@ class ForeignPropertyService @Inject() (
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val emptyForeignPropertyAnnualSubmission = AnnualForeignPropertySubmission(None)
+    val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
 
     for {
 
-      foreignPropertyAnnualSubmissionFromDownstream <-
+      annualForeignPropertySubmissionFromDownstream <-
         this
           .getAnnualForeignPropertySubmissionFromDownStream(
             journeyContext.taxYear,
@@ -389,18 +389,18 @@ class ForeignPropertyService @Inject() (
             journeyContext.incomeSourceId
           )
           .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyForeignPropertyAnnualSubmission)
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
             case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
           }
 
       _ <- {
         val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
           .fromForeignPropertyAllowances(
-            Some(foreignPropertyAnnualSubmissionFromDownstream),
+            Some(annualForeignPropertySubmissionFromDownstream),
             foreignPropertyAllowancesWithCountryCode
           )
           .fold(
-            _ => emptyForeignPropertyAnnualSubmission, // If Left (ServiceError), return empty submission
+            (error: ServiceError) => emptyAnnualForeignPropertySubmission, // If Left (ServiceError), return empty submission
             identity // If Right, return the submission itself
           )
 

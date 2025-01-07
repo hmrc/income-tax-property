@@ -346,9 +346,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
         zeroEmissionsGoodsVehicleAllowance = Some(345.65),
         costOfReplacingDomesticItems = Some(490.58),
         otherCapitalAllowance = Some(600),
-        annualInvestmentAllowance = None,
-        propertyAllowance = None,
-        electricChargePointAllowance = None,
         structuredBuildingAllowance = None
       )
       result.header.status shouldBe NO_CONTENT

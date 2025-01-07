@@ -19,7 +19,7 @@ package utils.mocks
 import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
@@ -216,4 +216,64 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
           .returning(Future.successful(result))
       case _ => mockCreateAnnualSubmission(taxYear, incomeSourceId, taxableEntityId, result)
     }
+
+  def mockGetAnnualForeignPropertySubmission(
+                                       taxYear: TaxYear,
+                                       taxableEntityId: Nino,
+                                       incomeSourceId: IncomeSourceId,
+                                       result: Either[ApiError, Option[AnnualForeignPropertySubmission]]
+                                     ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, Future[
+    Either[ApiError, Option[AnnualForeignPropertySubmission]]
+  ]] =
+    (mockIntegrationFrameworkConnector
+      .getAnnualForeignPropertySubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, incomeSourceId, *)
+      .returning(Future.successful(result))
+
+
+  def mockCreateAnnualForeignSubmission(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    taxableEntityId: Nino,
+    result: Either[ApiError, Unit]
+  ): CallHandler5[TaxYear, IncomeSourceId, Nino, AnnualForeignPropertySubmission, HeaderCarrier, Future[
+    Either[ApiError, Unit]
+  ]] =
+    (mockIntegrationFrameworkConnector
+      .createOrUpdateAnnualForeignPropertySubmission(
+        _: TaxYear,
+        _: IncomeSourceId,
+        _: Nino,
+        _: AnnualForeignPropertySubmission
+      )(
+        _: HeaderCarrier
+      ))
+      .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
+      .returning(Future.successful(result))
+
+  def mockCreateAnnualForeignPropertySubmission(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    taxableEntityId: Nino,
+    maybeAnnualForeignPropertySubmission: Option[AnnualForeignPropertySubmission],
+    result: Either[ApiError, Unit]
+  ): CallHandler5[TaxYear, IncomeSourceId, Nino, AnnualForeignPropertySubmission, HeaderCarrier, Future[
+    Either[ApiError, Unit]
+  ]] =
+    maybeAnnualForeignPropertySubmission match {
+      case Some(pas) =>
+        (mockIntegrationFrameworkConnector
+          .createOrUpdateAnnualForeignPropertySubmission(
+            _: TaxYear,
+            _: IncomeSourceId,
+            _: Nino,
+            _: AnnualForeignPropertySubmission
+          )(
+            _: HeaderCarrier
+          ))
+          .expects(taxYear, incomeSourceId, taxableEntityId, pas, *)
+          .returning(Future.successful(result))
+      case _ => mockCreateAnnualForeignSubmission(taxYear, incomeSourceId, taxableEntityId, result)
+    }
+
 }
