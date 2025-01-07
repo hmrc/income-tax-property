@@ -21,7 +21,7 @@ import models.RentalsAndRaRAbout
 import models.UKPropertySelect.PropertyRentals
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData}
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
@@ -784,8 +784,11 @@ class JourneyAnswersControllerSpec
       val foreignPropertyData = FetchedForeignPropertyData(
         None, None, None, None,None
       )
+      val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
+        None
+      )
       val resultFromService = FetchedPropertyData(
-        ukPropertyData = uKPropertyData, foreignPropertyData = foreignPropertyData
+        ukPropertyData = uKPropertyData, foreignPropertyData = foreignPropertyData, ukAndForeignPropertyData = ukAndForeignPropertyData
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

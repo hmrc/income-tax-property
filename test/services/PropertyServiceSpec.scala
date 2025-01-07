@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, JourneyAnswers}
+import models.domain._
 import models.errors._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
@@ -1605,8 +1605,9 @@ class PropertyServiceSpec
           List(),
           Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
         )
-        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None)
-        FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData)
+        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None)
+        val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)
+        FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData, ukAndForeignPropertyData = fetchedUkAndForeignPropertyData)
       }
 
       forAll(scenarios) {
