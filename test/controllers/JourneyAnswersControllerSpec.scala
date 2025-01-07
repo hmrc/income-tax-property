@@ -18,6 +18,7 @@ package controllers
 
 import cats.syntax.either._
 import models.RentalsAndRaRAbout
+import models.UKPropertySelect.PropertyRentals
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData}
@@ -69,7 +70,7 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockPersistAnswers(ctx, PropertyAbout("over", Seq("property.rentals"), Some(true)))
+      mockPersistAnswers(ctx, PropertyAbout("over", Some(Seq(PropertyRentals)), Some(true)))
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
