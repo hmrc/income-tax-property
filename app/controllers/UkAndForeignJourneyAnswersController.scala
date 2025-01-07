@@ -45,7 +45,7 @@ class UkAndForeignJourneyAnswersController @Inject() (
         request
       ) { (ctx, ukAndForeignAbout: UkAndForeignAbout) =>
         handleResponse(NO_CONTENT) {
-          ukAndForeignPropertyService.saveForeignPropertySelectCountry(ctx, ukAndForeignAbout)
+          ukAndForeignPropertyService.saveUkAndForeignPropertyAbout(ctx, ukAndForeignAbout)
         }
       }
     }

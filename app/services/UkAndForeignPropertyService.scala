@@ -18,26 +18,23 @@ package services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import connectors.IntegrationFrameworkConnector
 import models.common.JourneyContext
 import models.errors.{RepositoryError, ServiceError}
 import models.request.ukAndForeign.UkAndForeignAbout
 import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class UkAndForeignPropertyService @Inject() (
-    connector: IntegrationFrameworkConnector,
     repository: MongoJourneyAnswersRepository
   )(implicit ec: ExecutionContext)
   extends Logging {
 
-  def ukAndForeignPersistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-                                                         writes: Writes[A]
+  private def ukAndForeignPersistAnswers[A](ctx: JourneyContext, answers: A)(implicit
+                                                                             writes: Writes[A]
   ): EitherT[Future, ServiceError, Boolean] =
     EitherT(
       repository.upsertAnswers(ctx, Json.toJson(answers)).map {
@@ -46,10 +43,10 @@ class UkAndForeignPropertyService @Inject() (
       }
     )
 
-  def saveForeignPropertySelectCountry(
+  def saveUkAndForeignPropertyAbout(
                                         ctx: JourneyContext,
                                         ukAndForeignAbout: UkAndForeignAbout
-                                      )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+                                      ): EitherT[Future, ServiceError, Boolean] =
     ukAndForeignPersistAnswers(
       ctx,
       ukAndForeignAbout
