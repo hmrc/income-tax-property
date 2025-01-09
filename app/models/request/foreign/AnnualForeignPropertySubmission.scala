@@ -85,13 +85,11 @@ object AnnualForeignPropertySubmission {
     ) =
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
         case Some(
-              fpas @ AnnualForeignPropertySubmission(
-                Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances))))
-              )
+              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances)))))
             ) =>
           (Some(adjustments), Some(allowances))
-        case Some(fpas) => (None, None)
-        case _          => (None, None)
+        case Some(_) => (None, None)
+        case _       => (None, None)
       }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(

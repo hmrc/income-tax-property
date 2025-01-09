@@ -361,14 +361,15 @@ class ForeignPropertyService @Inject() (
     incomeSourceId: IncomeSourceId,
     nino: Nino,
     body: AnnualForeignPropertySubmission
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
     body match {
       case AnnualForeignPropertySubmission(None) =>
-        ITPEnvelope.liftPure(())
+        ITPEnvelope.liftPure(false)
       case _ =>
         EitherT(
           connector.createOrUpdateAnnualForeignPropertySubmission(taxYear, incomeSourceId, nino, body)
-        ).leftMap(e => ApiServiceError(e.status))
+        ).map(_ => true)
+          .leftMap(e => ApiServiceError(e.status))
     }
 
   def saveForeignPropertyAllowances(
@@ -393,14 +394,14 @@ class ForeignPropertyService @Inject() (
             case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
           }
 
-      _ <- {
+      isSubmissionSuccess <- {
         val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
           .fromForeignPropertyAllowances(
             Some(annualForeignPropertySubmissionFromDownstream),
             foreignPropertyAllowancesWithCountryCode
           )
           .fold(
-            (error: ServiceError) => emptyAnnualForeignPropertySubmission, // If Left (ServiceError), return empty submission
+            _ => emptyAnnualForeignPropertySubmission, // If Left (ServiceError), return empty submission
             identity // If Right, return the submission itself
           )
 
@@ -411,20 +412,7 @@ class ForeignPropertyService @Inject() (
           annualForeignPropertySubmissionWithNewAllowances
         )
       }
-      isPersistSuccess <- persistForeignAnswers(
-                            journeyContext,
-                            foreignPropertyAllowancesWithCountryCode,
-                            foreignPropertyAllowancesWithCountryCode.countryCode
-                          ).map(isPersistSuccess =>
-                            if (!isPersistSuccess) {
-                              logger.error("Could not persist Foreign property allowances to annual submission")
-                              false
-                            } else {
-                              logger.info("Foreign property allowances persisted successfully to annual submission")
-                              true
-                            }
-                          )
-    } yield isPersistSuccess
+    } yield isSubmissionSuccess
 
   }
 
