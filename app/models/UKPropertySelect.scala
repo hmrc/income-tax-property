@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package models.request
+package models
 
+import models.request.foreign.WithName
 
-import models.UKPropertySelect
-import play.api.libs.json.{Json, OFormat}
+sealed trait UKPropertySelect
 
+object UKPropertySelect extends Enumerable.Implicits {
+  case object PropertyRentals extends WithName("property.rentals") with UKPropertySelect
 
-case class PropertyAbout(totalIncome: String, ukProperty: Option[Seq[UKPropertySelect]], reportPropertyIncome: Option[Boolean])
-object PropertyAbout {
-  implicit val formats: OFormat[PropertyAbout] = Json.format[PropertyAbout]
+  private case object RentARoom extends WithName("rent.a.room") with UKPropertySelect
+
+  val values: Seq[UKPropertySelect] = Seq(
+    PropertyRentals,
+    RentARoom
+  )
+  implicit val enumerable: Enumerable[UKPropertySelect] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+
 }
