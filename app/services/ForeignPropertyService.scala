@@ -412,7 +412,10 @@ class ForeignPropertyService @Inject() (
           annualForeignPropertySubmissionWithNewAllowances
         )
       }
-    } yield isSubmissionSuccess
+    } yield {
+      logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
+      isSubmissionSuccess
+    }
 
   }
 

@@ -430,7 +430,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         "1597"
       )
     }
-    logger.debug(s"createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(foreignProperty)}")
+    logger.debug(s"Calling createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(foreignProperty)}")
 
     http
       .put(url"$url")(hcWithCorrelationId(hc))
