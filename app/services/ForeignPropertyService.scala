@@ -305,7 +305,7 @@ class ForeignPropertyService @Inject() (
   def saveForeignIncome(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignIncome: ForeignIncome
+    foreignIncome: ForeignIncomeWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
@@ -341,23 +341,82 @@ class ForeignPropertyService @Inject() (
            )
     } yield submissionResponse
 
+  def getAnnualForeignPropertySubmissionFromDownStream(
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    incomeSourceId: IncomeSourceId
+  )(implicit
+    hc: HeaderCarrier
+  ): ITPEnvelope[AnnualForeignPropertySubmission] =
+    EitherT(connector.getAnnualForeignPropertySubmission(taxYear, taxableEntityId, incomeSourceId))
+      .leftMap(error => ApiServiceError(error.status))
+      .subflatMap { maybeAnnualForeignPropertySubmission =>
+        maybeAnnualForeignPropertySubmission.fold[Either[ServiceError, AnnualForeignPropertySubmission]](
+          DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
+        )(_.asRight[ServiceError])
+      }
+
+  def createOrUpdateAnnualForeignPropertySubmission(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    body: AnnualForeignPropertySubmission
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+    body match {
+      case AnnualForeignPropertySubmission(None) =>
+        ITPEnvelope.liftPure(false)
+      case _ =>
+        EitherT(
+          connector.createOrUpdateAnnualForeignPropertySubmission(taxYear, incomeSourceId, nino, body)
+        ).map(_ => true)
+          .leftMap(e => ApiServiceError(e.status))
+    }
+
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
     nino: Nino,
-    foreignPropertyAllowancesWithCountyCode: ForeignPropertyAllowancesWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+
+    val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
+
     for {
-      submissionResponse <- persistForeignAnswers(
-                              journeyContext,
-                              foreignPropertyAllowancesWithCountyCode,
-                              foreignPropertyAllowancesWithCountyCode.countryCode
-                            ).map(isPersistSuccess =>
-                              if (!isPersistSuccess) {
-                                logger.error("Could not persist Foreign property allowances")
-                              } else {
-                                logger.info("Foreign property allowances persisted successfully")
-                              }
-                            )
-    } yield None
+
+      annualForeignPropertySubmissionFromDownstream <-
+        this
+          .getAnnualForeignPropertySubmissionFromDownStream(
+            journeyContext.taxYear,
+            nino,
+            journeyContext.incomeSourceId
+          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
+            case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
+          }
+
+      isSubmissionSuccess <- {
+        val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
+          .fromForeignPropertyAllowances(
+            Some(annualForeignPropertySubmissionFromDownstream),
+            foreignPropertyAllowancesWithCountryCode
+          )
+          .fold(
+            _ => emptyAnnualForeignPropertySubmission, // If Left (ServiceError), return empty submission
+            identity // If Right, return the submission itself
+          )
+
+        createOrUpdateAnnualForeignPropertySubmission(
+          journeyContext.taxYear,
+          journeyContext.incomeSourceId,
+          nino,
+          annualForeignPropertySubmissionWithNewAllowances
+        )
+      }
+    } yield {
+      logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
+      isSubmissionSuccess
+    }
+
+  }
 
 }

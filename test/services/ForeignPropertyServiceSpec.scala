@@ -20,9 +20,10 @@ import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import models.PropertyPeriodicSubmissionResponse
 import models.common._
-import models.errors.{ApiError, ApiServiceError, SingleErrorBody}
+import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request._
 import models.request.foreign._
+import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -44,7 +45,8 @@ class ForeignPropertyServiceSpec
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   private val taxYear: TaxYear = TaxYear(2024)
-  private val foreignPropertyIncome = ForeignPropertyIncome(None, Some(true), None, None, Some(456.75),Some(678.95))
+  private val foreignPropertyIncome = ForeignPropertyIncome(None, Some(true), None, None, Some(456.75), Some(678.95))
+
   val foreignProperty: Option[Seq[ForeignProperty]] = Some(
     Seq(
       ForeignProperty(
@@ -57,6 +59,148 @@ class ForeignPropertyServiceSpec
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
   private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, repository)
+
+  val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
+    CreateForeignPropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      foreignProperty
+    )
+
+  val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
+    None,
+    None,
+    LocalDate.now(),
+    LocalDate.now(),
+    foreignProperty,
+    Some(
+      UkOtherProperty(
+        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
+        None
+      )
+    )
+  )
+
+  "For Foreign Property Periodic Submissions getAllPropertyPeriodicSubmissions" should {
+
+    "return data when GetPeriodicSubmission has ids and the period is for a year" in {
+      val periodicSubmissionId = "1"
+      val periodicSubmissionIds = List(
+        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-04-06"), LocalDate.parse("2024-04-05"))
+      )
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        Some(PeriodicSubmissionId(periodicSubmissionId)),
+        submittedOn = Some(LocalDateTime.now),
+        fromDate = LocalDate.now.minusDays(1),
+        toDate = LocalDate.now,
+        None,
+        None
+      )
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(periodicSubmissionIds))
+      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, "1", Right(Some(propertyPeriodicSubmission)))
+
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe
+        Right(PropertyPeriodicSubmissionResponse(List(propertyPeriodicSubmission)))
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission has ids and the period is less than a year" in {
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
+      )
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission has ids and there is no submission" in {
+      val aPeriodicSubmissionModel = List(
+        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
+      )
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
+    }
+
+    "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
+      val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
+
+      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
+        PropertyPeriodicSubmissionResponse(List())
+      )
+
+    }
+
+    "return ApiError when GetPeriodicSubmissionIds fails" in {
+      mockGetAllPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error")))
+      )
+      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Left(
+        ApiServiceError(500)
+      )
+    }
+  }
+
+  "create periodic submission" should {
+
+    "return submissionId for valid request" in {
+
+      val periodicSubmissionId = PeriodicSubmissionId("submissionId")
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        validCreateForeignPropertyPeriodicSubmissionRequest,
+        Right(Some(periodicSubmissionId))
+      )
+
+      await(
+        underTest
+          .createForeignPeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            validCreateForeignPropertyPeriodicSubmissionRequest
+          )
+          .value
+      ) shouldBe
+        Right(Some(periodicSubmissionId))
+    }
+
+    "return ApiError for invalid request" in {
+
+      mockCreateForeignPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        validCreateForeignPropertyPeriodicSubmissionRequest,
+        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+      )
+      await(
+        underTest
+          .createForeignPeriodicSubmission(
+            nino,
+            incomeSourceId,
+            taxYear,
+            validCreateForeignPropertyPeriodicSubmissionRequest
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+
+  }
 
   "save foreign properties select country information" should {
 
@@ -391,7 +535,13 @@ class ForeignPropertyServiceSpec
         List(PeriodicSubmissionIdModel(submissionId, fromDate, toDate)).asRight[ApiError]
       )
 
-      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, submissionId, Some(emptyPeriodicSubmission).asRight[ApiError])
+      mockGetPropertyPeriodicSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        submissionId,
+        Some(emptyPeriodicSubmission).asRight[ApiError]
+      )
 
       await(
         underTest
@@ -410,7 +560,7 @@ class ForeignPropertyServiceSpec
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
-    val foreignIncome = ForeignIncome(
+    val foreignIncome = ForeignIncomeWithCountryCode(
       countryCode = "AUS",
       rentIncome = 1.0,
       premiumsGrantLeaseReceived = true,
@@ -649,145 +799,227 @@ class ForeignPropertyServiceSpec
     }
   }
 
-  ".getAllPropertyPeriodicSubmissions" should {
+  "save foreign allowances should" should {
 
-    "return data when GetPeriodicSubmission has ids and the period is for a year" in {
-      val periodicSubmissionId = "1"
-      val periodicSubmissionIds = List(
-        PeriodicSubmissionIdModel(periodicSubmissionId, LocalDate.parse("2023-04-06"), LocalDate.parse("2024-04-05"))
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+
+    val foreignAllowancesWithCountryCode = ForeignPropertyAllowancesWithCountryCode(
+      countryCode = "AUS",
+      zeroEmissionsCarAllowance = Some(BigDecimal(1.5)),
+      zeroEmissionsGoodsVehicleAllowance = Some(BigDecimal(2.5)),
+      costOfReplacingDomesticItems = Some(BigDecimal(3.5)),
+      otherCapitalAllowance = Some(BigDecimal(4.5)),
+      structuredBuildingAllowance = None
+    )
+
+    "call create foreign annual submission request when annual submission is empty and return no content for valid request" in {
+
+      val emptyAnnualForeignPropertySubmissionFromDownstream = AnnualForeignPropertySubmission(None)
+
+      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+        AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
+          Some(emptyAnnualForeignPropertySubmissionFromDownstream),
+          foreignAllowancesWithCountryCode
+        )
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(Some(emptyAnnualForeignPropertySubmissionFromDownstream))
       )
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        Some(PeriodicSubmissionId(periodicSubmissionId)),
-        submittedOn = Some(LocalDateTime.now),
-        fromDate = LocalDate.now.minusDays(1),
-        toDate = LocalDate.now,
-        None,
-        None
+
+      mockCreateAnnualForeignPropertySubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Some(requestForCreate),
+        ().asRight[ApiError]
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(periodicSubmissionIds))
-      mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, "1", Right(Some(propertyPeriodicSubmission)))
-
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe
-        Right(PropertyPeriodicSubmissionResponse(List(propertyPeriodicSubmission)))
+      await(
+        underTest
+          .saveForeignPropertyAllowances(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignAllowancesWithCountryCode
+          )
+          .value
+      ) shouldBe Right(true)
     }
 
-    "return DataNotFoundError when GetPeriodicSubmission has ids and the period is less than a year" in {
-      val aPeriodicSubmissionModel = List(
-        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
+    "call update annual foreign property submission allowances when there is an existing annual submission" in {
+
+      val mayBeAnnualForeignPropertySubmissionFromDownstream =
+        AnnualForeignPropertySubmission(
+          foreignProperty = Some(
+            Seq(
+              AnnualForeignProperty(
+                countryCode = "AUS",
+                allowances = Some(
+                  ForeignPropertyAllowances(
+                    zeroEmissionsCarAllowance = Some(21.5),
+                    zeroEmissionsGoodsVehicleAllowance = Some(32.5),
+                    costOfReplacingDomesticItems = Some(43.5),
+                    otherCapitalAllowance = Some(54.5),
+                    annualInvestmentAllowance = Some(64.5),
+                    propertyAllowance = Some(74.5),
+                    electricChargePointAllowance = Some(84.5),
+                    structuredBuildingAllowance = None
+                  )
+                ),
+                adjustments = None
+              )
+            )
+          )
+        )
+
+      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+        AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
+          Some(mayBeAnnualForeignPropertySubmissionFromDownstream),
+          foreignAllowancesWithCountryCode
+        )
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
-
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
-        PropertyPeriodicSubmissionResponse(List())
+      mockCreateAnnualForeignPropertySubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Some(requestForCreate),
+        ().asRight[ApiError]
       )
+
+      await(
+        underTest
+          .saveForeignPropertyAllowances(
+            ctx.toJourneyContext(JourneyName.ForeignPropertyTax),
+            nino,
+            foreignAllowancesWithCountryCode
+          )
+          .value
+      ) shouldBe Right(true)
     }
 
-    "return DataNotFoundError when GetPeriodicSubmission has ids and there is no submission" in {
-      val aPeriodicSubmissionModel = List(
-        PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
+    "return ApiError BAD_REQUEST for invalid request body" in {
+
+      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+        AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
+          None,
+          foreignAllowancesWithCountryCode
+        )
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(None)
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
-
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
-        PropertyPeriodicSubmissionResponse(List())
+      mockCreateAnnualForeignPropertySubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Some(requestForCreate),
+        ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Unit]
       )
+
+      await(
+        underTest
+          .saveForeignPropertyAllowances(
+            ctx.toJourneyContext(JourneyName.RentalIncome),
+            nino,
+            foreignAllowancesWithCountryCode
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  " For Foreign Property Periodic Submissions getAnnualForeignPropertySubmissionFromDownStream" should {
+
+    "return data when successful" in {
+      val mayBeAnnualForeignPropertySubmissionFromDownstream =
+        AnnualForeignPropertySubmission(
+          foreignProperty = Some(
+            Seq(
+              AnnualForeignProperty(
+                countryCode = "AUS",
+                allowances = Some(
+                  ForeignPropertyAllowances(
+                    zeroEmissionsCarAllowance = Some(21.5),
+                    zeroEmissionsGoodsVehicleAllowance = Some(32.5),
+                    costOfReplacingDomesticItems = Some(43.5),
+                    otherCapitalAllowance = Some(54.5),
+                    annualInvestmentAllowance = Some(64.5),
+                    propertyAllowance = Some(74.5),
+                    electricChargePointAllowance = Some(84.5),
+                    structuredBuildingAllowance = None
+                  )
+                ),
+                adjustments = None
+              )
+            )
+          )
+        )
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
+      )
+
+      await(underTest.getAnnualForeignPropertySubmissionFromDownStream(taxYear, nino, incomeSourceId).value) shouldBe
+        Right(mayBeAnnualForeignPropertySubmissionFromDownstream)
     }
 
-    "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
-      val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
+    "return DataNotFoundError when GetAnnualForeignPropertySubmissionFromDownStream does not has an annual submission" in {
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAnnualForeignPropertySubmission(taxYear, nino, incomeSourceId, Right(None))
 
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
-        PropertyPeriodicSubmissionResponse(List())
-      )
+      await(
+        underTest.getAnnualForeignPropertySubmissionFromDownStream(taxYear, nino, incomeSourceId).value
+      ) shouldBe Left(DataNotFoundError)
 
     }
 
-    "return ApiError when GetPeriodicSubmissionIds fails" in {
-      mockGetAllPeriodicSubmission(
+    "return when GetAnnualForeignPropertySubmissionFromDownStream has an annual submission without foreignProperty data" in {
+
+      val annualForeignPropertySubmissionWithoutForeignPropertyData =
+        AnnualForeignPropertySubmission(foreignProperty = None)
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(Some(annualForeignPropertySubmissionWithoutForeignPropertyData))
+      )
+
+      await(
+        underTest.getAnnualForeignPropertySubmissionFromDownStream(taxYear, nino, incomeSourceId).value
+      ) shouldBe Right(annualForeignPropertySubmissionWithoutForeignPropertyData)
+    }
+
+    "return ApiError when GetAnnualForeignPropertySubmissionFromDownStream fails" in {
+      mockGetAnnualForeignPropertySubmission(
         taxYear,
         nino,
         incomeSourceId,
         Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error")))
       )
-      await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Left(
+      await(
+        underTest.getAnnualForeignPropertySubmissionFromDownStream(taxYear, nino, incomeSourceId).value
+      ) shouldBe Left(
         ApiServiceError(500)
       )
     }
   }
 
-  val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
-    CreateForeignPropertyPeriodicSubmissionRequest(
-      LocalDate.now(),
-      LocalDate.now(),
-      foreignProperty
-    )
-
-
-  val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
-    None,
-    None,
-    LocalDate.now(),
-    LocalDate.now(),
-    foreignProperty,
-    Some(
-      UkOtherProperty(
-        Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
-        None
-      )
-    )
-  )
-
-  "create periodic submission" should {
-
-    "return submissionId for valid request" in {
-      val periodicSubmissionId = PeriodicSubmissionId("submissionId")
-
-      mockCreateForeignPeriodicSubmission(
-        taxYear,
-        nino,
-        incomeSourceId,
-        validCreateForeignPropertyPeriodicSubmissionRequest,
-        Right(Some(periodicSubmissionId))
-      )
-
-      await(
-        underTest
-          .createForeignPeriodicSubmission(
-            nino,
-            incomeSourceId,
-            taxYear,
-            validCreateForeignPropertyPeriodicSubmissionRequest
-          )
-          .value
-      ) shouldBe
-        Right(Some(periodicSubmissionId))
-    }
-
-    "return ApiError for invalid request" in {
-
-      mockCreateForeignPeriodicSubmission(
-        taxYear,
-        nino,
-        incomeSourceId,
-        validCreateForeignPropertyPeriodicSubmissionRequest,
-        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
-      )
-      await(
-        underTest
-          .createForeignPeriodicSubmission(
-            nino,
-            incomeSourceId,
-            taxYear,
-            validCreateForeignPropertyPeriodicSubmissionRequest
-          )
-          .value
-      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
-    }
-
-  }
 }

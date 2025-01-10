@@ -46,7 +46,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
       case e @ ForeignPropertyExpensesWithCountryCode(_, _, _, _, _, _, _, _) =>
         fromForeignPropertyExpenses(periodicSubmissionMaybe, e)
 
-      case e @ ForeignIncome(_, _, _, _, _, _, _, _, _) => fromForeignIncome(periodicSubmissionMaybe, e)
+      case e @ ForeignIncomeWithCountryCode(_, _, _, _, _, _, _, _, _) => fromForeignIncome(periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to UpdateForeignPropertyPeriodicSubmissionRequest)")
           .asLeft[UpdateForeignPropertyPeriodicSubmissionRequest]
@@ -204,10 +204,10 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
 
   def fromForeignIncome(
     maybeSubmission: Option[PropertyPeriodicSubmission],
-    foreignIncome: ForeignIncome
+    foreignIncomeWithCountryCode: ForeignIncomeWithCountryCode
   ): Either[ServiceError, UpdateForeignPropertyPeriodicSubmissionRequest] = {
 
-    val targetCountryCode = foreignIncome.countryCode
+    val targetCountryCode = foreignIncomeWithCountryCode.countryCode
 
     val foreignPropertyLens: Lens[UpdateForeignPropertyPeriodicSubmissionRequest, Option[Seq[ForeignProperty]]] =
       GenLens[UpdateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)
@@ -250,9 +250,9 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
       }
 
     val newForeignPropertyIncome = ForeignPropertyIncome(
-      rentIncome = Some(ForeignPropertyRentIncome(foreignIncome.rentIncome)),
-      otherPropertyIncome = Some(foreignIncome.otherPropertyIncome),
-      premiumsOfLeaseGrant = foreignIncome.premiumsOfLeaseGrantAgreed.fold(
+      rentIncome = Some(ForeignPropertyRentIncome(foreignIncomeWithCountryCode.rentIncome)),
+      otherPropertyIncome = Some(foreignIncomeWithCountryCode.otherPropertyIncome),
+      premiumsOfLeaseGrant = foreignIncomeWithCountryCode.premiumsOfLeaseGrantAgreed.fold(
         maybeForeignPropertyIncome.flatMap(_.premiumsOfLeaseGrant)
       )(_.premiumsOfLeaseGrant),
       foreignTaxCreditRelief = maybeForeignPropertyIncome.flatMap(_.foreignTaxCreditRelief),

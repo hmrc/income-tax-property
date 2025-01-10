@@ -25,9 +25,6 @@ case class ForeignPropertyAllowancesWithCountryCode(
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
   costOfReplacingDomesticItems: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
-  annualInvestmentAllowance: Option[BigDecimal],
-  propertyAllowance: Option[BigDecimal],
-  electricChargePointAllowance: Option[BigDecimal],
   structuredBuildingAllowance: Option[Array[StructuredBuildingAllowance]]
 )
 

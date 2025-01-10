@@ -217,7 +217,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
     "return a header status with NO_CONTENT for a valid request" in {
-      val foreignIncome = validForeignIncome.as[ForeignIncome]
+      val foreignIncome = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
       mockAuthorisation()
       mockSaveForeignIncomeSection(
@@ -241,7 +241,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       )
 
       forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
-        val foreignIncomeInformation = validForeignIncome.as[ForeignIncome]
+        val foreignIncomeInformation = validForeignIncome.as[ForeignIncomeWithCountryCode]
 
         mockAuthorisation()
         mockSaveForeignIncomeSection(
@@ -334,7 +334,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
         ctx,
         nino,
         foreignPropertyAllowances,
-        Right(Some(PeriodicSubmissionId(incomeSubmissionId.value)))
+        Right(true)
       )
 
       val request = fakePostRequest.withJsonBody(validForeignPropertyAllowances)
@@ -346,9 +346,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
         zeroEmissionsGoodsVehicleAllowance = Some(345.65),
         costOfReplacingDomesticItems = Some(490.58),
         otherCapitalAllowance = Some(600),
-        annualInvestmentAllowance = None,
-        propertyAllowance = None,
-        electricChargePointAllowance = None,
         structuredBuildingAllowance = None
       )
       result.header.status shouldBe NO_CONTENT
@@ -371,7 +368,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
           ctx,
           nino,
           foreignPropertyAllowances,
-          serviceError.asLeft[Option[PeriodicSubmissionId]]
+          serviceError.asLeft[Boolean]
         )
 
         val request = fakePostRequest.withJsonBody(validForeignPropertyAllowances)
