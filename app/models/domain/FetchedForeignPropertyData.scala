@@ -17,7 +17,6 @@
 package models.domain
 
 import models.request.foreign._
-import models.responses.ForeignPropertyAllowances
 import play.api.libs.json.{Json, OFormat}
 
 final case class FetchedForeignPropertyData(
