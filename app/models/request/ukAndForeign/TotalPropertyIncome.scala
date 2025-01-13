@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.request.ukAndForeign
 
-import play.api.libs.json.{Json, OFormat}
+import models.request.foreign.WithName
+import models.Enumerable
 
-final case class FetchedPropertyData(
-  ukPropertyData: FetchedUKPropertyData,
-  foreignPropertyData: FetchedForeignPropertyData,
-  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData
-)
 
-object FetchedPropertyData {
-  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+sealed trait TotalPropertyIncome
+
+object TotalPropertyIncome extends Enumerable.Implicits {
+
+  final case object LessThan extends WithName("lessThan") with TotalPropertyIncome
+  final case object Maximum extends WithName("maximum") with TotalPropertyIncome
+
+  val values: Seq[TotalPropertyIncome] = Seq(
+    LessThan, Maximum
+  )
+
+  implicit val enumerable: Enumerable[TotalPropertyIncome] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }
+

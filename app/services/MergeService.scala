@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package services
 
 import models._
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, JourneyAnswers, JourneyWithStatus}
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData, JourneyAnswers, JourneyWithStatus}
 import models.repository.ForeignMerger.ForeignPropertyTaxMerger
 import models.repository.Merger._
 import models.repository.ForeignMerger._
@@ -26,6 +26,7 @@ import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.foreign._
 import models.request.sba.{SbaInfo, SbaInfoToSave}
+import models.request.ukAndForeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 
@@ -35,6 +36,7 @@ import scala.concurrent.ExecutionContext
 class MergeService @Inject() (implicit
   ec: ExecutionContext
 ) {
+
   def mergeAll(
     resultFromAnnualDownstream: PropertyAnnualSubmission,
     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
@@ -57,6 +59,10 @@ class MergeService @Inject() (implicit
 
     val foreignPropertySelectCountryMaybe = mergeForeignPropertySelectCountry(
       resultFromRepository.get(JourneyName.ForeignPropertySelectCountry.entryName)
+    )
+
+    val ukAndForeignPropertyAboutMaybe = mergeUkAndForeignPropertyAbout(
+      resultFromRepository.get(JourneyName.UkAndForeignPropertyAbout.entryName)
     )
 
     val propertyRentalsAboutMaybe = mergePropertyRentalsAbout(
@@ -199,9 +205,14 @@ class MergeService @Inject() (implicit
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
+    val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(
+      ukAndForeignAbout = ukAndForeignPropertyAboutMaybe
+    )
+
     FetchedPropertyData(
       ukPropertyData = fetchedUKPropertyData,
-      foreignPropertyData = fetchedForeignPropertyData
+      foreignPropertyData = fetchedForeignPropertyData,
+      ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
     )
   }
 
@@ -294,6 +305,12 @@ class MergeService @Inject() (implicit
   def mergePropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyAbout])
+      case None                 => None
+    }
+
+  def mergeUkAndForeignPropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[UkAndForeignAbout] =
+    resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[UkAndForeignAbout])
       case None                 => None
     }
 

@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.request.ukAndForeign
 
-import play.api.libs.json.{Json, OFormat}
+import models.Enumerable
+import models.request.foreign.WithName
 
-final case class FetchedPropertyData(
-  ukPropertyData: FetchedUKPropertyData,
-  foreignPropertyData: FetchedForeignPropertyData,
-  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData
-)
+sealed trait ReportIncome
 
-object FetchedPropertyData {
-  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+object ReportIncome extends Enumerable.Implicits {
+
+  case object WantToReport extends WithName("wantToReport") with ReportIncome
+  case object DoNoWantToReport extends WithName("doNotWantToReport") with ReportIncome
+
+  val values: Seq[ReportIncome] = Seq(
+    WantToReport, DoNoWantToReport
+  )
+
+  implicit val enumerable: Enumerable[ReportIncome] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }

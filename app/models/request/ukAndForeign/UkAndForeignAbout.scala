@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.request.ukAndForeign
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-final case class FetchedPropertyData(
-  ukPropertyData: FetchedUKPropertyData,
-  foreignPropertyData: FetchedForeignPropertyData,
-  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData
-)
+final case class UkAndForeignAbout(
+                                    totalPropertyIncome: TotalPropertyIncome,
+                                    reportIncome: Option[ReportIncome]
+                                  )
 
-object FetchedPropertyData {
-  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+object UkAndForeignAbout {
+  implicit val format: Format[UkAndForeignAbout] = Json.format
 }

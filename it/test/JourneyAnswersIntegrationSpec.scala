@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import config.AppConfig
 import connectors.ConnectorIntegrationSpec
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData}
+import models.domain._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
@@ -43,6 +43,7 @@ import utils.AppConfigStub
 import java.time._
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
+
 class JourneyAnswersIntegrationSpec
     extends AnyWordSpec with Matchers with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite
     with ConnectorIntegrationSpec with CleanMongoCollectionSupport  {
@@ -404,6 +405,9 @@ class JourneyAnswersIntegrationSpec
           ),
           journeyStatuses = List(),
           foreignPropertySelectCountry = None
+        ),
+        ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
+          ukAndForeignAbout = None
         )
       )
 
