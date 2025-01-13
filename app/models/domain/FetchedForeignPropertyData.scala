@@ -17,12 +17,14 @@
 package models.domain
 
 import models.request.foreign._
+import models.responses.ForeignPropertyAllowances
 import play.api.libs.json.{Json, OFormat}
 
 final case class FetchedForeignPropertyData(
   foreignPropertyTax: Option[Map[String, ForeignPropertyTax]],
   foreignPropertyIncome: Option[Map[String, ForeignIncomeAnswers]],
   foreignPropertyExpenses: Option[Map[String, ForeignExpensesAnswers]],
+  foreignPropertyAllowances : Option[Map[String, ForeignPropertyAllowances]],
   foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
 )
 
