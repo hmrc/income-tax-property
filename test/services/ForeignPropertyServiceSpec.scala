@@ -215,7 +215,7 @@ class ForeignPropertyServiceSpec
     "persist the foreign selected properties supporting answers" in {
 
       val foreignPropertySelectCountry = ForeignPropertySelectCountry(
-        ForeignTotalIncome.OneThousandAndMore,
+        TotalIncome.Over,
         Some(true),
         Some(Array(Country("Brazil", "BRA"))),
         Some(false),

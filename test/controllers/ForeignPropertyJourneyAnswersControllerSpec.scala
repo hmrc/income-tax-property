@@ -53,7 +53,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
     val validRequestBody: JsValue =
       Json.parse("""{
                    |
-                   |     "totalIncome" : "lessThanOneThousand",
+                   |     "totalIncome" : "under",
                    |     "claimPropertyIncomeAllowance" : false
                    |
                    |}""".stripMargin)
