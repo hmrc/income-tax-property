@@ -16,8 +16,9 @@
 
 package services
 import models.domain.JourneyAnswers
+import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances}
 import models.request.{DeductingTax, PropertyRentalsIncome}
-import models.responses.{AnnualForeignProperty, ForeignPropertyAllowances, PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
+import models.responses.{PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
