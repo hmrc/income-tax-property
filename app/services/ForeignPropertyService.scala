@@ -24,6 +24,7 @@ import models.common._
 import models.errors._
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
+import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
@@ -436,4 +437,28 @@ class ForeignPropertyService @Inject() (
       foreignAdjustmentsWithCountryCode.countryCode
     )
   }
+  def saveForeignPropertySba(
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    for {
+      isPersistSuccessful <- persistForeignAnswers(
+                               journeyContext,
+                               ForeignPropertySbaStoreAnswers(
+                                 claimStructureBuildingAllowance =
+                                   foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance
+                               ),
+                               foreignPropertySbaWithCountryCode.countryCode
+                             ).map(isPersistSuccess =>
+                               if (!isPersistSuccess) {
+                                 logger.error("Could not persist Foreign Property Sba")
+                                 false
+                               } else {
+                                 logger.info("Foreign Property Sba persisted successfully")
+                                 true
+                               }
+                             )
+    } yield isPersistSuccessful
+
 }

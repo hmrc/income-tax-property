@@ -21,6 +21,7 @@ import models.common._
 import models.errors.ServiceError
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
+import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
@@ -92,10 +93,10 @@ trait MockForeignPropertyService extends MockFactory {
       .returning(EitherT.fromEither(result))
 
   def mockSaveForeignIncomeSection(
-                                    journeyContext: JourneyContext,
-                                    nino: Nino,
-                                    foreignIncome: ForeignIncomeWithCountryCode,
-                                    result: Either[ServiceError, Option[PeriodicSubmissionId]]
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignIncome: ForeignIncomeWithCountryCode,
+    result: Either[ServiceError, Option[PeriodicSubmissionId]]
   ): CallHandler4[JourneyContext, Nino, ForeignIncomeWithCountryCode, HeaderCarrier, EitherT[
     Future,
     ServiceError,
@@ -115,8 +116,11 @@ trait MockForeignPropertyService extends MockFactory {
     nino: Nino,
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode,
     result: Either[ServiceError, Boolean]
-  ):
-  CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+  ): CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
     (mockForeignPropertyService
       .saveForeignPropertyAllowances(
         _: JourneyContext,
@@ -141,6 +145,25 @@ trait MockForeignPropertyService extends MockFactory {
         _: ForeignPropertyAdjustmentsWithCountryCode
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignPropertyAdjustmentsWithCountryCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveForeignPropertySbaSection(
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler4[JourneyContext, Nino, ForeignPropertySbaWithCountryCode, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockForeignPropertyService
+      .saveForeignPropertySba(
+        _: JourneyContext,
+        _: Nino,
+        _: ForeignPropertySbaWithCountryCode
+      )(_: HeaderCarrier))
+      .expects(journeyContext, nino, foreignPropertySbaWithCountryCode, *)
       .returning(EitherT.fromEither(result))
 
 }

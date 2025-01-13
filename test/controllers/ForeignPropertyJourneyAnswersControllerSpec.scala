@@ -478,4 +478,46 @@ class ForeignPropertyJourneyAnswersControllerSpec
     }
   }
 
+  "save foreign property sba section " should {
+
+    val validForeignPropertySba: JsValue =
+      Json.parse("""{
+                   |  "countryCode": "AUS",
+                   |  "claimStructureBuildingAllowance": true,
+                   |  "allowances": [
+                   |    {
+                   |      "amount": 100000,
+                   |      "firstYear": {
+                   |        "qualifyingDate": "2023-01-01",
+                   |        "qualifyingAmountExpenditure": 50000
+                   |      },
+                   |      "building": {
+                   |        "name": "Sample Building",
+                   |        "number": "123",
+                   |        "postCode": "AB123CD"
+                   |      }
+                   |    },
+                   |    {
+                   |      "amount": 150000,
+                   |      "firstYear": null,
+                   |      "building": {
+                   |        "name": "Another Building",
+                   |        "number": "456"
+                   |      }
+                   |    }
+                   |  ]
+                   |}""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
+        JourneyName.ForeignPropertySba
+      )
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignPropertySba(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
 }
