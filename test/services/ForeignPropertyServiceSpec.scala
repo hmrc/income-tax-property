@@ -23,6 +23,7 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request._
 import models.request.foreign._
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.responses._
@@ -940,6 +941,45 @@ class ForeignPropertyServiceSpec
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
+  }
+
+  "save foreign property adjustments" should {
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear = taxYear, incomeSourceId = incomeSourceId, mtditid = Mtditid(mtditid), nino = nino)
+
+    val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
+      countryCode = "AUS",
+      privateUseAdjustment = BigDecimal(25.25),
+      balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
+      residentialFinanceCost = BigDecimal(75.75),
+      unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+        foreignUnusedResidentialFinanceCostYesNo = true,
+        foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
+      ),
+      unusedLossesPreviousYears = UnusedLossesPreviousYears(
+        unusedLossesPreviousYearsYesNo = true,
+        unusedLossesPreviousYearsAmount = Some(BigDecimal(80.8))
+      )
+    )
+
+    "persist the foreign adjustments supporting answers into the backend mongo" in {
+      val ctx = JourneyContext(
+        taxYear,
+        incomeSourceId,
+        Mtditid(mtditid),
+        JourneyName.ForeignPropertyAdjustments
+      )
+      await(
+        underTest
+          .saveForeignPropertyAdjustments(
+            ctx,
+            nino,
+            foreignPropertyAdjustmentsWithCountryCode
+          )
+          .value
+      ) shouldBe Right(true)
+    }
+
   }
 
   " For Foreign Property Periodic Submissions getAnnualForeignPropertySubmissionFromDownStream" should {

@@ -20,6 +20,7 @@ import actions.AuthorisedAction
 import errorhandling.ErrorHandler
 import models.common._
 import models.request.foreign._
+import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import play.api.Logging
@@ -112,6 +113,21 @@ class ForeignPropertyJourneyAnswersController @Inject() (
       ) { (ctx, foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode) =>
         handleResponse(NO_CONTENT) {
           foreignPropertyService.saveForeignPropertyAllowances(ctx, nino, foreignPropertyAllowancesWithCountryCode)
+        }
+      }
+    }
+
+  def saveForeignPropertyAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[ForeignPropertyAdjustmentsWithCountryCode](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.ForeignPropertyAdjustments,
+        request
+      ) { (ctx, foreignPropertyAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode) =>
+        handleResponse(NO_CONTENT) {
+          foreignPropertyService.saveForeignPropertyAdjustments(ctx, nino, foreignPropertyAdjustmentsWithCountryCode)
         }
       }
     }

@@ -20,6 +20,7 @@ import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
 import models.request.foreign._
+import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
@@ -123,6 +124,23 @@ trait MockForeignPropertyService extends MockFactory {
         _: ForeignPropertyAllowancesWithCountryCode
       )(_: HeaderCarrier))
       .expects(journeyContext, nino, foreignPropertyAllowancesWithCountryCode, *)
+      .returning(EitherT.fromEither(result))
+
+
+  def mockSaveForeignPropertyAdjustmentsSection(
+                                                 journeyContext: JourneyContext,
+                                                 nino: Nino,
+                                                 foreignPropertyAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode,
+                                                 result: Either[ServiceError, Boolean]
+                                              ):
+  CallHandler4[JourneyContext, Nino, ForeignPropertyAdjustmentsWithCountryCode, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+    (mockForeignPropertyService
+      .saveForeignPropertyAdjustments(
+        _: JourneyContext,
+        _: Nino,
+        _: ForeignPropertyAdjustmentsWithCountryCode
+      )(_: HeaderCarrier))
+      .expects(journeyContext, nino, foreignPropertyAdjustmentsWithCountryCode, *)
       .returning(EitherT.fromEither(result))
 
 }

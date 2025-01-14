@@ -19,7 +19,9 @@ package controllers
 import cats.syntax.either._
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.request.BalancingCharge
 import models.request.foreign._
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses.PeriodicSubmissionId
@@ -380,6 +382,98 @@ class ForeignPropertyJourneyAnswersControllerSpec
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
       val result = underTest.saveForeignPropertyAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "save foreign property adjustments section" should {
+    val validForeignPropertyAdjustments: JsValue =
+      Json.parse("""
+                   |{
+                   |  "countryCode": "AUS",
+                   |  "privateUseAdjustment": 231.45,
+                   |  "balancingCharge": {
+                   |    "balancingChargeYesNo": true,
+                   |    "balancingChargeAmount": 108
+                   |  },
+                   |  "residentialFinanceCost": 490.58,
+                   |  "unusedResidentialFinanceCost": {
+                   |    "foreignUnusedResidentialFinanceCostYesNo": true,
+                   |    "foreignUnusedResidentialFinanceCostAmount": 110.10
+                   |  },
+                   |  "unusedLossesPreviousYears": {
+                   |    "unusedLossesPreviousYearsYesNo": true,
+                   |    "unusedLossesPreviousYearsAmount": 80.80
+                   |  }
+                   |}
+                   |""".stripMargin)
+
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
+        JourneyName.ForeignPropertyAdjustments
+      )
+
+    "return a header status with NO_CONTENT for a valid request" in {
+      val foreignPropertyAdjustments = validForeignPropertyAdjustments.as[ForeignPropertyAdjustmentsWithCountryCode]
+      mockAuthorisation()
+      mockSaveForeignPropertyAdjustmentsSection(
+        ctx,
+        nino,
+        foreignPropertyAdjustments,
+        Right(true)
+      )
+
+      val request = fakePostRequest.withJsonBody(validForeignPropertyAdjustments)
+      val result = await(underTest.saveForeignPropertyAdjustments(taxYear, incomeSourceId, nino)(request))
+
+      foreignPropertyAdjustments shouldBe ForeignPropertyAdjustmentsWithCountryCode(
+        countryCode = "AUS",
+        privateUseAdjustment = 231.45,
+        balancingCharge = BalancingCharge(
+          balancingChargeYesNo = true,
+          balancingChargeAmount = Some(108)
+        ),
+        residentialFinanceCost = 490.58,
+        unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+          foreignUnusedResidentialFinanceCostYesNo = true,
+          foreignUnusedResidentialFinanceCostAmount = Some(110.10)
+        ),
+        unusedLossesPreviousYears = UnusedLossesPreviousYears(
+          unusedLossesPreviousYearsYesNo = true,
+          unusedLossesPreviousYearsAmount = Some(80.80)
+        )
+      )
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return serviceError when there is an error in Downstream Api or error in Parsing" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        val foreignPropertyAdjustments = validForeignPropertyAdjustments.as[ForeignPropertyAdjustmentsWithCountryCode]
+
+        mockAuthorisation()
+        mockSaveForeignPropertyAdjustmentsSection(
+          ctx,
+          nino,
+          foreignPropertyAdjustments,
+          serviceError.asLeft[Boolean]
+        )
+
+        val request = fakePostRequest.withJsonBody(validForeignPropertyAdjustments)
+        val result = await(underTest.saveForeignPropertyAdjustments(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignPropertyAdjustments(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }
