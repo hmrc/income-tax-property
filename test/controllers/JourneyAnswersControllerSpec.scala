@@ -25,7 +25,7 @@ import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUK
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
+import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
@@ -779,7 +779,7 @@ class JourneyAnswersControllerSpec
         None,
         None,
         List(),
-        Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
+        Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
       )
       val foreignPropertyData = FetchedForeignPropertyData(
         None, None, None, None,None

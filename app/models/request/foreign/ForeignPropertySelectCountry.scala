@@ -19,7 +19,7 @@ package models.request.foreign
 import play.api.libs.json.{Json, OFormat}
 
 final case class ForeignPropertySelectCountry(
-                                               totalIncome: ForeignTotalIncome,
+                                               totalIncome: TotalIncome,
                                                reportPropertyIncome: Option[Boolean],
                                                incomeCountries: Option[Array[Country]],
                                                addAnotherCountry: Option[Boolean],

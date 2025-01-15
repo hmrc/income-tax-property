@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 package models.request.foreign
 
+sealed trait TotalIncome
+
 import models.Enumerable
-sealed trait ForeignTotalIncome
 
-object ForeignTotalIncome extends Enumerable.Implicits {
+object TotalIncome extends Enumerable.Implicits {
 
-  case object LessThanOneThousand extends WithName("lessThanOneThousand") with ForeignTotalIncome
-  case object OneThousandAndMore extends WithName("oneThousandAndMore") with ForeignTotalIncome
+  case object Under extends WithName("under") with TotalIncome
+  case object Between extends WithName("between") with TotalIncome
+  case object Over extends WithName("over") with TotalIncome
 
-  val values: Seq[ForeignTotalIncome] = Seq(
-    LessThanOneThousand, OneThousandAndMore
+  val values: Seq[TotalIncome] = Seq(
+    Under, Between, Over
   )
 
-
-  implicit val enumerable: Enumerable[ForeignTotalIncome] =
+  implicit val enumerable: Enumerable[TotalIncome] =
     Enumerable(values.map(v => v.toString -> v): _*)
-
 }

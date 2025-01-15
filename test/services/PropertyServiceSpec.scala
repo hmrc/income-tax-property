@@ -26,7 +26,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
 import models.request.esba._
-import models.request.foreign.{ForeignPropertySelectCountry, ForeignTotalIncome}
+import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
@@ -1603,7 +1603,7 @@ class PropertyServiceSpec
           None,
           None,
           List(),
-          Some(ForeignPropertySelectCountry(ForeignTotalIncome.LessThanOneThousand, Some(false), None, None, None))
+          Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
         )
         val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None)
         val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)

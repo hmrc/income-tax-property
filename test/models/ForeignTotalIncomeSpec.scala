@@ -16,7 +16,7 @@
 
 package models
 
-import models.request.foreign.ForeignTotalIncome
+import models.request.foreign.TotalIncome
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.OptionValues
@@ -31,29 +31,29 @@ class ForeignTotalIncomeSpec extends AnyFreeSpec with Matchers with ScalaCheckPr
 
     "must deserialise valid values" in {
 
-      val gen = Gen.oneOf(ForeignTotalIncome.values)
+      val gen = Gen.oneOf(TotalIncome.values)
 
       forAll(gen) {
         foreignTotalIncome =>
 
-          JsString(foreignTotalIncome.toString).validate[ForeignTotalIncome].asOpt.value mustEqual foreignTotalIncome
+          JsString(foreignTotalIncome.toString).validate[TotalIncome].asOpt.value mustEqual foreignTotalIncome
       }
     }
 
     "must fail to deserialise invalid values" in {
 
-      val gen = arbitrary[String] suchThat (!ForeignTotalIncome.values.map(_.toString).contains(_))
+      val gen = arbitrary[String] suchThat (!TotalIncome.values.map(_.toString).contains(_))
 
       forAll(gen) {
         invalidValue =>
 
-          JsString(invalidValue).validate[ForeignTotalIncome] mustEqual JsError("error.invalid")
+          JsString(invalidValue).validate[TotalIncome] mustEqual JsError("error.invalid")
       }
     }
 
     "must serialise" in {
 
-      val gen = Gen.oneOf(ForeignTotalIncome.values)
+      val gen = Gen.oneOf(TotalIncome.values)
 
       forAll(gen) {
         foreignTotalIncome =>
