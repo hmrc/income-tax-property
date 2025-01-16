@@ -18,6 +18,7 @@ package models.request.foreign
 
 import models.errors.ServiceError
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
+import models.responses.StructuredBuildingAllowance
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json._
@@ -37,7 +38,7 @@ case class ForeignPropertyAllowances(
   annualInvestmentAllowance: Option[BigDecimal],
   propertyAllowance: Option[BigDecimal],
   electricChargePointAllowance: Option[BigDecimal],
-  structuredBuildingAllowance: Option[BigDecimal]
+  structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]]
 )
 
 object ForeignPropertyAllowances {

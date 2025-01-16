@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package services
 import models.domain.JourneyAnswers
 import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances}
 import models.request.{DeductingTax, PropertyRentalsIncome}
-import models.responses.{PeriodicSubmissionId, PropertyAnnualSubmission, PropertyPeriodicSubmission, UkOtherProperty, UkOtherPropertyIncome}
+import models.responses._
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
@@ -88,7 +88,18 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         zeroEmissionsGoodsVehicleAllowance = Some(35.35),
         otherCapitalAllowance = Some(45.45),
         electricChargePointAllowance = Some(55.55),
-        structuredBuildingAllowance = Some(65.65),
+        structuredBuildingAllowance = Some(
+          Seq(
+            StructuredBuildingAllowance(
+              amount = 65.65,
+              Some(
+                StructuredBuildingAllowanceDate(qualifyingDate = LocalDate.now(), qualifyingAmountExpenditure = 50.00)
+              ),
+              building =
+                StructuredBuildingAllowanceBuilding(name = Some("name"), number = Some("number"), postCode = "AB1 2XY")
+            )
+          )
+        ),
         zeroEmissionsCarAllowance = Some(75.75),
         propertyAllowance = Some(85.85)
       )
@@ -108,7 +119,24 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
                   zeroEmissionsGoodsVehicleAllowance = Some(35.35),
                   otherCapitalAllowance = Some(45.45),
                   electricChargePointAllowance = Some(55.55),
-                  structuredBuildingAllowance = Some(65.65),
+                  structuredBuildingAllowance = Some(
+                    Seq(
+                      StructuredBuildingAllowance(
+                        amount = 65.65,
+                        Some(
+                          StructuredBuildingAllowanceDate(
+                            qualifyingDate = LocalDate.now(),
+                            qualifyingAmountExpenditure = 50.00
+                          )
+                        ),
+                        building = StructuredBuildingAllowanceBuilding(
+                          name = Some("name"),
+                          number = Some("number"),
+                          postCode = "AB1 2XY"
+                        )
+                      )
+                    )
+                  ),
                   zeroEmissionsCarAllowance = Some(75.75),
                   propertyAllowance = Some(85.85)
                 )
