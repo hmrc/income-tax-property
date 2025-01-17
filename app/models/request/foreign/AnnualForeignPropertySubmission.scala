@@ -18,7 +18,8 @@ package models.request.foreign
 
 import models.errors.ServiceError
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
-import models.responses.StructuredBuildingAllowance
+import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate}
+import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json._
@@ -64,8 +65,8 @@ object AnnualForeignPropertySubmission {
   implicit val format: OFormat[AnnualForeignPropertySubmission] = Json.format[AnnualForeignPropertySubmission]
 
   implicit def jsonBodyWritable[T](implicit
-    writes: Writes[T],
-    jsValueBodyWritable: BodyWritable[JsValue]
+   writes: Writes[T],
+   jsValueBodyWritable: BodyWritable[JsValue]
   ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 
   def fromForeignPropertyAllowances(
@@ -82,15 +83,15 @@ object AnnualForeignPropertySubmission {
 
     val (maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
       Option[ForeignPropertyAdjustments],
-      Option[ForeignPropertyAllowances]
-    ) =
+        Option[ForeignPropertyAllowances]
+      ) =
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
         case Some(
-              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances)))))
-            ) =>
+        AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances)))))
+        ) =>
           (Some(adjustments), Some(allowances))
         case Some(_) => (None, None)
-        case _       => (None, None)
+        case _ => (None, None)
       }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(
@@ -109,6 +110,75 @@ object AnnualForeignPropertySubmission {
         Seq(
           AnnualForeignProperty(
             countryCode = countryCode,
+            adjustments = maybeForeignPropertyAdjustments,
+            allowances = Some(ForeignPropertyAllowances(None, None, None, None, None, None, None, None))
+          )
+        )
+      )
+    )
+
+    val annualForeignPropertySubmissionWithNewAllowances =
+      firstForeignPropertyAllowancesLens.replace(newForeignPropertyAllowances)(
+        annualForeignPropertySubmissionRetainingAdjustments
+      )
+
+    Right(annualForeignPropertySubmissionWithNewAllowances)
+  }
+
+  def fromForeignPropertySbas(
+     mayBeAnnualForeignPropertySubmissionFromDownstream: Option[AnnualForeignPropertySubmission],
+    foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode
+  ): Either[ServiceError, AnnualForeignPropertySubmission] = {
+    val targetCountryCode = foreignPropertySbaWithCountryCode.countryCode
+    val foreignPropertyLens = GenLens[AnnualForeignPropertySubmission](_.foreignProperty)
+    val foreignPropertyAllowancesLens = GenLens[AnnualForeignProperty](_.allowances)
+    val firstForeignPropertyAllowancesLens: Optional[AnnualForeignPropertySubmission, ForeignPropertyAllowances] =
+      foreignPropertyLens.some.index(0).andThen(foreignPropertyAllowancesLens.some)
+
+    val (maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
+      Option[ForeignPropertyAdjustments], Option[ForeignPropertyAllowances]) =
+      mayBeAnnualForeignPropertySubmissionFromDownstream match {
+        case Some(annualForeignPropertySubmission) =>
+          annualForeignPropertySubmission.foreignProperty.flatMap(_.find(_.countryCode == targetCountryCode)) match {
+            case Some(foreignPropertyForTheCountryCode) =>
+              (foreignPropertyForTheCountryCode.adjustments, foreignPropertyForTheCountryCode.allowances)
+            case _ => (None, None)
+          }
+        case _ => (None, None)
+      }
+
+    val sbaSeq: Seq[StructuredBuildingAllowance] = foreignPropertySbaWithCountryCode.allowances.map { allowances =>
+      allowances.toSeq.map { foreignSba =>
+        StructuredBuildingAllowance(
+          amount = foreignSba.foreignStructureBuildingAllowanceClaim,
+          firstYear = Some(StructuredBuildingAllowanceDate(
+            qualifyingDate = foreignSba.foreignStructureBuildingQualifyingDate,
+            qualifyingAmountExpenditure = foreignSba.foreignStructureBuildingQualifyingAmount
+          )),
+          building = StructuredBuildingAllowanceBuilding(
+            name = Some(foreignSba.foreignStructureBuildingAddress.name),
+            number = Some(foreignSba.foreignStructureBuildingAddress.number),
+            postCode = foreignSba.foreignStructureBuildingAddress.postCode
+          ))
+      }
+    }.getOrElse(Seq.empty[StructuredBuildingAllowance])
+
+    val newForeignPropertyAllowances = ForeignPropertyAllowances(
+      zeroEmissionsCarAllowance = maybeForeignPropertyAllowances.flatMap(_.zeroEmissionsCarAllowance),
+      zeroEmissionsGoodsVehicleAllowance = maybeForeignPropertyAllowances.flatMap(_.zeroEmissionsGoodsVehicleAllowance),
+      costOfReplacingDomesticItems = maybeForeignPropertyAllowances.flatMap(_.costOfReplacingDomesticItems),
+      otherCapitalAllowance = maybeForeignPropertyAllowances.flatMap(_.otherCapitalAllowance),
+      annualInvestmentAllowance = maybeForeignPropertyAllowances.flatMap(_.annualInvestmentAllowance),
+      propertyAllowance = None,
+      electricChargePointAllowance = maybeForeignPropertyAllowances.flatMap(_.electricChargePointAllowance),
+      structuredBuildingAllowance = Option.when(sbaSeq.nonEmpty)(sbaSeq)
+    )
+
+    val annualForeignPropertySubmissionRetainingAdjustments = AnnualForeignPropertySubmission(
+      foreignProperty = Some(
+        Seq(
+          AnnualForeignProperty(
+            countryCode = targetCountryCode,
             adjustments = maybeForeignPropertyAdjustments,
             allowances = Some(ForeignPropertyAllowances(None, None, None, None, None, None, None, None))
           )

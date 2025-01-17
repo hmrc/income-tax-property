@@ -60,7 +60,18 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(34.56),
               Some(78.90),
               Some(94.12),
-              None
+              Some(Seq(StructuredBuildingAllowance(
+                amount = 12.42,
+                firstYear = Some(StructuredBuildingAllowanceDate(
+                  qualifyingDate = LocalDate.now(),
+                  qualifyingAmountExpenditure = 42.12
+                )),
+                building = StructuredBuildingAllowanceBuilding(
+                  name = Some("building"),
+                  number = Some("1234"),
+                  postCode =  "FF4 4FF"
+                )
+              )))
             )
           )
         ),
@@ -81,7 +92,18 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               Some(134.56),
               Some(178.90),
               Some(94.12),
-              None
+              Some(Seq(StructuredBuildingAllowance(
+                amount = 20.24,
+                firstYear = Some(StructuredBuildingAllowanceDate(
+                  qualifyingDate = LocalDate.now(),
+                  qualifyingAmountExpenditure = 100.99
+                )),
+                building = StructuredBuildingAllowanceBuilding(
+                  name = Some("other building"),
+                  number = Some("4321"),
+                  postCode =  "FF5 5FF"
+                )
+              )))
             )
           )
         )
