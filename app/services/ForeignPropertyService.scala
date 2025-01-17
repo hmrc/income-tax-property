@@ -23,10 +23,11 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
 import models.request.foreign._
+import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.responses._
-import models.{ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
+import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -419,4 +420,20 @@ class ForeignPropertyService @Inject() (
 
   }
 
+
+  def saveForeignPropertyAdjustments(
+                                      journeyContext: JourneyContext,
+                                      nino: Nino,
+                                      foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+    persistForeignAnswers(
+      journeyContext,
+      ForeignAdjustmentsStoreAnswers(
+        balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
+        foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.foreignUnusedResidentialFinanceCostYesNo,
+        unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo
+      ),
+      foreignAdjustmentsWithCountryCode.countryCode
+    )
+  }
 }
