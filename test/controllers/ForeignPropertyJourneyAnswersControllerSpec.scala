@@ -24,6 +24,7 @@ import models.request.foreign._
 import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
+import models.request.foreign.sba.{ForeignPropertySbaWithCountryCode, ForeignStructureBuildingAllowance, ForeignStructureBuildingAllowanceAddress}
 import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
@@ -32,6 +33,7 @@ import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockForeignPropertyService, MockMongoJourneyAnswersRepository}
 import utils.providers.FakeRequestProvider
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignPropertyJourneyAnswersControllerSpec
@@ -481,32 +483,26 @@ class ForeignPropertyJourneyAnswersControllerSpec
   "save foreign property sba section " should {
 
     val validForeignPropertySba: JsValue =
-      Json.parse("""{
-                   |  "countryCode": "AUS",
-                   |  "claimStructureBuildingAllowance": true,
-                   |  "allowances": [
-                   |    {
-                   |      "amount": 100000,
-                   |      "firstYear": {
-                   |        "qualifyingDate": "2023-01-01",
-                   |        "qualifyingAmountExpenditure": 50000
-                   |      },
-                   |      "building": {
-                   |        "name": "Sample Building",
-                   |        "number": "123",
-                   |        "postCode": "AB123CD"
-                   |      }
-                   |    },
-                   |    {
-                   |      "amount": 150000,
-                   |      "firstYear": null,
-                   |      "building": {
-                   |        "name": "Another Building",
-                   |        "number": "456"
-                   |      }
-                   |    }
-                   |  ]
-                   |}""".stripMargin)
+      Json.parse("""
+                   |{
+                   |    "countryCode": "AUS",
+                   |    "claimStructureBuildingAllowance": true,
+                   |    "allowances":
+                   |    [
+                   |        {
+                   |            "foreignStructureBuildingAllowanceClaim": 100000,
+                   |            "foreignStructureBuildingQualifyingDate": "2024-11-12",
+                   |            "foreignStructureBuildingQualifyingAmount": 50000,
+                   |            "foreignStructureBuildingAddress":
+                   |            {
+                   |                "name": "Sample Building",
+                   |                "number": "123",
+                   |                "postCode": "AB123CD"
+                   |            }
+                   |        }
+                   |    ]
+                   |}
+                   |""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
@@ -518,6 +514,34 @@ class ForeignPropertyJourneyAnswersControllerSpec
       val result = underTest.saveForeignPropertySba(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
+
+    "correctly parse the values for a valid request" in {
+
+      val foreignPropertySbaWithCountryCode = validForeignPropertySba.as[ForeignPropertySbaWithCountryCode]
+
+      foreignPropertySbaWithCountryCode.countryCode shouldBe "AUS"
+      foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance shouldBe true
+      foreignPropertySbaWithCountryCode.allowances shouldBe Array(
+        ForeignStructureBuildingAllowance(
+          foreignStructureBuildingAllowanceClaim = 100000,
+          foreignStructureBuildingQualifyingDate = LocalDate.parse("2024-11-12"),
+          foreignStructureBuildingQualifyingAmount = 50000,
+          foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
+            name = Some("Sample Building"),
+            number = Some("123"),
+            postCode = Some("AB123CD")
+          )
+        )
+      )
+
+    }
+
+    "for foreign property sba should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveForeignPropertySba(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
   }
 
 }

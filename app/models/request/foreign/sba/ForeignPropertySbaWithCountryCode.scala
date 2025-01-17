@@ -31,29 +31,23 @@ object ForeignPropertySbaWithCountryCode {
 }
 
 case class ForeignStructureBuildingAllowance(
-  amount: BigDecimal,
-  firstYear: Option[ForeignStructuredBuildingAllowanceDate],
-  building: ForeignStructuredBuildingAllowanceBuilding
+  foreignStructureBuildingAllowanceClaim: BigDecimal,
+  foreignStructureBuildingQualifyingDate: LocalDate,
+  foreignStructureBuildingQualifyingAmount: BigDecimal,
+  foreignStructureBuildingAddress: ForeignStructureBuildingAllowanceAddress
 )
 
 object ForeignStructureBuildingAllowance {
   implicit val format: Format[ForeignStructureBuildingAllowance] = Json.format[ForeignStructureBuildingAllowance]
 }
 
-case class ForeignStructuredBuildingAllowanceDate(qualifyingDate: LocalDate, qualifyingAmountExpenditure: BigDecimal)
-
-object ForeignStructuredBuildingAllowanceDate {
-  implicit val format: Format[ForeignStructuredBuildingAllowanceDate] =
-    Json.format[ForeignStructuredBuildingAllowanceDate]
-}
-
-case class ForeignStructuredBuildingAllowanceBuilding(
+case class ForeignStructureBuildingAllowanceAddress(
   name: Option[String],
   number: Option[String],
   postCode: Option[String]
 )
 
-object ForeignStructuredBuildingAllowanceBuilding {
-  implicit val format: Format[ForeignStructuredBuildingAllowanceBuilding] =
-    Json.format[ForeignStructuredBuildingAllowanceBuilding]
+object ForeignStructureBuildingAllowanceAddress {
+  implicit val format: Format[ForeignStructureBuildingAllowanceAddress] =
+    Json.format[ForeignStructureBuildingAllowanceAddress]
 }
