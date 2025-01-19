@@ -26,6 +26,7 @@ import models.request.foreign._
 import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
+import models.request.foreign.sba.{ForeignPropertySbaWithCountryCode, ForeignStructureBuildingAllowance, ForeignStructureBuildingAllowanceAddress}
 import models.responses._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
@@ -975,6 +976,43 @@ class ForeignPropertyServiceSpec
             ctx,
             nino,
             foreignPropertyAdjustmentsWithCountryCode
+          )
+          .value
+      ) shouldBe Right(true)
+    }
+
+  }
+
+  "save foreign property sba should" should {
+
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+
+    val foreignPropertySbaWithCountryCode = ForeignPropertySbaWithCountryCode(
+      countryCode = "AUS",
+      claimStructureBuildingAllowance = true,
+      allowances = Array(
+        ForeignStructureBuildingAllowance(
+          foreignStructureBuildingAllowanceClaim = BigDecimal(546.78),
+          foreignStructureBuildingQualifyingDate = LocalDate.of(2024, 8, 7),
+          foreignStructureBuildingQualifyingAmount = BigDecimal(28.95),
+          foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
+            Some("Aryan Cements"),
+            Some("45A"),
+            Some("110 001")
+          )
+        )
+      )
+    )
+
+    "return true if it persists successfully the foreign property sba into the BE mongo" in {
+
+      await(
+        underTest
+          .saveForeignPropertySba(
+            ctx.toJourneyContext(JourneyName.ForeignPropertySba),
+            nino,
+            foreignPropertySbaWithCountryCode
           )
           .value
       ) shouldBe Right(true)

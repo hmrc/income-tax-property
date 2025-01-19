@@ -21,6 +21,11 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "logging.*",
     "utils.*",
     "Mock*.scala",
+    ".*feedback*.*",
+    "partials.*",
+    "app.Routes",
+    "ukAndForeignProperty.Routes",
+    "health.Routes",
     "foreign.Routes",
     "foreign.RoutesPrefix"
   )
