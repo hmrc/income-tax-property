@@ -16,6 +16,7 @@
 
 package models.domain
 
+import models.request.ForeignSbaInfo
 import models.request.foreign._
 import play.api.libs.json.{Json, OFormat}
 
@@ -24,6 +25,7 @@ final case class FetchedForeignPropertyData(
   foreignPropertyIncome: Option[Map[String, ForeignIncomeAnswers]],
   foreignPropertyExpenses: Option[Map[String, ForeignExpensesAnswers]],
   foreignPropertyAllowances : Option[Map[String, ForeignPropertyAllowances]],
+  foreignPropertySba: Option[Map[String, ForeignSbaInfo]],
   foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
 )
 
