@@ -23,7 +23,7 @@ import java.time.LocalDate
 case class ForeignPropertySbaWithCountryCode(
   countryCode: String,
   claimStructureBuildingAllowance: Boolean,
-  allowances: Array[ForeignStructureBuildingAllowance]
+  allowances: Option[Array[ForeignStructureBuildingAllowance]]
 )
 
 object ForeignPropertySbaWithCountryCode {
@@ -42,9 +42,9 @@ object ForeignStructureBuildingAllowance {
 }
 
 case class ForeignStructureBuildingAllowanceAddress(
-  name: Option[String],
-  number: Option[String],
-  postCode: Option[String]
+  name: String,
+  number: String,
+  postCode: String
 )
 
 object ForeignStructureBuildingAllowanceAddress {

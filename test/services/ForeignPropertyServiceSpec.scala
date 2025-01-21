@@ -991,21 +991,66 @@ class ForeignPropertyServiceSpec
     val foreignPropertySbaWithCountryCode = ForeignPropertySbaWithCountryCode(
       countryCode = "AUS",
       claimStructureBuildingAllowance = true,
-      allowances = Array(
+      allowances = Some(Array(
         ForeignStructureBuildingAllowance(
           foreignStructureBuildingAllowanceClaim = BigDecimal(546.78),
           foreignStructureBuildingQualifyingDate = LocalDate.of(2024, 8, 7),
           foreignStructureBuildingQualifyingAmount = BigDecimal(28.95),
           foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
-            Some("Aryan Cements"),
-            Some("45A"),
-            Some("110 001")
+            "Aryan Cements",
+            "45A",
+            "110 001"
           )
         )
-      )
+      ))
     )
 
     "return true if it persists successfully the foreign property sba into the BE mongo" in {
+
+      val mayBeAnnualForeignPropertySubmissionFromDownstream =
+        Some(AnnualForeignPropertySubmission(
+          foreignProperty = Some(
+            Seq(
+              AnnualForeignProperty(
+                countryCode = "AUS",
+                allowances = Some(
+                  ForeignPropertyAllowances(
+                    zeroEmissionsCarAllowance = Some(21.5),
+                    zeroEmissionsGoodsVehicleAllowance = Some(32.5),
+                    costOfReplacingDomesticItems = Some(43.5),
+                    otherCapitalAllowance = Some(54.5),
+                    annualInvestmentAllowance = Some(64.5),
+                    propertyAllowance = Some(74.5),
+                    electricChargePointAllowance = Some(84.5),
+                    structuredBuildingAllowance = None
+                  )
+                ),
+                adjustments = None
+              )
+            )
+          )
+        ))
+
+      mockGetAnnualForeignPropertySubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Right(mayBeAnnualForeignPropertySubmissionFromDownstream)
+      )
+
+      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+        AnnualForeignPropertySubmission.fromForeignPropertySbas(
+          mayBeAnnualForeignPropertySubmissionFromDownstream,
+          foreignPropertySbaWithCountryCode
+        )
+
+      mockCreateAnnualForeignPropertySubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Some(requestForCreate),
+        ().asRight[ApiError]
+      )
 
       await(
         underTest
@@ -1018,6 +1063,23 @@ class ForeignPropertyServiceSpec
       ) shouldBe Right(true)
     }
 
+    "return true but not call downstream when not claiming SBA" in {
+      val foreignPropertySbaWithCountryCodeNoClaim = ForeignPropertySbaWithCountryCode(
+        countryCode = "AUS",
+        claimStructureBuildingAllowance = false,
+        allowances = None
+      )
+
+      await(
+        underTest
+          .saveForeignPropertySba(
+            ctx.toJourneyContext(JourneyName.ForeignPropertySba),
+            nino,
+            foreignPropertySbaWithCountryCodeNoClaim
+          )
+          .value
+      ) shouldBe Right(true)
+    }
   }
 
   " For Foreign Property Periodic Submissions getAnnualForeignPropertySubmissionFromDownStream" should {

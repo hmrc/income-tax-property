@@ -24,9 +24,9 @@ import models.common._
 import models.errors._
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
-import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
+import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses._
 import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import play.api.Logging
@@ -437,28 +437,57 @@ class ForeignPropertyService @Inject() (
       foreignAdjustmentsWithCountryCode.countryCode
     )
   }
+
   def saveForeignPropertySba(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     for {
-      isPersistSuccessful <- persistForeignAnswers(
-                               journeyContext,
-                               ForeignPropertySbaStoreAnswers(
-                                 claimStructureBuildingAllowance =
-                                   foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance
-                               ),
-                               foreignPropertySbaWithCountryCode.countryCode
-                             ).map(isPersistSuccess =>
-                               if (!isPersistSuccess) {
-                                 logger.error("Could not persist Foreign Property Sba")
-                                 false
-                               } else {
-                                 logger.info("Foreign Property Sba persisted successfully")
-                                 true
-                               }
-                             )
-    } yield isPersistSuccessful
+      isSubmissionSuccess <- {
+        if(!foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance) {
+          ITPEnvelope.liftPure(true)
+        } else {
+          val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
+          for {
+            annualForeignPropertySubmissionFromDownstream <-
+              this.getAnnualForeignPropertySubmissionFromDownStream(journeyContext.taxYear, nino,
+                  journeyContext.incomeSourceId)
+                .leftFlatMap {
+                  case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
+                  case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
+                }
+            submissionResult <- {
+              val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
+                .fromForeignPropertySbas(Some(annualForeignPropertySubmissionFromDownstream), foreignPropertySbaWithCountryCode)
+                .fold(_ => emptyAnnualForeignPropertySubmission, identity)
 
+              createOrUpdateAnnualForeignPropertySubmission(
+                journeyContext.taxYear,
+                journeyContext.incomeSourceId,
+                nino,
+                annualForeignPropertySubmissionWithNewAllowances
+              )
+            }
+          } yield submissionResult
+        }
+      }
+      _ <- persistForeignAnswers(
+          journeyContext,
+          ForeignPropertySbaStoreAnswers(
+            claimStructureBuildingAllowance =
+              foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance
+          ),
+          foreignPropertySbaWithCountryCode.countryCode
+        ).map(isPersistSuccess =>
+          if (!isPersistSuccess) {
+            logger.error("Could not persist Foreign Property Sba")
+            false
+          } else {
+            logger.info("Foreign Property Sba persisted successfully")
+            true
+          }
+        )
+    } yield isSubmissionSuccess
+  }
 }

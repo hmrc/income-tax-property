@@ -156,14 +156,19 @@ trait MockForeignPropertyService extends MockFactory {
     Future,
     ServiceError,
     Boolean
-  ]] =
+  ]] = {
+    val compareSba: ForeignPropertySbaWithCountryCode => Boolean = other =>
+      foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance == other.claimStructureBuildingAllowance &&
+      foreignPropertySbaWithCountryCode.countryCode == other.countryCode &&
+        foreignPropertySbaWithCountryCode.allowances.map(_.toSeq) == other.allowances.map(_.toSeq)
     (mockForeignPropertyService
       .saveForeignPropertySba(
         _: JourneyContext,
         _: Nino,
         _: ForeignPropertySbaWithCountryCode
       )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertySbaWithCountryCode, *)
+      .expects(journeyContext, nino, argThat[ForeignPropertySbaWithCountryCode](compareSba), *)
       .returning(EitherT.fromEither(result))
+  }
 
 }

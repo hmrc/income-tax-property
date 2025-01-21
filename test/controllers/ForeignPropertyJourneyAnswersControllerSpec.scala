@@ -521,19 +521,55 @@ class ForeignPropertyJourneyAnswersControllerSpec
 
       foreignPropertySbaWithCountryCode.countryCode shouldBe "AUS"
       foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance shouldBe true
-      foreignPropertySbaWithCountryCode.allowances shouldBe Array(
+      foreignPropertySbaWithCountryCode.allowances.get shouldBe Array(
         ForeignStructureBuildingAllowance(
           foreignStructureBuildingAllowanceClaim = 100000,
           foreignStructureBuildingQualifyingDate = LocalDate.parse("2024-11-12"),
           foreignStructureBuildingQualifyingAmount = 50000,
           foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
-            name = Some("Sample Building"),
-            number = Some("123"),
-            postCode = Some("AB123CD")
+            name = "Sample Building",
+            number = "123",
+            postCode = "AB123CD"
           )
         )
       )
+    }
 
+    "return a header status with NO_CONTENT for a valid request" in {
+      val foreignPropertySba = validForeignPropertySba.as[ForeignPropertySbaWithCountryCode]
+      mockAuthorisation()
+      mockSaveForeignPropertySbaSection(
+        ctx,
+        nino,
+        foreignPropertySba,
+        true.asRight[ServiceError]
+      )
+      val request = fakePostRequest.withJsonBody(validForeignPropertySba)
+      val result = await(underTest.saveForeignPropertySba(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return serviceError when there is an error in Downstream Api or error in Parsing" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+        val foreignPropertySba = validForeignPropertySba.as[ForeignPropertySbaWithCountryCode]
+        mockAuthorisation()
+        mockSaveForeignPropertySbaSection(
+          ctx,
+          nino,
+          foreignPropertySba,
+          serviceError.asLeft[Boolean]
+        )
+        val request = fakePostRequest.withJsonBody(validForeignPropertySba)
+        val result = await(underTest.saveForeignPropertySba(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
     }
 
     "for foreign property sba should return bad request error when request body is empty" in {
