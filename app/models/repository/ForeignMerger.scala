@@ -17,10 +17,11 @@
 package models.repository
 
 import models.ForeignPropertyExpensesStoreAnswers
-import models.request.ReversePremiumsReceived
+import models.request.{ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
 import models.request.foreign.expenses.ConsolidatedExpenses
 import models.responses._
+import java.time.LocalDate
 
 // T: to return (merge into)
 // U: saved (extract from)
@@ -62,6 +63,58 @@ object ForeignMerger {
           Option.when(result.nonEmpty)(result)
         case _ => None
       }
+  }
+
+  implicit object ForeignPropertySbaMerger
+    extends Merger[Option[Map[String, ForeignSbaInfo]], Option[Map[String, ForeignPropertySbaStoreAnswers]], Option[
+      Map[String, Option[Seq[StructuredBuildingAllowance]]]
+    ]] {
+    override def merge(
+                        extracted: Option[Map[String, ForeignPropertySbaStoreAnswers]],
+                        fromDownstream: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]]
+                      ): Option[Map[String, ForeignSbaInfo]] =
+      (extracted, fromDownstream) match {
+        case (Some(extractedMap), Some(downStreamMap)) =>
+          val result = downStreamMap.map { case (countryCode, maybeAllowances) =>
+            countryCode -> ForeignSbaInfo(
+              claimStructureBuildingAllowance = extractedMap.get(countryCode).exists(_.claimStructureBuildingAllowance),
+              allowances = maybeAllowances
+                .map(_.map(fromSbaDownstreamToUpstream))
+                .getOrElse(Seq.empty)
+
+            )
+          }
+          Option(result).filter(_.nonEmpty)
+
+        case (_, Some(downStreamMap)) =>
+          val result = downStreamMap.map { case (countryCode, maybeAllowances) =>
+            countryCode -> ForeignSbaInfo(
+              claimStructureBuildingAllowance = maybeAllowances.isDefined,
+              allowances = maybeAllowances
+                .map(_.map(fromSbaDownstreamToUpstream))
+                .getOrElse(Seq.empty)
+            )
+          }
+          Option(result).filter(_.nonEmpty)
+
+        case _ => None
+      }
+
+    private def fromSbaDownstreamToUpstream(sba: StructuredBuildingAllowance): StructuredBuildingAllowance =
+      StructuredBuildingAllowance(
+        amount = sba.amount,
+        firstYear = Some(
+          StructuredBuildingAllowanceDate(
+            sba.firstYear.map(_.qualifyingDate).getOrElse(LocalDate.now()),
+            sba.firstYear.map(_.qualifyingAmountExpenditure).getOrElse(0)
+          )
+        ),
+        building = StructuredBuildingAllowanceBuilding(
+          name = Some(sba.building.name.getOrElse("")),
+          number = Some(sba.building.number.getOrElse("")),
+          postCode = sba.building.postCode
+        )
+      )
   }
 
   implicit object ForeignPropertyIncomeMerger

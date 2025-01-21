@@ -19,13 +19,13 @@ package models.repository
 import models.ForeignPropertyExpensesStoreAnswers
 import models.repository.ForeignMerger._
 import models.repository.Merger._
-import models.request.ReversePremiumsReceived
+import models.request.{ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
 import models.responses._
 import utils.UnitTest
 import models.request.foreign.expenses.ConsolidatedExpenses
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 class ForeignMergerSpec extends UnitTest {
 
@@ -76,6 +76,49 @@ class ForeignMergerSpec extends UnitTest {
     )),
     ukOtherProperty = None
   )
+
+  val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+    submittedOn = Some(LocalDateTime.now()),
+    ukOtherProperty = None,
+    foreignProperty = Some(
+      Seq(
+        AnnualForeignProperty(
+          countryCode = countryCode,
+          adjustments = None,
+          allowances = Some(
+            ForeignPropertyAllowances(
+              annualInvestmentAllowance = Some(15.15),
+              costOfReplacingDomesticItems = Some(25.25),
+              zeroEmissionsGoodsVehicleAllowance = Some(35.35),
+              otherCapitalAllowance = Some(45.45),
+              electricChargePointAllowance = Some(55.55),
+              structuredBuildingAllowance = Some(
+                Seq(
+                  StructuredBuildingAllowance(
+                    amount = 65.65,
+                    Some(
+                      StructuredBuildingAllowanceDate(
+                        qualifyingDate = LocalDate.now(),
+                        qualifyingAmountExpenditure = 50.00
+                      )
+                    ),
+                    building = StructuredBuildingAllowanceBuilding(
+                      name = Some("name"),
+                      number = Some("number"),
+                      postCode = "AB1 2XY"
+                    )
+                  )
+                )
+              ),
+              zeroEmissionsCarAllowance = Some(75.75),
+              propertyAllowance = Some(85.85)
+            )
+          )
+        )
+      )
+    )
+  )
+
 
   "ForeignMerger" should {
 
@@ -218,6 +261,71 @@ class ForeignMergerSpec extends UnitTest {
             costOfServices = costOfServices,
             other = other
           ))
+        )
+      }
+    }
+
+    "merge foreign sba from downstream response and from repo into response model" when {
+      val fromDownstreamMaybe: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]] = for {
+        foreignProperties         <- aPropertyAnnualSubmission.foreignProperty
+        foreignProperty           <- foreignProperties.headOption
+        foreignPropertyAllowances <- foreignProperty.allowances
+      } yield Map(foreignProperty.countryCode -> foreignPropertyAllowances.structuredBuildingAllowance)
+
+      "store answers are available in the repo" in {
+
+        val foreignPropertySbaStoreAnswers: Option[Map[String, ForeignPropertySbaStoreAnswers]] =
+          Some(Map(countryCode -> ForeignPropertySbaStoreAnswers(claimStructureBuildingAllowance = true)))
+
+        foreignPropertySbaStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(
+            countryCode -> ForeignSbaInfo(
+              claimStructureBuildingAllowance = true,
+              Array(
+                StructuredBuildingAllowance(
+                  amount = 65.65,
+                  Some(
+                    StructuredBuildingAllowanceDate(
+                      qualifyingDate = LocalDate.now(),
+                      qualifyingAmountExpenditure = 50.00
+                    )
+                  ),
+                  building = StructuredBuildingAllowanceBuilding(
+                    name = Some("name"),
+                    number = Some("number"),
+                    postCode = "AB1 2XY"
+                  )
+                )
+              )
+            )
+          )
+        )
+      }
+
+      "store answers are not available in the repo" in {
+        val foreignPropertySbaStoreAnswers: Option[Map[String, ForeignPropertySbaStoreAnswers]] = None
+        foreignPropertySbaStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(
+            countryCode -> ForeignSbaInfo(
+              claimStructureBuildingAllowance = true,
+              Array(
+                StructuredBuildingAllowance(
+                  amount = 65.65,
+                  Some(
+                    StructuredBuildingAllowanceDate(
+                      qualifyingDate = LocalDate.now(),
+                      qualifyingAmountExpenditure = 50.00
+                    )
+                  ),
+                  building = StructuredBuildingAllowanceBuilding(
+                    name = Some("name"),
+                    number = Some("number"),
+                    postCode = "AB1 2XY"
+                  )
+                )
+              )
+            )
+          )
         )
       }
     }

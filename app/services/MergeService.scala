@@ -18,7 +18,7 @@ package services
 
 import models._
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData, JourneyAnswers, JourneyWithStatus}
+import models.domain._
 import models.repository.ForeignMerger.ForeignPropertyTaxMerger
 import models.repository.Merger._
 import models.repository.ForeignMerger._
@@ -172,6 +172,8 @@ class MergeService @Inject() (implicit
 
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
+    val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream,foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
+
     val fetchedUKPropertyData = FetchedUKPropertyData(
       None,
       propertyAboutMaybe,
@@ -202,6 +204,7 @@ class MergeService @Inject() (implicit
       foreignPropertyIncome = foreignPropertyIncomeMaybe,
       foreignPropertyExpenses = foreignPropertyExpensesMaybe,
       foreignPropertyAllowances = foreignPropertyAllowancesMaybe,
+      foreignPropertySba = foreignPropertySbaMaybe,
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
@@ -539,6 +542,30 @@ class MergeService @Inject() (implicit
     } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)): _*)
 
     foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
+  }
+
+  def mergeForeignPropertySba(
+    resultFromDownStream: PropertyAnnualSubmission,
+    fromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignSbaInfo]] = {
+    val sbaStoreAnswers: Option[Map[String, ForeignPropertySbaStoreAnswers]] = fromRepository.map { ja =>
+      ja.map { case (countryCode, answers) =>
+        countryCode -> answers.data.as[ForeignPropertySbaStoreAnswers]
+      }
+    }
+
+    val foreignSba: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]] =
+      resultFromDownStream.foreignProperty.map { foreignProperties =>
+        foreignProperties
+          .map { fp =>
+            val sbaOpt = fp.allowances.flatMap(_.structuredBuildingAllowance)
+            fp.countryCode -> sbaOpt
+          }
+          .toMap
+      }
+
+    sbaStoreAnswers.merge(foreignSba)
+
   }
 
   def mergeForeignStatuses(
