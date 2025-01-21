@@ -19,6 +19,7 @@ package models.request.foreign
 import cats.implicits.catsSyntaxEitherId
 import models.common.TaxYear
 import models.errors.{InternalError, ServiceError}
+import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.responses._
 import monocle.Optional
@@ -49,11 +50,10 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
     entity: T
   ): Either[ServiceError, CreateForeignPropertyPeriodicSubmissionRequest] = {
     val result = entity match {
-      case e @ ForeignPropertyTaxWithCountryCode(_, _, _) => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignPropertyExpensesWithCountryCode(_, _, _, _, _, _, _, _) =>
-        fromForeignPropertyExpenses(taxYear, periodicSubmissionMaybe, e)
-      case e @ ForeignIncomeWithCountryCode(_, _, _, _, _, _, _, _, _) => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
-
+      case e: ForeignPropertyTaxWithCountryCode         => fromForeignPropertyTax(taxYear, periodicSubmissionMaybe, e)
+      case e: ForeignPropertyExpensesWithCountryCode    => fromForeignPropertyExpenses(taxYear, periodicSubmissionMaybe, e)
+      case e: ForeignIncomeWithCountryCode              => fromForeignIncome(taxYear, periodicSubmissionMaybe, e)
+      case e: ForeignPropertyAdjustmentsWithCountryCode => fromForeignAdjustments(taxYear, periodicSubmissionMaybe, e)
       case _ =>
         InternalError("No relevant entity found to convert from (to CreateForeignPropertyPeriodicSubmissionRequest)")
           .asLeft[CreateForeignPropertyPeriodicSubmissionRequest]
@@ -263,6 +263,68 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
       firstForeignPropertyIncomeLens.replace(newForeignPropertyIncome)(periodicSubmissionRequestRetainingExpenses)
 
     Right(periodicSubmissionRequestWithNewForeignIncome)
+  }
+
+  def fromForeignAdjustments(
+    taxYear: TaxYear,
+    maybeSubmission: Option[PropertyPeriodicSubmission],
+    foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
+  ): Either[ServiceError, CreateForeignPropertyPeriodicSubmissionRequest] = {
+
+    val foreignPropertyLens = GenLens[CreateForeignPropertyPeriodicSubmissionRequest](_.foreignProperty)
+    val foreignPropertyExpenseLens = GenLens[ForeignProperty](_.expenses)
+    val firstForeignPropertyExpenseLens
+    : Optional[CreateForeignPropertyPeriodicSubmissionRequest, ForeignPropertyExpenses] =
+      foreignPropertyLens.some.index(0).andThen(foreignPropertyExpenseLens.some)
+
+    val (periodicSubmission, maybeForeignPropertyExpenses, maybeForeignPropertyIncome)
+    : (Option[PropertyPeriodicSubmission], Option[ForeignPropertyExpenses], Option[ForeignPropertyIncome]) =
+      maybeSubmission match {
+        case Some(
+        pps @ PropertyPeriodicSubmission(
+        _,
+        _,
+        _,
+        _,
+        Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+        _
+        )
+        ) =>
+          (Some(pps), Some(expenses), Some(income))
+        case Some(pps) => (Some(pps), None, None)
+        case _         => (None, None, None)
+      }
+
+    val newForeignPropertyExpenses = ForeignPropertyExpenses(
+      residentialFinancialCost = foreignAdjustmentsWithCountryCode.residentialFinanceCost,
+      broughtFwdResidentialFinancialCost =
+        foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.flatMap(_.foreignUnusedResidentialFinanceCostAmount),
+      premisesRunningCosts = maybeForeignPropertyExpenses.flatMap(_.premisesRunningCosts),
+      repairsAndMaintenance = maybeForeignPropertyExpenses.flatMap(_.repairsAndMaintenance),
+      financialCosts = maybeForeignPropertyExpenses.flatMap(_.financialCosts),
+      professionalFees = maybeForeignPropertyExpenses.flatMap(_.professionalFees),
+      travelCosts = maybeForeignPropertyExpenses.flatMap(_.travelCosts),
+      costOfServices = maybeForeignPropertyExpenses.flatMap(_.costOfServices),
+      other = maybeForeignPropertyExpenses.flatMap(_.other),
+      consolidatedExpense = None,
+      consolidatedExpenseAmount = None
+    )
+    val periodicSubmissionRequestRetainingIncome = CreateForeignPropertyPeriodicSubmissionRequest(
+      periodicSubmission.map(_.fromDate).getOrElse(LocalDate.parse(TaxYear.startDate(taxYear))),
+      periodicSubmission.map(_.toDate).getOrElse(LocalDate.parse(TaxYear.endDate(taxYear))),
+      Some(
+        Seq(
+          ForeignProperty(
+            foreignAdjustmentsWithCountryCode.countryCode,
+            maybeForeignPropertyIncome,
+            Some(ForeignPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+          )
+        )
+      )
+    )
+    val periodicSubmissionRequestWithNewForeignExpenses =
+      firstForeignPropertyExpenseLens.replace(newForeignPropertyExpenses)(periodicSubmissionRequestRetainingIncome)
+    Right(periodicSubmissionRequestWithNewForeignExpenses)
   }
 
 }
