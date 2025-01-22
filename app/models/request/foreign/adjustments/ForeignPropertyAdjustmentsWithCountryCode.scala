@@ -16,7 +16,9 @@
 
 package models.request.foreign.adjustments
 
+import models.Enumerable
 import models.request.BalancingCharge
+import models.request.foreign.WithName
 import play.api.libs.json.{Format, Json}
 
 
@@ -24,9 +26,11 @@ case class ForeignPropertyAdjustmentsWithCountryCode(
                                                       countryCode: String,
                                                       privateUseAdjustment: BigDecimal,
                                                       balancingCharge: BalancingCharge,
-                                                      residentialFinanceCost: BigDecimal,
-                                                      unusedResidentialFinanceCost: ForeignUnusedResidentialFinanceCost,
-                                                      unusedLossesPreviousYears: UnusedLossesPreviousYears
+                                                      residentialFinanceCost: Option[BigDecimal],
+                                                      unusedResidentialFinanceCost: Option[ForeignUnusedResidentialFinanceCost],
+                                                      propertyIncomeAllowanceClaim: Option[BigDecimal],
+                                                      unusedLossesPreviousYears: UnusedLossesPreviousYears,
+                                                      whenYouReportedTheLoss: Option[ForeignWhenYouReportedTheLoss]
                                                     )
 
 
@@ -36,9 +40,9 @@ object ForeignPropertyAdjustmentsWithCountryCode {
 
 
 final case class ForeignUnusedResidentialFinanceCost (
-                                                 foreignUnusedResidentialFinanceCostYesNo: Boolean,
-                                                 foreignUnusedResidentialFinanceCostAmount: Option[BigDecimal]
-                                               )
+                                                       foreignUnusedResidentialFinanceCostYesNo: Boolean,
+                                                       foreignUnusedResidentialFinanceCostAmount: Option[BigDecimal]
+                                                     )
 object ForeignUnusedResidentialFinanceCost {
   implicit val format: Format[ForeignUnusedResidentialFinanceCost] = Json.format[ForeignUnusedResidentialFinanceCost]
 }
@@ -51,4 +55,22 @@ final case class UnusedLossesPreviousYears(
 
 object UnusedLossesPreviousYears {
   implicit val format: Format[UnusedLossesPreviousYears] = Json.format
+}
+
+sealed trait ForeignWhenYouReportedTheLoss
+
+object ForeignWhenYouReportedTheLoss extends Enumerable.Implicits {
+
+  case object y2018to2019 extends WithName("y2018to2019") with ForeignWhenYouReportedTheLoss
+  case object y2019to2020 extends WithName("y2019to2020") with ForeignWhenYouReportedTheLoss
+  case object y2020to2021 extends WithName("y2020to2021") with ForeignWhenYouReportedTheLoss
+  case object y2021to2022 extends WithName("y2021to2022") with ForeignWhenYouReportedTheLoss
+  case object y2022to2023 extends WithName("y2022to2023") with ForeignWhenYouReportedTheLoss
+
+  val values: Seq[ForeignWhenYouReportedTheLoss] = Seq(
+    y2018to2019, y2019to2020, y2020to2021, y2021to2022, y2022to2023
+  )
+
+  implicit val enumerable: Enumerable[ForeignWhenYouReportedTheLoss] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }
