@@ -433,7 +433,7 @@ class ForeignPropertyService @Inject() (
         balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
         foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(_.foreignUnusedResidentialFinanceCostYesNo),
         unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
-        whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss.map(_.toString)
+        whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
       ),
       foreignAdjustmentsWithCountryCode.countryCode
     )

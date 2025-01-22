@@ -16,11 +16,13 @@
 
 package models.repository
 
-import models.ForeignPropertyExpensesStoreAnswers
-import models.request.{ForeignSbaInfo, ReversePremiumsReceived}
+import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
+import models.request.{BalancingCharge, ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import models.request.foreign.expenses.ConsolidatedExpenses
 import models.responses._
+
 import java.time.LocalDate
 
 // T: to return (merge into)
@@ -216,6 +218,75 @@ object ForeignMerger {
                 professionalFees = foreignPropertyExpenses.professionalFees,
                 costOfServices = foreignPropertyExpenses.costOfServices,
                 other = foreignPropertyExpenses.other
+              )
+          }
+          Option.when(result.nonEmpty)(result)
+        case _ => None
+      }
+  }
+
+  implicit object ForeignPropertyAdjustmentsMerger
+    extends Merger[Option[Map[String, ForeignAdjustmentsAnswers]], Option[Map[String, ForeignAdjustmentsStoreAnswers]],
+      Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]]] {
+    override def merge(
+      extractedMaybe: Option[Map[String, ForeignAdjustmentsStoreAnswers]],
+      fromDownstreamMaybe: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]])
+    : Option[Map[String, ForeignAdjustmentsAnswers]] =
+      (extractedMaybe, fromDownstreamMaybe) match {
+        case (Some(extractedMap), Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignAdjustmentsAnswers] = fromDownstreamMap.map {
+            case (countryCode, (adjustments, maybePIA, expenses)) =>
+              val storeAnswersMaybe = extractedMap.get(countryCode)
+              countryCode -> ForeignAdjustmentsAnswers(
+                privateUseAdjustment = adjustments.privateUseAdjustment,
+                balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
+                  BalancingCharge(balancingChargeYesNo = true,
+                    balancingChargeAmount = Some(balancingCharge)
+                  )
+                }.orElse(storeAnswersMaybe.map { storeAnswers =>
+                  BalancingCharge(storeAnswers.balancingChargeYesNo, None)
+                }),
+                residentialFinanceCost = expenses.residentialFinancialCost,
+                unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
+                  ForeignUnusedResidentialFinanceCost(
+                    foreignUnusedResidentialFinanceCostYesNo = true,
+                    foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
+                  )
+                }.orElse(
+                    storeAnswersMaybe.flatMap(
+                      storeAnswers => storeAnswers.foreignUnusedResidentialFinanceCostYesNo.map(unusedResidentialFinanceCostYesNo =>
+                        ForeignUnusedResidentialFinanceCost(unusedResidentialFinanceCostYesNo, None)
+                      )
+                    )
+                ),
+                propertyIncomeAllowanceClaim = maybePIA,
+                unusedLossesPreviousYears = storeAnswersMaybe.map { storeAnswers =>
+                  UnusedLossesPreviousYears(storeAnswers.unusedLossesPreviousYearsYesNo, None)
+                },
+                whenYouReportedTheLoss = storeAnswersMaybe.flatMap(_.whenYouReportedTheLoss)
+              )
+          }
+          Option.when(result.nonEmpty)(result)
+        case (_, Some(fromDownstreamMap)) =>
+          val result: Map[String, ForeignAdjustmentsAnswers] = fromDownstreamMap.map {
+            case (countryCode, (adjustments, maybePIA, expenses)) =>
+              countryCode -> ForeignAdjustmentsAnswers(
+                privateUseAdjustment = adjustments.privateUseAdjustment,
+                balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
+                  BalancingCharge(balancingChargeYesNo = true,
+                    balancingChargeAmount = Some(balancingCharge)
+                  )
+                },
+                residentialFinanceCost = expenses.residentialFinancialCost,
+                unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
+                  ForeignUnusedResidentialFinanceCost(
+                    foreignUnusedResidentialFinanceCostYesNo = true,
+                    foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
+                  )
+                },
+                unusedLossesPreviousYears = None,
+                propertyIncomeAllowanceClaim = maybePIA,
+                whenYouReportedTheLoss = None
               )
           }
           Option.when(result.nonEmpty)(result)

@@ -16,11 +16,13 @@
 
 package models.repository
 
-import models.ForeignPropertyExpensesStoreAnswers
+import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 import models.repository.ForeignMerger._
 import models.repository.Merger._
-import models.request.{ForeignSbaInfo, ReversePremiumsReceived}
+import models.request.{BalancingCharge, ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
+import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss.y2019to2020
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.responses._
 import utils.UnitTest
 import models.request.foreign.expenses.ConsolidatedExpenses
@@ -43,6 +45,11 @@ class ForeignMergerSpec extends UnitTest {
   val costOfServices: Option[BigDecimal] = Some(BigDecimal(22.22))
   val professionalFees: Option[BigDecimal] = Some(BigDecimal(65.43))
   val other: Option[BigDecimal] = Some(BigDecimal(44.44))
+  val privateUseAdjustment: Option[BigDecimal] = Some(BigDecimal(543.21))
+  val balancingCharge: Option[BigDecimal] = Some(BigDecimal(123.45))
+  val residentialFinanceCost: Option[BigDecimal] = Some(BigDecimal(11.11))
+  val unusedResidentialFinanceCost: Option[BigDecimal] = Some(BigDecimal(23.22))
+  val propertyAllowance: Option[BigDecimal] = Some(BigDecimal(85.85))
   val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     submissionId = None,
     submittedOn = None,
@@ -66,8 +73,8 @@ class ForeignMergerSpec extends UnitTest {
           professionalFees = professionalFees,
           travelCosts = Some(BigDecimal(22.22)),
           costOfServices = costOfServices,
-          residentialFinancialCost = Some(BigDecimal(11.11)),
-          broughtFwdResidentialFinancialCost = Some(BigDecimal(23.22)),
+          residentialFinancialCost = residentialFinanceCost,
+          broughtFwdResidentialFinancialCost = unusedResidentialFinanceCost,
           other = other,
           consolidatedExpense = consolidatedExpenses.flatMap(_.consolidatedExpense),
           consolidatedExpenseAmount = None
@@ -84,7 +91,10 @@ class ForeignMergerSpec extends UnitTest {
       Seq(
         AnnualForeignProperty(
           countryCode = countryCode,
-          adjustments = None,
+          adjustments = Some(ForeignPropertyAdjustments(
+            privateUseAdjustment = privateUseAdjustment,
+            balancingCharge = balancingCharge
+          )),
           allowances = Some(
             ForeignPropertyAllowances(
               annualInvestmentAllowance = Some(15.15),
@@ -111,7 +121,7 @@ class ForeignMergerSpec extends UnitTest {
                 )
               ),
               zeroEmissionsCarAllowance = Some(75.75),
-              propertyAllowance = Some(85.85)
+              propertyAllowance = propertyAllowance
             )
           )
         )
@@ -250,7 +260,7 @@ class ForeignMergerSpec extends UnitTest {
       }
 
       "store answers are not available in the repo" in {
-        val foreignExpensesStoreAnswers:  Option[Map[String, ForeignPropertyExpensesStoreAnswers]] = None
+        val foreignExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] = None
         foreignExpensesStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignExpensesAnswers(
             consolidatedExpenses = consolidatedExpenses,
@@ -267,8 +277,8 @@ class ForeignMergerSpec extends UnitTest {
 
     "merge foreign sba from downstream response and from repo into response model" when {
       val fromDownstreamMaybe: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]] = for {
-        foreignProperties         <- aPropertyAnnualSubmission.foreignProperty
-        foreignProperty           <- foreignProperties.headOption
+        foreignProperties <- aPropertyAnnualSubmission.foreignProperty
+        foreignProperty <- foreignProperties.headOption
         foreignPropertyAllowances <- foreignProperty.allowances
       } yield Map(foreignProperty.countryCode -> foreignPropertyAllowances.structuredBuildingAllowance)
 
@@ -324,6 +334,69 @@ class ForeignMergerSpec extends UnitTest {
                   )
                 )
               )
+            )
+          )
+        )
+      }
+    }
+
+    "merge foreign adjustments from downstream response and from repo into response model " when {
+
+      val fromDownstreamMaybe: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]] = {
+        aPropertyAnnualSubmission.foreignProperty.map { annualForeignProperties =>
+          annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+            for {
+              adjustments <- annualForeignProperty.adjustments
+              periodicForeignProperties <- aPropertyPeriodicSubmission.foreignProperty
+              periodicForeignProperty <- periodicForeignProperties.find(_.countryCode == annualForeignProperty.countryCode)
+              expenses <- periodicForeignProperty.expenses
+            } yield annualForeignProperty.countryCode -> (adjustments, annualForeignProperty.allowances.flatMap(_.propertyAllowance), expenses)
+          }.toMap
+        }
+      }
+
+      "store answers are available in the repo" in {
+        val whenYouReportedTheLoss = Some(y2019to2020)
+        val foreignAdjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] =
+          Some(Map(countryCode -> ForeignAdjustmentsStoreAnswers(
+            balancingChargeYesNo = true,
+            foreignUnusedResidentialFinanceCostYesNo = Some(true),
+            unusedLossesPreviousYearsYesNo = true,
+            whenYouReportedTheLoss = whenYouReportedTheLoss,
+          )))
+        foreignAdjustmentsStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(
+            countryCode -> ForeignAdjustmentsAnswers(
+              privateUseAdjustment = privateUseAdjustment,
+              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              residentialFinanceCost = residentialFinanceCost,
+              unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
+                foreignUnusedResidentialFinanceCostYesNo = true,
+                foreignUnusedResidentialFinanceCostAmount = unusedResidentialFinanceCost
+              )),
+              unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(unusedLossesPreviousYearsYesNo = true, None)),
+              whenYouReportedTheLoss = whenYouReportedTheLoss,
+              propertyIncomeAllowanceClaim = propertyAllowance
+            )
+          )
+        )
+      }
+
+      "store answers are not available in the repo" in {
+        val foreignAdjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] = None
+        foreignAdjustmentsStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
+          Map(
+            countryCode -> ForeignAdjustmentsAnswers(
+              privateUseAdjustment = privateUseAdjustment,
+              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              residentialFinanceCost = residentialFinanceCost,
+              unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
+                foreignUnusedResidentialFinanceCostYesNo = true,
+                foreignUnusedResidentialFinanceCostAmount = unusedResidentialFinanceCost
+              )),
+              unusedLossesPreviousYears = None,
+              whenYouReportedTheLoss = None,
+              propertyIncomeAllowanceClaim = propertyAllowance
             )
           )
         )

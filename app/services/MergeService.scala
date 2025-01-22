@@ -174,6 +174,11 @@ class MergeService @Inject() (implicit
 
     val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream,foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
 
+    val foreignPropertyAdjustmentsMaybe = mergeForeignPropertyAdjustments(
+      resultFromAnnualDownstream,
+      resultFromPeriodicDownstreamMaybe,
+      foreignResultFromRepository.get(JourneyName.ForeignPropertyAdjustments.entryName))
+
     val fetchedUKPropertyData = FetchedUKPropertyData(
       None,
       propertyAboutMaybe,
@@ -205,6 +210,7 @@ class MergeService @Inject() (implicit
       foreignPropertyExpenses = foreignPropertyExpensesMaybe,
       foreignPropertyAllowances = foreignPropertyAllowancesMaybe,
       foreignPropertySba = foreignPropertySbaMaybe,
+      foreignPropertyAdjustments = foreignPropertyAdjustmentsMaybe,
       foreignJourneyStatuses = foreignJourneyStatuses
     )
 
@@ -566,6 +572,34 @@ class MergeService @Inject() (implicit
 
     sbaStoreAnswers.merge(foreignSba)
 
+  }
+
+  def mergeForeignPropertyAdjustments(
+    resultFromAnnualDownstream: PropertyAnnualSubmission,
+    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+    fromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignAdjustmentsAnswers]] = {
+    val adjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] = fromRepository.map { ja =>
+      ja.map { case (countryCode, answers) =>
+        countryCode -> answers.data.as[ForeignAdjustmentsStoreAnswers]
+      }
+    }
+
+    val adjustmentsPIAAndPeriodicExpenses: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]] =
+      resultFromAnnualDownstream.foreignProperty.map { annualForeignProperties =>
+        annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty => for {
+            adjustments <- annualForeignProperty.adjustments
+            periodicForeignProperties <- resultFromPeriodicDownstreamMaybe.flatMap(_.foreignProperty)
+            periodicForeignProperty <- periodicForeignProperties.find(_.countryCode == annualForeignProperty.countryCode)
+            expenses <- periodicForeignProperty.expenses
+          } yield annualForeignProperty.countryCode -> (
+          adjustments,
+          annualForeignProperty.allowances.flatMap(_.propertyAllowance),
+          expenses
+        )
+        }.toMap
+      }
+    adjustmentsStoreAnswers.merge(adjustmentsPIAAndPeriodicExpenses)
   }
 
   def mergeForeignStatuses(
