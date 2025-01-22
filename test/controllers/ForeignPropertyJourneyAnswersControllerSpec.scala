@@ -21,7 +21,7 @@ import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.BalancingCharge
 import models.request.foreign._
-import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.{ForeignPropertySbaWithCountryCode, ForeignStructureBuildingAllowance, ForeignStructureBuildingAllowanceAddress}
@@ -406,7 +406,8 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |  "unusedLossesPreviousYears": {
                    |    "unusedLossesPreviousYearsYesNo": true,
                    |    "unusedLossesPreviousYearsAmount": 80.80
-                   |  }
+                   |  },
+                   |  "whenYouReportedTheLoss": "y2018to2019"
                    |}
                    |""".stripMargin)
 
@@ -435,15 +436,17 @@ class ForeignPropertyJourneyAnswersControllerSpec
           balancingChargeYesNo = true,
           balancingChargeAmount = Some(108)
         ),
-        residentialFinanceCost = 490.58,
-        unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+        residentialFinanceCost = Some(490.58),
+        unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
           foreignUnusedResidentialFinanceCostYesNo = true,
           foreignUnusedResidentialFinanceCostAmount = Some(110.10)
-        ),
+        )),
+        propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
           unusedLossesPreviousYearsYesNo = true,
           unusedLossesPreviousYearsAmount = Some(80.80)
-        )
+        ),
+        whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
       )
       result.header.status shouldBe NO_CONTENT
     }
