@@ -119,7 +119,6 @@ class ForeignMergerSpec extends UnitTest {
     )
   )
 
-
   "ForeignMerger" should {
 
     "merge foreign tax from downstream response and from repo into response model" when {
@@ -281,19 +280,21 @@ class ForeignMergerSpec extends UnitTest {
           Map(
             countryCode -> ForeignSbaInfo(
               claimStructureBuildingAllowance = true,
-              Array(
-                StructuredBuildingAllowance(
-                  amount = 65.65,
-                  Some(
-                    StructuredBuildingAllowanceDate(
-                      qualifyingDate = LocalDate.now(),
-                      qualifyingAmountExpenditure = 50.00
+              Some(
+                Seq(
+                  StructuredBuildingAllowance(
+                    amount = 65.65,
+                    Some(
+                      StructuredBuildingAllowanceDate(
+                        qualifyingDate = LocalDate.now(),
+                        qualifyingAmountExpenditure = 50.00
+                      )
+                    ),
+                    building = StructuredBuildingAllowanceBuilding(
+                      name = Some("name"),
+                      number = Some("number"),
+                      postCode = "AB1 2XY"
                     )
-                  ),
-                  building = StructuredBuildingAllowanceBuilding(
-                    name = Some("name"),
-                    number = Some("number"),
-                    postCode = "AB1 2XY"
                   )
                 )
               )
@@ -308,19 +309,21 @@ class ForeignMergerSpec extends UnitTest {
           Map(
             countryCode -> ForeignSbaInfo(
               claimStructureBuildingAllowance = true,
-              Array(
-                StructuredBuildingAllowance(
-                  amount = 65.65,
-                  Some(
-                    StructuredBuildingAllowanceDate(
-                      qualifyingDate = LocalDate.now(),
-                      qualifyingAmountExpenditure = 50.00
+              Some(
+                Seq(
+                  StructuredBuildingAllowance(
+                    amount = 65.65,
+                    Some(
+                      StructuredBuildingAllowanceDate(
+                        qualifyingDate = LocalDate.now(),
+                        qualifyingAmountExpenditure = 50.00
+                      )
+                    ),
+                    building = StructuredBuildingAllowanceBuilding(
+                      name = Some("name"),
+                      number = Some("number"),
+                      postCode = "AB1 2XY"
                     )
-                  ),
-                  building = StructuredBuildingAllowanceBuilding(
-                    name = Some("name"),
-                    number = Some("number"),
-                    postCode = "AB1 2XY"
                   )
                 )
               )

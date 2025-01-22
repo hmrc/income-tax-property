@@ -80,8 +80,6 @@ object ForeignMerger {
               claimStructureBuildingAllowance = extractedMap.get(countryCode).exists(_.claimStructureBuildingAllowance),
               allowances = maybeAllowances
                 .map(_.map(fromSbaDownstreamToUpstream))
-                .getOrElse(Seq.empty)
-
             )
           }
           Option(result).filter(_.nonEmpty)
@@ -92,7 +90,6 @@ object ForeignMerger {
               claimStructureBuildingAllowance = maybeAllowances.isDefined,
               allowances = maybeAllowances
                 .map(_.map(fromSbaDownstreamToUpstream))
-                .getOrElse(Seq.empty)
             )
           }
           Option(result).filter(_.nonEmpty)

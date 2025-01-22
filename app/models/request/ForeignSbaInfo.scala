@@ -22,7 +22,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ForeignSbaInfo(
   claimStructureBuildingAllowance: Boolean,
-  allowances: Seq[StructuredBuildingAllowance]
+  allowances: Option[Seq[StructuredBuildingAllowance]]
 )
 object ForeignSbaInfo {
   implicit val format: OFormat[ForeignSbaInfo] = Json.format[ForeignSbaInfo]
