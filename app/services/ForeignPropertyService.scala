@@ -427,16 +427,59 @@ class ForeignPropertyService @Inject() (
                                       nino: Nino,
                                       foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
-    persistForeignAnswers(
-      journeyContext,
-      ForeignAdjustmentsStoreAnswers(
-        balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
-        foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(_.foreignUnusedResidentialFinanceCostYesNo),
-        unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
-        whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
-      ),
-      foreignAdjustmentsWithCountryCode.countryCode
-    )
+    val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
+    for {
+      annualForeignPropertySubmissionFromDownstream <- this.getAnnualForeignPropertySubmissionFromDownStream(
+            journeyContext.taxYear,
+            nino,
+            journeyContext.incomeSourceId
+          )
+          .leftFlatMap {
+            case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
+            case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
+          }
+      annualSubmissionResponse <- {
+        val annualForeignPropertySubmissionWithNewAdjustments = AnnualForeignPropertySubmission
+          .fromForeignPropertyAdjustments(
+            Some(annualForeignPropertySubmissionFromDownstream),
+            foreignAdjustmentsWithCountryCode
+          ).fold(_ => emptyAnnualForeignPropertySubmission, identity)
+        createOrUpdateAnnualForeignPropertySubmission(
+          journeyContext.taxYear,
+          journeyContext.incomeSourceId,
+          nino,
+          annualForeignPropertySubmissionWithNewAdjustments
+        )
+      }
+      periodicSubmissionResponse <- {
+        if(foreignAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined){
+          ITPEnvelope.liftPure(Option.empty[PeriodicSubmissionId])
+        } else {
+          for {
+            currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+              journeyContext.taxYear,
+              nino,
+              journeyContext.incomeSourceId
+            )
+            submissionResponse <- createOrUpdatePeriodicSubmission(
+              journeyContext.toJourneyContextWithNino(nino),
+              currentPeriodicSubmission,
+              foreignAdjustmentsWithCountryCode
+            )
+          } yield submissionResponse
+        }
+      }
+      res <- persistForeignAnswers(
+        journeyContext,
+        ForeignAdjustmentsStoreAnswers(
+          balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
+          foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(_.foreignUnusedResidentialFinanceCostYesNo),
+          unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
+          whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
+        ),
+        foreignAdjustmentsWithCountryCode.countryCode
+      )
+    } yield res
   }
 
   def saveForeignPropertySba(
