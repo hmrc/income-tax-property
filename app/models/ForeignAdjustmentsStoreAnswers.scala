@@ -19,10 +19,11 @@ package models
 import play.api.libs.json.{Json, OFormat}
 
 case class ForeignAdjustmentsStoreAnswers(
-  balancingChargeYesNo: Boolean,
-  foreignUnusedResidentialFinanceCostYesNo: Boolean,
-  unusedLossesPreviousYearsYesNo: Boolean
-)
+                                           balancingChargeYesNo: Boolean,
+                                           foreignUnusedResidentialFinanceCostYesNo: Option[Boolean],
+                                           unusedLossesPreviousYearsYesNo: Boolean,
+                                           whenYouReportedTheLoss: Option[String]
+                                         )
 
 object ForeignAdjustmentsStoreAnswers {
   implicit val expensesAnswersFormat: OFormat[ForeignAdjustmentsStoreAnswers] = Json.format[ForeignAdjustmentsStoreAnswers]

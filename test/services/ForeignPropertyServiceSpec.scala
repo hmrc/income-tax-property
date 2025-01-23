@@ -23,7 +23,7 @@ import models.common._
 import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request._
 import models.request.foreign._
-import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.{ConsolidatedExpenses, ForeignPropertyExpensesWithCountryCode}
 import models.request.foreign.sba.{ForeignPropertySbaWithCountryCode, ForeignStructureBuildingAllowance, ForeignStructureBuildingAllowanceAddress}
@@ -952,15 +952,17 @@ class ForeignPropertyServiceSpec
       countryCode = "AUS",
       privateUseAdjustment = BigDecimal(25.25),
       balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
-      residentialFinanceCost = BigDecimal(75.75),
-      unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+      residentialFinanceCost = Some(BigDecimal(75.75)),
+      unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
         foreignUnusedResidentialFinanceCostYesNo = true,
         foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
-      ),
+      )),
+      propertyIncomeAllowanceClaim = None,
       unusedLossesPreviousYears = UnusedLossesPreviousYears(
         unusedLossesPreviousYearsYesNo = true,
         unusedLossesPreviousYearsAmount = Some(BigDecimal(80.8))
-      )
+      ),
+      whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
     )
 
     "persist the foreign adjustments supporting answers into the backend mongo" in {

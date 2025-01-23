@@ -431,8 +431,9 @@ class ForeignPropertyService @Inject() (
       journeyContext,
       ForeignAdjustmentsStoreAnswers(
         balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
-        foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.foreignUnusedResidentialFinanceCostYesNo,
-        unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo
+        foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(_.foreignUnusedResidentialFinanceCostYesNo),
+        unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
+        whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss.map(_.toString)
       ),
       foreignAdjustmentsWithCountryCode.countryCode
     )

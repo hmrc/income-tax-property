@@ -17,7 +17,7 @@
 package models
 
 import models.request.BalancingCharge
-import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
@@ -32,15 +32,14 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         balancingCharge = BalancingCharge(
           balancingChargeYesNo = true,
           balancingChargeAmount = Some(108)),
-        residentialFinanceCost = 490.58,
-        unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
-          foreignUnusedResidentialFinanceCostAmount = Some(110.10)
-        ),
+        residentialFinanceCost = None,
+        unusedResidentialFinanceCost = None,
+        propertyIncomeAllowanceClaim = Some(12.34),
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
           unusedLossesPreviousYearsYesNo = true,
           unusedLossesPreviousYearsAmount = Some(109.09)
         ),
+        whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
       )
 
       val expectedJson = Json.parse(
@@ -52,15 +51,12 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |    "balancingChargeYesNo": true,
           |    "balancingChargeAmount": 108
           |  },
-          |  "residentialFinanceCost": 490.58,
-          |  "unusedResidentialFinanceCost": {
-          |    "foreignUnusedResidentialFinanceCostYesNo": true,
-          |    "foreignUnusedResidentialFinanceCostAmount": 110.10
-          |  },
+          |  "propertyIncomeAllowanceClaim": 12.34,
           |  "unusedLossesPreviousYears": {
           |    "unusedLossesPreviousYearsYesNo": true,
           |    "unusedLossesPreviousYearsAmount": 109.09
-          |  }
+          |  },
+          |  "whenYouReportedTheLoss": "y2018to2019"
           |}
           |""".stripMargin
       )
@@ -97,15 +93,17 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         balancingCharge = BalancingCharge(
           balancingChargeYesNo = true,
           balancingChargeAmount = Some(108)),
-        residentialFinanceCost = 300.00,
-        unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+        residentialFinanceCost = Some(300.00),
+        unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
           foreignUnusedResidentialFinanceCostYesNo = true,
           foreignUnusedResidentialFinanceCostAmount = Some(110.10)
-        ),
+        )),
+        propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
           unusedLossesPreviousYearsYesNo = true,
           unusedLossesPreviousYearsAmount = Some(109.09)
         ),
+        whenYouReportedTheLoss = None
       )
 
       json.validate[ForeignPropertyAdjustmentsWithCountryCode] mustEqual JsSuccess(expectedAdjustments)
@@ -151,15 +149,17 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           balancingChargeYesNo = false,
           balancingChargeAmount = None
         ),
-        residentialFinanceCost = 300.00,
-        unusedResidentialFinanceCost = ForeignUnusedResidentialFinanceCost(
+        residentialFinanceCost = Some(300.00),
+        unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
           foreignUnusedResidentialFinanceCostYesNo = false,
           foreignUnusedResidentialFinanceCostAmount = None
-        ),
+        )),
+        propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
           unusedLossesPreviousYearsYesNo = false,
           unusedLossesPreviousYearsAmount = None
         ),
+        whenYouReportedTheLoss = None
       )
 
       jsonWithMissingFields.validate[ForeignPropertyAdjustmentsWithCountryCode] mustEqual JsSuccess(expectedAdjustments)
