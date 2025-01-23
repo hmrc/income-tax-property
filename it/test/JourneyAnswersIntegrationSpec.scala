@@ -246,7 +246,7 @@ class JourneyAnswersIntegrationSpec
       val fetchedPropertyData = response.json.as[FetchedPropertyData]
       response.status shouldBe 200
       fetchedPropertyData shouldBe FetchedPropertyData(
-        foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None,None),
+        foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None,None, None),
         ukPropertyData = FetchedUKPropertyData(
           capitalAllowancesForACar = None,
           propertyAbout = None,
