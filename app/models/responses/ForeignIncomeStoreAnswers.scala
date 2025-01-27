@@ -21,7 +21,6 @@ import play.api.libs.json.{Format, Json}
 case class ForeignIncomeStoreAnswers(
   premiumsGrantLeaseReceived: Boolean,
   premiumsOfLeaseGrantAgreed: Boolean,
-  reversePremiumsReceived: Boolean,
   calculatedPremiumLeaseTaxable: Boolean,
   twelveMonthPeriodsInLease: Option[BigDecimal],
   receivedGrantLeaseAmount: Option[BigDecimal]

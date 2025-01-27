@@ -17,7 +17,7 @@
 package models.repository
 
 import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
-import models.request.{BalancingCharge, ForeignSbaInfo, ReversePremiumsReceived}
+import models.request.{BalancingCharge, ForeignSbaInfo}
 import models.request.foreign._
 import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import models.request.foreign.expenses.ConsolidatedExpenses
@@ -133,9 +133,6 @@ object ForeignMerger {
                 premiumsGrantLeaseReceived = storeAnswersMaybe
                   .map(_.premiumsGrantLeaseReceived)
                   .getOrElse(foreignPropertyIncome.premiumsOfLeaseGrant.isDefined),
-                reversePremiumsReceived = storeAnswersMaybe.map(answers =>
-                  ReversePremiumsReceived(answers.reversePremiumsReceived, None)
-                ),
                 otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
                 calculatedPremiumLeaseTaxable = storeAnswersMaybe.map(storeAnswers =>
                   CalculatedPremiumLeaseTaxable(storeAnswers.calculatedPremiumLeaseTaxable, None)
@@ -156,7 +153,6 @@ object ForeignMerger {
             case (countryCode, foreignPropertyIncome) => countryCode -> ForeignIncomeAnswers(
               rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
               premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
-              reversePremiumsReceived = None,
               otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
               calculatedPremiumLeaseTaxable = None,
               receivedGrantLeaseAmount = None,
