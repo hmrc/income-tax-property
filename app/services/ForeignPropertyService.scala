@@ -19,6 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
+import connectors.response.{BroughtForwardLossId, BroughtForwardLossResponse}
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
@@ -372,6 +373,36 @@ class ForeignPropertyService @Inject() (
         ).map(_ => true)
           .leftMap(e => ApiServiceError(e.status))
     }
+
+  def createForeignBroughtForwardLoss(
+    taxYearBroughtForwardFrom: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    lossAmount: BigDecimal,
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossId] = {
+    EitherT(
+      connector.createForeignBroughtForwardLoss(taxYearBroughtForwardFrom, incomeSourceId, nino, lossAmount)
+    )
+  }
+
+  def updateBroughtForwardLoss(
+    nino: Nino,
+    lossId: String,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
+    EitherT(
+      connector.updateBroughtForwardLoss(nino, lossId, lossAmount)
+    )
+  }
+
+  def getBroughtForwardLoss(
+    nino: Nino,
+    lossId: String
+)(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+    EitherT(
+      connector.getBroughtForwardLoss(nino, lossId)
+    )
+  }
 
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
