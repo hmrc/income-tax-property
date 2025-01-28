@@ -24,7 +24,7 @@ import models.ITPEnvelope.ITPEnvelope
 import models.common._
 import models.errors._
 import models.request.foreign._
-import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignWhenYouReportedTheLoss}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
@@ -376,14 +376,14 @@ class ForeignPropertyService @Inject() (
 
   def createForeignBroughtForwardLoss(
     taxYear: TaxYear,
-    taxYearBroughtForwardFrom: TaxYear,
+    taxYearBroughtForwardFrom: ForeignWhenYouReportedTheLoss,
     incomeSourceId: IncomeSourceId,
     nino: Nino,
     lossAmount: BigDecimal,
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossId] = {
     EitherT(
       connector.createForeignBroughtForwardLoss(taxYear, taxYearBroughtForwardFrom, incomeSourceId, nino, lossAmount)
-    )
+    ).leftMap(e => ApiServiceError(e.status))
   }
 
   def updateBroughtForwardLoss(
@@ -393,7 +393,7 @@ class ForeignPropertyService @Inject() (
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] = {
     EitherT(
       connector.updateBroughtForwardLoss(nino, lossId, lossAmount)
-    )
+    ).leftMap(e => ApiServiceError(e.status))
   }
 
   def getBroughtForwardLoss(
@@ -402,7 +402,7 @@ class ForeignPropertyService @Inject() (
 )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
     EitherT(
       connector.getBroughtForwardLoss(nino, lossId)
-    )
+    ).leftMap(e => ApiServiceError(e.status))
   }
 
   def saveForeignPropertyAllowances(
@@ -452,11 +452,10 @@ class ForeignPropertyService @Inject() (
 
   }
 
-
   def saveForeignPropertyAdjustments(
-                                      journeyContext: JourneyContext,
-                                      nino: Nino,
-                                      foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
     for {
@@ -498,6 +497,20 @@ class ForeignPropertyService @Inject() (
               foreignAdjustmentsWithCountryCode
             )
           } yield submissionResponse
+        }
+      }
+      lossesBroughtForwardResponse <- {
+        (foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsAmount,
+          foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss) match {
+          case (Some(lossAmount: BigDecimal), Some(taxYearBroughtForwardFrom: ForeignWhenYouReportedTheLoss)) =>
+            createForeignBroughtForwardLoss(
+              journeyContext.taxYear,
+              taxYearBroughtForwardFrom,
+              journeyContext.incomeSourceId,
+              nino,
+              lossAmount
+            ).map(_ => true)
+          case _ => ITPEnvelope.liftPure(true)
         }
       }
       res <- persistForeignAnswers(

@@ -22,6 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
+import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss
 import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateBroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, LossType, UpdateBroughtForwardLossRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
@@ -453,14 +454,14 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
 
   def createForeignBroughtForwardLoss(
      taxYear: TaxYear,
-     taxYearBroughtForwardFrom: TaxYear,
+     taxYearBroughtForwardFrom: ForeignWhenYouReportedTheLoss,
      incomeSourceId: IncomeSourceId,
      nino: Nino,
      lossAmount: BigDecimal,
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossId]] = {
     val (url, apiVersion) = (s"""${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/${TaxYear.asTyBefore24(taxYear)}""", "1500")
     val body = CreateBroughtForwardLossRequest(
-      taxYearBroughtForwardFrom = TaxYear.asTyBefore24(taxYearBroughtForwardFrom),
+      taxYearBroughtForwardFrom = taxYearBroughtForwardFrom,
       typeOfLoss = LossType.ForeignProperty,
       businessId = incomeSourceId,
       lossAmount = lossAmount,
