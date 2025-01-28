@@ -61,7 +61,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
     val propertyPeriodicSubmission = fromPropertyPeriodicSubmission(maybePeriodicSubmission)
     val expensesMaybe: Option[UkOtherPropertyExpenses] = propertyPeriodicSubmission.ukOtherProperty.flatMap(_.expenses)
     val ukOtherExpenses = expensesMaybe.fold(
-      UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None)
+      UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None)
     )(expenses => expenses)
 
     val expenses = ukOtherExpenses.copy(
@@ -126,9 +126,10 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
           None,
           None,
           ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_)),
+          None,
           None
         )
-      )(_.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
+      )(uope => cleanExpenses(uope.copy(ukOtherRentARoom = ukRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_)))))
 
     val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
@@ -186,9 +187,10 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
           None,
           None,
           rentalsAndRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_)),
+          None,
           None
         )
-      )(_.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_))))
+      )(expenses => cleanExpenses(expenses.copy(ukOtherRentARoom = rentalsAndRaRAbout.claimExpensesOrRelief.rentARoomAmount.map(UkRentARoomExpense(_)))))
 
     val requestWithEmptyOtherPropertyIncomeAndExpenses = UpdateUKPropertyPeriodicSubmissionRequest(
       Some(
@@ -224,7 +226,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
         UkOtherProperty(
           ukOtherPropertyIncome,
           Some(
-            UkOtherPropertyExpenses(
+            cleanExpenses(UkOtherPropertyExpenses(
               premisesRunningCosts = expenses.rentsRatesAndInsurance,
               repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
               financialCosts = expenses.loanInterest,
@@ -237,11 +239,12 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
               ),
               ukOtherRentARoom =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom))),
-              consolidatedExpenses =
-                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpenses))),
+              consolidatedExpense =
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.consolidatedExpense))),
               residentialFinancialCost =
-                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost)))
-            )
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCost))),
+              consolidatedExpenseAmount = None
+            ))
           )
         )
       )
@@ -266,7 +269,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
         UkOtherProperty(
           ukOtherPropertyIncome,
           Some(
-            UkOtherPropertyExpenses(
+            cleanExpenses(UkOtherPropertyExpenses(
               premisesRunningCosts = raRExpenses.rentsRatesAndInsurance, // Recheck?
               repairsAndMaintenance = raRExpenses.repairsAndMaintenanceCosts,
               professionalFees = raRExpenses.legalManagementOtherFee,
@@ -277,13 +280,14 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
                 _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))
               ),
               other = raRExpenses.otherPropertyExpenses,
-              consolidatedExpenses = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
+              consolidatedExpense = raRExpenses.consolidatedExpenses.flatMap(_.consolidatedExpensesAmount),
               financialCosts =
                 periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.financialCosts))),
               travelCosts = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.travelCosts))),
               ukOtherRentARoom =
-                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom)))
-            )
+                periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.expenses.flatMap(_.ukOtherRentARoom))),
+              consolidatedExpenseAmount = None
+            ))
           )
         )
       )
@@ -405,7 +409,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
     val ukOtherPropertyExpensesLens: Optional[UkOtherProperty, UkOtherPropertyExpenses] =
       Optional[UkOtherProperty, UkOtherPropertyExpenses] {
         case UkOtherProperty(_, None) =>
-          Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+          Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None))
         case UkOtherProperty(_, ukope) => ukope
       } { ukope => ukop =>
         ukop.copy(expenses = Some(ukope))
@@ -414,5 +418,25 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
     val focusFromRequestOnToExpensesukOtherPropertyLens = ukOtherPropertyLens.andThen(ukOtherPropertyExpensesLens)
     val result = focusFromRequestOnToExpensesukOtherPropertyLens.replace(ukOtherPropertyExpenses)(request)
     result
+  }
+
+  private def cleanExpenses(ukOtherPropertyExpenses: UkOtherPropertyExpenses): UkOtherPropertyExpenses = {
+    ukOtherPropertyExpenses.consolidatedExpense match {
+      case Some(_) =>
+        ukOtherPropertyExpenses.copy(
+          premisesRunningCosts = None,
+          repairsAndMaintenance = None,
+          financialCosts = None,
+          professionalFees = None,
+          travelCosts = None,
+          costOfServices = None,
+          other = None,
+          residentialFinancialCost = None,
+          residentialFinancialCostsCarriedForward = None,
+          ukOtherRentARoom = None,
+          consolidatedExpenseAmount = None
+        )
+      case _ => ukOtherPropertyExpenses.copy(consolidatedExpenseAmount = None, consolidatedExpense = None)
+    }
   }
 }

@@ -22,8 +22,9 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
+import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss
 import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.{BroughtForwardLoss, CreateBroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, IncomeSourceType, UpdateBroughtForwardLossRequest, UpdateUKPropertyPeriodicSubmissionRequest}
+import models.request.{CreateBroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, LossType, UpdateBroughtForwardLossRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
@@ -356,7 +357,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
 
     // refactor: to fix bug
-    val submissionRequest = body.copy(submittedOn = None)
+    val submissionRequest = body.copy(submittedOn = None, foreignProperty = None)
 
     http
       .put(url"$url")(hcWithCorrelationId(hc))
@@ -452,17 +453,18 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   }
 
   def createForeignBroughtForwardLoss(
-     taxYearBroughtForwardFrom: TaxYear,
+     taxYear: TaxYear,
+     taxYearBroughtForwardFrom: ForeignWhenYouReportedTheLoss,
      incomeSourceId: IncomeSourceId,
      nino: Nino,
      lossAmount: BigDecimal,
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossId]] = {
-    val (url, apiVersion) = (s"""${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses""", "1500")
+    val (url, apiVersion) = (s"""${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/${TaxYear.asTyBefore24(taxYear)}""", "1500")
     val body = CreateBroughtForwardLossRequest(
-      incomeSourceId = incomeSourceId,
-      incomeSourceType = IncomeSourceType.ForeignProperty,
-      broughtForwardLossAmount = lossAmount,
-      taxYearBroughtForwardFrom = taxYearBroughtForwardFrom
+      taxYearBroughtForwardFrom = taxYearBroughtForwardFrom,
+      typeOfLoss = LossType.ForeignProperty,
+      businessId = incomeSourceId,
+      lossAmount = lossAmount,
     )
 
     logger.debug(s"Calling createForeignBroughtForwardLoss with url: $url, body: ${Json.toJson(body)}")
@@ -492,7 +494,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     lossAmount: BigDecimal
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = (s"""${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId/change-loss-amount""", "1501")
-    val body = UpdateBroughtForwardLossRequest(updatedBroughtForwardLossAmount = lossAmount)
+    val body = UpdateBroughtForwardLossRequest(lossAmount = lossAmount)
 
     logger.debug(s"Calling updateForeignBroughtForwardLoss with url: $url, body: ${Json.toJson(body)}")
 
@@ -521,7 +523,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossResponse]] = {
     val (url, apiVersion) = (s"""${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId""", "1502")
 
-    logger.debug(s"Calling getForeignBroughtForwardLoss with url: $url}")
+    logger.debug(s"Calling getForeignBroughtForwardLoss with url: $url")
 
     http
       .get(url"$url")(hcWithCorrelationId(hc))

@@ -407,7 +407,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |    "unusedLossesPreviousYearsYesNo": true,
                    |    "unusedLossesPreviousYearsAmount": 80.80
                    |  },
-                   |  "whenYouReportedTheLoss": "y2018to2019"
+                   |  "whenYouReportedTheLoss": "2018-19"
                    |}
                    |""".stripMargin)
 

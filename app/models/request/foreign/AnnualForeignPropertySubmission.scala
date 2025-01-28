@@ -87,12 +87,13 @@ object AnnualForeignPropertySubmission {
       Option[ForeignPropertyAllowances]
     ) =
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
-        case Some(
-              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances)))))
-            ) =>
-          (Some(adjustments), Some(allowances))
-        case Some(_) => (None, None)
-        case _       => (None, None)
+        case Some(annualForeignPropertySubmission) =>
+          annualForeignPropertySubmission.foreignProperty.flatMap(_.find(_.countryCode == countryCode)) match {
+            case Some(foreignPropertyForTheCountryCode) =>
+              (foreignPropertyForTheCountryCode.adjustments, foreignPropertyForTheCountryCode.allowances)
+            case _ => (None, None)
+          }
+        case _     => (None, None)
       }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(

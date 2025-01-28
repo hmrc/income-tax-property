@@ -125,18 +125,12 @@ object PropertyAnnualSubmission {
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
       }
     val ukRentARoomLens = GenLens[UkOtherAdjustments](_.ukOtherRentARoom)
-
-    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
-
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
       Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
     )(request)
-
-    ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
-
-    resultWithUkRentARoom
+    cleanUkOtherAllowances(resultWithUkRentARoom)
   }
 
   def fromUkRentARoomAbout(
@@ -165,7 +159,7 @@ object PropertyAnnualSubmission {
       Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
     )(request)
 
-    resultWithUkRentARoom
+    cleanUkOtherAllowances(resultWithUkRentARoom)
   }
 
   def fromPropertyRentalAdjustments(
@@ -186,11 +180,20 @@ object PropertyAnnualSubmission {
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
       }
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(_, None) =>
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa) => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
 
     val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
     val privateUseAdjustmentLens = GenLens[UkOtherAdjustments](_.privateUseAdjustment)
     val renovationAllowanceBalancingChargeLens =
       GenLens[UkOtherAdjustments](_.businessPremisesRenovationAllowanceBalancingCharges)
+    val propertyIncomeAllowanceLens = GenLens[UkOtherAllowances](_.propertyIncomeAllowance)
 
     val focusFromRequestOnToBalancingChargeLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
@@ -198,6 +201,8 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(privateUseAdjustmentLens)
     val focusFromRequestOnToRenovationAllowanceBalancingChargeLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(renovationAllowanceBalancingChargeLens)
+    val focusFromRequestOnToPropertyIncomeAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(propertyIncomeAllowanceLens)
 
     val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
       propertyRentalAdjustments.balancingCharge.balancingChargeAmount
@@ -207,11 +212,15 @@ object PropertyAnnualSubmission {
       Some(propertyRentalAdjustments.privateUseAdjustment)
     )(resultWithBalancingCharge)
 
-    val resultWithAllThree = focusFromRequestOnToRenovationAllowanceBalancingChargeLens.replace(
+    val resultWithRenovationAllowanceBalancingCharge = focusFromRequestOnToRenovationAllowanceBalancingChargeLens.replace(
       propertyRentalAdjustments.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeAmount
     )(resultWithBalancingChargeAndPrivateUseAdjustment)
 
-    resultWithAllThree
+    val resultWithAllFour = focusFromRequestOnToPropertyIncomeAllowanceLens.replace(
+      propertyRentalAdjustments.propertyIncomeAllowance
+    )(resultWithRenovationAllowanceBalancingCharge)
+
+    cleanUkOtherAllowances(resultWithAllFour)
   }
 
   def fromRaRAdjustments(
@@ -330,6 +339,7 @@ object PropertyAnnualSubmission {
     val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
     val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
     val businessPremisesRenovationAllowanceLens = GenLens[UkOtherAllowances](_.businessPremisesRenovationAllowance)
+    val propertyIncomeAllowanceLens = GenLens[UkOtherAllowances](_.propertyIncomeAllowance)
 
     // Focuses
     val focusFromRequestOnToannualInvestmentAllowanceLens =
@@ -346,6 +356,9 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
     val focusFromRequestOnTobusinessPremisesRenovationAllowanceLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(businessPremisesRenovationAllowanceLens)
+
+    val focusFromRequestOnTopropertyIncomeAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(propertyIncomeAllowanceLens)
 
     // Results
 
@@ -374,9 +387,74 @@ object PropertyAnnualSubmission {
       rentalAllowances.replacementOfDomesticGoodsAllowance
     )(resultWithotherCapitalAllowance)
 
-    resultWithcostOfReplacingDomesticGoods
+    val resultWithpropertyIncomeAllowance = focusFromRequestOnTopropertyIncomeAllowanceLens.replace(
+      None
+    )(resultWithcostOfReplacingDomesticGoods)
+
+    resultWithpropertyIncomeAllowance
   }
 
+  def cleanUkOtherAllowances(request: PropertyAnnualSubmission): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+
+    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
+      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+        case AnnualUkOtherProperty(_, uoa)  => uoa
+      }{ uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
+      }
+
+    val propertyIncomeAllowanceLens = GenLens[UkOtherAllowances](_.propertyIncomeAllowance)
+    val structuredBuildingAllowanceLens = GenLens[UkOtherAllowances](_.structuredBuildingAllowance)
+    val enhancedStructuredBuildingAllowanceLens = GenLens[UkOtherAllowances](_.enhancedStructuredBuildingAllowance)
+
+    val focusFromRequestToPropertyIncomeAllowanceLens = ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(propertyIncomeAllowanceLens)
+    val focusFromRequestToStructuredBuildingAllowanceLens = ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(structuredBuildingAllowanceLens)
+    val focusFromRequestToEnhancedStructuredBuildingAllowanceLens =
+      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(enhancedStructuredBuildingAllowanceLens)
+
+    val resultWithPropertyIncomeAllowance = focusFromRequestToPropertyIncomeAllowanceLens.getOption(request).flatten match {
+      case pia@Some(_) =>
+        ukOtherPropertyLens.andThen(ukOtherAllowancesLens).replace(
+          UkOtherAllowances(
+            annualInvestmentAllowance = None,
+            zeroEmissionGoodsVehicleAllowance = None,
+            businessPremisesRenovationAllowance = None,
+            otherCapitalAllowance = None,
+            costOfReplacingDomesticGoods = None,
+            structuredBuildingAllowance = None,
+            enhancedStructuredBuildingAllowance = None,
+            zeroEmissionsCarAllowance = None,
+            propertyIncomeAllowance = pia
+          )
+        )(request)
+      case _ =>
+        focusFromRequestToPropertyIncomeAllowanceLens.replace(None)(request)
+    }
+
+    val resultWithStructuredBuildingAllowance = focusFromRequestToStructuredBuildingAllowanceLens
+      .getOption(resultWithPropertyIncomeAllowance).flatten match {
+        case Some(Nil) =>
+          focusFromRequestToStructuredBuildingAllowanceLens.replace(None)(resultWithPropertyIncomeAllowance)
+        case _ => resultWithPropertyIncomeAllowance
+    }
+
+    val resultWithEnhancedStructuredBuildingAllowance = focusFromRequestToEnhancedStructuredBuildingAllowanceLens
+      .getOption(resultWithStructuredBuildingAllowance).flatten match {
+        case Some(Nil) =>
+          focusFromRequestToEnhancedStructuredBuildingAllowanceLens.replace(None)(resultWithStructuredBuildingAllowance)
+        case _ => resultWithStructuredBuildingAllowance
+    }
+
+    resultWithEnhancedStructuredBuildingAllowance
+  }
 }
 
 

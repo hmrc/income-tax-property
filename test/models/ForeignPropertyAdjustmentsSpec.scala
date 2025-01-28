@@ -56,7 +56,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |    "unusedLossesPreviousYearsYesNo": true,
           |    "unusedLossesPreviousYearsAmount": 109.09
           |  },
-          |  "whenYouReportedTheLoss": "y2018to2019"
+          |  "whenYouReportedTheLoss": "2018-19"
           |}
           |""".stripMargin
       )

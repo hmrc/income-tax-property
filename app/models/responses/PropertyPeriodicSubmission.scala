@@ -108,14 +108,14 @@ object UkOtherProperty {
       case UkOtherProperty(None, None) => None
       case UkOtherProperty(
             Some(UkOtherPropertyIncome(None, None, None, None, None, None)),
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None))
           ) =>
         None
       case UkOtherProperty(Some(UkOtherPropertyIncome(None, None, None, None, None, None)), expensesMaybe) =>
         Some(UkOtherProperty(None, expensesMaybe))
       case UkOtherProperty(
             incomeMaybe,
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None))
           ) =>
         Some(UkOtherProperty(incomeMaybe, None))
 
@@ -148,7 +148,8 @@ case class UkOtherPropertyExpenses(
   residentialFinancialCost: Option[BigDecimal],
   residentialFinancialCostsCarriedForward: Option[BigDecimal],
   ukOtherRentARoom: Option[UkRentARoomExpense],
-  consolidatedExpenses: Option[BigDecimal]
+  consolidatedExpense: Option[BigDecimal],
+  consolidatedExpenseAmount: Option[BigDecimal]
 )
 
 object UkOtherPropertyExpenses {
