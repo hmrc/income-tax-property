@@ -4,7 +4,7 @@ import play.api.libs.json.{Format, JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 
 case class UpdateBroughtForwardLossRequest(
-  updatedBroughtForwardLossAmount: BigDecimal
+  lossAmount: BigDecimal
 )
 
 object UpdateBroughtForwardLossRequest {

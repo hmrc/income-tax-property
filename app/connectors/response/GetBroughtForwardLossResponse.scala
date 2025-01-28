@@ -1,7 +1,9 @@
 package connectors.response
 
 import connectors.Parser
+import models.common.IncomeSourceId
 import models.errors.ApiError
+import models.request.LossType
 import play.api.http.Status._
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -11,12 +13,10 @@ import java.time.LocalDate
 case class GetBroughtForwardLossResponse(httpResponse: HttpResponse, result: Either[ApiError, BroughtForwardLossResponse])
 
 case class BroughtForwardLossResponse(
-  incomeSourceId: String,
-  incomeSourceType: String,
-  broughtForwardLossAmount: BigDecimal,
-  taxYear: Int,
-  lossId: String,
-  submissionDate: LocalDate
+  typeOfLoss: LossType,
+  lossAmount: BigDecimal,
+  taxYearBroughtForwardFrom: String,
+  lastModified: LocalDate
 )
 
 object BroughtForwardLossResponse {

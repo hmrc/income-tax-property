@@ -375,13 +375,14 @@ class ForeignPropertyService @Inject() (
     }
 
   def createForeignBroughtForwardLoss(
+    taxYear: TaxYear,
     taxYearBroughtForwardFrom: TaxYear,
     incomeSourceId: IncomeSourceId,
     nino: Nino,
     lossAmount: BigDecimal,
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossId] = {
     EitherT(
-      connector.createForeignBroughtForwardLoss(taxYearBroughtForwardFrom, incomeSourceId, nino, lossAmount)
+      connector.createForeignBroughtForwardLoss(taxYear, taxYearBroughtForwardFrom, incomeSourceId, nino, lossAmount)
     )
   }
 

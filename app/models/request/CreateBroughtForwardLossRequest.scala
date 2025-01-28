@@ -1,16 +1,14 @@
 package models.request
 
-import models.Enumerable
-import models.common.{IncomeSourceId, TaxYear}
-import models.request.foreign.WithName
+import models.common.IncomeSourceId
 import play.api.libs.json.{Format, JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 
 case class CreateBroughtForwardLossRequest(
-  incomeSourceId: IncomeSourceId,
-  incomeSourceType: IncomeSourceType,
-  broughtForwardLossAmount: BigDecimal,
-  taxYearBroughtForwardFrom: TaxYear
+  taxYearBroughtForwardFrom: String,
+  typeOfLoss: LossType,
+  businessId: IncomeSourceId,
+  lossAmount: BigDecimal
 )
 
 object CreateBroughtForwardLossRequest {
@@ -20,11 +18,4 @@ object CreateBroughtForwardLossRequest {
     writes: Writes[T],
     jsValueBodyWritable: BodyWritable[JsValue]
   ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
-}
-
-sealed trait IncomeSourceType
-
-object IncomeSourceType extends Enumerable.Implicits {
-  case object ForeignProperty extends WithName("15") with IncomeSourceType
-  case object UKProperty extends WithName("02") with IncomeSourceType
 }
