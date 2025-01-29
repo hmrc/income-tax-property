@@ -566,7 +566,6 @@ class ForeignPropertyServiceSpec
       countryCode = "AUS",
       rentIncome = 1.0,
       premiumsGrantLeaseReceived = true,
-      reversePremiumsReceived = ReversePremiumsReceived(reversePremiumsReceived = true, Some(BigDecimal(2.50))),
       otherPropertyIncome = BigDecimal(54.94),
       calculatedPremiumLeaseTaxable =
         Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),

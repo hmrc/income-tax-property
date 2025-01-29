@@ -16,7 +16,6 @@
 
 package models.request.foreign
 
-import models.request.ReversePremiumsReceived
 import play.api.libs.json.{Format, Json}
 
 case class ForeignIncomeAnswers(

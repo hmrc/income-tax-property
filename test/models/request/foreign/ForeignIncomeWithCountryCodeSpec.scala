@@ -16,7 +16,6 @@
 
 package models.request.foreign
 
-import models.request.ReversePremiumsReceived
 import org.scalatest.OptionValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
@@ -30,10 +29,6 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
       |    "countryCode": "AUS",
       |    "rentIncome": 1,
       |    "premiumsGrantLeaseReceived": true,
-      |    "reversePremiumsReceived": {
-      |      "reversePremiumsReceived": true,
-      |      "reversePremiums": 4
-      |    },
       |    "otherPropertyIncome": 5,
       |    "calculatedPremiumLeaseTaxable": {
       |      "calculatedPremiumLeaseTaxable": false
@@ -54,8 +49,6 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
         premiumsGrantLeaseReceived = true,
-        reversePremiumsReceived =
-          ReversePremiumsReceived(reversePremiumsReceived = true, reversePremiums = Some(BigDecimal(4))),
         otherPropertyIncome = BigDecimal(5),
         calculatedPremiumLeaseTaxable =
           Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
@@ -75,8 +68,6 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
         premiumsGrantLeaseReceived = true,
-        reversePremiumsReceived =
-          ReversePremiumsReceived(reversePremiumsReceived = true, reversePremiums = Some(BigDecimal(4))),
         otherPropertyIncome = BigDecimal(5),
         calculatedPremiumLeaseTaxable =
           Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),

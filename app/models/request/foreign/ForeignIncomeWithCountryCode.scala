@@ -16,14 +16,12 @@
 
 package models.request.foreign
 
-import models.request.ReversePremiumsReceived
 import play.api.libs.json.{Format, Json}
 
 case class ForeignIncomeWithCountryCode(
   countryCode: String,
   rentIncome: BigDecimal,
   premiumsGrantLeaseReceived: Boolean,
-  reversePremiumsReceived: ReversePremiumsReceived,
   otherPropertyIncome: BigDecimal,
   calculatedPremiumLeaseTaxable: Option[CalculatedPremiumLeaseTaxable],
   receivedGrantLeaseAmount: Option[BigDecimal],
