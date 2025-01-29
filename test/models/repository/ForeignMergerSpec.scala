@@ -188,7 +188,6 @@ class ForeignMergerSpec extends UnitTest {
           Some(Map(countryCode -> ForeignIncomeStoreAnswers(
             premiumsGrantLeaseReceived = premiumsGrantLeaseReceived,
             premiumsOfLeaseGrantAgreed = premiumsOfLeaseGrantAgreed,
-            reversePremiumsReceived = reversePremiumsReceived,
             calculatedPremiumLeaseTaxable = calculatedPremiumLeaseTaxable,
             twelveMonthPeriodsInLease = twelveMonthPeriodsInLease,
             receivedGrantLeaseAmount = receivedGrantLeaseAmount
@@ -197,9 +196,6 @@ class ForeignMergerSpec extends UnitTest {
           Map(countryCode -> ForeignIncomeAnswers(
             rentIncome = Some(rentIncome),
             premiumsGrantLeaseReceived = premiumsGrantLeaseReceived,
-            reversePremiumsReceived = Some(ReversePremiumsReceived(
-              reversePremiumsReceived = reversePremiumsReceived, reversePremiums = None
-            )),
             otherPropertyIncome = otherPropertyIncome,
             calculatedPremiumLeaseTaxable = Some(CalculatedPremiumLeaseTaxable(
               calculatedPremiumLeaseTaxable, None
@@ -219,7 +215,6 @@ class ForeignMergerSpec extends UnitTest {
           Map(countryCode -> ForeignIncomeAnswers(
             rentIncome = Some(rentIncome),
             premiumsGrantLeaseReceived = true,
-            reversePremiumsReceived = None,
             otherPropertyIncome = otherPropertyIncome,
             calculatedPremiumLeaseTaxable = None,
             receivedGrantLeaseAmount = None,

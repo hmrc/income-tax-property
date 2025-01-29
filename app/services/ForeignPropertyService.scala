@@ -327,7 +327,6 @@ class ForeignPropertyService @Inject() (
                premiumsGrantLeaseReceived = foreignIncome.premiumsGrantLeaseReceived,
                premiumsOfLeaseGrantAgreed =
                  foreignIncome.premiumsOfLeaseGrantAgreed.fold(false)(_.premiumsOfLeaseGrantAgreed),
-               reversePremiumsReceived = foreignIncome.reversePremiumsReceived.reversePremiumsReceived,
                calculatedPremiumLeaseTaxable =
                  foreignIncome.calculatedPremiumLeaseTaxable.fold(false)(_.calculatedPremiumLeaseTaxable),
                twelveMonthPeriodsInLease = foreignIncome.twelveMonthPeriodsInLease,
