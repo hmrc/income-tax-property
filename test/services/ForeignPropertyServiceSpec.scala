@@ -945,17 +945,24 @@ class ForeignPropertyServiceSpec
 
   "save foreign property adjustments" should {
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(taxYear = taxYear, incomeSourceId = incomeSourceId, mtditid = Mtditid(mtditid), nino = nino)
+    val ctx = JourneyContextWithNino(
+      taxYear = taxYear,
+      incomeSourceId = incomeSourceId,
+      mtditid = Mtditid(mtditid),
+      nino = nino
+    )
 
     val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
       countryCode = "AUS",
       privateUseAdjustment = BigDecimal(25.25),
       balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
       residentialFinanceCost = Some(BigDecimal(75.75)),
-      unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-        foreignUnusedResidentialFinanceCostYesNo = true,
-        foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
-      )),
+      unusedResidentialFinanceCost = Some(
+        ForeignUnusedResidentialFinanceCost(
+          foreignUnusedResidentialFinanceCostYesNo = true,
+          foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
+        )
+      ),
       propertyIncomeAllowanceClaim = None,
       unusedLossesPreviousYears = UnusedLossesPreviousYears(
         unusedLossesPreviousYearsYesNo = true,
@@ -1014,7 +1021,7 @@ class ForeignPropertyServiceSpec
         val foreignPropertyAdjustmentsClaimingPIA = foreignPropertyAdjustmentsWithCountryCode.copy(
           propertyIncomeAllowanceClaim = Some(85.85),
           residentialFinanceCost = None,
-          unusedResidentialFinanceCost = None,
+          unusedResidentialFinanceCost = None
         )
         mockGetAnnualForeignPropertySubmission(
           taxYear,
@@ -1022,7 +1029,7 @@ class ForeignPropertyServiceSpec
           incomeSourceId,
           Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
         )
-        
+
         val Right(requestForCreateAnnual: AnnualForeignPropertySubmission) =
           AnnualForeignPropertySubmission.fromForeignPropertyAdjustments(
             Some(mayBeAnnualForeignPropertySubmissionFromDownstream),
@@ -1121,45 +1128,49 @@ class ForeignPropertyServiceSpec
     val foreignPropertySbaWithCountryCode = ForeignPropertySbaWithCountryCode(
       countryCode = "AUS",
       claimStructureBuildingAllowance = true,
-      allowances = Some(Array(
-        ForeignStructureBuildingAllowance(
-          foreignStructureBuildingAllowanceClaim = BigDecimal(546.78),
-          foreignStructureBuildingQualifyingDate = LocalDate.of(2024, 8, 7),
-          foreignStructureBuildingQualifyingAmount = BigDecimal(28.95),
-          foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
-            "Aryan Cements",
-            "45A",
-            "110 001"
+      allowances = Some(
+        Seq(
+          ForeignStructureBuildingAllowance(
+            foreignStructureBuildingAllowanceClaim = BigDecimal(546.78),
+            foreignStructureBuildingQualifyingDate = LocalDate.of(2024, 8, 7),
+            foreignStructureBuildingQualifyingAmount = BigDecimal(28.95),
+            foreignStructureBuildingAddress = ForeignStructureBuildingAllowanceAddress(
+              "Aryan Cements",
+              "45A",
+              "110 001"
+            )
           )
         )
-      ))
+      )
     )
 
     "return true if it persists successfully the foreign property sba into the BE mongo" in {
 
       val mayBeAnnualForeignPropertySubmissionFromDownstream =
-        Some(AnnualForeignPropertySubmission(
-          foreignProperty = Some(
-            Seq(
-              AnnualForeignProperty(
-                countryCode = "AUS",
-                allowances = Some(
-                  ForeignPropertyAllowances(
-                    zeroEmissionsCarAllowance = Some(21.5),
-                    zeroEmissionsGoodsVehicleAllowance = Some(32.5),
-                    costOfReplacingDomesticItems = Some(43.5),
-                    otherCapitalAllowance = Some(54.5),
-                    annualInvestmentAllowance = Some(64.5),
-                    propertyAllowance = Some(74.5),
-                    electricChargePointAllowance = Some(84.5),
-                    structuredBuildingAllowance = None
-                  )
-                ),
-                adjustments = None
+        Some(
+          AnnualForeignPropertySubmission(
+            foreignProperty = Some(
+              Seq(
+                AnnualForeignProperty(
+                  countryCode = "AUS",
+                  allowances = Some(
+                    ForeignPropertyAllowances(
+                      zeroEmissionsCarAllowance = Some(21.5),
+                      zeroEmissionsGoodsVehicleAllowance = Some(32.5),
+                      costOfReplacingDomesticItems = Some(43.5),
+                      otherCapitalAllowance = Some(54.5),
+                      annualInvestmentAllowance = Some(64.5),
+                      propertyAllowance = Some(74.5),
+                      electricChargePointAllowance = Some(84.5),
+                      structuredBuildingAllowance = None
+                    )
+                  ),
+                  adjustments = None
+                )
               )
             )
           )
-        ))
+        )
 
       mockGetAnnualForeignPropertySubmission(
         taxYear,

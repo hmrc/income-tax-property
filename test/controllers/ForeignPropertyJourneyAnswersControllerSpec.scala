@@ -524,7 +524,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
 
       foreignPropertySbaWithCountryCode.countryCode shouldBe "AUS"
       foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance shouldBe true
-      foreignPropertySbaWithCountryCode.allowances.get shouldBe Array(
+      foreignPropertySbaWithCountryCode.allowances.get shouldBe Seq(
         ForeignStructureBuildingAllowance(
           foreignStructureBuildingAllowanceClaim = 100000,
           foreignStructureBuildingQualifyingDate = LocalDate.parse("2024-11-12"),
