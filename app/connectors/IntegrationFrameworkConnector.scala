@@ -55,12 +55,15 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       )
     }
 
+    logger.info(s"Getting periodic submission ids from the Integration Framework: URL: $url")
+
     http
       .get(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .execute[GetPeriodicSubmissionIdResponse]
       .map(response => response.result)
+    
   }
 
   def getPropertyPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: String)(
@@ -89,7 +92,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error getting a property periodic submission from the Integration Framework:" +
+            s"Error getting a property periodic submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -123,7 +126,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error getting a property annual submission from the Integration Framework:" +
+            s"Error getting a property annual submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -158,7 +161,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error deleting a property annual submission from the Integration Framework:" +
+            s"Error deleting a property annual submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -198,7 +201,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a property periodic submission from the Integration Framework:" +
+            s"Error creating a property periodic submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -238,7 +241,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a foreign property periodic submission from the Integration Framework:" +
+            s"Error creating a foreign property periodic submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -281,7 +284,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error updating a property periodic submission from the Integration Framework:" +
+            s"Error updating a property periodic submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -325,7 +328,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error updating a foreign property periodic submission from the Integration Framework:" +
+            s"Error updating a foreign property periodic submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -369,7 +372,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a UK property annual submission from the Integration Framework:" +
+            s"Error creating a UK property annual submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -403,7 +406,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error getting a foreign property annual submission from the Integration Framework:" +
+            s"Error getting a foreign property annual submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
@@ -443,7 +446,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a foreign property annual submission from the Integration Framework:" +
+            s"Error creating a foreign property annual submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
