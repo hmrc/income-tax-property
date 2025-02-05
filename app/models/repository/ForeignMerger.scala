@@ -16,12 +16,12 @@
 
 package models.repository
 
-import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
-import models.request.{BalancingCharge, ForeignSbaInfo}
 import models.request.foreign._
-import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.expenses.ConsolidatedExpenses
+import models.request.{BalancingCharge, ForeignSbaInfo}
 import models.responses._
+import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 
 import java.time.LocalDate
 
@@ -32,7 +32,9 @@ import java.time.LocalDate
 object ForeignMerger {
 
   implicit object ForeignPropertyTaxMerger
-    extends Merger[Option[Map[String, ForeignPropertyTax]], Option[Map[String, ForeignPropertyTaxStoreAnswers]], Option[Map[String, ForeignPropertyIncome]]] {
+      extends Merger[Option[Map[String, ForeignPropertyTax]], Option[
+        Map[String, ForeignPropertyTaxStoreAnswers]
+      ], Option[Map[String, ForeignPropertyIncome]]] {
 
     override def merge(
       extractedMaybe: Option[Map[String, ForeignPropertyTaxStoreAnswers]],
@@ -41,26 +43,33 @@ object ForeignMerger {
       (extractedMaybe, fromDownstreamMaybe) match {
         case (Some(extractedMap), Some(fromDownstreamMap)) =>
           val result: Map[String, ForeignPropertyTax] = fromDownstreamMap.map {
-            case (countryCode, foreignPropertyIncome) => countryCode -> ForeignPropertyTax(
-              foreignIncomeTax = Some(ForeignIncomeTax(
-                foreignIncomeTaxYesNo = extractedMap.get(countryCode)
-                  .flatMap(_.foreignIncomeTaxYesNo)
-                  .getOrElse(foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined),
-                foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
-              )),
-              foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
-            )
+            case (countryCode, foreignPropertyIncome) =>
+              countryCode -> ForeignPropertyTax(
+                foreignIncomeTax = Some(
+                  ForeignIncomeTax(
+                    foreignIncomeTaxYesNo = extractedMap
+                      .get(countryCode)
+                      .flatMap(_.foreignIncomeTaxYesNo)
+                      .getOrElse(foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined),
+                    foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
+                  )
+                ),
+                foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
+              )
           }
           Option.when(result.nonEmpty)(result)
         case (_, Some(fromDownstreamMap)) =>
           val result: Map[String, ForeignPropertyTax] = fromDownstreamMap.map {
-            case (countryCode, foreignPropertyIncome) => countryCode -> ForeignPropertyTax(
-              foreignIncomeTax = Some(ForeignIncomeTax(
-                foreignIncomeTaxYesNo = foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined,
-                foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
-              )),
-              foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
-            )
+            case (countryCode, foreignPropertyIncome) =>
+              countryCode -> ForeignPropertyTax(
+                foreignIncomeTax = Some(
+                  ForeignIncomeTax(
+                    foreignIncomeTaxYesNo = foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined,
+                    foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
+                  )
+                ),
+                foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
+              )
           }
           Option.when(result.nonEmpty)(result)
         case _ => None
@@ -68,13 +77,13 @@ object ForeignMerger {
   }
 
   implicit object ForeignPropertySbaMerger
-    extends Merger[Option[Map[String, ForeignSbaInfo]], Option[Map[String, ForeignPropertySbaStoreAnswers]], Option[
-      Map[String, Option[Seq[StructuredBuildingAllowance]]]
-    ]] {
+      extends Merger[Option[Map[String, ForeignSbaInfo]], Option[Map[String, ForeignPropertySbaStoreAnswers]], Option[
+        Map[String, Option[Seq[StructuredBuildingAllowance]]]
+      ]] {
     override def merge(
-                        extracted: Option[Map[String, ForeignPropertySbaStoreAnswers]],
-                        fromDownstream: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]]
-                      ): Option[Map[String, ForeignSbaInfo]] =
+      extracted: Option[Map[String, ForeignPropertySbaStoreAnswers]],
+      fromDownstream: Option[Map[String, Option[Seq[StructuredBuildingAllowance]]]]
+    ): Option[Map[String, ForeignSbaInfo]] =
       (extracted, fromDownstream) match {
         case (Some(extractedMap), Some(downStreamMap)) =>
           val result = downStreamMap.map { case (countryCode, maybeAllowances) =>
@@ -117,7 +126,9 @@ object ForeignMerger {
   }
 
   implicit object ForeignPropertyIncomeMerger
-    extends Merger[Option[Map[String, ForeignIncomeAnswers]], Option[Map[String, ForeignIncomeStoreAnswers]], Option[Map[String, ForeignPropertyIncome]]] {
+      extends Merger[Option[Map[String, ForeignIncomeAnswers]], Option[Map[String, ForeignIncomeStoreAnswers]], Option[
+        Map[String, ForeignPropertyIncome]
+      ]] {
 
     override def merge(
       extractedMaybe: Option[Map[String, ForeignIncomeStoreAnswers]],
@@ -145,25 +156,26 @@ object ForeignMerger {
                     premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
                   )
                 )
-            )
+              )
           }
           Option.when(result.nonEmpty)(result)
         case (_, Some(fromDownstreamMap)) =>
           val result: Map[String, ForeignIncomeAnswers] = fromDownstreamMap.map {
-            case (countryCode, foreignPropertyIncome) => countryCode -> ForeignIncomeAnswers(
-              rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
-              premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
-              otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
-              calculatedPremiumLeaseTaxable = None,
-              receivedGrantLeaseAmount = None,
-              twelveMonthPeriodsInLease = None,
-              premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
-                PremiumsOfLeaseGrantAgreed(
-                  premiumsOfLeaseGrantAgreed = true,
-                  premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
+            case (countryCode, foreignPropertyIncome) =>
+              countryCode -> ForeignIncomeAnswers(
+                rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
+                premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
+                otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
+                calculatedPremiumLeaseTaxable = None,
+                receivedGrantLeaseAmount = None,
+                twelveMonthPeriodsInLease = None,
+                premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
+                  PremiumsOfLeaseGrantAgreed(
+                    premiumsOfLeaseGrantAgreed = true,
+                    premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
+                  )
                 )
               )
-            )
           }
           Option.when(result.nonEmpty)(result)
         case _ => None
@@ -171,23 +183,31 @@ object ForeignMerger {
   }
 
   implicit object ForeignPropertyExpensesMerger
-    extends Merger[Option[Map[String, ForeignExpensesAnswers]], Option[Map[String, ForeignPropertyExpensesStoreAnswers]],
-      Option[Map[String, ForeignPropertyExpenses]]] {
+      extends Merger[Option[Map[String, ForeignExpensesAnswers]], Option[
+        Map[String, ForeignPropertyExpensesStoreAnswers]
+      ], Option[Map[String, ForeignPropertyExpenses]]] {
     override def merge(
-                        extractedMaybe: Option[Map[String, ForeignPropertyExpensesStoreAnswers]],
-                        fromDownstreamMaybe: Option[Map[String, ForeignPropertyExpenses]]
-                      ): Option[Map[String, ForeignExpensesAnswers]] =
+      extractedMaybe: Option[Map[String, ForeignPropertyExpensesStoreAnswers]],
+      fromDownstreamMaybe: Option[Map[String, ForeignPropertyExpenses]]
+    ): Option[Map[String, ForeignExpensesAnswers]] =
       (extractedMaybe, fromDownstreamMaybe) match {
         case (Some(extractedMap), Some(fromDownstreamMap)) =>
           val result: Map[String, ForeignExpensesAnswers] = fromDownstreamMap.map {
             case (countryCode, foreignPropertyExpenses) =>
               val storeAnswersMaybe = extractedMap.get(countryCode)
               countryCode -> ForeignExpensesAnswers(
-                consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense.map { consolidatedExpenseAmount =>
-                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = true,
-                    consolidatedExpense = Some(consolidatedExpenseAmount))
-                }.orElse(storeAnswersMaybe.map(ce =>
-                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = ce.consolidatedExpensesYesOrNo, None))),
+                consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense
+                  .map { consolidatedExpenseAmount =>
+                    ConsolidatedExpenses(
+                      consolidatedOrIndividualExpensesYesNo = true,
+                      consolidatedExpense = Some(consolidatedExpenseAmount)
+                    )
+                  }
+                  .orElse(
+                    storeAnswersMaybe.map(ce =>
+                      ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = ce.consolidatedExpensesYesOrNo, None)
+                    )
+                  ),
                 premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
                 repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
                 financialCosts = foreignPropertyExpenses.financialCosts,
@@ -202,8 +222,10 @@ object ForeignMerger {
             case (countryCode, foreignPropertyExpenses) =>
               countryCode -> ForeignExpensesAnswers(
                 consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense.map { consolidatedExpenseAmount =>
-                  ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = true,
-                    consolidatedExpense = Some(consolidatedExpenseAmount))
+                  ConsolidatedExpenses(
+                    consolidatedOrIndividualExpensesYesNo = true,
+                    consolidatedExpense = Some(consolidatedExpenseAmount)
+                  )
                 },
                 premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
                 repairsAndMaintenance = foreignPropertyExpenses.repairsAndMaintenance,
@@ -219,12 +241,15 @@ object ForeignMerger {
   }
 
   implicit object ForeignPropertyAdjustmentsMerger
-    extends Merger[Option[Map[String, ForeignAdjustmentsAnswers]], Option[Map[String, ForeignAdjustmentsStoreAnswers]],
-      Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]]] {
+      extends Merger[Option[Map[String, ForeignAdjustmentsAnswers]], Option[
+        Map[String, ForeignAdjustmentsStoreAnswers]
+      ], Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]]] {
     override def merge(
       extractedMaybe: Option[Map[String, ForeignAdjustmentsStoreAnswers]],
-      fromDownstreamMaybe: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]])
-    : Option[Map[String, ForeignAdjustmentsAnswers]] =
+      fromDownstreamMaybe: Option[
+        Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]
+      ]
+    ): Option[Map[String, ForeignAdjustmentsAnswers]] =
       (extractedMaybe, fromDownstreamMaybe) match {
         case (Some(extractedMap), Some(fromDownstreamMap)) =>
           val result: Map[String, ForeignAdjustmentsAnswers] = fromDownstreamMap.map {
@@ -232,26 +257,28 @@ object ForeignMerger {
               val storeAnswersMaybe = extractedMap.get(countryCode)
               countryCode -> ForeignAdjustmentsAnswers(
                 privateUseAdjustment = adjustments.privateUseAdjustment,
-                balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
-                  BalancingCharge(balancingChargeYesNo = true,
-                    balancingChargeAmount = Some(balancingCharge)
-                  )
-                }.orElse(storeAnswersMaybe.map { storeAnswers =>
-                  BalancingCharge(storeAnswers.balancingChargeYesNo, None)
-                }),
+                balancingCharge = adjustments.balancingCharge
+                  .map { balancingCharge =>
+                    BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
+                  }
+                  .orElse(storeAnswersMaybe.map { storeAnswers =>
+                    BalancingCharge(storeAnswers.balancingChargeYesNo, None)
+                  }),
                 residentialFinanceCost = expenses.residentialFinancialCost,
-                unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
-                  ForeignUnusedResidentialFinanceCost(
-                    foreignUnusedResidentialFinanceCostYesNo = true,
-                    foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
-                  )
-                }.orElse(
-                    storeAnswersMaybe.flatMap(
-                      storeAnswers => storeAnswers.foreignUnusedResidentialFinanceCostYesNo.map(unusedResidentialFinanceCostYesNo =>
+                unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost
+                  .map { unusedResidentialFinanceCost =>
+                    ForeignUnusedResidentialFinanceCost(
+                      foreignUnusedResidentialFinanceCostYesNo = true,
+                      foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
+                    )
+                  }
+                  .orElse(
+                    storeAnswersMaybe.flatMap(storeAnswers =>
+                      storeAnswers.foreignUnusedResidentialFinanceCostYesNo.map(unusedResidentialFinanceCostYesNo =>
                         ForeignUnusedResidentialFinanceCost(unusedResidentialFinanceCostYesNo, None)
                       )
                     )
-                ),
+                  ),
                 propertyIncomeAllowanceClaim = maybePIA,
                 unusedLossesPreviousYears = storeAnswersMaybe.map { storeAnswers =>
                   UnusedLossesPreviousYears(storeAnswers.unusedLossesPreviousYearsYesNo, None)
@@ -266,17 +293,16 @@ object ForeignMerger {
               countryCode -> ForeignAdjustmentsAnswers(
                 privateUseAdjustment = adjustments.privateUseAdjustment,
                 balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
-                  BalancingCharge(balancingChargeYesNo = true,
-                    balancingChargeAmount = Some(balancingCharge)
-                  )
+                  BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
                 },
                 residentialFinanceCost = expenses.residentialFinancialCost,
-                unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
-                  ForeignUnusedResidentialFinanceCost(
-                    foreignUnusedResidentialFinanceCostYesNo = true,
-                    foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
-                  )
-                },
+                unusedResidentialFinanceCost =
+                  expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
+                    ForeignUnusedResidentialFinanceCost(
+                      foreignUnusedResidentialFinanceCostYesNo = true,
+                      foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
+                    )
+                  },
                 unusedLossesPreviousYears = None,
                 propertyIncomeAllowanceClaim = maybePIA,
                 whenYouReportedTheLoss = None

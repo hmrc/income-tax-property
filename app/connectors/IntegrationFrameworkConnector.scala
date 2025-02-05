@@ -63,7 +63,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .execute[GetPeriodicSubmissionIdResponse]
       .map(response => response.result)
-    
+
   }
 
   def getPropertyPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: String)(
@@ -381,7 +381,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   }
 
   def getAnnualForeignPropertySubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
-                                                                                                       hc: HeaderCarrier
+    hc: HeaderCarrier
   ): Future[Either[ApiError, Option[AnnualForeignPropertySubmission]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
@@ -433,7 +433,9 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         "1597"
       )
     }
-    logger.debug(s"Calling createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(foreignProperty)}")
+    logger.debug(
+      s"Calling createOrUpdateAnnualForeignPropertySubmission with url: $url, body: ${Json.toJson(foreignProperty)}"
+    )
 
     http
       .put(url"$url")(hcWithCorrelationId(hc))
