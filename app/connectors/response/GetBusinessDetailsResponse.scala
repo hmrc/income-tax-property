@@ -21,6 +21,7 @@ import models.errors.ApiError
 import models.responses.IncomeSourceDetailsModel
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 case class GetBusinessDetailsResponse(
@@ -45,7 +46,34 @@ object GetBusinessDetailsResponse extends Logging {
         }
 
       private def extractResult(response: HttpResponse): Either[ApiError, Option[IncomeSourceDetailsModel]] = {
-        val json = response.json
+        //val json = response.json
+        val json = Json.parse(
+          """
+            |{
+            |    "processingDate": "2025-02-05T13:10:49Z",
+            |    "taxPayerDisplayResponse":
+            |    {
+            |        "safeId": "XV0000100460886",
+            |        "nino": "WP216633A",
+            |        "mtdId": "XAIT00000176746",
+            |        "propertyIncome": true,
+            |        "propertyData":
+            |        [
+            |            {
+              |              "incomeSourceType": "foreign-property",
+            |                "incomeSourceId": "XJIS00001230596",
+            |                "accountingPeriodStartDate": "2023-04-06",
+            |                "accountingPeriodEndDate": "2024-04-05",
+            |                "tradingStartDate": "2019-04-06",
+            |                "cashOrAccruals": true,
+            |                "incomeSourceStartDate": "2019-04-06",
+            |                "firstAccountingPeriodStartDate": "2023-04-06",
+            |                "firstAccountingPeriodEndDate": "2024-04-05"
+            |            }
+            |        ]
+            |    }
+            |}
+            |""".stripMargin)
         logger.info(s"GetBusinessDetailsResponse response: $json")
         json
           .validate[IncomeSourceDetailsModel]
