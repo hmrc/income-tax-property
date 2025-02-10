@@ -22,7 +22,7 @@ import connectors.response._
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
@@ -442,6 +442,47 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(foreignProperty)
+      .execute[PutAnnualSubmissionResponse]
+      .map { response: PutAnnualSubmissionResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error creating a foreign property annual submission from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+  def createOrUpdateAnnualForeignPropertySubmissionAdjustments(
+                                                                 taxYear: TaxYear,
+                                                                 incomeSourceId: IncomeSourceId,
+                                                                 nino: Nino,
+                                                                 foreignProperty: AnnualForeignPropertySubmissionAdjustments
+                                                               )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
+        "1804"
+      )
+    } else {
+      (
+        s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
+          taxYear
+        )}&incomeSourceId=$incomeSourceId""",
+        "1597"
+      )
+    }
+    logger.debug(
+      s"Calling createOrUpdateAnnualForeignPropertySubmissionAdjustments with url: $url, body: ${Json.toJson(foreignProperty)}"
+    )
+
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(Json.toJson(foreignProperty))
       .execute[PutAnnualSubmissionResponse]
       .map { response: PutAnnualSubmissionResponse =>
         if (response.result.isLeft) {

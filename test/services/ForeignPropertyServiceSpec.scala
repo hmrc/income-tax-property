@@ -1017,64 +1017,20 @@ class ForeignPropertyServiceSpec
           )
         )
       )
-      "claiming PIA" in {
-        val foreignPropertyAdjustmentsClaimingPIA = foreignPropertyAdjustmentsWithCountryCode.copy(
-          propertyIncomeAllowanceClaim = Some(85.85),
-          residentialFinanceCost = None,
-          unusedResidentialFinanceCost = None
-        )
-        mockGetAnnualForeignPropertySubmission(
-          taxYear,
-          nino,
-          incomeSourceId,
-          Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
-        )
 
-        val Right(requestForCreateAnnual: AnnualForeignPropertySubmission) =
+      "return no content for valid request" in {
+
+
+        val requestForCreateAnnual =
           AnnualForeignPropertySubmission.fromForeignPropertyAdjustments(
-            Some(mayBeAnnualForeignPropertySubmissionFromDownstream),
-            foreignPropertyAdjustmentsClaimingPIA
-          )
-
-        mockCreateAnnualForeignPropertySubmission(
-          taxYear,
-          incomeSourceId,
-          nino,
-          Some(requestForCreateAnnual),
-          ().asRight[ApiError]
-        )
-
-        await(
-          underTest
-            .saveForeignPropertyAdjustments(
-              ctx,
-              nino,
-              foreignPropertyAdjustmentsClaimingPIA
-            )
-            .value
-        ) shouldBe Right(true)
-      }
-
-      "not claiming PIA" in {
-        mockGetAnnualForeignPropertySubmission(
-          taxYear,
-          nino,
-          incomeSourceId,
-          Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
-        )
-
-        val Right(requestForCreateAnnual: AnnualForeignPropertySubmission) =
-          AnnualForeignPropertySubmission.fromForeignPropertyAdjustments(
-            Some(mayBeAnnualForeignPropertySubmissionFromDownstream),
             foreignPropertyAdjustmentsWithCountryCode
           )
 
-        mockCreateAnnualForeignPropertySubmission(
+        mockCreateAnnualForeignPropertySubmissionAdjustments(
           taxYear,
           incomeSourceId,
           nino,
-          Some(requestForCreateAnnual),
-          ().asRight[ApiError]
+          Right(requestForCreateAnnual)
         )
         mockGetAllPeriodicSubmission(
           taxYear,
@@ -1112,6 +1068,33 @@ class ForeignPropertyServiceSpec
               ctx,
               nino,
               foreignPropertyAdjustmentsWithCountryCode
+            )
+            .value
+        ) shouldBe Right(true)
+      }
+      "claiming PIA" in {
+        val foreignPropertyAdjustmentsClaimingPIA = foreignPropertyAdjustmentsWithCountryCode.copy(
+          propertyIncomeAllowanceClaim = Some(85.85),
+          residentialFinanceCost = None,
+          unusedResidentialFinanceCost = None
+        )
+
+        val requestForCreateAnnual = AnnualForeignPropertySubmission.fromForeignPropertyAdjustmentsPIA(foreignPropertyAdjustmentsClaimingPIA)
+
+        mockCreateAnnualForeignPropertySubmission(
+          taxYear,
+          incomeSourceId,
+          nino,
+          Some(requestForCreateAnnual),
+          ().asRight[ApiError]
+        )
+
+        await(
+          underTest
+            .saveForeignPropertyAdjustments(
+              ctx,
+              nino,
+              foreignPropertyAdjustmentsClaimingPIA
             )
             .value
         ) shouldBe Right(true)
