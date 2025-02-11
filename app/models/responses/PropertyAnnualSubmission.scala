@@ -19,13 +19,13 @@ package models.responses
 import models.RentalsAndRaRAbout
 import models.request._
 import models.request.foreign.AnnualForeignProperty
-import models.request.ukrentaroom.RaRAdjustments
+import models.request.ukrentaroom.{RaRAdjustments, RarWhenYouReportedTheLoss}
 import monocle.Optional
 import monocle.macros.GenLens
-import play.api.libs.json.{JsValue, Json, OFormat, Writes}
+import play.api.libs.json.{OFormat, Writes, Json, JsValue}
 import play.api.libs.ws.BodyWritable
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, LocalDate}
 
 case class PropertyAnnualSubmission(
   submittedOn: Option[LocalDateTime],
@@ -402,7 +402,8 @@ case class UkOtherAdjustments(
   businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
   nonResidentLandlord: Option[Boolean],
   ukOtherRentARoom: Option[UkRentARoom], // API#1598 (Get) expects ukOtherRentARoom
-  rentARoom: Option[UkRentARoom]         // API#1805 (Get) expects rentARoom
+  rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
+  whenYouReportedTheLoss: Option[RarWhenYouReportedTheLoss]
 )
 
 object UkOtherAdjustments {

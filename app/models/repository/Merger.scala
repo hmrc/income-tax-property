@@ -21,7 +21,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{Sba, SbaInfo, SbaInfoToSave}
-import models.request.ukrentaroom.RaRAdjustments
+import models.request.ukrentaroom.{RaRAdjustments, RarWhenYouReportedTheLoss, RaRUnusedLossesBroughtForward}
 import models.responses._
 
 import java.time.LocalDate
@@ -390,11 +390,11 @@ object Merger {
   }
 
   implicit object RaRAdjustmentsMerger
-      extends Merger[Option[RaRAdjustments], Option[RaRBalancingChargeYesNo], Option[
+      extends Merger[Option[RaRAdjustments], Option[RentARoomAdjustmentsStoreAnswers], Option[
         (UkOtherAdjustments, UkOtherPropertyExpenses)
       ]] {
     override def merge(
-      extractedMaybe: Option[RaRBalancingChargeYesNo],
+      extractedMaybe: Option[RentARoomAdjustmentsStoreAnswers],
       fromDownstreamMaybe: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)]
     ): Option[RaRAdjustments] =
       (extractedMaybe, fromDownstreamMaybe) match {
@@ -420,21 +420,34 @@ object Merger {
                 )
               )
             ) =>
+          test(
           Some(
             RaRAdjustments(
               balancingCharge = Some(
                 BalancingCharge(
                   balancingChargeYesNo = extractedMaybe
-                    .map(_.raRBalancingChargeYesNo)
+                    .map(_.balancingCharge.isDefined)
                     .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
               ),
-              unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward
+              unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward,
+              unusedLossesBroughtForward = Some(
+                RaRUnusedLossesBroughtForward(
+                  raRUnusedLossesBroughtForwardYesOrNo = extractedMaybe
+                    .map(_.unusedLossesBroughtForward.isDefined)
+                    .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
+                  raRUnusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+                )
+              ),
+              whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
             )
+          )
           )
         case _ => None
       }
+
+    private def test(adjustmentsInfo: Option[RaRAdjustments]): Option[RaRAdjustments] = ???
   }
 
   implicit object EsbaMerger extends Merger[Option[EsbaInfo], Option[EsbaInfoToSave], Option[List[EsbaInUpstream]]] {
