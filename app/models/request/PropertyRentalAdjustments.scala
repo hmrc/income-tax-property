@@ -16,7 +16,7 @@
 
 package models.request
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{OFormat, Json}
 
 final case class PropertyRentalAdjustments(
   privateUseAdjustment: BigDecimal,
@@ -24,7 +24,8 @@ final case class PropertyRentalAdjustments(
   propertyIncomeAllowance: Option[BigDecimal],
   renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
   residentialFinanceCost: BigDecimal,
-  unusedResidentialFinanceCost: Option[BigDecimal]
+  unusedResidentialFinanceCost: Option[BigDecimal],
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
 
 object PropertyRentalAdjustments {
@@ -45,3 +46,5 @@ final case class RenovationAllowanceBalancingCharge(
 object RenovationAllowanceBalancingCharge {
   implicit val format: OFormat[RenovationAllowanceBalancingCharge] = Json.format
 }
+
+sealed trait WhenYouReportedTheLoss
