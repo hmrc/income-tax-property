@@ -255,13 +255,14 @@ object AnnualForeignPropertySubmission {
         )
       Right(annualForeignPropertySubmissionWithBoth)
     } else {
+      val allowances = if(maybeForeignPropertyAllowances.isEmpty) None else maybeForeignPropertyAllowances
       val annualForeignPropertySubmissionRetainingAllowances = AnnualForeignPropertySubmission(
         foreignProperty = Some(
           Seq(
             AnnualForeignProperty(
               countryCode = targetCountryCode,
               adjustments = Some(ForeignPropertyAdjustments(None, None)),
-              allowances = maybeForeignPropertyAllowances.orElse(None)
+              allowances = allowances
             )
           )
         )
