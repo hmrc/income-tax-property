@@ -382,7 +382,8 @@ object Merger {
                   fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
               ),
               residentialFinanceCost = residentialFinanceCost,
-              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward)
+              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward),
+              whenYouReportedTheLoss = None
             )
           )
         case _ => None
@@ -420,7 +421,6 @@ object Merger {
                 )
               )
             ) =>
-          test(
           Some(
             RaRAdjustments(
               balancingCharge = Some(
@@ -443,11 +443,8 @@ object Merger {
               whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
             )
           )
-          )
         case _ => None
       }
-
-    private def test(adjustmentsInfo: Option[RaRAdjustments]): Option[RaRAdjustments] = ???
   }
 
   implicit object EsbaMerger extends Merger[Option[EsbaInfo], Option[EsbaInfoToSave], Option[List[EsbaInUpstream]]] {
