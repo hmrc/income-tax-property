@@ -205,23 +205,22 @@ object AnnualForeignPropertySubmission {
     val firstForeignPropertyAdjustmentsLens: Optional[AnnualForeignPropertySubmission, ForeignPropertyAdjustments] =
       foreignPropertyLens.some.index(0).andThen(foreignPropertyAdjustmentsLens.some)
 
-    val (maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
-      Option[ForeignPropertyAdjustments], Option[ForeignPropertyAllowances]) =
+    val maybeForeignPropertyAllowances: Option[ForeignPropertyAllowances] =
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
         case Some(annualForeignPropertySubmission) =>
           annualForeignPropertySubmission.foreignProperty.flatMap(_.find(_.countryCode == targetCountryCode)) match {
             case Some(foreignPropertyForTheCountryCode) =>
-              (foreignPropertyForTheCountryCode.adjustments, foreignPropertyForTheCountryCode.allowances)
-            case _ => (None, None)
+              foreignPropertyForTheCountryCode.allowances
+            case _ => None
           }
-        case _ => (None, None)
+        case _ => None
       }
     val newForeignPropertyAdjustments = ForeignPropertyAdjustments(
       privateUseAdjustment = Some(foreignPropertyAdjustmentsWithCountryCode.privateUseAdjustment),
       balancingCharge = foreignPropertyAdjustmentsWithCountryCode.balancingCharge.balancingChargeAmount
     )
 
-    if(foreignPropertyAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined){
+    if (foreignPropertyAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined) {
       val foreignPropertyAllowancesLens = GenLens[AnnualForeignProperty](_.allowances)
       val firstForeignPropertyAllowancesLens: Optional[AnnualForeignPropertySubmission, ForeignPropertyAllowances] =
         foreignPropertyLens.some.index(0).andThen(foreignPropertyAllowancesLens.some)
@@ -256,13 +255,14 @@ object AnnualForeignPropertySubmission {
         )
       Right(annualForeignPropertySubmissionWithBoth)
     } else {
+      val allowances = if(maybeForeignPropertyAllowances.isEmpty) None else maybeForeignPropertyAllowances
       val annualForeignPropertySubmissionRetainingAllowances = AnnualForeignPropertySubmission(
         foreignProperty = Some(
           Seq(
             AnnualForeignProperty(
               countryCode = targetCountryCode,
               adjustments = Some(ForeignPropertyAdjustments(None, None)),
-              allowances = maybeForeignPropertyAllowances
+              allowances = allowances
             )
           )
         )
