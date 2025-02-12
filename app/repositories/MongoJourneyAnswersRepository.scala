@@ -102,7 +102,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   def fetchAllJourneys(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {
     val filter: Bson = Filters
       .and(
-        Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
         Filters.equal("taxYear", ctx.taxYear.endYear),
         Filters.equal("mtditid", ctx.mtditid.value)
       )
