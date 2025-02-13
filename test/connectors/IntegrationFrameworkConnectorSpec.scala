@@ -229,7 +229,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
       )
     )
 
@@ -352,7 +352,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
       )
     )
 
@@ -473,7 +473,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
       )
     )
 

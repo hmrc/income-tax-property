@@ -111,6 +111,7 @@ class EsbaInfoSpec extends UnitTest {
             None,
             None,
             None,
+            None,
             None
           )
         ),

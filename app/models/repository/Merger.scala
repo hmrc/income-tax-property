@@ -21,7 +21,7 @@ import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.sba.{Sba, SbaInfo, SbaInfoToSave}
-import models.request.ukrentaroom.{RaRAdjustments, RarWhenYouReportedTheLoss, RaRUnusedLossesBroughtForward}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 
 import java.time.LocalDate
@@ -383,6 +383,14 @@ object Merger {
               ),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward),
+              unusedLossesBroughtForward = UnusedLossesBroughtForward(
+                unusedLossesBroughtForwardYesOrNo = extractedMaybe
+                  .map(_.unusedLossesBroughtForwardYesNo)
+                  .getOrElse((
+                    fromDownstreamAdjustment.lossBroughtForward.isDefined
+                  )),
+                unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+              ),
               whenYouReportedTheLoss = None
             )
           )
@@ -433,14 +441,14 @@ object Merger {
               ),
               unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward,
               unusedLossesBroughtForward = Some(
-                RaRUnusedLossesBroughtForward(
-                  raRUnusedLossesBroughtForwardYesOrNo = extractedMaybe
+                UnusedLossesBroughtForward(
+                  unusedLossesBroughtForwardYesOrNo = extractedMaybe
                     .map(_.unusedLossesBroughtForward.isDefined)
                     .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
-                  raRUnusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+                  unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
                 )
               ),
-              whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
+              whenYouReportedTheLoss = None
             )
           )
         case _ => None

@@ -17,8 +17,7 @@
 package models
 
 import models.request._
-import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAdjustments, ForeignPropertyAllowances}
-import models.request.ukrentaroom.RaRAdjustments
+import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignPropertyAdjustments}
 import models.responses._
 import utils.CaseClassLevelDifferenceUtil.diff
 import utils.UnitTest
@@ -118,7 +117,8 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(56.78),
             Some(90.12),
             Some(true),
-            Some(UkRentARoom(true))
+            Some(UkRentARoom(true)),
+            Some(WhenYouReportedTheLoss.y2018to2019),
           )
         ),
         Some(
@@ -188,6 +188,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           Some(
             UkOtherAdjustments(
               Some(12.34),
+              None,
               None,
               None,
               None,
