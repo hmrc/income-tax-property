@@ -432,8 +432,8 @@ class MergeService @Inject() (implicit
       ukOtherPropertyExpenses      <- ukOtherProperty.expenses
     } yield (uopaa, ukOtherPropertyExpenses)
 
-    val raRAdjustmentStoreAnswers: Option[RaRBalancingChargeYesNo] = resultFromRepository match {
-      case Some(journeyAnswers) => Some(journeyAnswers.data.as[RaRBalancingChargeYesNo])
+    val raRAdjustmentStoreAnswers: Option[RentARoomAdjustmentsStoreAnswers] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[RentARoomAdjustmentsStoreAnswers])
       case None                 => None
     }
 
