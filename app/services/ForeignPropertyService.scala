@@ -373,6 +373,22 @@ class ForeignPropertyService @Inject() (
           .leftMap(e => ApiServiceError(e.status))
     }
 
+  def createOrUpdateAnnualForeignPropertySubmissionAdjustments(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    body: AnnualForeignPropertySubmissionAdjustments
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+    body match {
+      case AnnualForeignPropertySubmissionAdjustments(None) =>
+        ITPEnvelope.liftPure(false)
+      case _ =>
+        EitherT(
+          connector.createOrUpdateAnnualForeignPropertySubmissionAdjustments(taxYear, incomeSourceId, nino, body)
+        ).map(_ => true)
+          .leftMap(e => ApiServiceError(e.status))
+    }
+
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
     nino: Nino,
@@ -420,66 +436,70 @@ class ForeignPropertyService @Inject() (
 
   }
 
-
   def saveForeignPropertyAdjustments(
-                                      journeyContext: JourneyContext,
-                                      nino: Nino,
-                                      foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
-    val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     for {
-      annualForeignPropertySubmissionFromDownstream <- this.getAnnualForeignPropertySubmissionFromDownStream(
+      _ <- {
+        if (foreignAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined) {
+          val annualForeignPropertySubmission =
+            AnnualForeignPropertySubmission.fromForeignPropertyAdjustmentsPIA(foreignAdjustmentsWithCountryCode)
+          createOrUpdateAnnualForeignPropertySubmission(
             journeyContext.taxYear,
+            journeyContext.incomeSourceId,
             nino,
-            journeyContext.incomeSourceId
+            annualForeignPropertySubmission
           )
-          .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
-          }
-      annualSubmissionResponse <- {
-        val annualForeignPropertySubmissionWithNewAdjustments = AnnualForeignPropertySubmission
-          .fromForeignPropertyAdjustments(
-            Some(annualForeignPropertySubmissionFromDownstream),
-            foreignAdjustmentsWithCountryCode
-          ).fold(_ => emptyAnnualForeignPropertySubmission, identity)
-        createOrUpdateAnnualForeignPropertySubmission(
-          journeyContext.taxYear,
-          journeyContext.incomeSourceId,
-          nino,
-          annualForeignPropertySubmissionWithNewAdjustments
-        )
+        } else {
+          val annualForeignPropertySubmissionWithNewAdjustments = AnnualForeignPropertySubmission
+            .fromForeignPropertyAdjustments(
+              foreignAdjustmentsWithCountryCode
+            )
+          createOrUpdateAnnualForeignPropertySubmissionAdjustments(
+            journeyContext.taxYear,
+            journeyContext.incomeSourceId,
+            nino,
+            annualForeignPropertySubmissionWithNewAdjustments
+          )
+        }
+
       }
-      periodicSubmissionResponse <- {
-        if(foreignAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined){
+      _ <- {
+        if (foreignAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined) {
           ITPEnvelope.liftPure(Option.empty[PeriodicSubmissionId])
         } else {
           for {
             currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-              journeyContext.taxYear,
-              nino,
-              journeyContext.incomeSourceId
-            )
+                                           journeyContext.taxYear,
+                                           nino,
+                                           journeyContext.incomeSourceId
+                                         )
             submissionResponse <- createOrUpdatePeriodicSubmission(
-              journeyContext.toJourneyContextWithNino(nino),
-              currentPeriodicSubmission,
-              foreignAdjustmentsWithCountryCode
-            )
+                                    journeyContext.toJourneyContextWithNino(nino),
+                                    currentPeriodicSubmission,
+                                    foreignAdjustmentsWithCountryCode
+                                  )
           } yield submissionResponse
         }
+
       }
       res <- persistForeignAnswers(
-        journeyContext,
-        ForeignAdjustmentsStoreAnswers(
-          balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
-          foreignUnusedResidentialFinanceCostYesNo = foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(_.foreignUnusedResidentialFinanceCostYesNo),
-          unusedLossesPreviousYearsYesNo = foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
-          whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
-        ),
-        foreignAdjustmentsWithCountryCode.countryCode
-      )
+               journeyContext,
+               ForeignAdjustmentsStoreAnswers(
+                 balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
+                 foreignUnusedResidentialFinanceCostYesNo =
+                   foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(
+                     _.foreignUnusedResidentialFinanceCostYesNo
+                   ),
+                 unusedLossesPreviousYearsYesNo =
+                   foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
+                 whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
+               ),
+               foreignAdjustmentsWithCountryCode.countryCode
+             )
     } yield res
-  }
 
   def saveForeignPropertySba(
     journeyContext: JourneyContext,

@@ -19,7 +19,7 @@ package utils.mocks
 import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
@@ -275,5 +275,23 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
           .returning(Future.successful(result))
       case _ => mockCreateAnnualForeignSubmission(taxYear, incomeSourceId, taxableEntityId, result)
     }
+  def mockCreateAnnualForeignPropertySubmissionAdjustments(
+                                                            taxYear: TaxYear,
+                                                            incomeSourceId: IncomeSourceId,
+                                                            taxableEntityId: Nino,
+                                                            result: Either[ApiError, Unit]
+  ): CallHandler5[TaxYear, IncomeSourceId, Nino, AnnualForeignPropertySubmissionAdjustments, HeaderCarrier, Future[Either[ApiError, Unit]]] =
+        (mockIntegrationFrameworkConnector
+          .createOrUpdateAnnualForeignPropertySubmissionAdjustments(
+            _: TaxYear,
+            _: IncomeSourceId,
+            _: Nino,
+            _: AnnualForeignPropertySubmissionAdjustments
+          )(
+            _: HeaderCarrier
+          ))
+          .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
+          .returning(Future.successful(result))
+
 
 }
