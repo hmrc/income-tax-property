@@ -412,14 +412,22 @@ class PropertyService @Inject() (
       }
 
   def getPropertyAnnualSubmission(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(implicit
-    hc: HeaderCarrier
+                                                                                                           hc: HeaderCarrier
   ): ITPEnvelope[PropertyAnnualSubmission] =
     EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
-      .leftMap(error => ApiServiceError(error.status))
+      .map(pas => {
+        logger.debug(s"[getAnnualSubmission] Annual submission details: $pas")
+        pas
+      })
+      .leftMap(error => {
+        logger.debug(s"[getAnnualSubmission] Annual submission details error")
+        ApiServiceError(error.status)
+      })
       .subflatMap { annualSubmission =>
-        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]](
+        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]]{
+          logger.debug(s"[getAnnualSubmission] Annual submission details not found")
           DataNotFoundError.asLeft[PropertyAnnualSubmission]
-        )(_.asRight[ServiceError])
+        }(_.asRight[ServiceError])
       }
 
   def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
