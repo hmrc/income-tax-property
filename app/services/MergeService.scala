@@ -29,13 +29,14 @@ import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukAndForeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
+import play.api.Logging
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class MergeService @Inject() (implicit
   ec: ExecutionContext
-) {
+) extends Logging {
 
   def mergeAll(
     resultFromAnnualDownstream: PropertyAnnualSubmission,
@@ -362,6 +363,11 @@ class MergeService @Inject() (implicit
       ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
     } yield ukop
 
+    logger.error(s"[MergeService][mergeRentalsAndRaRAbout]: jointlyLet = $jointlyLet" +
+      s"\nuKOtherPropertyMaybe = $uKOtherPropertyMaybe" +
+      s"\nclaimPropertyIncomeAllowanceYesOrNo = $claimPropertyIncomeAllowanceYesOrNo" +
+      s"\nclaimExpensesOrRRRYesNo = $claimExpensesOrRRRYesNo"
+    )
     val rentalsAndRaRAboutStoreAnswers = (claimPropertyIncomeAllowanceYesOrNo, claimExpensesOrRRRYesNo)
     rentalsAndRaRAboutStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
   }
