@@ -369,7 +369,7 @@ class MergeService @Inject() (implicit
       s"\nclaimExpensesOrRRRYesNo = $claimExpensesOrRRRYesNo"
     )
     val rentalsAndRaRAboutStoreAnswers = (claimPropertyIncomeAllowanceYesOrNo, claimExpensesOrRRRYesNo)
-    rentalsAndRaRAboutStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
+    rentalsAndRaRAboutStoreAnswers.merge((jointlyLet.orElse(Some(false)), uKOtherPropertyMaybe))
   }
 
   def mergeRaRAbout(
@@ -392,7 +392,7 @@ class MergeService @Inject() (implicit
       ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
     } yield ukop
 
-    rentARoomAllowancesStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
+    rentARoomAllowancesStoreAnswers.merge((jointlyLet.orElse(Some(false)), uKOtherPropertyMaybe))
   }
 
   def mergeStatuses(resultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
