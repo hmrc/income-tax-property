@@ -354,7 +354,7 @@ class MergeService @Inject() (implicit
     val jointlyLet = for {
       uop    <- resultFromDownstream.ukOtherProperty
       ukopaa <- uop.ukOtherPropertyAnnualAdjustments
-      ukorar <- ukopaa.ukOtherRentARoom
+      ukorar <- ukopaa.ukOtherRentARoom.orElse(ukopaa.rentARoom)
     } yield ukorar.jointlyLet
 
     val uKOtherPropertyMaybe: Option[UkOtherProperty] = for {
@@ -378,7 +378,7 @@ class MergeService @Inject() (implicit
     val jointlyLet = for {
       uop    <- resultFromDownstream.ukOtherProperty
       ukopaa <- uop.ukOtherPropertyAnnualAdjustments
-      ukorar <- ukopaa.ukOtherRentARoom
+      ukorar <- ukopaa.ukOtherRentARoom.orElse(ukopaa.rentARoom)
     } yield ukorar.jointlyLet
 
     val uKOtherPropertyMaybe: Option[UkOtherProperty] = for {

@@ -118,7 +118,8 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(56.78),
             Some(90.12),
             Some(true),
-            Some(UkRentARoom(true))
+            Some(UkRentARoom(true)),
+            None
           )
         ),
         Some(
@@ -188,6 +189,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           Some(
             UkOtherAdjustments(
               Some(12.34),
+              None,
               None,
               None,
               None,

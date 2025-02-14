@@ -79,7 +79,8 @@ class JourneyAnswersIntegrationSpec
             Some(23),
             Some(14),
             Some(true),
-            Some(UkRentARoom(true))
+            Some(UkRentARoom(true)),
+            None
           )
         ),
         Some(
