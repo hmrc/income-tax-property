@@ -447,9 +447,7 @@ class PropertyServiceSpec
         renovationAllowanceBalancingChargeAmount = Some(92)
       ),
       BigDecimal(56.78),
-      Some(BigDecimal(78.89)),
-      UnusedLossesBroughtForward(true, Some(12.56)),
-      Some(WhenYouReportedTheLoss.y2018to2019)
+      Some(BigDecimal(78.89))
     )
 
     "return a success with no content when the request is valid and data is persisted" in {

@@ -382,16 +382,7 @@ object Merger {
                   fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
               ),
               residentialFinanceCost = residentialFinanceCost,
-              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward),
-              unusedLossesBroughtForward = UnusedLossesBroughtForward(
-                unusedLossesBroughtForwardYesOrNo = extractedMaybe
-                  .map(_.unusedLossesBroughtForwardYesNo)
-                  .getOrElse((
-                    fromDownstreamAdjustment.lossBroughtForward.isDefined
-                  )),
-                unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
-              ),
-              whenYouReportedTheLoss = extractedMaybe.flatMap(_.whenYouReportedTheLoss)
+              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward)
             )
           )
         case _ => None

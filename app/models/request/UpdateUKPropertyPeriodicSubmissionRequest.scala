@@ -82,7 +82,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
       case e @ RentARoomExpenses(_, _, _, _, _, _)              => fromRaRExpenses(periodicSubmissionMaybe, e)
       case e @ PropertyRentalsIncome(_, _, _, _, _, _, _, _, _) => fromPropertyRentalsIncome(periodicSubmissionMaybe, e)
       case e @ RentalsAndRaRIncome(_, _, _, _, _, _, _, _)      => fromRentalsAndRaRIncome(periodicSubmissionMaybe, e)
-      case e @ PropertyRentalAdjustments(_, _, _, _, _, _, _, _) =>
+      case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(periodicSubmissionMaybe, e).asRight[ServiceError]
       case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(periodicSubmissionMaybe, e)
       case _ =>
