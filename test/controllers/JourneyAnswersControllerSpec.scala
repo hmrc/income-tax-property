@@ -286,12 +286,7 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          Some(BigDecimal(78.89)),
-          UnusedLossesBroughtForward(
-            unusedLossesBroughtForwardYesOrNo = true,
-            unusedLossesBroughtForwardAmount = Some(BigDecimal(37.92))
-          ),
-          Some(WhenYouReportedTheLoss.y2018to2019),
+          Some(BigDecimal(78.89))
         )
       )
 
@@ -1232,12 +1227,7 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          Some(BigDecimal(78.89)),
-          UnusedLossesBroughtForward(
-            unusedLossesBroughtForwardYesOrNo = true,
-            unusedLossesBroughtForwardAmount = Some(BigDecimal(12.56))
-          ),
-          Some(WhenYouReportedTheLoss.y2018to2019),
+          Some(BigDecimal(78.89))
         )
       )
 

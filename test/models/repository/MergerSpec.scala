@@ -151,9 +151,8 @@ class MergerSpec extends UnitTest {
 
       val balancingChargeYesNo = true
       val renovationAllowanceBalancingChargeYesNo = false
-      val unusedLossesBroughtForwardYesOrNo = true
       val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] =
-        Some(AdjustmentStoreAnswers(balancingChargeYesNo, renovationAllowanceBalancingChargeYesNo, unusedLossesBroughtForwardYesOrNo, Some(whenReportedTheLoss)))
+        Some(AdjustmentStoreAnswers(balancingChargeYesNo, renovationAllowanceBalancingChargeYesNo))
       val propertyRentalAdjustments: Option[PropertyRentalAdjustments] =
         adjustmentStoreAnswers.merge(ukOtherAdjustmentsAndExpensesMaybe)
       propertyRentalAdjustments shouldBe Some(
@@ -166,12 +165,7 @@ class MergerSpec extends UnitTest {
             Some(businessPremisesRenovationAllowanceBalancingCharges)
           ),
           residentialFinanceCost,
-          Some(residentialFinanceCostCarriedForward),
-          UnusedLossesBroughtForward(
-            unusedLossesBroughtForwardYesOrNo,
-            Some(unusedLossesBroughtForward)
-          ),
-          whenYouReportedTheLoss = Some(whenReportedTheLoss)
+          Some(residentialFinanceCostCarriedForward)
         )
       )
     }

@@ -56,7 +56,7 @@ object CreateUKPropertyPeriodicSubmissionRequest {
         fromPropertyRentalsIncome(taxYear, periodicSubmissionMaybe, e)
       case e @ RentalsAndRaRIncome(_, _, _, _, _, _, _, _) =>
         fromRentalsAndRaRIncome(taxYear, periodicSubmissionMaybe, e)
-      case e @ PropertyRentalAdjustments(_, _, _, _, _, _, _, _) =>
+      case e @ PropertyRentalAdjustments(_, _, _, _, _, _) =>
         fromPropertyRentalAdjustments(taxYear, periodicSubmissionMaybe, e).asRight[ServiceError]
       case e @ RentalsAndRaRAbout(_, _, _, _, _) => fromRentalsAndRaRAbout(taxYear, periodicSubmissionMaybe, e)
 

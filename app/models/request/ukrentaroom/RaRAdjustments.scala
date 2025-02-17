@@ -16,7 +16,7 @@
 
 package models.request.ukrentaroom
 
-import models.request.{WhenYouReportedTheLoss, BalancingCharge, UnusedLossesBroughtForward}
+import models.request.{BalancingCharge, UnusedLossesBroughtForward, WhenYouReportedTheLoss}
 import play.api.libs.json.{OFormat, Json}
 
 final case class RaRAdjustments(

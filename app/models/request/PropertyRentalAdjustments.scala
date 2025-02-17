@@ -26,9 +26,7 @@ final case class PropertyRentalAdjustments(
   propertyIncomeAllowance: Option[BigDecimal],
   renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
   residentialFinanceCost: BigDecimal,
-  unusedResidentialFinanceCost: Option[BigDecimal],
-  unusedLossesBroughtForward: UnusedLossesBroughtForward,
-  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
+  unusedResidentialFinanceCost: Option[BigDecimal]
 )
 
 object PropertyRentalAdjustments {
@@ -51,9 +49,9 @@ object RenovationAllowanceBalancingCharge {
 }
 
 final case class UnusedLossesBroughtForward(
-  unusedLossesBroughtForwardYesOrNo: Boolean,
-  unusedLossesBroughtForwardAmount: Option[BigDecimal]
-)
+                                             unusedLossesBroughtForwardYesOrNo: Boolean,
+                                             unusedLossesBroughtForwardAmount: Option[BigDecimal]
+                                           )
 
 object UnusedLossesBroughtForward {
   implicit val format: OFormat[UnusedLossesBroughtForward] = Json.format
