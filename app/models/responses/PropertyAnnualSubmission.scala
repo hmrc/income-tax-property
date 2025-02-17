@@ -421,7 +421,7 @@ case class UkOtherAdjustments(
   nonResidentLandlord: Option[Boolean],
   ukOtherRentARoom: Option[UkRentARoom], // API#1598 (Get) expects ukOtherRentARoom
   rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
-  whenYouReportedTheLoss: Option[WhenReportedTheLoss]
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
 
 object UkOtherAdjustments {

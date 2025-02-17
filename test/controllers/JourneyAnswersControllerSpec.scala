@@ -132,7 +132,12 @@ class JourneyAnswersControllerSpec
                                                  |        "balancingChargeYesNo" : true,
                                                  |        "balancingChargeAmount" : 12.34
                                                  |    },
-                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12
+                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12,
+                                                 |    "unusedLossesBroughtForward" : {
+                                                 |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                 |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                 |    },
+                                                 |    "whenYouReportedTheLoss" : "y2018to2019"
                                                  |}""".stripMargin)
 
     "return CREATED for valid request body" in {
@@ -256,7 +261,12 @@ class JourneyAnswersControllerSpec
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
-                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |  "unusedResidentialFinanceCost": 78.89,
+                                                            |  "unusedLossesBroughtForward" : {
+                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                            |    },
+                                                            |    "whenYouReportedTheLoss" : "y2018to2019"
                                                             |}
         """.stripMargin)
     val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalAdjustments)
@@ -1197,7 +1207,12 @@ class JourneyAnswersControllerSpec
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
-                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |  "unusedResidentialFinanceCost": 78.89,
+                                                            |  "unusedLossesBroughtForward" : {
+                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                            |    },
+                                                            |    "whenYouReportedTheLoss" : "y2018to2019"
                                                             |}
         """.stripMargin)
     val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalsAndRaRAdjustments)
@@ -1220,7 +1235,7 @@ class JourneyAnswersControllerSpec
           Some(BigDecimal(78.89)),
           UnusedLossesBroughtForward(
             unusedLossesBroughtForwardYesOrNo = true,
-            unusedLossesBroughtForwardAmount = Some(BigDecimal(38.42))
+            unusedLossesBroughtForwardAmount = Some(BigDecimal(12.56))
           ),
           Some(WhenYouReportedTheLoss.y2018to2019),
         )

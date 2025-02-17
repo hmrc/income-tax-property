@@ -542,7 +542,8 @@ class PropertyService @Inject() (
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(
       propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
       propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo,
-      propertyRentalAdjustment.unusedLossesBroughtForward.unusedLossesBroughtForwardYesOrNo
+      propertyRentalAdjustment.unusedLossesBroughtForward.unusedLossesBroughtForwardYesOrNo,
+      propertyRentalAdjustment.whenYouReportedTheLoss
     )
     for {
       maybePeriodicSubmission <- getCurrentPeriodicSubmission(

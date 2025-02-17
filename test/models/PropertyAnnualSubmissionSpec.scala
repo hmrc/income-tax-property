@@ -120,7 +120,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(true),
             Some(UkRentARoom(true)),
             None,
-            Some(WhenReportedTheLoss.y2018to2019),
+            Some(WhenYouReportedTheLoss.y2018to2019),
           )
         ),
         Some(

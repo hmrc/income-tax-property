@@ -391,7 +391,7 @@ object Merger {
                   )),
                 unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
               ),
-              whenYouReportedTheLoss = None
+              whenYouReportedTheLoss = extractedMaybe.flatMap(_.whenYouReportedTheLoss)
             )
           )
         case _ => None
@@ -448,7 +448,7 @@ object Merger {
                   unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
                 )
               ),
-              whenYouReportedTheLoss = None
+              whenYouReportedTheLoss = extractedMaybe.flatMap(_.whenYouReportedTheLoss)
             )
           )
         case _ => None
