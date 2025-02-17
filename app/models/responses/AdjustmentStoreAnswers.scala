@@ -16,12 +16,14 @@
 
 package models.responses
 
-import play.api.libs.json.{Json, OFormat}
+import models.request.WhenYouReportedTheLoss
+import play.api.libs.json.{OFormat, Json}
 
 case class AdjustmentStoreAnswers(
                               balancingChargeYesNo: Boolean,
                               renovationAllowanceBalancingChargeYesNo: Boolean,
-                              unusedLossesBroughtForwardYesNo: Boolean
+                              unusedLossesBroughtForwardYesNo: Boolean,
+                              whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
                             )
 
 object AdjustmentStoreAnswers {
