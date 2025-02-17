@@ -18,6 +18,7 @@ package models
 
 import models.request._
 import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignPropertyAdjustments}
+import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import utils.CaseClassLevelDifferenceUtil.diff
 import utils.UnitTest
@@ -119,7 +120,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(true),
             Some(UkRentARoom(true)),
             None,
-            Some(WhenYouReportedTheLoss.y2018to2019),
+            Some(WhenReportedTheLoss.y2018to2019),
           )
         ),
         Some(
@@ -257,7 +258,9 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           Some(35.79)
         ),
         13.57,
-        Some(91.35)
+        Some(91.35),
+        UnusedLossesBroughtForward(true, Some(32.47)),
+        Some(WhenYouReportedTheLoss.y2018to2019)
       )
 
       val firstLevelDiff = diff(
@@ -303,7 +306,9 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     "be generated from rar adjustments and not override existing other fields" in {
       val raRAdjustments = RaRAdjustments(
         Option(BalancingCharge(true, Some(80.24))),
-        Some(12.65)
+        Some(12.65),
+        Option(UnusedLossesBroughtForward(true, Some(32.47))),
+        Some(WhenYouReportedTheLoss.y2018to2019)
       )
 
       val firstLevelDiff = diff(

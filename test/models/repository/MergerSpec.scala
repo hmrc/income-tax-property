@@ -19,11 +19,11 @@ package models.repository
 import models.repository.Merger._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.{BalancingCharge, PropertyRentalAdjustments, RenovationAllowanceBalancingCharge}
+import models.request.{PropertyRentalAdjustments, BalancingCharge, WhenYouReportedTheLoss, UnusedLossesBroughtForward, RenovationAllowanceBalancingCharge}
 import models.responses._
 import utils.UnitTest
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, LocalDate}
 
 class MergerSpec extends UnitTest {
   "Merger" should {
@@ -40,6 +40,8 @@ class MergerSpec extends UnitTest {
     val businessPremisesRenovationAllowanceBalancingCharges = 44
     val residentialFinanceCost = 1.23
     val residentialFinanceCostCarriedForward = 45.67
+    val unusedLossesBroughtForward = 32.65
+    val whenReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
     val aPropertyPeriodicSubmission = PropertyPeriodicSubmission(
       None,
       None,
@@ -149,8 +151,9 @@ class MergerSpec extends UnitTest {
 
       val balancingChargeYesNo = true
       val renovationAllowanceBalancingChargeYesNo = false
+      val unusedLossesBroughtForwardYesOrNo = true
       val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] =
-        Some(AdjustmentStoreAnswers(balancingChargeYesNo, renovationAllowanceBalancingChargeYesNo))
+        Some(AdjustmentStoreAnswers(balancingChargeYesNo, renovationAllowanceBalancingChargeYesNo, unusedLossesBroughtForwardYesOrNo))
       val propertyRentalAdjustments: Option[PropertyRentalAdjustments] =
         adjustmentStoreAnswers.merge(ukOtherAdjustmentsAndExpensesMaybe)
       propertyRentalAdjustments shouldBe Some(
@@ -163,7 +166,12 @@ class MergerSpec extends UnitTest {
             Some(businessPremisesRenovationAllowanceBalancingCharges)
           ),
           residentialFinanceCost,
-          Some(residentialFinanceCostCarriedForward)
+          Some(residentialFinanceCostCarriedForward),
+          UnusedLossesBroughtForward(
+            unusedLossesBroughtForwardYesOrNo,
+            Some(unusedLossesBroughtForward)
+          ),
+          whenYouReportedTheLoss = Some(whenReportedTheLoss)
         )
       )
     }
