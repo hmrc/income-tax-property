@@ -18,7 +18,7 @@ package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.foreign.{AnnualForeignProperty, AnnualForeignPropertyAdjustments, AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, ForeignPropertyAdjustments, ForeignPropertyAllowances}
+import models.request.foreign.{AnnualForeignProperty, AnnualForeignPropertyAdjustments, AnnualForeignPropertyAllowances, AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
@@ -66,6 +66,22 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
 
   val annualForeignPropertySubmissionAdjustments: AnnualForeignPropertySubmissionAdjustments =
     AnnualForeignPropertySubmissionAdjustments(Some(Seq(annualForeignPropertyAdjustments)))
+
+  val foreignPropertyAllowances: ForeignPropertyAllowances = ForeignPropertyAllowances(
+    Some(BigDecimal(99.00)),
+    Some(BigDecimal(150.00)),
+    Some(BigDecimal(45.00)),
+    Some(BigDecimal(768.00)),
+    None,
+    None,
+    None,
+    None
+  )
+
+  val annualForeignPropertyAllowances: AnnualForeignPropertyAllowances =
+    AnnualForeignPropertyAllowances(countryCode, Some(foreignPropertyAllowances))
+  val annualForeignPropertySubmissionAllowances: AnnualForeignPropertySubmissionAllowances =
+    AnnualForeignPropertySubmissionAllowances(Some(Seq(annualForeignPropertyAllowances)))
 
   "Given a need to get Periodic Submission Data" when {
 
@@ -906,6 +922,26 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           )(hc)
       ) shouldBe Right((): Unit)
     }
+    "for TaxYear(2024) onwards create annual foreign property submissions allowances data" in {
+      val taxYear = TaxYear(2024)
+      val httpResponse = HttpResponse(NO_CONTENT, Json.toJson(annualForeignPropertySubmissionAllowances).toString())
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmissionAllowances).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmissionAllowances(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmissionAllowances
+          )(hc)
+      ) shouldBe Right((): Unit)
+    }
 
     "return Conflict from Upstream for annual foreign property" in {
       val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
@@ -944,6 +980,26 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
             incomeSourceId,
             nino,
             annualForeignPropertySubmissionAdjustments
+          )(hc)
+      ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
+    }
+    "return Conflict from Upstream for annual foreign property submission allowances" in {
+      val httpResponse = HttpResponse(CONFLICT, Json.toJson(SingleErrorBody("some-code", "Conflict")).toString())
+      val taxYear = TaxYear(2024)
+
+      stubPutHttpClientCall(
+        s"/income-tax/business/property/annual/23-24/$nino/$incomeSourceId",
+        Json.toJson(annualForeignPropertySubmissionAllowances).toString(),
+        httpResponse
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmissionAllowances(
+            taxYear,
+            incomeSourceId,
+            nino,
+            annualForeignPropertySubmissionAllowances
           )(hc)
       ) shouldBe Left(ApiError(500, SingleErrorBody("some-code", "Conflict")))
     }

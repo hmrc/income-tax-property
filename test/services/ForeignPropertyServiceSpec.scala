@@ -810,15 +810,14 @@ class ForeignPropertyServiceSpec
       zeroEmissionsCarAllowance = Some(BigDecimal(1.5)),
       zeroEmissionsGoodsVehicleAllowance = Some(BigDecimal(2.5)),
       costOfReplacingDomesticItems = Some(BigDecimal(3.5)),
-      otherCapitalAllowance = Some(BigDecimal(4.5)),
-      structuredBuildingAllowance = None
+      otherCapitalAllowance = Some(BigDecimal(4.5))
     )
 
     "call create foreign annual submission request when annual submission is empty and return no content for valid request" in {
 
       val emptyAnnualForeignPropertySubmissionFromDownstream = AnnualForeignPropertySubmission(None)
 
-      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+      val requestForCreate: AnnualForeignPropertySubmissionAllowances =
         AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
           Some(emptyAnnualForeignPropertySubmissionFromDownstream),
           foreignAllowancesWithCountryCode
@@ -831,12 +830,11 @@ class ForeignPropertyServiceSpec
         Right(Some(emptyAnnualForeignPropertySubmissionFromDownstream))
       )
 
-      mockCreateAnnualForeignPropertySubmission(
+      mockCreateAnnualForeignPropertySubmissionAllowances(
         taxYear,
         incomeSourceId,
         nino,
-        Some(requestForCreate),
-        ().asRight[ApiError]
+        Right(requestForCreate)
       )
 
       await(
@@ -876,7 +874,7 @@ class ForeignPropertyServiceSpec
           )
         )
 
-      val Right(requestForCreate: AnnualForeignPropertySubmission) =
+      val requestForCreate: AnnualForeignPropertySubmissionAllowances =
         AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
           Some(mayBeAnnualForeignPropertySubmissionFromDownstream),
           foreignAllowancesWithCountryCode
@@ -889,12 +887,11 @@ class ForeignPropertyServiceSpec
         Right(Some(mayBeAnnualForeignPropertySubmissionFromDownstream))
       )
 
-      mockCreateAnnualForeignPropertySubmission(
+      mockCreateAnnualForeignPropertySubmissionAllowances(
         taxYear,
         incomeSourceId,
         nino,
-        Some(requestForCreate),
-        ().asRight[ApiError]
+        Right(requestForCreate)
       )
 
       await(
@@ -910,12 +907,6 @@ class ForeignPropertyServiceSpec
 
     "return ApiError BAD_REQUEST for invalid request body" in {
 
-      val Right(requestForCreate: AnnualForeignPropertySubmission) =
-        AnnualForeignPropertySubmission.fromForeignPropertyAllowances(
-          None,
-          foreignAllowancesWithCountryCode
-        )
-
       mockGetAnnualForeignPropertySubmission(
         taxYear,
         nino,
@@ -923,11 +914,10 @@ class ForeignPropertyServiceSpec
         Right(None)
       )
 
-      mockCreateAnnualForeignPropertySubmission(
+      mockCreateAnnualForeignPropertySubmissionAllowances(
         taxYear,
         incomeSourceId,
         nino,
-        Some(requestForCreate),
         ApiError(BAD_REQUEST, SingleErrorBody("code", "error")).asLeft[Unit]
       )
 

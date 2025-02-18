@@ -76,6 +76,18 @@ object AnnualForeignPropertySubmissionAdjustments {
     Json.format[AnnualForeignPropertySubmissionAdjustments]
 }
 
+case class AnnualForeignPropertyAllowances(countryCode: String, allowances: Option[ForeignPropertyAllowances])
+
+object AnnualForeignPropertyAllowances {
+  implicit val format: OFormat[AnnualForeignPropertyAllowances] = Json.format[AnnualForeignPropertyAllowances]
+}
+
+case class AnnualForeignPropertySubmissionAllowances(foreignProperty: Option[Seq[AnnualForeignPropertyAllowances]])
+
+object AnnualForeignPropertySubmissionAllowances {
+  implicit val format: OFormat[AnnualForeignPropertySubmissionAllowances] = Json.format[AnnualForeignPropertySubmissionAllowances]
+}
+
 object AnnualForeignPropertySubmission {
   implicit val format: OFormat[AnnualForeignPropertySubmission] = Json.format[AnnualForeignPropertySubmission]
 
@@ -87,26 +99,24 @@ object AnnualForeignPropertySubmission {
   def fromForeignPropertyAllowances(
     mayBeAnnualForeignPropertySubmissionFromDownstream: Option[AnnualForeignPropertySubmission],
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
-  ): Either[ServiceError, AnnualForeignPropertySubmission] = {
+  ): AnnualForeignPropertySubmissionAllowances = {
 
     val countryCode = foreignPropertyAllowancesWithCountryCode.countryCode
-    val foreignPropertyLens = GenLens[AnnualForeignPropertySubmission](_.foreignProperty)
-    val foreignPropertyAllowancesLens = GenLens[AnnualForeignProperty](_.allowances)
+    val foreignPropertyLens = GenLens[AnnualForeignPropertySubmissionAllowances](_.foreignProperty)
+    val foreignPropertyAllowancesLens = GenLens[AnnualForeignPropertyAllowances](_.allowances)
 
-    val firstForeignPropertyAllowancesLens: Optional[AnnualForeignPropertySubmission, ForeignPropertyAllowances] =
+    val firstForeignPropertyAllowancesLens
+      : Optional[AnnualForeignPropertySubmissionAllowances, ForeignPropertyAllowances] =
       foreignPropertyLens.some.index(0).andThen(foreignPropertyAllowancesLens.some)
 
-    val (maybeForeignPropertyAdjustments, maybeForeignPropertyAllowances): (
-      Option[ForeignPropertyAdjustments],
-      Option[ForeignPropertyAllowances]
-    ) =
+    val maybeForeignPropertyAllowances: Option[ForeignPropertyAllowances] =
       mayBeAnnualForeignPropertySubmissionFromDownstream match {
         case Some(
-              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, Some(adjustments), Some(allowances)))))
+              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, _, Some(allowances)))))
             ) =>
-          (Some(adjustments), Some(allowances))
-        case Some(_) => (None, None)
-        case _       => (None, None)
+          Some(allowances)
+
+        case _ => None
       }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(
@@ -115,17 +125,16 @@ object AnnualForeignPropertySubmission {
       costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
       otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance,
       annualInvestmentAllowance = maybeForeignPropertyAllowances.flatMap(_.annualInvestmentAllowance),
-      propertyAllowance = maybeForeignPropertyAllowances.flatMap(_.propertyAllowance),
+      propertyAllowance = None,
       electricChargePointAllowance = maybeForeignPropertyAllowances.flatMap(_.electricChargePointAllowance),
       structuredBuildingAllowance = maybeForeignPropertyAllowances.flatMap(_.structuredBuildingAllowance)
     )
 
-    val annualForeignPropertySubmissionRetainingAdjustments = AnnualForeignPropertySubmission(
+    val emptyAllowances = AnnualForeignPropertySubmissionAllowances(
       foreignProperty = Some(
         Seq(
-          AnnualForeignProperty(
+          AnnualForeignPropertyAllowances(
             countryCode = countryCode,
-            adjustments = maybeForeignPropertyAdjustments,
             allowances = Some(ForeignPropertyAllowances(None, None, None, None, None, None, None, None))
           )
         )
@@ -134,10 +143,10 @@ object AnnualForeignPropertySubmission {
 
     val annualForeignPropertySubmissionWithNewAllowances =
       firstForeignPropertyAllowancesLens.replace(newForeignPropertyAllowances)(
-        annualForeignPropertySubmissionRetainingAdjustments
+        emptyAllowances
       )
 
-    Right(annualForeignPropertySubmissionWithNewAllowances)
+    annualForeignPropertySubmissionWithNewAllowances
   }
 
   def fromForeignPropertySbas(
