@@ -19,12 +19,13 @@ package connectors.response
 import connectors.Parser
 import models.errors.ApiError
 import models.responses.PropertyAnnualSubmission
+import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 case class GetPropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[PropertyAnnualSubmission]])
 
-object GetPropertyAnnualSubmissionResponse {
+object GetPropertyAnnualSubmissionResponse extends Logging {
 
   implicit val getPropertyAnnualSubmissionDataReads: HttpReads[GetPropertyAnnualSubmissionResponse] =
     new HttpReads[GetPropertyAnnualSubmissionResponse] with Parser {
@@ -41,6 +42,7 @@ object GetPropertyAnnualSubmissionResponse {
 
       private def extractResult(response: HttpResponse): Either[ApiError, Option[PropertyAnnualSubmission]] = {
         val json = response.json
+        logger.info(s"[GetPropertyAnnualSubmissionResponse]: $json")
         json.validate[PropertyAnnualSubmission]
           .fold[Either[ApiError, Option[PropertyAnnualSubmission]]](_ => badSuccessJsonResponse, parsedModel => Right(Some(parsedModel)))
       }
