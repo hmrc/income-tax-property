@@ -79,6 +79,7 @@ class MergerSpec extends UnitTest {
               Some(privateUseAdjustments),
               Some(businessPremisesRenovationAllowanceBalancingCharges),
               None,
+              None,
               None
             )
           ),
