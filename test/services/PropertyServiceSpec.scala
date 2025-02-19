@@ -142,7 +142,7 @@ class PropertyServiceSpec
         submittedOn = Some(LocalDateTime.now),
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
         )
       )
 
@@ -355,7 +355,7 @@ class PropertyServiceSpec
       submittedOn = Some(LocalDateTime.now),
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
       )
     )
 
@@ -392,7 +392,7 @@ class PropertyServiceSpec
       submittedOn = Some(LocalDateTime.now),
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
       )
     )
 
@@ -452,7 +452,7 @@ class PropertyServiceSpec
 
     "return a success with no content when the request is valid and data is persisted" in {
       val annualUkOtherProperty =
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -497,7 +497,7 @@ class PropertyServiceSpec
         None,
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
         )
       )
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
@@ -516,13 +516,13 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
 
       val annualUkOtherProperty =
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
       val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
       val updatedAnnualSubmission = PropertyAnnualSubmission(
         None,
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, None,Some(WhenYouReportedTheLoss.y2018to2019))), None)
         )
       )
 
@@ -1973,6 +1973,7 @@ class PropertyServiceSpec
                     None,
                     Some(false),
                     Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo)),
+                    None,
                     None
                   )
                 ),
@@ -2120,6 +2121,7 @@ class PropertyServiceSpec
                     None,
                     Some(false),
                     Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo)),
+                    None,
                     None
                   )
                 ),
@@ -2236,6 +2238,7 @@ class PropertyServiceSpec
                     None,
                     Some(false),
                     None,
+                    None,
                     None
                   )
                 ),
@@ -2280,6 +2283,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     Some(false),
+                    None,
                     None,
                     None
                   )
