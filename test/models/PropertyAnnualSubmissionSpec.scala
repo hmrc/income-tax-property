@@ -195,6 +195,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
               None,
               None,
               None,
+              None,
               None
             )
           ),
