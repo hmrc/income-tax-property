@@ -28,7 +28,7 @@ import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCod
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses._
-import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
+import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
 import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import repositories.MongoJourneyAnswersRepository
@@ -389,6 +389,22 @@ class ForeignPropertyService @Inject() (
           .leftMap(e => ApiServiceError(e.status))
     }
 
+  private def createOrUpdateAnnualForeignPropertySubmissionAllowances(
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    body: AnnualForeignPropertySubmissionAllowances
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+    body match {
+      case AnnualForeignPropertySubmissionAllowances(None) =>
+        ITPEnvelope.liftPure(false)
+      case _ =>
+        EitherT(
+          connector.createOrUpdateAnnualForeignPropertySubmissionAllowances(taxYear, incomeSourceId, nino, body)
+        ).map(_ => true)
+          .leftMap(e => ApiServiceError(e.status))
+    }
+
   def saveForeignPropertyAllowances(
     journeyContext: JourneyContext,
     nino: Nino,
@@ -414,21 +430,35 @@ class ForeignPropertyService @Inject() (
       isSubmissionSuccess <- {
         val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
           .fromForeignPropertyAllowances(
-            Some(annualForeignPropertySubmissionFromDownstream),
+            Option(annualForeignPropertySubmissionFromDownstream),
             foreignPropertyAllowancesWithCountryCode
           )
-          .fold(
-            _ => emptyAnnualForeignPropertySubmission, // If Left (ServiceError), return empty submission
-            identity // If Right, return the submission itself
-          )
 
-        createOrUpdateAnnualForeignPropertySubmission(
+        createOrUpdateAnnualForeignPropertySubmissionAllowances(
           journeyContext.taxYear,
           journeyContext.incomeSourceId,
           nino,
           annualForeignPropertySubmissionWithNewAllowances
         )
       }
+      _ <- persistForeignAnswers(
+             journeyContext,
+             ForeignAllowancesStoreAnswers(
+               zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
+               zeroEmissionsGoodsVehicleAllowance =
+                 foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
+               costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
+               otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance
+             ),
+             foreignPropertyAllowancesWithCountryCode.countryCode
+           ).flatMap { isPersisted =>
+             if (isPersisted) {
+               logger.info("Foreign Property allowances persisted successfully")
+             } else {
+               logger.error("Could not persist Foreign Property allowances")
+             }
+             ITPEnvelope.liftPure(isPersisted)
+           }
     } yield {
       logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
       isSubmissionSuccess

@@ -350,7 +350,6 @@ class ForeignPropertyJourneyAnswersControllerSpec
         zeroEmissionsGoodsVehicleAllowance = Some(345.65),
         costOfReplacingDomesticItems = Some(490.58),
         otherCapitalAllowance = Some(600),
-        structuredBuildingAllowance = None
       )
       result.header.status shouldBe NO_CONTENT
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package models.request.foreign.allowances
+package models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-case class ForeignPropertyAllowancesWithCountryCode(
-  countryCode: String,
+case class ForeignAllowancesStoreAnswers(
   zeroEmissionsCarAllowance: Option[BigDecimal],
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
   costOfReplacingDomesticItems: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal]
 )
 
-object ForeignPropertyAllowancesWithCountryCode {
-  implicit val format: Format[ForeignPropertyAllowancesWithCountryCode] = Json.format[ForeignPropertyAllowancesWithCountryCode]
+case object ForeignAllowancesStoreAnswers {
+  implicit val format: OFormat[ForeignAllowancesStoreAnswers] = Json.format[ForeignAllowancesStoreAnswers]
 }
