@@ -19,23 +19,24 @@ package controllers
 import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.UKPropertySelect.PropertyRentals
-import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
+import models.common.JourneyName.{RentARoomAdjustments, RentARoomAbout, About}
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
-import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
+import models.domain.{FetchedForeignPropertyData, FetchedUkAndForeignPropertyData, FetchedUKPropertyData, FetchedPropertyData}
+import models.errors.{ServiceError, InvalidJsonFormatError, ApiServiceError, RepositoryError}
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
+import models.request.{WhenYouReportedTheLoss, UnusedLossesBroughtForward}
 import models.responses._
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{Json, JsValue}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
+import utils.mocks.{MockPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -131,7 +132,12 @@ class JourneyAnswersControllerSpec
                                                  |        "balancingChargeYesNo" : true,
                                                  |        "balancingChargeAmount" : 12.34
                                                  |    },
-                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12
+                                                 |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12,
+                                                 |    "unusedLossesBroughtForward" : {
+                                                 |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                 |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                 |    },
+                                                 |    "whenYouReportedTheLoss" : "y2018to2019"
                                                  |}""".stripMargin)
 
     "return CREATED for valid request body" in {
@@ -140,7 +146,11 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
+        RaRAdjustments(
+          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BigDecimal(12)),
+          Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
+          Some(WhenYouReportedTheLoss.y2018to2019)),
         true.asRight[ServiceError]
       )
 
@@ -161,7 +171,11 @@ class JourneyAnswersControllerSpec
       mockSaveUkRaRAdjustments(
         ctx,
         nino,
-        RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))), Some(BigDecimal(12))),
+        RaRAdjustments(
+          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BigDecimal(12)),
+          Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
+          Some(WhenYouReportedTheLoss.y2018to2019)),
         ApiServiceError(500).asLeft[Boolean]
       )
 
@@ -247,7 +261,12 @@ class JourneyAnswersControllerSpec
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
-                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |  "unusedResidentialFinanceCost": 78.89,
+                                                            |  "unusedLossesBroughtForward" : {
+                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                            |    },
+                                                            |    "whenYouReportedTheLoss" : "y2018to2019"
                                                             |}
         """.stripMargin)
     val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalAdjustments)
@@ -1183,7 +1202,12 @@ class JourneyAnswersControllerSpec
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
-                                                            |  "unusedResidentialFinanceCost": 78.89
+                                                            |  "unusedResidentialFinanceCost": 78.89,
+                                                            |  "unusedLossesBroughtForward" : {
+                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "unusedLossesBroughtForwardAmount" : 12.56
+                                                            |    },
+                                                            |    "whenYouReportedTheLoss" : "y2018to2019"
                                                             |}
         """.stripMargin)
     val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalsAndRaRAdjustments)

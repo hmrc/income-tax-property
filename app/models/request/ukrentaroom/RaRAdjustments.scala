@@ -16,12 +16,14 @@
 
 package models.request.ukrentaroom
 
-import models.request.BalancingCharge
-import play.api.libs.json.{Json, OFormat}
+import models.request.{BalancingCharge, UnusedLossesBroughtForward, WhenYouReportedTheLoss}
+import play.api.libs.json.{OFormat, Json}
 
 final case class RaRAdjustments(
   balancingCharge: Option[BalancingCharge],
-  unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal]
+  unusedResidentialPropertyFinanceCostsBroughtFwd: Option[BigDecimal],
+  unusedLossesBroughtForward: Option[UnusedLossesBroughtForward],
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
 
 object RaRAdjustments {

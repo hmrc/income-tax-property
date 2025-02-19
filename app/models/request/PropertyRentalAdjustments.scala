@@ -16,7 +16,9 @@
 
 package models.request
 
-import play.api.libs.json.{Json, OFormat}
+import models.Enumerable
+import models.request.foreign.WithName
+import play.api.libs.json.{OFormat, Json}
 
 final case class PropertyRentalAdjustments(
   privateUseAdjustment: BigDecimal,
@@ -44,4 +46,31 @@ final case class RenovationAllowanceBalancingCharge(
 
 object RenovationAllowanceBalancingCharge {
   implicit val format: OFormat[RenovationAllowanceBalancingCharge] = Json.format
+}
+
+final case class UnusedLossesBroughtForward(
+                                             unusedLossesBroughtForwardYesOrNo: Boolean,
+                                             unusedLossesBroughtForwardAmount: Option[BigDecimal]
+                                           )
+
+object UnusedLossesBroughtForward {
+  implicit val format: OFormat[UnusedLossesBroughtForward] = Json.format
+}
+
+sealed trait WhenYouReportedTheLoss
+
+object WhenYouReportedTheLoss extends Enumerable.Implicits {
+
+  case object y2018to2019 extends WithName("y2018to2019") with WhenYouReportedTheLoss
+  case object y2019to2020 extends WithName("y2019to2020") with WhenYouReportedTheLoss
+  case object y2020to2021 extends WithName("y2020to2021") with WhenYouReportedTheLoss
+  case object y2021to2022 extends WithName("y2021to2022") with WhenYouReportedTheLoss
+  case object y2022to2023 extends WithName("y2022to2023") with WhenYouReportedTheLoss
+
+  val values: Seq[WhenYouReportedTheLoss] = Seq(
+    y2018to2019, y2019to2020, y2020to2021, y2021to2022, y2022to2023
+  )
+
+  implicit val enumerable: Enumerable[WhenYouReportedTheLoss] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }

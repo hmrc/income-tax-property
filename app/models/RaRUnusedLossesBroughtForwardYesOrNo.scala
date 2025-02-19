@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package models.responses
+package models
 
 import play.api.libs.json.{OFormat, Json}
 
-case class AdjustmentStoreAnswers(
-                              balancingChargeYesNo: Boolean,
-                              renovationAllowanceBalancingChargeYesNo: Boolean
-                            )
+final case class RaRUnusedLossesBroughtForwardYesOrNo(raRUnusedLossesBroughtForwardYesOrNo: Boolean)
 
-object AdjustmentStoreAnswers {
-  implicit val adjustmentAnswersFormat: OFormat[AdjustmentStoreAnswers] = Json.format[AdjustmentStoreAnswers]
+object RaRUnusedLossesBroughtForwardYesOrNo {
+  implicit val format: OFormat[RaRUnusedLossesBroughtForwardYesOrNo] = Json.format[RaRUnusedLossesBroughtForwardYesOrNo]
 }
