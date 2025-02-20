@@ -110,14 +110,9 @@ object AnnualForeignPropertySubmission {
       foreignPropertyLens.some.index(0).andThen(foreignPropertyAllowancesLens.some)
 
     val maybeForeignPropertyAllowances: Option[ForeignPropertyAllowances] =
-      mayBeAnnualForeignPropertySubmissionFromDownstream match {
-        case Some(
-              AnnualForeignPropertySubmission(Some(Seq(AnnualForeignProperty(_, _, Some(allowances)))))
-            ) =>
-          Some(allowances)
+      mayBeAnnualForeignPropertySubmissionFromDownstream
+        .flatMap(_.foreignProperty.flatMap(_.find(_.countryCode == countryCode).flatMap(_.allowances)))
 
-        case _ => None
-      }
 
     val newForeignPropertyAllowances = ForeignPropertyAllowances(
       zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
