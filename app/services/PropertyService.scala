@@ -64,9 +64,9 @@ class PropertyService @Inject() (
                             )
       _ <- persistAnswers(journeyContext, StoredIncome.fromRentalsIncome(propertyRentalsIncome)).map(isPersistSuccess =>
              if (!isPersistSuccess) {
-               logger.error("Could not persist")
+               logger.error("[saveIncome] Could not persist")
              } else {
-               logger.info("Persist successful")
+               logger.info("[saveIncome] Persist successful")
              }
            )
     } yield submissionResponse
@@ -89,9 +89,9 @@ class PropertyService @Inject() (
       _ <- persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome)).map(
              isPersistSuccess =>
                if (!isPersistSuccess) {
-                 logger.error("Could not persist")
+                 logger.error("[saveRentalsAndRaRIncome] Could not persist")
                } else {
-                 logger.info("Persist successful")
+                 logger.info("[saveRentalsAndRaRIncome] Persist successful")
                }
            )
     } yield submissionResponse
@@ -103,31 +103,43 @@ class PropertyService @Inject() (
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ServiceError, FetchedPropertyData] = {
+
     val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear, nino, incomeSourceId)
 
     val resultPeriodic = getCurrentPeriodicSubmission(ctx.taxYear, nino, incomeSourceId)
 
     for {
-      resultFromDownstreamAnnual                            <- resultAnnual
-      resultFromDownstreamPeriodicMaybe                     <- resultPeriodic
-      resultFromRepository <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
+      resultFromDownstreamAnnual        <- resultAnnual
+      resultFromDownstreamPeriodicMaybe <- resultPeriodic
+      resultFromRepository              <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
       (ukResultFromRepository, foreignResultFromRepository) = resultFromRepository
-    } yield mergeService.mergeAll(resultFromDownstreamAnnual, resultFromDownstreamPeriodicMaybe, ukResultFromRepository, foreignResultFromRepository)
+    } yield {
+      val mergedData = mergeService.mergeAll(
+        resultFromDownstreamAnnual,
+        resultFromDownstreamPeriodicMaybe,
+        ukResultFromRepository,
+        foreignResultFromRepository
+      )
+      logger.debug(s"[getFetchedPropertyDataMerged] Annual, Periodic and Repository merged data is: $mergedData")
+      mergedData
+    }
 
   }
 
-  private def fetchAllJourneyDataFromRepository(ctx: JourneyContext)
-  : ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
-    val result: Future[Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]] = if (ctx.journey == JourneyName.NoJourney) {
-      Future.successful(
-        InternalError(s"Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}")
-          .asLeft[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]
-      )
-    } else {
-      repository
-        .fetchAllJourneys(ctx)
-        .map(ja => getValidJourneysPerJourneyName(ja.toList))
-    }
+  private def fetchAllJourneyDataFromRepository(
+    ctx: JourneyContext
+  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
+    val result: Future[Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]] =
+      if (ctx.journey == JourneyName.NoJourney) {
+        Future.successful(
+          InternalError(s"Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}")
+            .asLeft[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]
+        )
+      } else {
+        repository
+          .fetchAllJourneys(ctx)
+          .map(ja => getValidJourneysPerJourneyName(ja.toList))
+      }
     ITPEnvelope.liftFuture(result)
   }
 
@@ -141,9 +153,11 @@ class PropertyService @Inject() (
           val (k, v) = kv
           val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.forall(_.countryCode.isDefined)) {
             ja.asRight[ServiceError]
-          } else if(v.size == 1) {
+          } else if (v.size == 1) {
+            logger.debug(s"[getValidUKJourneysPerJourneyName] Fetched UK Journey Answers from Repo")
             (ja + (k -> v.head)).asRight[ServiceError]
           } else {
+            logger.error(s"[getValidUKJourneysPerJourneyName] Could not find UK Journey Answers from Repo")
             RepositoryError.asLeft[Map[String, JourneyAnswers]]
           }
           r
@@ -153,39 +167,46 @@ class PropertyService @Inject() (
 
   }
 
-  private def getForeignJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers]): Either[ServiceError, Map[String, Map[String, JourneyAnswers]]] = {
+  private def getForeignJourneysPerJourneyName(
+    journeyAnswers: List[JourneyAnswers]
+  ): Either[ServiceError, Map[String, Map[String, JourneyAnswers]]] = {
     val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
     journeyAnswersGrouped.foldLeft(Map[String, Map[String, JourneyAnswers]]().asRight[ServiceError]) { (acc, kv) =>
       acc match {
         case Right(validJourneys) =>
           val (journeyName, journeys) = kv
           val foreignJourneyMap: Either[ServiceError, Map[String, JourneyAnswers]] =
-            journeys.groupBy(_.countryCode).foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (innerAcc, innerKV) =>
-              innerAcc match {
-                case Right(innerValidJourneys) =>
-                  innerKV match {
-                    case (Some(countryCode), List(foreignJourneyAnswers)) => (innerValidJourneys + (countryCode -> foreignJourneyAnswers)).asRight[ServiceError]
-                    case _ => innerValidJourneys.asRight[ServiceError]
-                  }
-                case left => left
-              }
+            journeys.groupBy(_.countryCode).foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) {
+              (innerAcc, innerKV) =>
+                innerAcc match {
+                  case Right(innerValidJourneys) =>
+                    innerKV match {
+                      case (Some(countryCode), List(foreignJourneyAnswers)) =>
+                        logger.debug(s"[getForeignJourneysPerJourneyName] Fetched Foreign Journey Answers from Repo")
+                        (innerValidJourneys + (countryCode -> foreignJourneyAnswers)).asRight[ServiceError]
+                      case _ =>
+                        logger.debug(s"[getForeignJourneysPerJourneyName] Could not find Foreign Journey Answers from Repo")
+                        innerValidJourneys.asRight[ServiceError]
+                    }
+                  case left => left
+                }
             }
           foreignJourneyMap match {
             case Right(fjm) => (validJourneys + (journeyName -> fjm)).asRight[ServiceError]
-            case _ => validJourneys.asRight[ServiceError]
+            case _          => validJourneys.asRight[ServiceError]
           }
         case left => left
       }
     }
   }
 
-  private def getValidJourneysPerJourneyName(journeyAnswers: List[JourneyAnswers])
-  : Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
+  private def getValidJourneysPerJourneyName(
+    journeyAnswers: List[JourneyAnswers]
+  ): Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] =
     for {
-      ukJourneyMap <- getValidUKJourneysPerJourneyName(journeyAnswers)
+      ukJourneyMap      <- getValidUKJourneysPerJourneyName(journeyAnswers)
       foreignJourneyMap <- getForeignJourneysPerJourneyName(journeyAnswers)
     } yield (ukJourneyMap, foreignJourneyMap)
-  }
 
   def getPropertyPeriodicSubmissions(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
@@ -198,7 +219,7 @@ class PropertyService @Inject() (
         propertyPeriodicSubmissions <-
           getPropertySubmissions(taxYear, nino, incomeSourceId, periodicSubmissionIds)
       } yield {
-        logger.debug(s"Filtered periodic submission details: $propertyPeriodicSubmissions")
+        logger.debug(s"[getPropertyPeriodicSubmissions] Periodic submission details: $propertyPeriodicSubmissions")
         propertyPeriodicSubmissions
       }
 
@@ -222,9 +243,9 @@ class PropertyService @Inject() (
              .persistAnswers(ctx, esbaInfo.extractToSavePart())
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
-                 logger.error("Could not persist")
+                 logger.error("[saveEsbas] Could not persist")
                } else {
-                 logger.info("Persist successful")
+                 logger.info("[saveEsbas] Persist successful")
                }
              )
     } yield r
@@ -246,9 +267,9 @@ class PropertyService @Inject() (
              .persistAnswers(ctx, sbaInfo.toSbaToSave)
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
-                 logger.error("SBA Persist failed")
+                 logger.error("[saveSBA] Could not persist")
                } else {
-                 logger.info("SBA Persist successful")
+                 logger.info("[saveSBA] Persist successful")
                }
              )
     } yield result
@@ -412,20 +433,20 @@ class PropertyService @Inject() (
       }
 
   def getPropertyAnnualSubmission(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(implicit
-                                                                                                           hc: HeaderCarrier
+    hc: HeaderCarrier
   ): ITPEnvelope[PropertyAnnualSubmission] =
     EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
-      .map(pas => {
-        logger.debug(s"[getAnnualSubmission] Annual submission details: $pas")
+      .map { pas =>
+        logger.debug(s"[getPropertyAnnualSubmission] Annual submission details: $pas")
         pas
-      })
-      .leftMap(error => {
-        logger.debug(s"[getAnnualSubmission] Annual submission details error")
+      }
+      .leftMap { error =>
+        logger.debug(s"[getPropertyAnnualSubmission] Annual submission details error")
         ApiServiceError(error.status)
-      })
+      }
       .subflatMap { annualSubmission =>
-        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]]{
-          logger.debug(s"[getAnnualSubmission] Annual submission details not found")
+        annualSubmission.fold[Either[ServiceError, PropertyAnnualSubmission]] {
+          logger.debug(s"[getPropertyAnnualSubmission] Annual submission details not found")
           DataNotFoundError.asLeft[PropertyAnnualSubmission]
         }(_.asRight[ServiceError])
       }
