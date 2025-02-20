@@ -425,7 +425,7 @@ object Merger {
               balancingCharge = Some(
                 BalancingCharge(
                   balancingChargeYesNo = extractedMaybe
-                    .map(_.balancingCharge.exists(_.balancingChargeYesNo == true))
+               .flatMap(_.balancingCharge.map(_.balancingChargeYesNo))
                     .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
