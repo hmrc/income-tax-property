@@ -17,9 +17,9 @@
 package connectors
 
 import models.common.{IncomeSourceId, Nino, TaxYear}
-import models.errors.{ApiError, SingleErrorBody}
-import models.request.foreign.{AnnualForeignProperty, AnnualForeignPropertyAdjustments, AnnualForeignPropertyAllowances, AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances}
-import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
+import models.errors.{SingleErrorBody, ApiError}
+import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertyAdjustments, AnnualForeignPropertyAllowances, AnnualForeignProperty, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances}
+import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
@@ -238,7 +238,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
       )
     )
 
@@ -361,7 +361,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
       )
     )
 
@@ -484,7 +484,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       submittedOn = None,
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None)), None)
+        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None,  Some(WhenYouReportedTheLoss.y2018to2019))), None)
       )
     )
 

@@ -80,7 +80,8 @@ class JourneyAnswersIntegrationSpec
             Some(14),
             Some(true),
             Some(UkRentARoom(true)),
-            None
+            None,
+            Some(WhenYouReportedTheLoss.y2018to2019)
           )
         ),
         Some(
@@ -326,7 +327,12 @@ class JourneyAnswersIntegrationSpec
             )
           ),
           raRAdjustments =
-            Some(RaRAdjustments(Some(BalancingCharge(balancingChargeYesNo = true, Some(32))), Some(34.56))),
+            Some(RaRAdjustments(
+              Some(BalancingCharge(balancingChargeYesNo = true, Some(32))),
+              Some(34.56),
+              Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41))),
+              Some(WhenYouReportedTheLoss.y2018to2019))
+            ),
           rentARoomAllowances = Some(
             RentARoomAllowances(
               Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
@@ -422,7 +428,9 @@ class JourneyAnswersIntegrationSpec
             Some(12.34)
           )
         ),
-        Some(34.56)
+        Some(34.56),
+        Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(22.47))),
+        Some(WhenYouReportedTheLoss.y2018to2019)
       )
 
       userLoggedInITPUser(NinoUser)
