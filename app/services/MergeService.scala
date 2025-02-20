@@ -25,6 +25,7 @@ import models.repository.ForeignMerger._
 import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.foreign._
+import models.request.foreign.allowances.ForeignAllowancesAnswers
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukAndForeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
@@ -168,7 +169,10 @@ class MergeService @Inject() (implicit
       foreignResultFromRepository.get(JourneyName.ForeignPropertyExpenses.entryName)
     )
 
-    val foreignPropertyAllowancesMaybe = mergeForeignPropertyAllowances(resultFromAnnualDownstream)
+    val foreignPropertyAllowancesMaybe = mergeForeignPropertyAllowances(
+      resultFromAnnualDownstream,
+      foreignResultFromRepository.get(JourneyName.ForeignPropertyAllowances.entryName)
+    )
 
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
@@ -502,13 +506,23 @@ class MergeService @Inject() (implicit
   }
 
    def mergeForeignPropertyAllowances(
-    resultFromDownstream: PropertyAnnualSubmission
-  ): Option[Map[String, ForeignPropertyAllowances]] = {
-    val foreignAllowances: Option[Map[String, ForeignPropertyAllowances]] = for {
-      fp <- resultFromDownstream.foreignProperty
-    } yield Map(fp.flatMap(fp => fp.allowances.map(fpAllowances => fp.countryCode -> fpAllowances)): _*)
-    foreignAllowances
-  }
+    resultFromDownstream: PropertyAnnualSubmission,
+    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+  ): Option[Map[String, ForeignAllowancesAnswers]] = {
+     val foreignPropertyAllowanceStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
+       foreignResultFromRepository match {
+         case Some(journeyAnswers) =>
+           Some(journeyAnswers.map { case (countryCode, storeAnswers) =>
+             countryCode -> storeAnswers.data.as[ForeignAllowancesStoreAnswers]
+           })
+         case _ => None
+      }
+     val foreignAllowances: Option[Map[String, ForeignPropertyAllowances]] = for {
+       fp <- resultFromDownstream.foreignProperty
+     } yield Map(fp.flatMap(fp => fp.allowances.map(fpAllowances => fp.countryCode -> fpAllowances)): _*)
+
+     foreignPropertyAllowanceStoreAnswers.merge(foreignAllowances)
+   }
 
   def mergeForeignPropertyIncome(
     resultFromDownstream: Option[PropertyPeriodicSubmission],

@@ -16,14 +16,21 @@
 
 package models.request.foreign.allowances
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
+
+case class CapitalAllowancesForACar(capitalAllowancesForACarYesNo: Boolean, capitalAllowancesForACarAmount: Option[BigDecimal])
+
+object CapitalAllowancesForACar {
+  implicit val formats: OFormat[CapitalAllowancesForACar] = Json.format[CapitalAllowancesForACar]
+}
 
 case class ForeignPropertyAllowancesWithCountryCode(
   countryCode: String,
   zeroEmissionsCarAllowance: Option[BigDecimal],
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
   costOfReplacingDomesticItems: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal]
+  otherCapitalAllowance: Option[BigDecimal],
+  capitalAllowancesForACar: Option[CapitalAllowancesForACar]
 )
 
 object ForeignPropertyAllowancesWithCountryCode {

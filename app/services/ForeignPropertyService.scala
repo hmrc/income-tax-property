@@ -24,7 +24,7 @@ import models.common._
 import models.errors._
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
-import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
+import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignPropertyAllowancesWithCountryCode}
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses._
@@ -410,45 +410,45 @@ class ForeignPropertyService @Inject() (
     nino: Nino,
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
-
-    val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
-
     for {
-
-      annualForeignPropertySubmissionFromDownstream <-
-        this
-          .getAnnualForeignPropertySubmissionFromDownStream(
-            journeyContext.taxYear,
-            nino,
-            journeyContext.incomeSourceId
-          )
-          .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
-          }
-
       isSubmissionSuccess <- {
-        val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
-          .fromForeignPropertyAllowances(
-            Option(annualForeignPropertySubmissionFromDownstream),
-            foreignPropertyAllowancesWithCountryCode
-          )
+        foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar match {
+          case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(true)
+          case _ =>
+            val emptyAnnualForeignPropertySubmission = AnnualForeignPropertySubmission(None)
+            for {
+              annualForeignPropertySubmissionFromDownstream <-
+                this
+                  .getAnnualForeignPropertySubmissionFromDownStream(
+                    journeyContext.taxYear,
+                    nino,
+                    journeyContext.incomeSourceId
+                  )
+                  .leftFlatMap {
+                    case DataNotFoundError => ITPEnvelope.liftPure(emptyAnnualForeignPropertySubmission)
+                    case e                 => ITPEnvelope.liftEither(e.asLeft[AnnualForeignPropertySubmission])
+                  }
+              result <- {
+                val annualForeignPropertySubmissionWithNewAllowances = AnnualForeignPropertySubmission
+                  .fromForeignPropertyAllowances(
+                    Option(annualForeignPropertySubmissionFromDownstream),
+                    foreignPropertyAllowancesWithCountryCode
+                  )
 
-        createOrUpdateAnnualForeignPropertySubmissionAllowances(
-          journeyContext.taxYear,
-          journeyContext.incomeSourceId,
-          nino,
-          annualForeignPropertySubmissionWithNewAllowances
-        )
+                createOrUpdateAnnualForeignPropertySubmissionAllowances(
+                  journeyContext.taxYear,
+                  journeyContext.incomeSourceId,
+                  nino,
+                  annualForeignPropertySubmissionWithNewAllowances
+                )
+              }
+            } yield result
+        }
       }
       _ <- persistForeignAnswers(
              journeyContext,
              ForeignAllowancesStoreAnswers(
-               zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
-               zeroEmissionsGoodsVehicleAllowance =
-                 foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
-               costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
-               otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance
+               foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
              ),
              foreignPropertyAllowancesWithCountryCode.countryCode
            ).flatMap { isPersisted =>
@@ -463,7 +463,6 @@ class ForeignPropertyService @Inject() (
       logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
       isSubmissionSuccess
     }
-
   }
 
   def saveForeignPropertyAdjustments(
