@@ -425,7 +425,7 @@ object Merger {
               balancingCharge = Some(
                 BalancingCharge(
                   balancingChargeYesNo = extractedMaybe
-               .flatMap(_.balancingCharge.map(_.balancingChargeYesNo))
+                    .flatMap(_.balancingCharge.map(_.balancingChargeYesNo))
                     .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
@@ -434,7 +434,7 @@ object Merger {
               unusedLossesBroughtForward = Some(
                 UnusedLossesBroughtForward(
                   unusedLossesBroughtForwardYesOrNo = extractedMaybe
-                    .map(_.unusedLossesBroughtForward.exists(_.unusedLossesBroughtForwardYesOrNo == true))
+                    .flatMap(_.unusedLossesBroughtForward.map(_.unusedLossesBroughtForwardYesOrNo))
                     .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
                   unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
                 )
