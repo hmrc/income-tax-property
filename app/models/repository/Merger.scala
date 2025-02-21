@@ -390,11 +390,11 @@ object Merger {
   }
 
   implicit object RaRAdjustmentsMerger
-      extends Merger[Option[RaRAdjustments], Option[RaRBalancingChargeYesNo], Option[
+      extends Merger[Option[RaRAdjustments], Option[RentARoomAdjustmentsStoreAnswers], Option[
         (UkOtherAdjustments, UkOtherPropertyExpenses)
       ]] {
     override def merge(
-      extractedMaybe: Option[RaRBalancingChargeYesNo],
+      extractedMaybe: Option[RentARoomAdjustmentsStoreAnswers],
       fromDownstreamMaybe: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)]
     ): Option[RaRAdjustments] =
       (extractedMaybe, fromDownstreamMaybe) match {
@@ -425,12 +425,21 @@ object Merger {
               balancingCharge = Some(
                 BalancingCharge(
                   balancingChargeYesNo = extractedMaybe
-                    .map(_.raRBalancingChargeYesNo)
+                    .flatMap(_.balancingCharge.map(_.balancingChargeYesNo))
                     .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )
               ),
-              unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward
+              unusedResidentialPropertyFinanceCostsBroughtFwd = residentialFinanceCostCarriedForward,
+              unusedLossesBroughtForward = Some(
+                UnusedLossesBroughtForward(
+                  unusedLossesBroughtForwardYesOrNo = extractedMaybe
+                    .flatMap(_.unusedLossesBroughtForward.map(_.unusedLossesBroughtForwardYesOrNo))
+                    .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
+                  unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+                )
+              ),
+              whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
             )
           )
         case _ => None

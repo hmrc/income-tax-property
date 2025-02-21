@@ -16,16 +16,16 @@
 
 package models.responses
 
-import models.RentalsAndRaRAbout
+import models.{RentalsAndRaRAbout, Enumerable}
 import models.request._
-import models.request.foreign.AnnualForeignProperty
+import models.request.foreign.{AnnualForeignProperty, WithName}
 import models.request.ukrentaroom.RaRAdjustments
 import monocle.Optional
 import monocle.macros.GenLens
-import play.api.libs.json.{JsValue, Json, OFormat, Writes}
+import play.api.libs.json.{OFormat, Writes, Json, JsValue}
 import play.api.libs.ws.BodyWritable
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, LocalDate}
 
 case class PropertyAnnualSubmission(
   submittedOn: Option[LocalDateTime],
@@ -119,7 +119,7 @@ object PropertyAnnualSubmission {
 
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
         case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -153,7 +153,7 @@ object PropertyAnnualSubmission {
 
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
         case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -181,7 +181,7 @@ object PropertyAnnualSubmission {
       }
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
         case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -227,7 +227,7 @@ object PropertyAnnualSubmission {
       }
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None))
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
         case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
@@ -386,6 +386,24 @@ object UkRentARoom {
   implicit val format: OFormat[UkRentARoom] = Json.format[UkRentARoom]
 }
 
+sealed trait WhenReportedTheLoss
+
+object WhenReportedTheLoss extends Enumerable.Implicits {
+
+  case object y2018to2019 extends WithName("y2018to2019") with WhenReportedTheLoss
+  case object y2019to2020 extends WithName("y2019to2020") with WhenReportedTheLoss
+  case object y2020to2021 extends WithName("y2020to2021") with WhenReportedTheLoss
+  case object y2021to2022 extends WithName("y2021to2022") with WhenReportedTheLoss
+  case object y2022to2023 extends WithName("y2022to2023") with WhenReportedTheLoss
+
+  val values: Seq[WhenReportedTheLoss] = Seq(
+    y2018to2019, y2019to2020, y2020to2021, y2021to2022, y2022to2023
+  )
+
+  implicit val enumerable: Enumerable[WhenReportedTheLoss] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+}
+
 case class AnnualUkOtherProperty(
   ukOtherPropertyAnnualAdjustments: Option[UkOtherAdjustments],
   ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances]
@@ -402,7 +420,8 @@ case class UkOtherAdjustments(
   businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
   nonResidentLandlord: Option[Boolean],
   ukOtherRentARoom: Option[UkRentARoom], // API#1598 (Get) expects ukOtherRentARoom
-  rentARoom: Option[UkRentARoom]         // API#1805 (Get) expects rentARoom
+  rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
 
 object UkOtherAdjustments {
