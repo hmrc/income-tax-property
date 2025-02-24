@@ -16,13 +16,14 @@
 
 package models.repository
 
-import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
+import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 import models.repository.ForeignMerger._
 import models.repository.Merger._
 import models.request.{BalancingCharge, ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss.y2019to2020
 import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
+import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignAllowancesAnswers}
 import models.responses._
 import utils.UnitTest
 import models.request.foreign.expenses.ConsolidatedExpenses
@@ -50,6 +51,12 @@ class ForeignMergerSpec extends UnitTest {
   val residentialFinanceCost: Option[BigDecimal] = Some(BigDecimal(11.11))
   val unusedResidentialFinanceCost: Option[BigDecimal] = Some(BigDecimal(23.22))
   val propertyAllowance: Option[BigDecimal] = Some(BigDecimal(85.85))
+  val annualInvestmentAllowance: Option[BigDecimal] = Some(15.15)
+  val costOfReplacingDomesticItems: Option[BigDecimal] = Some(25.25)
+  val zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal] = Some(35.35)
+  val otherCapitalAllowance: Option[BigDecimal] = Some(45.45)
+  val electricChargePointAllowance: Option[BigDecimal] = Some(55.55)
+  val zeroEmissionsCarAllowance: Option[BigDecimal] = Some(75.75)
   val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
     submissionId = None,
     submittedOn = None,
@@ -97,11 +104,11 @@ class ForeignMergerSpec extends UnitTest {
           )),
           allowances = Some(
             ForeignPropertyAllowances(
-              annualInvestmentAllowance = Some(15.15),
-              costOfReplacingDomesticItems = Some(25.25),
-              zeroEmissionsGoodsVehicleAllowance = Some(35.35),
-              otherCapitalAllowance = Some(45.45),
-              electricChargePointAllowance = Some(55.55),
+              annualInvestmentAllowance = annualInvestmentAllowance,
+              costOfReplacingDomesticItems = costOfReplacingDomesticItems,
+              zeroEmissionsGoodsVehicleAllowance = zeroEmissionsGoodsVehicleAllowance,
+              otherCapitalAllowance = otherCapitalAllowance,
+              electricChargePointAllowance = electricChargePointAllowance,
               structuredBuildingAllowance = Some(
                 Seq(
                   StructuredBuildingAllowance(
@@ -180,7 +187,6 @@ class ForeignMergerSpec extends UnitTest {
       "store answers are available in the repo" in {
         val premiumsGrantLeaseReceived = true
         val premiumsOfLeaseGrantAgreed = true
-        val reversePremiumsReceived = true
         val calculatedPremiumLeaseTaxable = true
         val twelveMonthPeriodsInLease = Some(BigDecimal(3))
         val receivedGrantLeaseAmount = Some(BigDecimal(22))
@@ -398,6 +404,50 @@ class ForeignMergerSpec extends UnitTest {
             )
           )
         )
+      }
+    }
+
+    "merge foreign allowances from downstream response and from repo into response model" when {
+      val fromDownstreamMaybe: Option[Map[String, ForeignPropertyAllowances]] = {
+        aPropertyAnnualSubmission.foreignProperty.map { annualForeignProperties =>
+          annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+            for {
+              allowances <- annualForeignProperty.allowances
+            } yield annualForeignProperty.countryCode -> allowances
+          }.toMap
+        }
+      }
+
+      "store answers are available in the repo" in {
+        val capitalAllowancesForACarYesNo = Some(true)
+        val foreignAllowancesStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
+          Some(Map(countryCode -> ForeignAllowancesStoreAnswers(
+            capitalAllowancesForACarYesNo = capitalAllowancesForACarYesNo
+          )))
+        val mergedResult: Option[Map[String, ForeignAllowancesAnswers]] = foreignAllowancesStoreAnswers.merge(fromDownstreamMaybe)
+        val Some(result): Option[ForeignAllowancesAnswers] = mergedResult.flatMap(_.get(countryCode))
+        result.annualInvestmentAllowance shouldBe annualInvestmentAllowance
+        result.costOfReplacingDomesticItems shouldBe costOfReplacingDomesticItems
+        result.zeroEmissionsGoodsVehicleAllowance shouldBe zeroEmissionsGoodsVehicleAllowance
+        result.otherCapitalAllowance shouldBe otherCapitalAllowance
+        result.electricChargePointAllowance shouldBe electricChargePointAllowance
+        result.zeroEmissionsCarAllowance shouldBe zeroEmissionsCarAllowance
+        result.capitalAllowancesForACar shouldBe Some(CapitalAllowancesForACar(
+          capitalAllowancesForACarYesNo = true,
+          capitalAllowancesForACarAmount = otherCapitalAllowance))
+      }
+
+      "store answers are not available in the repo" in {
+        val foreignAllowancesStoreAnswers : Option[Map[String, ForeignAllowancesStoreAnswers]] = None
+        val mergedResult: Option[Map[String, ForeignAllowancesAnswers]] = foreignAllowancesStoreAnswers.merge(fromDownstreamMaybe)
+        val Some(result): Option[ForeignAllowancesAnswers] = mergedResult.flatMap(_.get(countryCode))
+        result.annualInvestmentAllowance shouldBe annualInvestmentAllowance
+        result.costOfReplacingDomesticItems shouldBe costOfReplacingDomesticItems
+        result.zeroEmissionsGoodsVehicleAllowance shouldBe zeroEmissionsGoodsVehicleAllowance
+        result.otherCapitalAllowance shouldBe otherCapitalAllowance
+        result.electricChargePointAllowance shouldBe electricChargePointAllowance
+        result.zeroEmissionsCarAllowance shouldBe zeroEmissionsCarAllowance
+        result.capitalAllowancesForACar shouldBe None
       }
     }
   }

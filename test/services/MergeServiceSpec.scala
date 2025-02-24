@@ -16,6 +16,7 @@
 
 package services
 import models.domain.JourneyAnswers
+import models.request.foreign.allowances.ForeignAllowancesAnswers
 import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances}
 import models.request.{DeductingTax, PropertyRentalsIncome}
 import models.responses._
@@ -147,11 +148,21 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       )
 
       val service = new MergeService()
-      val result = service.mergeForeignPropertyAllowances(aPropertyAnnualSubmission)
-
+      val result = service.mergeForeignPropertyAllowances(aPropertyAnnualSubmission, None)
+      val expected = ForeignAllowancesAnswers(
+        zeroEmissionsCarAllowance = foreignPropertyAllowances.zeroEmissionsCarAllowance,
+        zeroEmissionsGoodsVehicleAllowance = foreignPropertyAllowances.zeroEmissionsGoodsVehicleAllowance,
+        costOfReplacingDomesticItems = foreignPropertyAllowances.costOfReplacingDomesticItems,
+        otherCapitalAllowance = foreignPropertyAllowances.otherCapitalAllowance,
+        annualInvestmentAllowance = foreignPropertyAllowances.annualInvestmentAllowance,
+        propertyAllowance = foreignPropertyAllowances.propertyAllowance,
+        electricChargePointAllowance = foreignPropertyAllowances.electricChargePointAllowance,
+        structuredBuildingAllowance = foreignPropertyAllowances.structuredBuildingAllowance,
+        capitalAllowancesForACar = None
+      )
       result shouldBe Some(
         Map(
-          "ESP" -> foreignPropertyAllowances
+          "ESP" -> expected
         )
       )
     }
@@ -172,9 +183,9 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       )
 
       val service = new MergeService()
-      val result = service.mergeForeignPropertyAllowances(propertyAnnualSubmission)
+      val result = service.mergeForeignPropertyAllowances(propertyAnnualSubmission, None)
 
-      result shouldBe Some(Map.empty[String, ForeignPropertyAllowances])
+      result shouldBe None
     }
 
   }

@@ -118,7 +118,8 @@ object AnnualForeignPropertySubmission {
       zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
       zeroEmissionsGoodsVehicleAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
       costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
-      otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance,
+      otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.flatMap(_.capitalAllowancesForACarAmount)
+        .orElse(foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance),
       annualInvestmentAllowance = maybeForeignPropertyAllowances.flatMap(_.annualInvestmentAllowance),
       propertyAllowance = None,
       electricChargePointAllowance = maybeForeignPropertyAllowances.flatMap(_.electricChargePointAllowance),

@@ -810,7 +810,8 @@ class ForeignPropertyServiceSpec
       zeroEmissionsCarAllowance = Some(BigDecimal(1.5)),
       zeroEmissionsGoodsVehicleAllowance = Some(BigDecimal(2.5)),
       costOfReplacingDomesticItems = Some(BigDecimal(3.5)),
-      otherCapitalAllowance = Some(BigDecimal(4.5))
+      otherCapitalAllowance = Some(BigDecimal(4.5)),
+      capitalAllowancesForACar = None
     )
 
     "call create foreign annual submission request when annual submission is empty and return no content for valid request" in {

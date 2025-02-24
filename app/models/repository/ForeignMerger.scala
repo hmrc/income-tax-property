@@ -18,10 +18,11 @@ package models.repository
 
 import models.request.foreign._
 import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
+import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignAllowancesAnswers}
 import models.request.foreign.expenses.ConsolidatedExpenses
 import models.request.{BalancingCharge, ForeignSbaInfo}
 import models.responses._
-import models.{ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
+import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 
 import java.time.LocalDate
 
@@ -311,5 +312,57 @@ object ForeignMerger {
           Option.when(result.nonEmpty)(result)
         case _ => None
       }
+  }
+
+  implicit object ForeignPropertyAllowancesMerger
+    extends Merger[
+      Option[Map[String, ForeignAllowancesAnswers]],
+      Option[Map[String, ForeignAllowancesStoreAnswers]],
+      Option[Map[String, ForeignPropertyAllowances]]] {
+    override def merge(
+                        extractedMaybe: Option[Map[String, ForeignAllowancesStoreAnswers]],
+                        fromDownstreamMaybe: Option[Map[String, ForeignPropertyAllowances]]
+                      ): Option[Map[String, ForeignAllowancesAnswers]] = (extractedMaybe, fromDownstreamMaybe) match {
+      case (Some(extractedMap), Some(fromDownstreamMap)) =>
+        val result: Map[String, ForeignAllowancesAnswers] = fromDownstreamMap.map {
+          case (countryCode, allowances) =>
+            val storeAnswersMaybe = extractedMap.get(countryCode)
+            countryCode -> ForeignAllowancesAnswers(
+              zeroEmissionsCarAllowance = allowances.zeroEmissionsCarAllowance,
+              zeroEmissionsGoodsVehicleAllowance = allowances.zeroEmissionsGoodsVehicleAllowance,
+              costOfReplacingDomesticItems = allowances.costOfReplacingDomesticItems,
+              otherCapitalAllowance = allowances.otherCapitalAllowance,
+              annualInvestmentAllowance = allowances.annualInvestmentAllowance,
+              propertyAllowance = allowances.propertyAllowance,
+              electricChargePointAllowance = allowances.electricChargePointAllowance,
+              structuredBuildingAllowance = allowances.structuredBuildingAllowance,
+              capitalAllowancesForACar = storeAnswersMaybe.map { foreignPropertyAllowancesStoreAnswers =>
+                if (foreignPropertyAllowancesStoreAnswers.capitalAllowancesForACarYesNo.exists(identity)) {
+                  CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, capitalAllowancesForACarAmount = allowances.otherCapitalAllowance)
+                } else {
+                  CapitalAllowancesForACar(capitalAllowancesForACarYesNo = false, capitalAllowancesForACarAmount = None)
+                }
+              }
+            )
+        }
+        Option.when(result.nonEmpty)(result)
+      case (_, Some(fromDownstreamMap)) =>
+        val result: Map[String, ForeignAllowancesAnswers] = fromDownstreamMap.map {
+          case (countryCode, allowances) =>
+            countryCode -> ForeignAllowancesAnswers(
+              zeroEmissionsCarAllowance = allowances.zeroEmissionsCarAllowance,
+              zeroEmissionsGoodsVehicleAllowance = allowances.zeroEmissionsGoodsVehicleAllowance,
+              costOfReplacingDomesticItems = allowances.costOfReplacingDomesticItems,
+              otherCapitalAllowance = allowances.otherCapitalAllowance,
+              annualInvestmentAllowance = allowances.annualInvestmentAllowance,
+              propertyAllowance = allowances.propertyAllowance,
+              electricChargePointAllowance = allowances.electricChargePointAllowance,
+              structuredBuildingAllowance = allowances.structuredBuildingAllowance,
+              capitalAllowancesForACar = None
+            )
+        }
+        Option.when(result.nonEmpty)(result)
+      case _ => None
+    }
   }
 }
