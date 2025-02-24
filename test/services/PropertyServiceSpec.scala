@@ -142,7 +142,21 @@ class PropertyServiceSpec
         submittedOn = Some(LocalDateTime.now),
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(
+            Some(
+              UkOtherAdjustments(
+                Some(1),
+                Some(2),
+                Some(3),
+                Some(4),
+                Some(true),
+                None,
+                None,
+                Some(WhenYouReportedTheLoss.y2018to2019)
+              )
+            ),
+            None
+          )
         )
       )
 
@@ -355,7 +369,21 @@ class PropertyServiceSpec
       submittedOn = Some(LocalDateTime.now),
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(
+              Some(1),
+              Some(2),
+              Some(3),
+              Some(4),
+              Some(true),
+              None,
+              None,
+              Some(WhenYouReportedTheLoss.y2018to2019)
+            )
+          ),
+          None
+        )
       )
     )
 
@@ -392,7 +420,21 @@ class PropertyServiceSpec
       submittedOn = Some(LocalDateTime.now),
       None,
       Some(
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(1), Some(2), Some(3), Some(4), Some(true), None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(
+              Some(1),
+              Some(2),
+              Some(3),
+              Some(4),
+              Some(true),
+              None,
+              None,
+              Some(WhenYouReportedTheLoss.y2018to2019)
+            )
+          ),
+          None
+        )
       )
     )
 
@@ -452,7 +494,12 @@ class PropertyServiceSpec
 
     "return a success with no content when the request is valid and data is persisted" in {
       val annualUkOtherProperty =
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))
+          ),
+          None
+        )
 
       mockGetAllPeriodicSubmission(
         taxYear,
@@ -497,7 +544,21 @@ class PropertyServiceSpec
         None,
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(
+            Some(
+              UkOtherAdjustments(
+                Some(44),
+                Some(108),
+                Some(12.34),
+                Some(92),
+                None,
+                None,
+                None,
+                Some(WhenYouReportedTheLoss.y2018to2019)
+              )
+            ),
+            None
+          )
         )
       )
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
@@ -516,13 +577,32 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
 
       val annualUkOtherProperty =
-        AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))), None)
+        AnnualUkOtherProperty(
+          Some(
+            UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))
+          ),
+          None
+        )
       val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
       val updatedAnnualSubmission = PropertyAnnualSubmission(
         None,
         None,
         Some(
-          AnnualUkOtherProperty(Some(UkOtherAdjustments(Some(44), Some(108), Some(12.34), Some(92), None, None, None,Some(WhenYouReportedTheLoss.y2018to2019))), None)
+          AnnualUkOtherProperty(
+            Some(
+              UkOtherAdjustments(
+                Some(44),
+                Some(108),
+                Some(12.34),
+                Some(92),
+                None,
+                None,
+                None,
+                Some(WhenYouReportedTheLoss.y2018to2019)
+              )
+            ),
+            None
+          )
         )
       )
 
@@ -1607,9 +1687,13 @@ class PropertyServiceSpec
           List(),
           Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
         )
-        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None,None,None)
+        val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None, None, None)
         val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)
-        FetchedPropertyData(ukPropertyData = ukPropertyData, foreignPropertyData = foreignPropertyData, ukAndForeignPropertyData = fetchedUkAndForeignPropertyData)
+        FetchedPropertyData(
+          ukPropertyData = ukPropertyData,
+          foreignPropertyData = foreignPropertyData,
+          ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+        )
       }
 
       forAll(scenarios) {
@@ -1751,7 +1835,9 @@ class PropertyServiceSpec
             .getFetchedPropertyDataMerged(ctx.toJourneyContext(JourneyName.NoJourney), nino, incomeSourceId)
       } yield r
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
-        response shouldBe InternalError("Journey Repo could not be accessed, journey name: no-journey")
+        response shouldBe InternalError(
+          "[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: no-journey"
+        )
           .asLeft[FetchedPropertyData]
 
       }
