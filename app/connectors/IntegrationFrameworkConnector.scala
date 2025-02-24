@@ -208,11 +208,12 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .execute[PostPeriodicSubmissionResponse]
       .map { response: PostPeriodicSubmissionResponse =>
         if (response.result.isLeft) {
+          val apiError: ApiError = response.result.left.get
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
             s"Error creating a property periodic submission from the Integration Framework: URL: $url" +
-              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+              s" correlationId: $correlationId; Body:${response.result.left} status: ${apiError.status} Error body: ${apiError.body} "
           )
         }
         response.result
@@ -466,11 +467,11 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       }
   }
   def createOrUpdateAnnualForeignPropertySubmissionAdjustments(
-                                                                 taxYear: TaxYear,
-                                                                 incomeSourceId: IncomeSourceId,
-                                                                 nino: Nino,
-                                                                 foreignProperty: AnnualForeignPropertySubmissionAdjustments
-                                                               )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    foreignProperty: AnnualForeignPropertySubmissionAdjustments
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
@@ -479,8 +480,8 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     } else {
       (
         s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
-          taxYear
-        )}&incomeSourceId=$incomeSourceId""",
+            taxYear
+          )}&incomeSourceId=$incomeSourceId""",
         "1597"
       )
     }
@@ -508,11 +509,11 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   }
 
   def createOrUpdateAnnualForeignPropertySubmissionAllowances(
-                                                                taxYear: TaxYear,
-                                                                incomeSourceId: IncomeSourceId,
-                                                                nino: Nino,
-                                                                foreignProperty: AnnualForeignPropertySubmissionAllowances
-                                                              )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    taxYear: TaxYear,
+    incomeSourceId: IncomeSourceId,
+    nino: Nino,
+    foreignProperty: AnnualForeignPropertySubmissionAllowances
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
         s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual/${asTys(taxYear)}/$nino/$incomeSourceId""",
@@ -521,8 +522,8 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
     } else {
       (
         s"""${appConfig.ifBaseUrl}/income-tax/business/property/annual?taxableEntityId=$nino&taxYear=${asTyBefore24(
-          taxYear
-        )}&incomeSourceId=$incomeSourceId""",
+            taxYear
+          )}&incomeSourceId=$incomeSourceId""",
         "1597"
       )
     }

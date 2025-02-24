@@ -38,111 +38,36 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignPropertyService @Inject() (
-  connector: IntegrationFrameworkConnector,
-  repository: MongoJourneyAnswersRepository
-)(implicit ec: ExecutionContext)
-    extends Logging {
+                                         connector: IntegrationFrameworkConnector,
+                                         repository: MongoJourneyAnswersRepository
+                                       )(implicit ec: ExecutionContext)
+  extends Logging {
 
-  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-    writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
+  def getPropertyPeriodicSubmissions(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
+                                                                                                   hc: HeaderCarrier
+  ): ITPEnvelope[PropertyPeriodicSubmissionResponse] = {
+
+    val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
+      for {
+        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, nino, incomeSourceId))
+          .leftMap(error => ApiServiceError(error.status))
+        propertyPeriodicSubmissions <-
+          getPropertySubmissions(taxYear, nino, incomeSourceId, periodicSubmissionIds)
+      } yield {
+        logger.debug(
+          s"[getPropertyPeriodicSubmissions] Foreign Periodic submission ids from IF ids: ${periodicSubmissionIds.map(_.submissionId).mkString(", ")}"
+        )
+        logger.debug(
+          s"[getPropertyPeriodicSubmissions] Foreign Periodic submission details from IF: $propertyPeriodicSubmissions"
+        )
+        propertyPeriodicSubmissions
       }
-    )
-  private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
-    writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
-      }
-    )
 
-  def saveForeignPropertySelectCountry(
-    ctx: JourneyContext,
-    foreignPropertySelectCountry: ForeignPropertySelectCountry
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
-    persistAnswers(
-      ctx,
-      foreignPropertySelectCountry
-    )
-
-  def saveForeignPropertyExpenses(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertyExpensesWithCountryCode: ForeignPropertyExpensesWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
-    for {
-      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                     journeyContext.taxYear,
-                                     nino,
-                                     journeyContext.incomeSourceId
-                                   )
-      submissionResponse <- createOrUpdatePeriodicSubmission(
-                              journeyContext.toJourneyContextWithNino(nino),
-                              currentPeriodicSubmission,
-                              foreignPropertyExpensesWithCountryCode
-                            )
-      _ <- foreignPropertyExpensesWithCountryCode.consolidatedExpenses match {
-             case Some(consolidatedExpenses) =>
-               persistForeignAnswers(
-                 journeyContext,
-                 ForeignPropertyExpensesStoreAnswers(
-                   consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
-                 ),
-                 foreignPropertyExpensesWithCountryCode.countryCode
-               ).map(isPersistSuccess =>
-                 if (!isPersistSuccess) {
-                   logger.error("Could not persist Foreign Expenses")
-                 } else {
-                   logger.info("Foreign Expenses persisted successfully")
-                 }
-               )
-             case _ =>
-               ITPEnvelope.liftPure(None)
-           }
-    } yield submissionResponse
-
-  def saveForeignPropertyTax(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode
-  )(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
-    for {
-      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                     journeyContext.taxYear,
-                                     nino,
-                                     journeyContext.incomeSourceId
-                                   )
-
-      submissionResponse <- createOrUpdatePeriodicSubmission(
-                              journeyContext.toJourneyContextWithNino(nino),
-                              currentPeriodicSubmission,
-                              foreignPropertyTaxWithCountryCode
-                            )
-      _ <- persistForeignAnswers(
-             journeyContext,
-             ForeignPropertyTaxStoreAnswers(
-               foreignIncomeTaxYesNo = foreignPropertyTaxWithCountryCode.foreignIncomeTax.map(_.foreignIncomeTaxYesNo)
-             ),
-             foreignPropertyTaxWithCountryCode.countryCode
-           ).map(isPersistSuccess =>
-             if (!isPersistSuccess) {
-               logger.error("Could not persist")
-             } else {
-               logger.info("Persist successful")
-             }
-           )
-    } yield submissionResponse
+    result.subflatMap(propertyPeriodicSubmissionList => transformToResponse(propertyPeriodicSubmissionList))
+  }
 
   def getCurrentPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
-    hc: HeaderCarrier
+                                                                                                 hc: HeaderCarrier
   ): ITPEnvelope[Option[PropertyPeriodicSubmission]] =
     getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId)
       .map(_.periodicSubmissions.headOption)
@@ -151,118 +76,29 @@ class ForeignPropertyService @Inject() (
         case None         => ITPEnvelope.liftPure(None)
       }
 
-  private def createOrUpdatePeriodicSubmission[T](
-    contextWithNino: JourneyContextWithNino,
-    maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
-    entity: T
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
-    for {
-      updatePeriodicSubmissionRequest <-
-        ITPEnvelope.liftEither(
-          UpdateForeignPropertyPeriodicSubmissionRequest
-            .fromEntity(maybePeriodicSubmission, entity)
-        )
-      createPeriodicSubmissionRequest <-
-        ITPEnvelope.liftEither(
-          CreateForeignPropertyPeriodicSubmissionRequest
-            .fromEntity(contextWithNino.taxYear, maybePeriodicSubmission, entity)
-        )
-      submissionResponse <- maybePeriodicSubmission match {
-                              case None =>
-                                createForeignPeriodicSubmission(
-                                  contextWithNino.nino,
-                                  contextWithNino.incomeSourceId,
-                                  contextWithNino.taxYear,
-                                  createPeriodicSubmissionRequest
-                                )
-                              case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
-                                updateForeignPeriodicSubmission(
-                                  contextWithNino.nino,
-                                  contextWithNino.incomeSourceId,
-                                  contextWithNino.taxYear,
-                                  submissionId.submissionId,
-                                  updatePeriodicSubmissionRequest
-                                ).map(_ => Some(submissionId))
-                              case _ =>
-                                ITPEnvelope.liftEither(
-                                  InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
-                                )
-                            }
-    } yield {
-      logger.debug(s"Save periodic submission details: $submissionResponse")
-      submissionResponse
-    }
-
-  def createOrUpdateAnnualSubmission(
-    taxYear: TaxYear,
-    incomeSourceId: IncomeSourceId,
-    nino: Nino,
-    body: PropertyAnnualSubmission
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
-    body match {
-      case PropertyAnnualSubmission(None, None, None) =>
-        ITPEnvelope.liftPure(())
-      case _ =>
-        EitherT(
-          connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
-        ).leftMap(e => ApiServiceError(e.status))
-    }
-
-  def createForeignPeriodicSubmission(
-    nino: Nino,
-    incomeSourceId: IncomeSourceId,
-    taxYear: TaxYear,
-    body: CreateForeignPropertyPeriodicSubmissionRequest
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
-    EitherT(connector.createForeignPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
-      ApiServiceError(e.status)
-    )
-
-  private def updateForeignPeriodicSubmission(
-    nino: Nino,
-    incomeSourceId: IncomeSourceId,
-    taxYear: TaxYear,
-    submissionId: String,
-    updateForeignPropertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest
-  )(implicit
-    hc: HeaderCarrier
-  ): ITPEnvelope[String] =
-    EitherT(
-      connector
-        .updateForeignPeriodicSubmission(
-          nino,
-          incomeSourceId,
-          taxYear,
-          submissionId,
-          updateForeignPropertyPeriodicSubmissionRequest
-        )
-    )
-      .bimap(error => ApiServiceError(error.status), _ => "")
-
-  def getPropertyPeriodicSubmissions(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
-    hc: HeaderCarrier
-  ): ITPEnvelope[PropertyPeriodicSubmissionResponse] = {
-
-    val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
-      for {
-        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, nino, incomeSourceId))
-                                   .leftMap(error => ApiServiceError(error.status))
-        propertyPeriodicSubmissions <-
-          getPropertySubmissions(taxYear, nino, incomeSourceId, periodicSubmissionIds)
-      } yield {
-        logger.debug(s"Filtered periodic submission details: $propertyPeriodicSubmissions")
-        propertyPeriodicSubmissions
+  def getAnnualForeignPropertySubmissionFromDownStream(
+                                                        taxYear: TaxYear,
+                                                        taxableEntityId: Nino,
+                                                        incomeSourceId: IncomeSourceId
+                                                      )(implicit
+                                                        hc: HeaderCarrier
+                                                      ): ITPEnvelope[AnnualForeignPropertySubmission] =
+    EitherT(connector.getAnnualForeignPropertySubmission(taxYear, taxableEntityId, incomeSourceId))
+      .leftMap(error => ApiServiceError(error.status))
+      .subflatMap { maybeAnnualForeignPropertySubmission =>
+        maybeAnnualForeignPropertySubmission.fold[Either[ServiceError, AnnualForeignPropertySubmission]] {
+          logger.error(s"[getAnnualForeignPropertySubmissionFromDownStream] For Foreign Property no Annual submission found in IF")
+        DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
+      }(_.asRight[ServiceError])
       }
 
-    result.subflatMap(propertyPeriodicSubmissionList => transformToResponse(propertyPeriodicSubmissionList))
-  }
 
   private def getPropertySubmissions(
-    taxYear: TaxYear,
-    taxableEntityId: Nino,
-    incomeSourceId: IncomeSourceId,
-    periodicSubmissionIds: List[PeriodicSubmissionIdModel]
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): ITPEnvelope[List[PropertyPeriodicSubmission]] = {
+                                      taxYear: TaxYear,
+                                      taxableEntityId: Nino,
+                                      incomeSourceId: IncomeSourceId,
+                                      periodicSubmissionIds: List[PeriodicSubmissionIdModel]
+                                    )(implicit hc: HeaderCarrier, ec: ExecutionContext): ITPEnvelope[List[PropertyPeriodicSubmission]] = {
     val propertyPeriodicSubmissions = periodicSubmissionIds
       .filter(submissionId =>
         submissionId.fromDate.equals(TaxYear.startDate(taxYear.endYear)) && submissionId.toDate
@@ -280,8 +116,12 @@ class ForeignPropertyService @Inject() (
                   )
                 )
               ).asRight[ApiError]
-            case Right(None) => None.asRight[ApiError]
-            case Left(e)     => e.asLeft[Option[PropertyPeriodicSubmission]]
+            case Right(None) =>
+              logger.error(s"[getPropertySubmissions] Foreign property submission details not found in IF")
+              None.asRight[ApiError]
+            case Left(e)     =>
+              logger.error(s"[getPropertySubmissions] Foreign property submission details error found in IF: ${e.status}")
+              e.asLeft[Option[PropertyPeriodicSubmission]]
           }
       }
     val all: Future[List[Either[ApiError, Option[PropertyPeriodicSubmission]]]] =
@@ -299,70 +139,246 @@ class ForeignPropertyService @Inject() (
     }).bimap(l => ApiServiceError(l.status), _.flatten)
   }
 
+  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
+                                                         writes: Writes[A]
+  ): EitherT[Future, ServiceError, Boolean] =
+    EitherT(
+      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
+        case false => RepositoryError.asLeft[Boolean]
+        case true  => true.asRight[ServiceError]
+      }
+    )
+  private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
+                                                                                             writes: Writes[A]
+  ): EitherT[Future, ServiceError, Boolean] =
+    EitherT(
+      repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
+        case false => RepositoryError.asLeft[Boolean]
+        case true  => true.asRight[ServiceError]
+      }
+    )
+
+  def saveForeignPropertySelectCountry(
+                                        ctx: JourneyContext,
+                                        foreignPropertySelectCountry: ForeignPropertySelectCountry
+                                      )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    persistAnswers(
+      ctx,
+      foreignPropertySelectCountry
+    )
+
+  def saveForeignPropertyExpenses(
+                                   journeyContext: JourneyContext,
+                                   nino: Nino,
+                                   foreignPropertyExpensesWithCountryCode: ForeignPropertyExpensesWithCountryCode
+                                 )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    for {
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+        journeyContext.taxYear,
+        nino,
+        journeyContext.incomeSourceId
+      )
+      submissionResponse <- createOrUpdatePeriodicSubmission(
+        journeyContext.toJourneyContextWithNino(nino),
+        currentPeriodicSubmission,
+        foreignPropertyExpensesWithCountryCode
+      )
+      _ <- foreignPropertyExpensesWithCountryCode.consolidatedExpenses match {
+        case Some(consolidatedExpenses) =>
+          persistForeignAnswers(
+            journeyContext,
+            ForeignPropertyExpensesStoreAnswers(
+              consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
+            ),
+            foreignPropertyExpensesWithCountryCode.countryCode
+          ).map(isPersistSuccess =>
+            if (!isPersistSuccess) {
+              logger.error("Could not persist Foreign Expenses")
+            } else {
+              logger.info("Foreign Expenses persisted successfully")
+            }
+          )
+        case _ =>
+          ITPEnvelope.liftPure(None)
+      }
+    } yield submissionResponse
+
+  def saveForeignPropertyTax(
+                              journeyContext: JourneyContext,
+                              nino: Nino,
+                              foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode
+                            )(implicit
+                              hc: HeaderCarrier
+                            ): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+    for {
+      currentPeriodicSubmission <- getCurrentPeriodicSubmission(
+        journeyContext.taxYear,
+        nino,
+        journeyContext.incomeSourceId
+      )
+
+      submissionResponse <- createOrUpdatePeriodicSubmission(
+        journeyContext.toJourneyContextWithNino(nino),
+        currentPeriodicSubmission,
+        foreignPropertyTaxWithCountryCode
+      )
+      _ <- persistForeignAnswers(
+        journeyContext,
+        ForeignPropertyTaxStoreAnswers(
+          foreignIncomeTaxYesNo = foreignPropertyTaxWithCountryCode.foreignIncomeTax.map(_.foreignIncomeTaxYesNo)
+        ),
+        foreignPropertyTaxWithCountryCode.countryCode
+      ).map(isPersistSuccess =>
+        if (!isPersistSuccess) {
+          logger.error("Could not persist")
+        } else {
+          logger.info("Persist successful")
+        }
+      )
+    } yield submissionResponse
+
+
+  private def createOrUpdatePeriodicSubmission[T](
+                                                   contextWithNino: JourneyContextWithNino,
+                                                   maybePeriodicSubmission: Option[PropertyPeriodicSubmission],
+                                                   entity: T
+                                                 )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
+    for {
+      updatePeriodicSubmissionRequest <-
+        ITPEnvelope.liftEither(
+          UpdateForeignPropertyPeriodicSubmissionRequest
+            .fromEntity(maybePeriodicSubmission, entity)
+        )
+      createPeriodicSubmissionRequest <-
+        ITPEnvelope.liftEither(
+          CreateForeignPropertyPeriodicSubmissionRequest
+            .fromEntity(contextWithNino.taxYear, maybePeriodicSubmission, entity)
+        )
+      submissionResponse <- maybePeriodicSubmission match {
+        case None =>
+          createForeignPeriodicSubmission(
+            contextWithNino.nino,
+            contextWithNino.incomeSourceId,
+            contextWithNino.taxYear,
+            createPeriodicSubmissionRequest
+          )
+        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
+          updateForeignPeriodicSubmission(
+            contextWithNino.nino,
+            contextWithNino.incomeSourceId,
+            contextWithNino.taxYear,
+            submissionId.submissionId,
+            updatePeriodicSubmissionRequest
+          ).map(_ => Some(submissionId))
+        case _ =>
+          ITPEnvelope.liftEither(
+            InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
+          )
+      }
+    } yield {
+      logger.debug(s"Save periodic submission details: $submissionResponse")
+      submissionResponse
+    }
+
+  def createOrUpdateAnnualSubmission(
+                                      taxYear: TaxYear,
+                                      incomeSourceId: IncomeSourceId,
+                                      nino: Nino,
+                                      body: PropertyAnnualSubmission
+                                    )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
+    body match {
+      case PropertyAnnualSubmission(None, None, None) =>
+        ITPEnvelope.liftPure(())
+      case _ =>
+        EitherT(
+          connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
+        ).leftMap(e => ApiServiceError(e.status))
+    }
+
+  def createForeignPeriodicSubmission(
+                                       nino: Nino,
+                                       incomeSourceId: IncomeSourceId,
+                                       taxYear: TaxYear,
+                                       body: CreateForeignPropertyPeriodicSubmissionRequest
+                                     )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
+    EitherT(connector.createForeignPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap(e =>
+      ApiServiceError(e.status)
+    )
+
+  private def updateForeignPeriodicSubmission(
+                                               nino: Nino,
+                                               incomeSourceId: IncomeSourceId,
+                                               taxYear: TaxYear,
+                                               submissionId: String,
+                                               updateForeignPropertyPeriodicSubmissionRequest: UpdateForeignPropertyPeriodicSubmissionRequest
+                                             )(implicit
+                                               hc: HeaderCarrier
+                                             ): ITPEnvelope[String] =
+    EitherT(
+      connector
+        .updateForeignPeriodicSubmission(
+          nino,
+          incomeSourceId,
+          taxYear,
+          submissionId,
+          updateForeignPropertyPeriodicSubmissionRequest
+        )
+    )
+      .bimap(error => ApiServiceError(error.status), _ => "")
+
+
+
   private def transformToResponse(
-    submissions: List[PropertyPeriodicSubmission]
-  ): Either[ServiceError, PropertyPeriodicSubmissionResponse] =
+                                   submissions: List[PropertyPeriodicSubmission]
+                                 ): Either[ServiceError, PropertyPeriodicSubmissionResponse] =
     Right(PropertyPeriodicSubmissionResponse(submissions))
 
   def saveForeignIncome(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignIncome: ForeignIncomeWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
+                         journeyContext: JourneyContext,
+                         nino: Nino,
+                         foreignIncome: ForeignIncomeWithCountryCode
+                       )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Option[PeriodicSubmissionId]] =
     for {
       currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                     journeyContext.taxYear,
-                                     nino,
-                                     journeyContext.incomeSourceId
-                                   )
+        journeyContext.taxYear,
+        nino,
+        journeyContext.incomeSourceId
+      )
 
       submissionResponse <- createOrUpdatePeriodicSubmission(
-                              journeyContext.toJourneyContextWithNino(nino),
-                              currentPeriodicSubmission,
-                              foreignIncome
-                            )
+        journeyContext.toJourneyContextWithNino(nino),
+        currentPeriodicSubmission,
+        foreignIncome
+      )
       _ <- persistForeignAnswers(
-             journeyContext,
-             ForeignIncomeStoreAnswers(
-               premiumsGrantLeaseReceived = foreignIncome.premiumsGrantLeaseReceived,
-               premiumsOfLeaseGrantAgreed =
-                 foreignIncome.premiumsOfLeaseGrantAgreed.fold(false)(_.premiumsOfLeaseGrantAgreed),
-               calculatedPremiumLeaseTaxable =
-                 foreignIncome.calculatedPremiumLeaseTaxable.fold(false)(_.calculatedPremiumLeaseTaxable),
-               twelveMonthPeriodsInLease = foreignIncome.twelveMonthPeriodsInLease,
-               receivedGrantLeaseAmount = foreignIncome.receivedGrantLeaseAmount
-             ),
-             foreignIncome.countryCode
-           ).map(isPersistSuccess =>
-             if (!isPersistSuccess) {
-               logger.error("Could not persist Foreign Income")
-             } else {
-               logger.info("Foreign Income persisted successfully")
-             }
-           )
+        journeyContext,
+        ForeignIncomeStoreAnswers(
+          premiumsGrantLeaseReceived = foreignIncome.premiumsGrantLeaseReceived,
+          premiumsOfLeaseGrantAgreed =
+            foreignIncome.premiumsOfLeaseGrantAgreed.fold(false)(_.premiumsOfLeaseGrantAgreed),
+          calculatedPremiumLeaseTaxable =
+            foreignIncome.calculatedPremiumLeaseTaxable.fold(false)(_.calculatedPremiumLeaseTaxable),
+          twelveMonthPeriodsInLease = foreignIncome.twelveMonthPeriodsInLease,
+          receivedGrantLeaseAmount = foreignIncome.receivedGrantLeaseAmount
+        ),
+        foreignIncome.countryCode
+      ).map(isPersistSuccess =>
+        if (!isPersistSuccess) {
+          logger.error("Could not persist Foreign Income")
+        } else {
+          logger.info("Foreign Income persisted successfully")
+        }
+      )
     } yield submissionResponse
 
-  def getAnnualForeignPropertySubmissionFromDownStream(
-    taxYear: TaxYear,
-    taxableEntityId: Nino,
-    incomeSourceId: IncomeSourceId
-  )(implicit
-    hc: HeaderCarrier
-  ): ITPEnvelope[AnnualForeignPropertySubmission] =
-    EitherT(connector.getAnnualForeignPropertySubmission(taxYear, taxableEntityId, incomeSourceId))
-      .leftMap(error => ApiServiceError(error.status))
-      .subflatMap { maybeAnnualForeignPropertySubmission =>
-        maybeAnnualForeignPropertySubmission.fold[Either[ServiceError, AnnualForeignPropertySubmission]](
-          DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
-        )(_.asRight[ServiceError])
-      }
+
 
   def createOrUpdateAnnualForeignPropertySubmission(
-    taxYear: TaxYear,
-    incomeSourceId: IncomeSourceId,
-    nino: Nino,
-    body: AnnualForeignPropertySubmission
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+                                                     taxYear: TaxYear,
+                                                     incomeSourceId: IncomeSourceId,
+                                                     nino: Nino,
+                                                     body: AnnualForeignPropertySubmission
+                                                   )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
     body match {
       case AnnualForeignPropertySubmission(None) =>
         ITPEnvelope.liftPure(false)
@@ -374,11 +390,11 @@ class ForeignPropertyService @Inject() (
     }
 
   def createOrUpdateAnnualForeignPropertySubmissionAdjustments(
-    taxYear: TaxYear,
-    incomeSourceId: IncomeSourceId,
-    nino: Nino,
-    body: AnnualForeignPropertySubmissionAdjustments
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+                                                                taxYear: TaxYear,
+                                                                incomeSourceId: IncomeSourceId,
+                                                                nino: Nino,
+                                                                body: AnnualForeignPropertySubmissionAdjustments
+                                                              )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
     body match {
       case AnnualForeignPropertySubmissionAdjustments(None) =>
         ITPEnvelope.liftPure(false)
@@ -390,11 +406,11 @@ class ForeignPropertyService @Inject() (
     }
 
   private def createOrUpdateAnnualForeignPropertySubmissionAllowances(
-    taxYear: TaxYear,
-    incomeSourceId: IncomeSourceId,
-    nino: Nino,
-    body: AnnualForeignPropertySubmissionAllowances
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+                                                                       taxYear: TaxYear,
+                                                                       incomeSourceId: IncomeSourceId,
+                                                                       nino: Nino,
+                                                                       body: AnnualForeignPropertySubmissionAllowances
+                                                                     )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
     body match {
       case AnnualForeignPropertySubmissionAllowances(None) =>
         ITPEnvelope.liftPure(false)
@@ -406,10 +422,10 @@ class ForeignPropertyService @Inject() (
     }
 
   def saveForeignPropertyAllowances(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+                                     journeyContext: JourneyContext,
+                                     nino: Nino,
+                                     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode
+                                   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     for {
       isSubmissionSuccess <- {
         foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar match {
@@ -446,19 +462,19 @@ class ForeignPropertyService @Inject() (
         }
       }
       _ <- persistForeignAnswers(
-             journeyContext,
-             ForeignAllowancesStoreAnswers(
-               foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
-             ),
-             foreignPropertyAllowancesWithCountryCode.countryCode
-           ).flatMap { isPersisted =>
-             if (isPersisted) {
-               logger.info("Foreign Property allowances persisted successfully")
-             } else {
-               logger.error("Could not persist Foreign Property allowances")
-             }
-             ITPEnvelope.liftPure(isPersisted)
-           }
+        journeyContext,
+        ForeignAllowancesStoreAnswers(
+          foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+        ),
+        foreignPropertyAllowancesWithCountryCode.countryCode
+      ).flatMap { isPersisted =>
+        if (isPersisted) {
+          logger.info("Foreign Property allowances persisted successfully")
+        } else {
+          logger.error("Could not persist Foreign Property allowances")
+        }
+        ITPEnvelope.liftPure(isPersisted)
+      }
     } yield {
       logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
       isSubmissionSuccess
@@ -466,10 +482,10 @@ class ForeignPropertyService @Inject() (
   }
 
   def saveForeignPropertyAdjustments(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+                                      journeyContext: JourneyContext,
+                                      nino: Nino,
+                                      foreignAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode
+                                    )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
     for {
       _ <- {
         if (foreignAdjustmentsWithCountryCode.propertyIncomeAllowanceClaim.isDefined) {
@@ -501,40 +517,40 @@ class ForeignPropertyService @Inject() (
         } else {
           for {
             currentPeriodicSubmission <- getCurrentPeriodicSubmission(
-                                           journeyContext.taxYear,
-                                           nino,
-                                           journeyContext.incomeSourceId
-                                         )
+              journeyContext.taxYear,
+              nino,
+              journeyContext.incomeSourceId
+            )
             submissionResponse <- createOrUpdatePeriodicSubmission(
-                                    journeyContext.toJourneyContextWithNino(nino),
-                                    currentPeriodicSubmission,
-                                    foreignAdjustmentsWithCountryCode
-                                  )
+              journeyContext.toJourneyContextWithNino(nino),
+              currentPeriodicSubmission,
+              foreignAdjustmentsWithCountryCode
+            )
           } yield submissionResponse
         }
 
       }
       res <- persistForeignAnswers(
-               journeyContext,
-               ForeignAdjustmentsStoreAnswers(
-                 balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
-                 foreignUnusedResidentialFinanceCostYesNo =
-                   foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(
-                     _.foreignUnusedResidentialFinanceCostYesNo
-                   ),
-                 unusedLossesPreviousYearsYesNo =
-                   foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
-                 whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
-               ),
-               foreignAdjustmentsWithCountryCode.countryCode
-             )
+        journeyContext,
+        ForeignAdjustmentsStoreAnswers(
+          balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
+          foreignUnusedResidentialFinanceCostYesNo =
+            foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(
+              _.foreignUnusedResidentialFinanceCostYesNo
+            ),
+          unusedLossesPreviousYearsYesNo =
+            foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
+          whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
+        ),
+        foreignAdjustmentsWithCountryCode.countryCode
+      )
     } yield res
 
   def saveForeignPropertySba(
-    journeyContext: JourneyContext,
-    nino: Nino,
-    foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode
-  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+                              journeyContext: JourneyContext,
+                              nino: Nino,
+                              foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode
+                            )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     for {
       isSubmissionSuccess <- {
         if(!foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance) {
@@ -565,21 +581,21 @@ class ForeignPropertyService @Inject() (
         }
       }
       _ <- persistForeignAnswers(
-          journeyContext,
-          ForeignPropertySbaStoreAnswers(
-            claimStructureBuildingAllowance =
-              foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance
-          ),
-          foreignPropertySbaWithCountryCode.countryCode
-        ).map(isPersistSuccess =>
-          if (!isPersistSuccess) {
-            logger.error("Could not persist Foreign Property Sba")
-            false
-          } else {
-            logger.info("Foreign Property Sba persisted successfully")
-            true
-          }
-        )
+        journeyContext,
+        ForeignPropertySbaStoreAnswers(
+          claimStructureBuildingAllowance =
+            foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance
+        ),
+        foreignPropertySbaWithCountryCode.countryCode
+      ).map(isPersistSuccess =>
+        if (!isPersistSuccess) {
+          logger.error("Could not persist Foreign Property Sba")
+          false
+        } else {
+          logger.info("Foreign Property Sba persisted successfully")
+          true
+        }
+      )
     } yield isSubmissionSuccess
   }
 }
