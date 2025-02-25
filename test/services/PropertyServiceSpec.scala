@@ -1836,7 +1836,7 @@ class PropertyServiceSpec
       } yield r
       whenReady(result.value, Timeout(Span(500, Millis))) { response =>
         response shouldBe InternalError(
-          "[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: no-journey"
+        "Journey Repo could not be accessed, journey name: no-journey"
         )
           .asLeft[FetchedPropertyData]
 

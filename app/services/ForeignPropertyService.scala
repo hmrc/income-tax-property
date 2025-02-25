@@ -462,19 +462,24 @@ class ForeignPropertyService @Inject() (
         }
       }
       _ <- persistForeignAnswers(
-        journeyContext,
-        ForeignAllowancesStoreAnswers(
-          foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
-        ),
-        foreignPropertyAllowancesWithCountryCode.countryCode
-      ).flatMap { isPersisted =>
-        if (isPersisted) {
-          logger.info("Foreign Property allowances persisted successfully")
-        } else {
-          logger.error("Could not persist Foreign Property allowances")
-        }
-        ITPEnvelope.liftPure(isPersisted)
-      }
+             journeyContext,
+             ForeignAllowancesStoreAnswers(
+               zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
+               zeroEmissionsGoodsVehicleAllowance =
+                 foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
+               costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
+               otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance,
+               foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+             ),
+             foreignPropertyAllowancesWithCountryCode.countryCode
+           ).flatMap { isPersisted =>
+             if (isPersisted) {
+               logger.info("Foreign Property allowances persisted successfully")
+             } else {
+               logger.error("Could not persist Foreign Property allowances")
+             }
+             ITPEnvelope.liftPure(isPersisted)
+           }
     } yield {
       logger.info("Foreign Allowances persisted successfully to Downstream IF:" + isSubmissionSuccess)
       isSubmissionSuccess
