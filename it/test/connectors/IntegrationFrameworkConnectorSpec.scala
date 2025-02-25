@@ -100,7 +100,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           httpResponse
         )
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
+        await(underTest.getAllPeriodicSubmissionIds(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
           aPeriodicSubmissionModel
         )
       }
@@ -114,7 +114,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           httpResponse
         )
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
+        await(underTest.getAllPeriodicSubmissionIds(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
           aPeriodicSubmissionModel
         )
       }
@@ -128,7 +128,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           httpResponse
         )
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
+        await(underTest.getAllPeriodicSubmissionIds(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Right(
           List.empty
         )
       }
@@ -143,7 +143,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           httpResponse
         )
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
+        await(underTest.getAllPeriodicSubmissionIds(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
           ApiError(
             SERVICE_UNAVAILABLE,
             SingleErrorBody("some-code", "some-reason")
@@ -162,7 +162,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           httpResponse
         )
 
-        await(underTest.getAllPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
+        await(underTest.getAllPeriodicSubmissionIds(taxYear, taxableEntityId, incomeSourceId)(hc)) shouldBe Left(
           ApiError(
             BAD_GATEWAY,
             SingleErrorBody("some-code", "some-reason")

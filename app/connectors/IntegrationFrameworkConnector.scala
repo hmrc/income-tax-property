@@ -39,7 +39,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
 
   lazy val logger: Logger = LoggerFactory.getLogger("connector")
 
-  def getAllPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
+  def getAllPeriodicSubmissionIds(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ApiError, List[PeriodicSubmissionIdModel]]] = {
 
@@ -73,7 +73,6 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         }
         response.result
       }
-
   }
 
   def getPropertyPeriodicSubmission(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId, submissionId: String)(

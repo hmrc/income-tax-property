@@ -32,7 +32,7 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
 
   protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
 
-  def mockGetAllPeriodicSubmission(
+  def mockGetAllPeriodicSubmissionIds(
     taxYear: TaxYear,
     taxableEntityId: Nino,
     incomeSourceId: IncomeSourceId,
@@ -41,7 +41,7 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
     Either[ApiError, List[PeriodicSubmissionIdModel]]
   ]] =
     (mockIntegrationFrameworkConnector
-      .getAllPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
+      .getAllPeriodicSubmissionIds(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(Future.successful(result))
 
