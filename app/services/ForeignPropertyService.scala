@@ -49,7 +49,7 @@ class ForeignPropertyService @Inject() (
 
     val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
       for {
-        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmission(taxYear, nino, incomeSourceId))
+        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId))
           .leftMap(error => ApiServiceError(error.status))
         propertyPeriodicSubmissions <-
           getPropertySubmissions(taxYear, nino, incomeSourceId, periodicSubmissionIds)

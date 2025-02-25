@@ -80,7 +80,7 @@ class PropertyServiceSpec
         None
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(periodicSubmissionIds))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(periodicSubmissionIds))
       mockGetPropertyPeriodicSubmission(taxYear, nino, incomeSourceId, "1", Right(Some(propertyPeriodicSubmission)))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe
@@ -92,7 +92,7 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -104,7 +104,7 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -114,7 +114,7 @@ class PropertyServiceSpec
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
       val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -123,7 +123,7 @@ class PropertyServiceSpec
     }
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -171,7 +171,7 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -183,7 +183,7 @@ class PropertyServiceSpec
         PeriodicSubmissionIdModel("1", LocalDate.parse("2021-01-01"), LocalDate.parse("2021-11-11"))
       )
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -193,7 +193,7 @@ class PropertyServiceSpec
     "return DataNotFoundError when GetPeriodicSubmission does not have ids" in {
       val aPeriodicSubmissionModel = List.empty[PeriodicSubmissionIdModel]
 
-      mockGetAllPeriodicSubmission(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
+      mockGetAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId, Right(aPeriodicSubmissionModel))
 
       await(underTest.getPropertyPeriodicSubmissions(taxYear, nino, incomeSourceId).value) shouldBe Right(
         PropertyPeriodicSubmissionResponse(List())
@@ -202,7 +202,7 @@ class PropertyServiceSpec
     }
 
     "return ApiError when GetPeriodicSubmissionIds fails" in {
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -501,7 +501,7 @@ class PropertyServiceSpec
           None
         )
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -606,7 +606,7 @@ class PropertyServiceSpec
         )
       )
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -855,7 +855,7 @@ class PropertyServiceSpec
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -900,7 +900,7 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -962,7 +962,7 @@ class PropertyServiceSpec
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1007,7 +1007,7 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1089,7 +1089,7 @@ class PropertyServiceSpec
       val fromDate = TaxYear.startDate(taxYear.endYear)
       val toDate = TaxYear.endDate(taxYear.endYear)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1128,7 +1128,7 @@ class PropertyServiceSpec
 
     "downstream error when getAllPeriodicSubmission call fails" in {
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1157,7 +1157,7 @@ class PropertyServiceSpec
       val fromDate = TaxYear.startDate(taxYear.endYear)
       val toDate = TaxYear.endDate(taxYear.endYear)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1226,7 +1226,7 @@ class PropertyServiceSpec
         None
       )
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1302,7 +1302,7 @@ class PropertyServiceSpec
       val fromDate = LocalDate.now().minusYears(2)
       val toDate = fromDate.plusYears(3)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1369,7 +1369,7 @@ class PropertyServiceSpec
       val fromDate = TaxYear.startDate(taxYear.endYear)
       val toDate = TaxYear.endDate(taxYear.endYear)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1409,7 +1409,7 @@ class PropertyServiceSpec
 
     "downstream error when getAllPeriodicSubmission call fails" in {
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1438,7 +1438,7 @@ class PropertyServiceSpec
       val fromDate = TaxYear.startDate(taxYear.endYear)
       val toDate = TaxYear.endDate(taxYear.endYear)
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1504,7 +1504,7 @@ class PropertyServiceSpec
           )
         )
       )
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1711,7 +1711,7 @@ class PropertyServiceSpec
               aPropertyAnnualSubmission
             ).asRight[ApiError]
           )
-          mockGetAllPeriodicSubmission(
+          mockGetAllPeriodicSubmissionIds(
             taxYear,
             nino,
             incomeSourceId,
@@ -1800,7 +1800,7 @@ class PropertyServiceSpec
         incomeSourceId,
         Some(aPropertyAnnualSubmission).asRight[ApiError]
       )
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1851,7 +1851,7 @@ class PropertyServiceSpec
         incomeSourceId,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -1935,7 +1935,7 @@ class PropertyServiceSpec
         ).asRight[ApiError]
       )
 
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -2004,7 +2004,7 @@ class PropertyServiceSpec
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -2084,7 +2084,7 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -2152,7 +2152,7 @@ class PropertyServiceSpec
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,
@@ -2232,7 +2232,7 @@ class PropertyServiceSpec
     "return ApiError for invalid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
       val toDate = fromDate.plusMonths(3)
-      mockGetAllPeriodicSubmission(
+      mockGetAllPeriodicSubmissionIds(
         taxYear,
         nino,
         incomeSourceId,

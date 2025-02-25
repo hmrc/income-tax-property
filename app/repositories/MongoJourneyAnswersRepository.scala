@@ -105,7 +105,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         Filters.equal("taxYear", ctx.taxYear.endYear),
         Filters.equal("mtditid", ctx.mtditid.value)
       )
-
+    logger.debug(s"[fetchAllJourneys] Getting all journeys: ${collection.find(filter)} ")
     collection.find(filter).toFuture()
   }
   private[repositories] def createUpsert(
@@ -159,7 +159,11 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private[repositories] def updateForeignStatus(ctx: JourneyContext, status: JourneyStatus, countryCode: String): Future[UpdateResult] = {
+  private[repositories] def updateForeignStatus(
+    ctx: JourneyContext,
+    status: JourneyStatus,
+    countryCode: String
+  ): Future[UpdateResult] = {
     val filter = foreignFilterJourney(ctx, countryCode)
     val update = createUpsertStatus(status)
     val options = new UpdateOptions().upsert(true)

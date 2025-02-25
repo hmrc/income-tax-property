@@ -55,14 +55,14 @@ trait MockPropertyService extends MockFactory {
       .expects(taxYear, taxableEntityId, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetCurrentPeriodicSubmission(
+  def mockGetPeriodicSubmission(
     taxYear: TaxYear,
     nino: Nino,
     incomeSourceId: IncomeSourceId,
     result: Either[ServiceError, Option[PropertyPeriodicSubmission]]
   ): CallHandler4[TaxYear, Nino, IncomeSourceId, HeaderCarrier, ITPEnvelope[Option[PropertyPeriodicSubmission]]] =
     (mockPropertyService
-      .getCurrentPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
+      .getPeriodicSubmission(_: TaxYear, _: Nino, _: IncomeSourceId)(_: HeaderCarrier))
       .expects(taxYear, nino, incomeSourceId, *)
       .returning(EitherT.fromEither(result))
 
