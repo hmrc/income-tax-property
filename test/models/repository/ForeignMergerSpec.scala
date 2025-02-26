@@ -16,17 +16,17 @@
 
 package models.repository
 
-import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 import models.repository.ForeignMerger._
 import models.repository.Merger._
-import models.request.{BalancingCharge, ForeignSbaInfo, ReversePremiumsReceived}
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss.y2019to2020
 import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignAllowancesAnswers}
-import models.responses._
-import utils.UnitTest
 import models.request.foreign.expenses.ConsolidatedExpenses
+import models.request.{BalancingCharge, ForeignSbaInfo}
+import models.responses._
+import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers}
+import utils.UnitTest
 
 import java.time.{LocalDate, LocalDateTime}
 
@@ -421,10 +421,19 @@ class ForeignMergerSpec extends UnitTest {
       "store answers are available in the repo" in {
         val capitalAllowancesForACarYesNo = Some(true)
         val foreignAllowancesStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
-          Some(Map(countryCode -> ForeignAllowancesStoreAnswers(
-            capitalAllowancesForACarYesNo = capitalAllowancesForACarYesNo
-          )))
-        val mergedResult: Option[Map[String, ForeignAllowancesAnswers]] = foreignAllowancesStoreAnswers.merge(fromDownstreamMaybe)
+          Some(
+            Map(
+              countryCode -> ForeignAllowancesStoreAnswers(
+                None,
+                None,
+                None,
+                None,
+                capitalAllowancesForACarYesNo = capitalAllowancesForACarYesNo
+              )
+            )
+          )
+        val mergedResult: Option[Map[String, ForeignAllowancesAnswers]] =
+          foreignAllowancesStoreAnswers.merge(fromDownstreamMaybe)
         val Some(result): Option[ForeignAllowancesAnswers] = mergedResult.flatMap(_.get(countryCode))
         result.annualInvestmentAllowance shouldBe annualInvestmentAllowance
         result.costOfReplacingDomesticItems shouldBe costOfReplacingDomesticItems

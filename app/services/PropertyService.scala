@@ -153,42 +153,34 @@ class PropertyService @Inject() (
 
   private def fetchAllJourneyDataFromRepository(
     ctx: JourneyContext
-  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] = {
-    val result: Future[Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]] =
-      if (ctx.journey == JourneyName.NoJourney) {
-        logger.error(
-          s"[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}"
-        )
+  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] =
+    if (ctx.journey == JourneyName.NoJourney) {
+      logger.error(
+        s"[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}"
+      )
+      ITPEnvelope.liftFuture(
         Future.successful(
-          InternalError(
-            s"[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}"
-          )
-            .asLeft[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])]
+          InternalError(s"Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}").asLeft
         )
-      } else {
-        repository
-          .fetchAllJourneys(ctx)
-          .map { ja =>
-            val validJourneys
-              : Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] =
-              getValidJourneysPerJourneyName(ja.toList)
+      )
+    } else {
 
-            validJourneys match {
-              case Right((ukJourneyMap, foreignJourneyMap)) =>
-                logger.debug(
-                  s"[fetchAllJourneyDataFromRepository] Journey map answers from the repository. ukJourneyMap: $ukJourneyMap foreignJourneyMap: $foreignJourneyMap"
-                )
-                validJourneys
-              case Left(error) =>
-                logger.error(
-                  s"[fetchAllJourneyDataFromRepository] Error fetching valid journeys: ${error.message} from the repository"
-                )
-                Left(error)
-            }
+      ITPEnvelope.liftFuture {
+        repository.fetchAllJourneys(ctx).map { journeys =>
+          getValidJourneysPerJourneyName(journeys.toList) match {
+            case Right((ukJourneyMap, foreignJourneyMap)) =>
+              logger.debug(
+                s"[fetchAllJourneyDataFromRepository] Successfully retrieved journeys. UK: $ukJourneyMap, Foreign: $foreignJourneyMap"
+              )
+              Right((ukJourneyMap, foreignJourneyMap))
+
+            case Left(error) =>
+              logger.error(s"[fetchAllJourneyDataFromRepository] Error fetching valid journeys: ${error.message}")
+              Left(error)
           }
+        }
       }
-    ITPEnvelope.liftFuture(result)
-  }
+    }
 
   def getFetchedPropertyDataMerged(
     ctx: JourneyContext,

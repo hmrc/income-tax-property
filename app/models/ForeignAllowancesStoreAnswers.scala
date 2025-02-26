@@ -19,6 +19,10 @@ package models
 import play.api.libs.json.{Json, OFormat}
 
 case class ForeignAllowancesStoreAnswers(
+  zeroEmissionsCarAllowance: Option[BigDecimal],
+  zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
+  costOfReplacingDomesticItems: Option[BigDecimal],
+  otherCapitalAllowance: Option[BigDecimal],
   capitalAllowancesForACarYesNo: Option[Boolean]
 )
 
