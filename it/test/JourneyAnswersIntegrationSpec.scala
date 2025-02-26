@@ -16,8 +16,10 @@
 
 import config.AppConfig
 import connectors.ConnectorIntegrationSpec
+import models.LossType.UKProperty
 import models.RentalsAndRaRAbout
 import models.common.TaxYear
+import models.common.TaxYear.asTyBefore24
 import models.domain._
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
@@ -420,7 +422,8 @@ class JourneyAnswersIntegrationSpec
 
     }
     "the downstream receives the expected payload when upload happens" in {
-
+      val whenYouReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
+      val lossesBroughtForwardAmount = 22.47
       val rentARoomAdjustments = RaRAdjustments(
         Some(
           BalancingCharge(
@@ -429,8 +432,8 @@ class JourneyAnswersIntegrationSpec
           )
         ),
         Some(34.56),
-        Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(22.47))),
-        Some(WhenYouReportedTheLoss.y2018to2019)
+        Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(lossesBroughtForwardAmount))),
+        Some(whenYouReportedTheLoss)
       )
 
       userLoggedInITPUser(NinoUser)
@@ -452,6 +455,63 @@ class JourneyAnswersIntegrationSpec
           .toString(),
         httpResponseOk
       )
+
+      // Brought Forward Loss
+      val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(whenYouReportedTheLoss))
+      val nino = taxableEntityId
+      val businessId = incomeSourceId
+      val lossId = "some-loss-id"
+      val broughtForwardLossId: BroughtForwardLossId = BroughtForwardLossId(
+        lossId = lossId
+      )
+      val broughtForwardLossRequest = BroughtForwardLossRequest(
+        businessId = businessId,
+        typeOfLoss = UKProperty,
+        lossAmount = lossesBroughtForwardAmount,
+        taxYearBroughtForwardFrom = taxYearStr
+      )
+      val broughtForwardLossResponse: BroughtForwardLossResponse = BroughtForwardLossResponse(
+        businessId = businessId,
+        typeOfLoss = UKProperty,
+        lossAmount = lossesBroughtForwardAmount,
+        taxYearBroughtForwardFrom = taxYearStr,
+        lastModified = LocalDate.now().toString
+      )
+      val broughtForwardLossResponseWithId: BroughtForwardLossResponseWithId = BroughtForwardLossResponseWithId(
+        lossId = broughtForwardLossId.lossId,
+        businessId = broughtForwardLossResponse.businessId,
+        typeOfLoss = broughtForwardLossResponse.typeOfLoss,
+        lossAmount = broughtForwardLossResponse.lossAmount,
+        taxYearBroughtForwardFrom = broughtForwardLossResponse.taxYearBroughtForwardFrom,
+        lastModified = broughtForwardLossResponse.lastModified
+      )
+      val broughtForwardLossesResponse: BroughtForwardLosses = BroughtForwardLosses(losses = Seq(broughtForwardLossResponseWithId))
+      val broughtForwardLossAmountRequest: BroughtForwardLossAmount = BroughtForwardLossAmount(lossAmount = lossesBroughtForwardAmount)
+
+      val broughtForwardLossIdHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossId).toString)
+      val broughtForwardLossHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossResponse).toString)
+      val broughtForwardLossWithIdHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossResponseWithId).toString)
+      val broughtForwardLossesHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossesResponse).toString)
+      stubPostHttpClientCall(
+        s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr",
+        Json.toJson(broughtForwardLossRequest).toString,
+        broughtForwardLossIdHttpResponse
+      )
+      stubGetHttpClientCall(
+        s"/individuals/losses/$nino/brought-forward-losses/$lossId",
+        broughtForwardLossHttpResponse
+      )
+      stubGetHttpClientCall(
+        s"/individuals/losses/$nino/brought-forward-losses/tax-year/$taxYearStr" +
+      s"?businessId=$incomeSourceId&typeOfLoss=$UKProperty",
+        broughtForwardLossesHttpResponse
+      )
+      stubPutHttpClientCall(
+        s"/individuals/losses/$nino/brought-forward-losses/$lossId/tax-year/$taxYearStr/change-loss-amount",
+        Json.toJson(broughtForwardLossAmountRequest).toString,
+        broughtForwardLossHttpResponse
+      )
+
       val aPeriodicSubmissionModel = List(
         PeriodicSubmissionIdModel(submissionId1, LocalDate.parse("2020-04-06"), LocalDate.parse("2021-04-05")),
         PeriodicSubmissionIdModel(submissionId2, LocalDate.parse("2021-02-02"), LocalDate.parse("2022-12-12"))
@@ -526,7 +586,6 @@ class JourneyAnswersIntegrationSpec
           .addHttpHeaders(requestHeaders.toSeq: _*)
           .post(Json.toJson(rentARoomAdjustments))
           .futureValue
-
       response.status shouldBe 201
 
     }

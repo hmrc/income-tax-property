@@ -17,8 +17,9 @@
 package models.request
 
 import models.Enumerable
+import models.common.TaxYear
 import models.request.foreign.WithName
-import play.api.libs.json.{OFormat, Json}
+import play.api.libs.json.{Json, OFormat}
 
 final case class PropertyRentalAdjustments(
   privateUseAdjustment: BigDecimal,
@@ -73,4 +74,7 @@ object WhenYouReportedTheLoss extends Enumerable.Implicits {
 
   implicit val enumerable: Enumerable[WhenYouReportedTheLoss] =
     Enumerable(values.map(v => v.toString -> v): _*)
+
+  def toTaxYear(taxYearBroughtForward: WhenYouReportedTheLoss): TaxYear =
+    TaxYear(taxYearBroughtForward.toString.takeRight(4).toInt)
 }
