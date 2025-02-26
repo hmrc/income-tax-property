@@ -18,6 +18,10 @@ package support.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import play.api.http.Status.OK
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.auth.core.AffinityGroup.Individual
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 
 object AuthStub {
 
@@ -48,6 +52,41 @@ object AuthStub {
           aResponse().withStatus(200)
         )
     )
+
+  private def successfulAuthResponse(affinityGroup: Option[AffinityGroup], confidenceLevel: Option[ConfidenceLevel], enrolments: JsObject*): JsObject = {
+    affinityGroup.fold(Json.obj())(unwrappedAffinityGroup => Json.obj("affinityGroup" -> unwrappedAffinityGroup)) ++
+      confidenceLevel.fold(Json.obj())(unwrappedConfidenceLevel => Json.obj("confidenceLevel" -> unwrappedConfidenceLevel)) ++
+      Json.obj("allEnrolments" -> enrolments)
+  }
+
+  def authorised(response: JsObject = successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), mtditEnrolment, ninoEnrolment)): StubMapping = {
+    stubFor(post(urlMatching("/auth/authorise"))
+      .willReturn(
+        aResponse()
+          .withStatus(OK)
+          .withBody(response.toString())
+          .withHeader("Content-Type", "application/json; charset=utf-8")))
+  }
+
+  private val mtditEnrolment = Json.obj(
+    "key" -> "HMRC-MTD-IT",
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> "MTDITID",
+        "value" -> "555555555"
+      )
+    )
+  )
+
+  private val ninoEnrolment = Json.obj(
+    "key" -> "HMRC-NI",
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> "NINO",
+        "value" -> "AA123123A"
+      )
+    )
+  )
 
   private val Retrievals: String =
     """
