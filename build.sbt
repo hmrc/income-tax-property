@@ -27,7 +27,9 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "ukAndForeignProperty.Routes",
     "health.Routes",
     "foreign.Routes",
-    "foreign.RoutesPrefix"
+    "foreign.RoutesPrefix",
+    "ukAndForeignProperty.RoutesPrefix",
+
   )
 
   Seq(
