@@ -375,7 +375,9 @@ object CreateUKPropertyPeriodicSubmissionRequest {
       }
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      premiumsOfLeaseGrant = rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      premiumsOfLeaseGrant = rentalsAndRaRIncome.calculatedFigureYourself
+        .flatMap(_.amount)
+        .orElse(rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease)),
       reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.reversePremiums),
       periodAmount = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.periodAmount))),
       taxDeducted = rentalsAndRaRIncome.deductingTax.flatMap(_.taxDeductedAmount),

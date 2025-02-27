@@ -90,7 +90,7 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
           .asLeft[UpdateUKPropertyPeriodicSubmissionRequest]
     }
     result.map(r =>
-      r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone(_)))
+      r.copy(ukOtherProperty = r.ukOtherProperty.flatMap(UkOtherProperty.convertToNoneIfAllFieldsNone))
     )
   }
 
@@ -343,7 +343,9 @@ object UpdateUKPropertyPeriodicSubmissionRequest {
       }
 
     val ukOtherPropertyIncome = UkOtherPropertyIncome(
-      premiumsOfLeaseGrant = rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease),
+      premiumsOfLeaseGrant = rentalsAndRaRIncome.calculatedFigureYourself
+        .flatMap(_.amount)
+        .orElse(rentalsAndRaRIncome.premiumsGrantLease.flatMap(_.premiumsGrantLease)),
       reversePremiums = rentalsAndRaRIncome.reversePremiumsReceived.flatMap(_.reversePremiums),
       periodAmount = periodicSubmission.flatMap(_.ukOtherProperty.flatMap(_.income.flatMap(_.periodAmount))),
       taxDeducted = rentalsAndRaRIncome.deductingTax.flatMap(_.taxDeductedAmount),
