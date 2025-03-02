@@ -182,36 +182,11 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
     )
   )
   def createAnnualSubmission(esbasMaybe: Option[List[Esba]]) =
-    PropertyAnnualSubmission(
-      None,
-      None,
-      Some(
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(
-              Some(12.34),
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None
-            )
-          ),
-          Some(
-            UkOtherAllowances(
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              esbasMaybe,
-              Some(34.56),
-              None
-            )
-          )
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+          ukOtherPropertyAnnualAllowances = Some(UkOtherAllowances().copy(
+            enhancedStructuredBuildingAllowance = esbasMaybe
+          ))
         )
       )
     )
@@ -226,27 +201,16 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
 
     "be generated from uk rent a room about" in {
       val ukRaRAbout = RaRAbout(
-        true,
+        jointlyLetYesOrNo = true,
         12.34,
         ClaimExpensesOrRelief(
-          true,
+          claimExpensesOrReliefYesNo = true,
           Some(56.78)
         )
       )
-      PropertyAnnualSubmission
-        .fromUkRentARoomAbout(ukRaRAbout, annualSubmissionAfterAdditionOfEsbas)
-        .copy(submittedOn = None) shouldBe annualSubmissionAfterAdditionOfEsbas
-        .copy(ukOtherProperty =
-          annualSubmissionAfterAdditionOfEsbas.ukOtherProperty.map(
-            _.copy(ukOtherPropertyAnnualAdjustments =
-              annualSubmissionAfterAdditionOfEsbas.ukOtherProperty.flatMap(
-                _.ukOtherPropertyAnnualAdjustments
-                  .map(_.copy(ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))))
-              )
-            )
-          )
-        )
-        .copy(submittedOn = None)
+      PropertyAnnualSubmission.fromUkRentARoomAbout(ukRaRAbout, annualSubmissionAfterAdditionOfEsbas)
+        .ukOtherProperty.flatMap(_.ukOtherPropertyAnnualAdjustments.flatMap(_.ukOtherRentARoom)) shouldBe
+          Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
     }
 
     "be generated from rentals adjustments and not override existing other fields" in {
@@ -296,10 +260,17 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("balancingCharge", "privateUseAdjustment", "businessPremisesRenovationAllowanceBalancingCharges")
+        List(
+          "lossBroughtForward",
+          "balancingCharge",
+          "privateUseAdjustment",
+          "businessPremisesRenovationAllowanceBalancingCharges",
+          "ukOtherRentARoom",
+          "whenYouReportedTheLoss"
+        )
       )
     }
     "be generated from rar adjustments and not override existing other fields" in {
@@ -344,14 +315,22 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("balancingCharge")
+        List(
+          "lossBroughtForward",
+          "balancingCharge",
+          "privateUseAdjustment",
+          "businessPremisesRenovationAllowanceBalancingCharges",
+          "ukOtherRentARoom",
+          "whenYouReportedTheLoss"
+        )
       )
     }
     "be generated from rental allowances and not override existing other fields" in {
       val rentalAllowances = RentalAllowances(
+        None,
         annualInvestmentAllowance = Some(11.22),
         zeroEmissionCarAllowance = Some(33.44),
         zeroEmissionGoodsVehicleAllowance = Some(44.55),
@@ -384,8 +363,8 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
         List(
           "annualInvestmentAllowance",
@@ -393,7 +372,10 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           "businessPremisesRenovationAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "zeroEmissionsCarAllowance"
+          "structuredBuildingAllowance",
+          "enhancedStructuredBuildingAllowance",
+          "zeroEmissionsCarAllowance",
+          "propertyIncomeAllowance"
         )
       )
     }
@@ -430,14 +412,19 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
         List(
+          "annualInvestmentAllowance",
           "zeroEmissionGoodsVehicleAllowance",
+          "businessPremisesRenovationAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "zeroEmissionsCarAllowance"
+          "structuredBuildingAllowance",
+          "enhancedStructuredBuildingAllowance",
+          "zeroEmissionsCarAllowance",
+          "propertyIncomeAllowance"
         )
       )
     }
@@ -470,14 +457,19 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
         List(
+          "annualInvestmentAllowance",
           "zeroEmissionGoodsVehicleAllowance",
+          "businessPremisesRenovationAllowance",
           "otherCapitalAllowance",
           "costOfReplacingDomesticGoods",
-          "zeroEmissionsCarAllowance"
+          "structuredBuildingAllowance",
+          "enhancedStructuredBuildingAllowance",
+          "zeroEmissionsCarAllowance",
+          "propertyIncomeAllowance"
         )
       )
     }
@@ -517,10 +509,20 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("structuredBuildingAllowance")
+        List(
+          "annualInvestmentAllowance",
+          "zeroEmissionGoodsVehicleAllowance",
+          "businessPremisesRenovationAllowance",
+          "otherCapitalAllowance",
+          "costOfReplacingDomesticGoods",
+          "structuredBuildingAllowance",
+          "enhancedStructuredBuildingAllowance",
+          "zeroEmissionsCarAllowance",
+          "propertyIncomeAllowance"
+        )
       )
     }
     "be generated from rental esbas and not override existing other fields" in {
@@ -548,10 +550,20 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAllowances")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("enhancedStructuredBuildingAllowance")
+        List(
+          "annualInvestmentAllowance",
+          "zeroEmissionGoodsVehicleAllowance",
+          "businessPremisesRenovationAllowance",
+          "otherCapitalAllowance",
+          "costOfReplacingDomesticGoods",
+          "structuredBuildingAllowance",
+          "enhancedStructuredBuildingAllowance",
+          "zeroEmissionsCarAllowance",
+          "propertyIncomeAllowance"
+        )
       )
     }
     "be generated from rar about and not override existing other fields" in {
@@ -583,10 +595,17 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("ukOtherRentARoom")
+        List(
+          "lossBroughtForward",
+          "balancingCharge",
+          "privateUseAdjustment",
+          "businessPremisesRenovationAllowanceBalancingCharges",
+          "ukOtherRentARoom",
+          "whenYouReportedTheLoss"
+        )
       )
     }
     "be generated from rentals and rar about and not override existing other fields" in {
@@ -620,10 +639,17 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           .get
       )
 
-      firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments")
+      firstLevelDiff shouldBe List("foreignProperty", "ukOtherProperty")
+      secondLevelDiff shouldBe List("ukOtherPropertyAnnualAdjustments", "ukOtherPropertyAnnualAllowances")
       thirdLevelDiff should be(
-        List("ukOtherRentARoom")
+        List(
+          "lossBroughtForward",
+          "balancingCharge",
+          "privateUseAdjustment",
+          "businessPremisesRenovationAllowanceBalancingCharges",
+          "ukOtherRentARoom",
+          "whenYouReportedTheLoss"
+        )
       )
     }
 

@@ -28,9 +28,9 @@ import play.api.libs.ws.BodyWritable
 import java.time.{LocalDateTime, LocalDate}
 
 case class PropertyAnnualSubmission(
-  submittedOn: Option[LocalDateTime],
-  foreignProperty: Option[Seq[AnnualForeignProperty]],
-  ukOtherProperty: Option[AnnualUkOtherProperty]
+  submittedOn: Option[LocalDateTime] = None,
+  foreignProperty: Option[Seq[AnnualForeignProperty]] = None,
+  ukOtherProperty: Option[AnnualUkOtherProperty] = None
 )
 
 object PropertyAnnualSubmission {
@@ -41,344 +41,160 @@ object PropertyAnnualSubmission {
     jsValueBodyWritable: BodyWritable[JsValue]
   ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 
-  val emptyPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
-
   def fromEsbas(
     propertyAnnualSubmission: PropertyAnnualSubmission,
     esbas: List[Esba]
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
-      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
-        case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
-        case AnnualUkOtherProperty(_, uoa) => uoa
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
-      }
-
-    val esbasLens = GenLens[UkOtherAllowances](_.enhancedStructuredBuildingAllowance)
-
-    val focusFromAnnualSubmissionOnEsbasLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(esbasLens)
-
-    val resultWithEsbas: PropertyAnnualSubmission =
-      focusFromAnnualSubmissionOnEsbasLens.replace(Some(esbas))(propertyAnnualSubmission)
-
-    resultWithEsbas
+    val ukOtherAllowances = UkOtherAllowances().copy(enhancedStructuredBuildingAllowance = Some(esbas))
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAllowances = Some(ukOtherAllowances)
+      ))
+    )
   }
 
   def fromSbas(
     propertyAnnualSubmission: PropertyAnnualSubmission,
     sbas: List[StructuredBuildingAllowance]
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
-      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
-        case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
-        case AnnualUkOtherProperty(_, uoa) => uoa
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
-      }
-
-    val sbasLens = GenLens[UkOtherAllowances](_.structuredBuildingAllowance)
-
-    val focusFromAnnualSubmissionOnSbasLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(sbasLens)
-
-    val resultWithSbas: PropertyAnnualSubmission =
-      focusFromAnnualSubmissionOnSbasLens.replace(Some(sbas))(propertyAnnualSubmission)
-
-    resultWithSbas
+    val ukOtherAllowances = UkOtherAllowances().copy(structuredBuildingAllowance = Some(sbas))
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAllowances = Some(ukOtherAllowances)
+      ))
+    )
   }
 
   def fromRentalsAndRentARoomAbout(
     rentalsAndRaRAbout: RentalsAndRaRAbout,
-    request: PropertyAnnualSubmission
+    propertyAnnualSubmission: PropertyAnnualSubmission
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
+    val maybeNonResidentLandlord: Option[Boolean] = for {
+      ukOtherProperty <- propertyAnnualSubmission.ukOtherProperty
+      ukOtherPropertyAnnualAdjustments <- ukOtherProperty.ukOtherPropertyAnnualAdjustments
+      nonResidentLandlord <- ukOtherPropertyAnnualAdjustments.nonResidentLandlord
+    } yield nonResidentLandlord
 
-    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
-      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
-      }
-    val ukRentARoomLens = GenLens[UkOtherAdjustments](_.ukOtherRentARoom)
+    val ukOtherAdjustments: UkOtherAdjustments = UkOtherAdjustments().copy(
+      ukOtherRentARoom = Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo)),
+      nonResidentLandlord = maybeNonResidentLandlord.orElse(Some(false))
+    )
 
-    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
-
-    val focusFromRequestOnToUkRentARoomLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
-    val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
-    )(request)
-
-    ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
-
-    resultWithUkRentARoom
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAdjustments = Some(ukOtherAdjustments)
+      ))
+    )
   }
 
   def fromUkRentARoomAbout(
     ukRaRAbout: RaRAbout,
-    request: PropertyAnnualSubmission
+    propertyAnnualSubmission: PropertyAnnualSubmission
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
+    val maybeNonResidentLandlord: Option[Boolean] = for {
+      ukOtherProperty <- propertyAnnualSubmission.ukOtherProperty
+      ukOtherPropertyAnnualAdjustments <- ukOtherProperty.ukOtherPropertyAnnualAdjustments
+      nonResidentLandlord <- ukOtherPropertyAnnualAdjustments.nonResidentLandlord
+    } yield nonResidentLandlord
 
-    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
-      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
-      }
-    val ukRentARoomLens = GenLens[UkOtherAdjustments](_.ukOtherRentARoom)
-    val focusFromRequestOnToUkRentARoomLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
-    val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
-    )(request)
+    val ukOtherAdjustments: UkOtherAdjustments = UkOtherAdjustments().copy(
+      ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo)),
+      nonResidentLandlord = maybeNonResidentLandlord.orElse(Some(false))
+    )
 
-    resultWithUkRentARoom
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAdjustments = Some(ukOtherAdjustments)
+      ))
+    )
   }
 
   def fromPropertyRentalAdjustments(
     propertyRentalAdjustments: PropertyRentalAdjustments,
-    request: PropertyAnnualSubmission
+    propertyAnnualSubmission: PropertyAnnualSubmission
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
-      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
-      }
+    val maybeNonResidentLandlord: Option[Boolean] = for {
+      ukOtherProperty <- propertyAnnualSubmission.ukOtherProperty
+      ukOtherPropertyAnnualAdjustments <- ukOtherProperty.ukOtherPropertyAnnualAdjustments
+      nonResidentLandlord <- ukOtherPropertyAnnualAdjustments.nonResidentLandlord
+    } yield nonResidentLandlord
 
-    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
-    val privateUseAdjustmentLens = GenLens[UkOtherAdjustments](_.privateUseAdjustment)
-    val renovationAllowanceBalancingChargeLens =
-      GenLens[UkOtherAdjustments](_.businessPremisesRenovationAllowanceBalancingCharges)
+    val ukOtherAdjustments: UkOtherAdjustments = UkOtherAdjustments().copy(
+      nonResidentLandlord = maybeNonResidentLandlord.orElse(Some(false)),
+      balancingCharge = propertyRentalAdjustments.balancingCharge.balancingChargeAmount,
+      privateUseAdjustment = Some(propertyRentalAdjustments.privateUseAdjustment),
+      businessPremisesRenovationAllowanceBalancingCharges =
+        propertyRentalAdjustments.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeAmount
+    )
 
-    val focusFromRequestOnToBalancingChargeLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
-    val focusFromRequestOnToPrivateUseAdjustmentLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(privateUseAdjustmentLens)
-    val focusFromRequestOnToRenovationAllowanceBalancingChargeLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(renovationAllowanceBalancingChargeLens)
-
-    val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
-      propertyRentalAdjustments.balancingCharge.balancingChargeAmount
-    )(request)
-
-    val resultWithBalancingChargeAndPrivateUseAdjustment = focusFromRequestOnToPrivateUseAdjustmentLens.replace(
-      Some(propertyRentalAdjustments.privateUseAdjustment)
-    )(resultWithBalancingCharge)
-
-    val resultWithAllThree = focusFromRequestOnToRenovationAllowanceBalancingChargeLens.replace(
-      propertyRentalAdjustments.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeAmount
-    )(resultWithBalancingChargeAndPrivateUseAdjustment)
-
-    resultWithAllThree
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAdjustments = Some(ukOtherAdjustments)
+      ))
+    )
   }
 
   def fromRaRAdjustments(
     propertyAnnualSubmission: PropertyAnnualSubmission,
     raRAdjustments: RaRAdjustments
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
-      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
-        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
-      }
+    val maybeNonResidentLandlord: Option[Boolean] = for {
+      ukOtherProperty <- propertyAnnualSubmission.ukOtherProperty
+      ukOtherPropertyAnnualAdjustments <- ukOtherProperty.ukOtherPropertyAnnualAdjustments
+      nonResidentLandlord <- ukOtherPropertyAnnualAdjustments.nonResidentLandlord
+    } yield nonResidentLandlord
 
-    val balancingChargeLens = GenLens[UkOtherAdjustments](_.balancingCharge)
+    val ukOtherAdjustments: UkOtherAdjustments = UkOtherAdjustments().copy(
+      balancingCharge = raRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount),
+      nonResidentLandlord = maybeNonResidentLandlord.orElse(Some(false))
+    )
 
-    val focusFromRequestOnToBalancingChargeLens =
-      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
-
-    val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
-      raRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount)
-    )(propertyAnnualSubmission)
-
-    resultWithBalancingCharge
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAdjustments = Some(ukOtherAdjustments),
+        ukOtherPropertyAnnualAllowances = None
+      ))
+    )
   }
 
   def fromRaRAllowances(
     propertyAnnualSubmission: PropertyAnnualSubmission,
     rentARoomAllowances: RentARoomAllowances
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
-      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
-        case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
-        case AnnualUkOtherProperty(_, uoa) => uoa
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
-      }
-
-    val annualInvestmentAllowanceLens = GenLens[UkOtherAllowances](_.annualInvestmentAllowance)
-    val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
-    val zeroEmissionCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
-    val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
-    val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
-
-    // Focuses
-    val focusFromRequestOnTozeroEmissionCarAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionCarAllowanceLens)
-    val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionGoodsVehicleAllowanceLens)
-    val focusFromRequestOnTootherCapitalAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
-    val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
-
-    // Results
-    val resultWithzeroEmissionCarAllowance = focusFromRequestOnTozeroEmissionCarAllowanceLens.replace(
-      rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
-    )(propertyAnnualSubmission)
-
-    val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
-      rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
-    )(resultWithzeroEmissionCarAllowance)
-
-    val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
-      rentARoomAllowances.capitalAllowancesForACar
-        .flatMap(_.capitalAllowancesForACarAmount)
-        .fold(
-          rentARoomAllowances.otherCapitalAllowance
-        )(Some(_))
-    )(resultWithzeroEmissionGoodsVehicleAllowance)
-
-    val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
-      rentARoomAllowances.replacementOfDomesticGoodsAllowance
-    )(resultWithotherCapitalAllowance)
-    resultWithcostOfReplacingDomesticGoods
+    val ukOtherAllowances = UkOtherAllowances().copy(
+      zeroEmissionGoodsVehicleAllowance = rentARoomAllowances.zeroEmissionGoodsVehicleAllowance,
+      zeroEmissionsCarAllowance = rentARoomAllowances.zeroEmissionCarAllowance,
+      otherCapitalAllowance = rentARoomAllowances.capitalAllowancesForACar.flatMap(_.capitalAllowancesForACarAmount)
+        .fold(rentARoomAllowances.otherCapitalAllowance)(Some(_)),
+      costOfReplacingDomesticGoods = rentARoomAllowances.replacementOfDomesticGoodsAllowance
+    )
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAllowances = Some(ukOtherAllowances)
+      ))
+    )
   }
 
   def fromRentalAllowances(
     propertyAnnualSubmission: PropertyAnnualSubmission,
     rentalAllowances: RentalAllowances
   ): PropertyAnnualSubmission = {
-    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
-      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
-        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
-        case PropertyAnnualSubmission(_, _, auop) => auop
-      } { auop => pas =>
-        pas.copy(ukOtherProperty = Some(auop))
-      }
-    val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
-      Optional[AnnualUkOtherProperty, UkOtherAllowances] {
-        case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
-        case AnnualUkOtherProperty(_, uoa) => uoa
-      } { uoa => auop =>
-        auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
-      }
-
-    val annualInvestmentAllowanceLens = GenLens[UkOtherAllowances](_.annualInvestmentAllowance)
-    val zeroEmissionsCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
-    val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
-    val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)
-    val costOfReplacingDomesticGoodsLens = GenLens[UkOtherAllowances](_.costOfReplacingDomesticGoods)
-    val businessPremisesRenovationAllowanceLens = GenLens[UkOtherAllowances](_.businessPremisesRenovationAllowance)
-
-    // Focuses
-    val focusFromRequestOnToannualInvestmentAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(annualInvestmentAllowanceLens)
-    val focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionGoodsVehicleAllowanceLens)
-
-    val focusFromRequestOnTozeroEmissionsCarAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(zeroEmissionsCarAllowanceLens)
-
-    val focusFromRequestOnTootherCapitalAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(otherCapitalAllowanceLens)
-    val focusFromRequestOnTocostOfReplacingDomesticGoodsLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
-    val focusFromRequestOnTobusinessPremisesRenovationAllowanceLens =
-      ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(businessPremisesRenovationAllowanceLens)
-
-    // Results
-
-    val resultWithbusinessPremisesRenovationAllowance =
-      focusFromRequestOnTobusinessPremisesRenovationAllowanceLens.replace(
-        rentalAllowances.businessPremisesRenovationAllowance
-      )(propertyAnnualSubmission)
-
-    val resultWithzeroEmissionsCarAllowance = focusFromRequestOnTozeroEmissionsCarAllowanceLens.replace(
-      rentalAllowances.zeroEmissionCarAllowance
-    )(resultWithbusinessPremisesRenovationAllowance)
-
-    val resultWithannualInvestmentAllowance = focusFromRequestOnToannualInvestmentAllowanceLens.replace(
-      rentalAllowances.annualInvestmentAllowance
-    )(resultWithzeroEmissionsCarAllowance)
-
-    val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
-      rentalAllowances.zeroEmissionGoodsVehicleAllowance
-    )(resultWithannualInvestmentAllowance)
-
-    val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
-      rentalAllowances.otherCapitalAllowance
-    )(resultWithzeroEmissionGoodsVehicleAllowance)
-
-    val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
-      rentalAllowances.replacementOfDomesticGoodsAllowance
-    )(resultWithotherCapitalAllowance)
-
-    resultWithcostOfReplacingDomesticGoods
+    val ukOtherAllowances = UkOtherAllowances().copy(
+      annualInvestmentAllowance = rentalAllowances.annualInvestmentAllowance,
+      zeroEmissionsCarAllowance = rentalAllowances.zeroEmissionCarAllowance,
+      zeroEmissionGoodsVehicleAllowance = rentalAllowances.zeroEmissionGoodsVehicleAllowance,
+      otherCapitalAllowance = rentalAllowances.capitalAllowancesForACar.flatMap(_.capitalAllowancesForACarAmount)
+        .orElse(rentalAllowances.otherCapitalAllowance),
+      costOfReplacingDomesticGoods = rentalAllowances.replacementOfDomesticGoodsAllowance,
+      businessPremisesRenovationAllowance = rentalAllowances.businessPremisesRenovationAllowance
+    )
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAllowances = Some(ukOtherAllowances)
+      ))
+    )
   }
-
 }
-
 
 case class UkRentARoom(jointlyLet: Boolean)
 
@@ -405,8 +221,8 @@ object WhenReportedTheLoss extends Enumerable.Implicits {
 }
 
 case class AnnualUkOtherProperty(
-  ukOtherPropertyAnnualAdjustments: Option[UkOtherAdjustments],
-  ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances]
+  ukOtherPropertyAnnualAdjustments: Option[UkOtherAdjustments] = None,
+  ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances] = None
 )
 
 object AnnualUkOtherProperty {
@@ -414,14 +230,14 @@ object AnnualUkOtherProperty {
 }
 
 case class UkOtherAdjustments(
-  lossBroughtForward: Option[BigDecimal],
-  balancingCharge: Option[BigDecimal],
-  privateUseAdjustment: Option[BigDecimal],
-  businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
-  nonResidentLandlord: Option[Boolean],
-  ukOtherRentARoom: Option[UkRentARoom], // API#1598 (Get) expects ukOtherRentARoom
-  rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
-  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
+  lossBroughtForward: Option[BigDecimal] = None,
+  balancingCharge: Option[BigDecimal] = None,
+  privateUseAdjustment: Option[BigDecimal] = None,
+  businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal] = None,
+  nonResidentLandlord: Option[Boolean] = None,
+  ukOtherRentARoom: Option[UkRentARoom] = None,  // API#1598 (Get) expects ukOtherRentARoom
+  rentARoom: Option[UkRentARoom] = None,         // API#1805 (Get) expects rentARoom
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss] = None
 )
 
 object UkOtherAdjustments {
@@ -429,15 +245,15 @@ object UkOtherAdjustments {
 }
 
 case class UkOtherAllowances(
-  annualInvestmentAllowance: Option[BigDecimal],
-  zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
-  businessPremisesRenovationAllowance: Option[BigDecimal],
-  otherCapitalAllowance: Option[BigDecimal],
-  costOfReplacingDomesticGoods: Option[BigDecimal],
-  structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
-  enhancedStructuredBuildingAllowance: Option[Seq[Esba]],
-  zeroEmissionsCarAllowance: Option[BigDecimal],
-  propertyIncomeAllowance: Option[BigDecimal]
+  annualInvestmentAllowance: Option[BigDecimal] = None,
+  zeroEmissionGoodsVehicleAllowance: Option[BigDecimal] = None,
+  businessPremisesRenovationAllowance: Option[BigDecimal] = None,
+  otherCapitalAllowance: Option[BigDecimal] = None,
+  costOfReplacingDomesticGoods: Option[BigDecimal] = None,
+  structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]] = None,
+  enhancedStructuredBuildingAllowance: Option[Seq[Esba]] = None,
+  zeroEmissionsCarAllowance: Option[BigDecimal] = None,
+  propertyIncomeAllowance: Option[BigDecimal] = None
 )
 
 object UkOtherAllowances {

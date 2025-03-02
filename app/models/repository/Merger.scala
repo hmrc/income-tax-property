@@ -107,7 +107,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -122,7 +122,7 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             PropertyRentalsExpense(
-              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce =>
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce =>
                 ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -152,7 +152,7 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             RentARoomExpenses(
-              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(extracted.consolidatedExpensesYesOrNo, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -165,7 +165,7 @@ object Merger {
         case (_, Some(fromDownstream)) =>
           Some(
             RentARoomExpenses(
-              consolidatedExpenses = fromDownstream.consolidatedExpenses.map(ce => // Todo: Should Be Made Optional
+              consolidatedExpenses = fromDownstream.consolidatedExpense.map(ce => // Todo: Should Be Made Optional
                 ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(ce))
               ),
               rentsRatesAndInsurance = fromDownstream.premisesRunningCosts,
@@ -290,7 +290,10 @@ object Merger {
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
-              otherCapitalAllowance = fromDownstream.otherCapitalAllowance
+              otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
+              capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map { otherCapitalAllowance =>
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(otherCapitalAllowance))
+              }
             )
           )
         case (None, Some(fromDownstream)) =>
@@ -301,7 +304,10 @@ object Merger {
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
-              otherCapitalAllowance = fromDownstream.otherCapitalAllowance
+              otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
+              capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map { otherCapitalAllowance =>
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(otherCapitalAllowance))
+              }
             )
           )
         case _ => None
@@ -355,6 +361,7 @@ object Merger {
                     _,
                     Some(residentialFinanceCost),
                     Some(residentialFinanceCostCarriedForward),
+                    _,
                     _,
                     _
                   )
@@ -414,6 +421,7 @@ object Merger {
                     _,
                     _,
                     residentialFinanceCostCarriedForward,
+                    _,
                     _,
                     _
                   )

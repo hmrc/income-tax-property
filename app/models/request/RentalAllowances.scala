@@ -28,6 +28,7 @@ object CapitalAllowancesForACar {
 }
 
 final case class RentalAllowances(
+  capitalAllowancesForACar: Option[CapitalAllowancesForACar],
   annualInvestmentAllowance: Option[BigDecimal],
   zeroEmissionCarAllowance: Option[BigDecimal],
   zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
