@@ -290,7 +290,10 @@ object Merger {
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
-              otherCapitalAllowance = fromDownstream.otherCapitalAllowance
+              otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
+              capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map { otherCapitalAllowance =>
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(otherCapitalAllowance))
+              }
             )
           )
         case (None, Some(fromDownstream)) =>
@@ -301,7 +304,10 @@ object Merger {
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
               replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
-              otherCapitalAllowance = fromDownstream.otherCapitalAllowance
+              otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
+              capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map { otherCapitalAllowance =>
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(otherCapitalAllowance))
+              }
             )
           )
         case _ => None

@@ -474,195 +474,154 @@ class PropertyServiceSpec
     }
   }
 
-  "save property rental adjustments" should {
+    "save property rental adjustments" should {
 
-    val mtditid = "89787469409"
-    val journeyContextWithNino =
-      JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
-    val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
-    val propertyRentalAdjustments = PropertyRentalAdjustments(
-      BigDecimal(12.34),
-      BalancingCharge(balancingChargeYesNo = true, Some(108)),
-      Some(BigDecimal(34.56)),
-      RenovationAllowanceBalancingCharge(
-        renovationAllowanceBalancingChargeYesNo = true,
-        renovationAllowanceBalancingChargeAmount = Some(92)
-      ),
-      BigDecimal(56.78),
-      Some(BigDecimal(78.89))
-    )
+      val mtditid = "89787469409"
+      val journeyContextWithNino =
+        JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+      val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
+      val propertyRentalAdjustments = PropertyRentalAdjustments(
+        BigDecimal(12.34),
+        BalancingCharge(balancingChargeYesNo = true, Some(108)),
+        Some(BigDecimal(34.56)),
+        RenovationAllowanceBalancingCharge(
+          renovationAllowanceBalancingChargeYesNo = true,
+          renovationAllowanceBalancingChargeAmount = Some(92)
+        ),
+        BigDecimal(56.78),
+        Some(BigDecimal(78.89))
+      )
 
-    "return a success with no content when the request is valid and data is persisted" in {
-      val annualUkOtherProperty =
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))
-          ),
-          None
-        )
-
-      mockGetAllPeriodicSubmissionIds(
-        taxYear,
-        nino,
-        incomeSourceId,
-        List(
-          PeriodicSubmissionIdModel(
-            "1",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
-            LocalDate.parse(TaxYear.endDate(taxYear))
+      val annualUkOtherProperty = AnnualUkOtherProperty()
+      val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
+      val updatedAnnualSubmission = PropertyAnnualSubmission().copy(
+        ukOtherProperty = Some(
+          AnnualUkOtherProperty().copy(
+            ukOtherPropertyAnnualAdjustments = Some(
+              UkOtherAdjustments().copy(
+                balancingCharge = propertyRentalAdjustments.balancingCharge.balancingChargeAmount,
+                privateUseAdjustment = Some(propertyRentalAdjustments.privateUseAdjustment),
+                businessPremisesRenovationAllowanceBalancingCharges =
+                  propertyRentalAdjustments.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeAmount,
+                nonResidentLandlord = Some(false)
+              )
+            )
           )
         )
-          .asRight[ApiError]
       )
+      "return a success with no content when the request is valid and data is persisted" in {
 
-      val emptyPeriodicSubmission =
-        PropertyPeriodicSubmission(
-          None,
-          None,
-          LocalDate.parse(TaxYear.startDate(taxYear)),
-          LocalDate.parse(TaxYear.endDate(taxYear)),
-          None,
-          None
-        )
-
-      val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
-        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+        mockGetAllPeriodicSubmissionIds(
           taxYear,
-          Some(emptyPeriodicSubmission),
-          propertyRentalAdjustments
+          nino,
+          incomeSourceId,
+          List(
+            PeriodicSubmissionIdModel(
+              "1",
+              LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
+              LocalDate.parse(TaxYear.endDate(taxYear))
+            )
+          )
+            .asRight[ApiError]
         )
-      mockCreatePeriodicSubmission(
-        taxYear,
-        nino,
-        incomeSourceId,
-        requestForCreate,
-        Some(PeriodicSubmissionId("")).asRight[ApiError]
-      )
 
-      val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
-      val updatedAnnualSubmission = PropertyAnnualSubmission(
-        None,
-        None,
-        Some(
-          AnnualUkOtherProperty(
-            Some(
-              UkOtherAdjustments(
-                Some(44),
-                Some(108),
-                Some(12.34),
-                Some(92),
-                None,
-                None,
-                None,
-                Some(WhenYouReportedTheLoss.y2018to2019)
-              )
-            ),
+        val emptyPeriodicSubmission =
+          PropertyPeriodicSubmission(
+            None,
+            None,
+            LocalDate.parse(TaxYear.startDate(taxYear)),
+            LocalDate.parse(TaxYear.endDate(taxYear)),
+            None,
             None
           )
-        )
-      )
-      mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
-      mockCreateAnnualSubmission(
-        taxYear,
-        incomeSourceId,
-        nino,
-        Some(updatedAnnualSubmission),
-        ().asRight[ApiError]
-      )
-      await(
-        underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
-      ) shouldBe Right(true)
-    }
 
-    "return ApiError for invalid request" in {
-
-      val annualUkOtherProperty =
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(Some(44), None, None, None, None, None, None, Some(WhenYouReportedTheLoss.y2018to2019))
-          ),
-          None
+        val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
+          CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+            taxYear,
+            Some(emptyPeriodicSubmission),
+            propertyRentalAdjustments
+          )
+        mockCreatePeriodicSubmission(
+          taxYear,
+          nino,
+          incomeSourceId,
+          requestForCreate,
+          Some(PeriodicSubmissionId("")).asRight[ApiError]
         )
-      val annualSubmission = PropertyAnnualSubmission(None, None, Some(annualUkOtherProperty))
-      val updatedAnnualSubmission = PropertyAnnualSubmission(
-        None,
-        None,
-        Some(
-          AnnualUkOtherProperty(
-            Some(
-              UkOtherAdjustments(
-                Some(44),
-                Some(108),
-                Some(12.34),
-                Some(92),
-                None,
-                None,
-                None,
-                Some(WhenYouReportedTheLoss.y2018to2019)
-              )
-            ),
+
+        mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
+        mockCreateAnnualSubmission(
+          taxYear,
+          incomeSourceId,
+          nino,
+          Some(updatedAnnualSubmission),
+          ().asRight[ApiError]
+        )
+        await(
+          underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
+        ) shouldBe Right(true)
+      }
+
+      "return ApiError for invalid request" in {
+
+        mockGetAllPeriodicSubmissionIds(
+          taxYear,
+          nino,
+          incomeSourceId,
+          List(
+            PeriodicSubmissionIdModel(
+              "",
+              LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
+              LocalDate.parse(TaxYear.endDate(taxYear))
+            )
+          )
+            .asRight[ApiError]
+        )
+
+        val emptyPeriodicSubmission =
+          PropertyPeriodicSubmission(
+            None,
+            None,
+            LocalDate.parse(TaxYear.startDate(taxYear)),
+            LocalDate.parse(TaxYear.endDate(taxYear)),
+            None,
             None
           )
-        )
-      )
 
-      mockGetAllPeriodicSubmissionIds(
-        taxYear,
-        nino,
-        incomeSourceId,
-        List(
-          PeriodicSubmissionIdModel(
-            "",
-            LocalDate.parse(TaxYear.startDate(TaxYear(taxYear.endYear - 1))),
-            LocalDate.parse(TaxYear.endDate(taxYear))
+        val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
+          CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+            taxYear,
+            Some(emptyPeriodicSubmission),
+            propertyRentalAdjustments
           )
-        )
-          .asRight[ApiError]
-      )
-
-      val emptyPeriodicSubmission =
-        PropertyPeriodicSubmission(
-          None,
-          None,
-          LocalDate.parse(TaxYear.startDate(taxYear)),
-          LocalDate.parse(TaxYear.endDate(taxYear)),
-          None,
-          None
-        )
-
-      val requestForCreate: CreateUKPropertyPeriodicSubmissionRequest =
-        CreateUKPropertyPeriodicSubmissionRequest.fromPropertyRentalAdjustments(
+        mockCreatePeriodicSubmission(
           taxYear,
-          Some(emptyPeriodicSubmission),
-          propertyRentalAdjustments
+          nino,
+          incomeSourceId,
+          requestForCreate,
+          Some(PeriodicSubmissionId("")).asRight[ApiError]
         )
-      mockCreatePeriodicSubmission(
-        taxYear,
-        nino,
-        incomeSourceId,
-        requestForCreate,
-        Some(PeriodicSubmissionId("")).asRight[ApiError]
-      )
 
-      mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
-      mockCreateAnnualSubmission(
-        taxYear,
-        incomeSourceId,
-        nino,
-        Some(updatedAnnualSubmission),
-        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
-      )
-      await(
-        underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
-      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+        mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
+        mockCreateAnnualSubmission(
+          taxYear,
+          incomeSourceId,
+          nino,
+          Some(updatedAnnualSubmission),
+          Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+        )
+        await(
+          underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
+        ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      }
     }
-  }
 
   "save property rental allowances" should {
 
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
     val allowances = RentalAllowances(
+      None,
       Some(11),
       Some(11),
       Some(11),
@@ -703,38 +662,13 @@ class PropertyServiceSpec
     sbasMaybe: Option[List[StructuredBuildingAllowance]],
     esbasMaybe: Option[List[Esba]]
   ): PropertyAnnualSubmission =
-    PropertyAnnualSubmission(
-      None,
-      None,
-      Some(
-        AnnualUkOtherProperty(
-          Some(
-            UkOtherAdjustments(
-              Some(12.34),
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              Some(WhenYouReportedTheLoss.y2018to2019)
-            )
-          ),
-          Some(
-            UkOtherAllowances(
-              None,
-              None,
-              None,
-              None,
-              None,
-              sbasMaybe,
-              esbasMaybe,
-              Some(34.56),
-              None
-            )
-          )
-        )
-      )
+    PropertyAnnualSubmission().copy(
+      ukOtherProperty = Some(AnnualUkOtherProperty().copy(
+        ukOtherPropertyAnnualAllowances = Some(UkOtherAllowances().copy(
+          structuredBuildingAllowance = sbasMaybe,
+          enhancedStructuredBuildingAllowance = esbasMaybe
+        ))
+      ))
     )
 
   "save esbas" should {
@@ -1671,7 +1605,7 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          Some(RentalAllowances(None, None, None, None, None, None)),
+          Some(RentalAllowances(None, None, None, None, None, None, None)),
           esbaInfoRetrieved,
           None,
           None,

@@ -250,7 +250,7 @@ class JourneyAnswersIntegrationSpec
       val fetchedPropertyData = response.json.as[FetchedPropertyData]
       response.status shouldBe 200
       fetchedPropertyData shouldBe FetchedPropertyData(
-        foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None,None, None),
+        foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None, None, None),
         ukPropertyData = FetchedUKPropertyData(
           capitalAllowancesForACar = None,
           propertyAbout = None,
@@ -267,6 +267,7 @@ class JourneyAnswersIntegrationSpec
           ),
           allowances = Some(
             RentalAllowances(
+              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),
@@ -365,6 +366,7 @@ class JourneyAnswersIntegrationSpec
           ),
           rentalsAndRaRAllowances = Some(
             RentalAllowances(
+              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),
