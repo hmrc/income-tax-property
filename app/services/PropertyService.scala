@@ -553,12 +553,7 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-      _ <- raRExpenses.consolidatedExpenses match {
-             case Some(consolidatedExpenses) =>
-               persistAnswers(ctx, RentARoomExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
-             case None =>
-               ITPEnvelope.liftPure(None)
-           }
+      _ <- persistAnswers(ctx, RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.consolidatedExpensesYesOrNo)))
     } yield submissionResponse
 
   def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
@@ -779,7 +774,7 @@ class PropertyService @Inject() (
     rentARoomAllowances: RentARoomAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     val rentARoomAllowancesStoreAnswers = RentARoomAllowancesStoreAnswers(
-      rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+      rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo).orElse(Some(false))
     )
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
