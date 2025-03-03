@@ -37,8 +37,6 @@ class PrePopulationControllerISpec extends ControllerIntegrationTest
     val mtdItId: String = "555555555"
     val ifTaxYearParam = s"${(taxYear - 1).toString.takeRight(2)}-${taxYear.toString.takeRight(2)}"
 
-    //val cisTaxYear: CISDates = CISTaxYearHelper.cisTaxYearConverter(taxYear)
-
     val ifUrl: String = s"/registration/business-details/nino/$nino"
 
     def request(): WSRequest = {
