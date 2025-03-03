@@ -183,7 +183,8 @@ object PropertyAnnualSubmission {
       annualInvestmentAllowance = rentalAllowances.annualInvestmentAllowance,
       zeroEmissionsCarAllowance = rentalAllowances.zeroEmissionCarAllowance,
       zeroEmissionGoodsVehicleAllowance = rentalAllowances.zeroEmissionGoodsVehicleAllowance,
-      otherCapitalAllowance = rentalAllowances.otherCapitalAllowance,
+      otherCapitalAllowance = rentalAllowances.capitalAllowancesForACar.flatMap(_.capitalAllowancesForACarAmount)
+        .orElse(rentalAllowances.otherCapitalAllowance),
       costOfReplacingDomesticGoods = rentalAllowances.replacementOfDomesticGoodsAllowance,
       businessPremisesRenovationAllowance = rentalAllowances.businessPremisesRenovationAllowance
     )
