@@ -26,7 +26,9 @@ final case class PropertyRentalAdjustments(
   propertyIncomeAllowance: Option[BigDecimal],
   renovationAllowanceBalancingCharge: RenovationAllowanceBalancingCharge,
   residentialFinanceCost: BigDecimal,
-  unusedResidentialFinanceCost: Option[BigDecimal]
+  unusedResidentialFinanceCost: Option[BigDecimal],
+  unusedLossesBroughtForward: UnusedLossesBroughtForward,
+  whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
 
 object PropertyRentalAdjustments {
