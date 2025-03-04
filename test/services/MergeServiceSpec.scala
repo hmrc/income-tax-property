@@ -15,10 +15,14 @@
  */
 
 package services
+import models.ForeignAdjustmentsStoreAnswers
+import models.common.JourneyStatus.InProgress
+import models.common.{IncomeSourceId, JourneyName, Mtditid, TaxYear}
 import models.domain.JourneyAnswers
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
 import models.request.foreign.allowances.ForeignAllowancesAnswers
-import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances}
-import models.request.{DeductingTax, PropertyRentalsIncome}
+import models.request.foreign.{AnnualForeignProperty, ForeignAdjustmentsAnswers, ForeignPropertyAdjustments, ForeignPropertyAllowances}
+import models.request.{BalancingCharge, DeductingTax, PropertyRentalsIncome}
 import models.responses._
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
@@ -27,7 +31,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsObject, Json}
 import utils.UnitTest
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{Instant, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with ScalaCheckPropertyChecks {
@@ -188,5 +192,119 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       result shouldBe None
     }
 
+  }
+
+  "mergeForeignPropertyAdjustments" should {
+    "return a map of foreign property adjustments" in {
+      val privateUseAdjustment = BigDecimal(15.25)
+      val balancingCharge = BigDecimal(25.35)
+      val propertyAllowanceClaim = None
+      val foreignPropertyAdjustments = ForeignPropertyAdjustments(
+        privateUseAdjustment = Some(privateUseAdjustment), balancingCharge = Some(balancingCharge)
+      )
+      val foreignPropertyAllowances = ForeignPropertyAllowances(
+        annualInvestmentAllowance = Some(15.15),
+        costOfReplacingDomesticItems = Some(25.25),
+        zeroEmissionsGoodsVehicleAllowance = Some(35.35),
+        otherCapitalAllowance = Some(45.45),
+        electricChargePointAllowance = Some(55.55),
+        structuredBuildingAllowance = Some(
+          Seq(
+            StructuredBuildingAllowance(
+              amount = 65.65,
+              Some(
+                StructuredBuildingAllowanceDate(
+                  qualifyingDate = LocalDate.now(),
+                  qualifyingAmountExpenditure = 50.00
+                )
+              ),
+              building = StructuredBuildingAllowanceBuilding(
+                name = Some("name"),
+                number = Some("number"),
+                postCode = "AB1 2XY"
+              )
+            )
+          )
+        ),
+        zeroEmissionsCarAllowance = Some(75.75),
+        propertyAllowance = propertyAllowanceClaim
+      )
+      val countryCode = "ESP"
+
+      val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(
+          Seq(
+            AnnualForeignProperty(
+              countryCode = countryCode,
+              adjustments = Some(foreignPropertyAdjustments),
+              allowances = Some(foreignPropertyAllowances)
+            )
+          )
+        )
+      )
+
+      val residentialFinancialCost = BigDecimal(66.66)
+      val broughtFwdResidentialFinancialCost = BigDecimal(77.77)
+      val foreignPropertyExpenses: ForeignPropertyExpenses = ForeignPropertyExpenses(
+        premisesRunningCosts = Some(00.01),
+        repairsAndMaintenance = Some(11.11),
+        financialCosts = Some(22.22),
+        professionalFees = Some(33.33),
+        travelCosts = Some(44.44),
+        costOfServices = Some(55.55),
+        residentialFinancialCost = Some(residentialFinancialCost),
+        broughtFwdResidentialFinancialCost = Some(broughtFwdResidentialFinancialCost),
+        other = Some(88.88),
+        consolidatedExpense = Some(99.99),
+        None
+      )
+
+      val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
+        submissionId = None,
+        submittedOn = None,
+        fromDate = LocalDate.now,
+        toDate = LocalDate.now,
+        foreignProperty = Some(Seq(ForeignProperty(countryCode, None, Some(foreignPropertyExpenses)))),
+        ukOtherProperty = None
+      )
+
+      val balancingChargeYesNo = true
+      val foreignUnusedResidentialFinanceCostYesNo = true
+      val unusedLossesPreviousYearsYesNo = true
+      val whenYouReportedTheLoss = ForeignWhenYouReportedTheLoss.y2019to2020
+      val repositoryAnswers = Map(
+        countryCode -> JourneyAnswers(
+          mtditid = Mtditid("some-mtditid"),
+          incomeSourceId = IncomeSourceId("some-income-source-id"),
+          taxYear = TaxYear(2024),
+          journey = JourneyName.ForeignPropertyAdjustments,
+          countryCode = Some(countryCode),
+          status = InProgress,
+          data = Json.toJsObject(ForeignAdjustmentsStoreAnswers(
+            balancingChargeYesNo = balancingChargeYesNo,
+            foreignUnusedResidentialFinanceCostYesNo = Some(foreignUnusedResidentialFinanceCostYesNo),
+            unusedLossesPreviousYearsYesNo = unusedLossesPreviousYearsYesNo,
+            whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
+          )),
+          createdAt = Instant.now,
+          updatedAt = Instant.now
+        )
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyAdjustments(aPropertyAnnualSubmission, Some(aPropertyPeriodicSubmission), Some(repositoryAnswers))
+      val expected = ForeignAdjustmentsAnswers(
+          privateUseAdjustment = Some(privateUseAdjustment),
+          balancingCharge = Some(BalancingCharge(balancingChargeYesNo, Some(balancingCharge))),
+          residentialFinanceCost = Some(residentialFinancialCost),
+          unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(foreignUnusedResidentialFinanceCostYesNo, Some(broughtFwdResidentialFinancialCost))),
+          propertyIncomeAllowanceClaim = propertyAllowanceClaim,
+          unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(unusedLossesPreviousYearsYesNo, None)),
+          whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
+        )
+      result shouldBe Some(Map(countryCode -> expected))
+    }
   }
 }

@@ -70,6 +70,7 @@ class AuthorisedAction @Inject() (
               Unauthorized
             case e =>
               logger.error(s"[AuthorisedAction][async] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+              logger.error(s"[AuthorisedAction][async] - Error: ${e.getMessage}")
               InternalServerError
           }
         }

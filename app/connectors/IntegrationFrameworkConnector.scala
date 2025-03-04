@@ -19,11 +19,12 @@ package connectors
 import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
 import connectors.response._
+import models.LossType.UKProperty
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
+import models.request.foreign._
+import models.request._
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
@@ -542,6 +543,133 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
             s"Error creating a foreign property annual submission from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def createBroughtForwardLoss(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossId]] = {
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val apiVersion = "1500"
+    val url = s"${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
+    val body = BroughtForwardLossRequest(
+      taxYearBroughtForwardFrom = taxYearStr,
+      typeOfLoss = UKProperty,
+      businessId = incomeSourceId.toString,
+      lossAmount = lossAmount
+    )
+    logger.debug(
+      s"Calling createBroughtForwardLoss with url: $url, body: ${Json.toJson(body)}"
+    )
+
+    http
+      .post(url"$url")
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(Json.toJson(body))
+      .execute[PostBroughtForwardLossResponse]
+      .map { response: PostBroughtForwardLossResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error creating a brought forward loss from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def getBroughtForwardLoss(
+    nino: Nino,
+    lossId: String
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossResponse]] = {
+    val apiVersion = "1502"
+    val url = s"${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId"
+    logger.debug(
+      s"Calling getBroughtForwardLoss with url: $url"
+    )
+
+    http
+      .get(url"$url")
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetBroughtForwardLossResponse]
+      .map { response: GetBroughtForwardLossResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error retrieving a brought forward loss from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def getBroughtForwardLosses(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLosses]] = {
+    val apiVersion = "1870"
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val url = s"${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/$taxYearStr" +
+      s"?businessId=$incomeSourceId&typeOfLoss=$UKProperty"
+    logger.debug(
+      s"Calling getBroughtForwardLosses with url: $url"
+    )
+    http
+      .get(url"$url")
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[GetBroughtForwardLossesResponse]
+      .map { response: GetBroughtForwardLossesResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error retrieving brought forward losses from the Integration Framework: URL: $url;" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body: ${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def updateBroughtForwardLoss(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    lossId: String,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossResponse]] = {
+    val apiVersion = "1501"
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val url = s"${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId/tax-year/$taxYearStr/change-loss-amount"
+    val body = BroughtForwardLossAmount(lossAmount = lossAmount)
+    logger.debug(
+      s"Calling updateBroughtForwardLoss with url: $url, body: ${Json.toJson(body)}"
+    )
+    http
+      .put(url"$url")
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[PutBroughtForwardLossResponse]
+      .map { response: PutBroughtForwardLossResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error updating a brought forward loss from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }

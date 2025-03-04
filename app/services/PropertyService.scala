@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
+import models.LossType.UKProperty
 import models._
 import models.common._
 import models.domain.{FetchedPropertyData, JourneyAnswers}
@@ -322,6 +323,77 @@ class PropertyService @Inject() (
         )
         ITPEnvelope.liftEither(error.asLeft[PropertyAnnualSubmission])
     }
+  }
+
+  private def createBroughtForwardLoss(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): ITPEnvelope[String] = {
+    EitherT(connector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount))
+      .map(_.lossId)
+      .leftMap { error =>
+        logger.error(s"[createBroughtForwardLoss]: Error creating loss brought forward")
+        ApiServiceError(error.status)
+      }
+  }
+
+  private def getBroughtForwardLosses(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Seq[BroughtForwardLossResponseWithId]] = {
+    EitherT(connector.getBroughtForwardLosses(taxYearBroughtForwardFrom, nino, incomeSourceId))
+      .map(_.losses)
+      .leftMap {error =>
+        logger.error(s"[getBroughtForwardLosses]: Error retrieving losses brought forward")
+        ApiServiceError(error.status)
+      }
+  }
+
+  private def updateBroughtForwardLoss(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    lossId: String,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+    EitherT(connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
+      .leftMap {error =>
+        logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
+        ApiServiceError(error.status)
+      }
+  }
+
+  private def createOrUpdateBroughtForwardLoss(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    ctx: JourneyContext,
+    lossAmount: BigDecimal
+  )(implicit hc: HeaderCarrier): ITPEnvelope[String] = {
+    for {
+      broughtForwardLosses <- getBroughtForwardLosses(
+                                taxYearBroughtForwardFrom,
+                                nino,
+                                incomeSourceId = ctx.incomeSourceId
+                              ).orElse(ITPEnvelope.liftPure(Seq.empty[BroughtForwardLossResponseWithId]))
+      broughtForwardLossId <- broughtForwardLosses.find(bfl => bfl.typeOfLoss == UKProperty) match {
+                                  case Some(bfl) =>
+                                    updateBroughtForwardLoss(
+                                      taxYearBroughtForwardFrom,
+                                      nino,
+                                      bfl.lossId,
+                                      lossAmount
+                                    ).map(_ => bfl.lossId)
+                                  case _ =>
+                                    createBroughtForwardLoss(
+                                      taxYearBroughtForwardFrom,
+                                      nino,
+                                      ctx.incomeSourceId,
+                                      lossAmount
+                                    )
+                                }
+    } yield broughtForwardLossId
   }
 
   def saveIncome(journeyContext: JourneyContext, nino: Nino, propertyRentalsIncome: PropertyRentalsIncome)(implicit
@@ -737,6 +809,18 @@ class PropertyService @Inject() (
           case Some(BalancingCharge(raRbalancingChargeYesNo, _)) =>
             persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
           case _ => ITPEnvelope.liftPure(true)
+        }
+      }
+      lbfSubmissionSuccess <- {
+        (raRAdjustments.unusedLossesBroughtForward, raRAdjustments.whenYouReportedTheLoss) match {
+          case (Some(UnusedLossesBroughtForward(_, Some(lossAmount))), Some(taxYearBroughtForwardFrom)) =>
+            createOrUpdateBroughtForwardLoss(
+              taxYearBroughtForwardFrom,
+              nino,
+              ctx,
+              lossAmount
+            ).map(_ => true)
+          case _ => ITPEnvelope.liftPure(false)
         }
       }
     } yield res
