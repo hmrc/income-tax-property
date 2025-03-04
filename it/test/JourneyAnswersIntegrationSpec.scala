@@ -223,7 +223,7 @@ class JourneyAnswersIntegrationSpec
                     44
                   )
                 ),
-                Some(25)
+                consolidatedExpense = Some(25)
               )
             )
           )

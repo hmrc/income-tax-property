@@ -66,7 +66,7 @@ case class ForeignPropertyExpenses(
   residentialFinancialCost: Option[BigDecimal],
   broughtFwdResidentialFinancialCost: Option[BigDecimal],
   other: Option[BigDecimal],
-  consolidatedExpense: Option[BigDecimal],      // API#1958 (Update) expects consolidatedExpense
+  consolidatedExpense: Option[BigDecimal],      // API#1958 (Update) / API#1595 and API#1862 (Get) expects consolidatedExpense
   consolidatedExpenseAmount: Option[BigDecimal] // API#1861 (Create) expects consolidatedExpenseAmount
 )
 
@@ -108,14 +108,14 @@ object UkOtherProperty {
       case UkOtherProperty(None, None) => None
       case UkOtherProperty(
             Some(UkOtherPropertyIncome(None, None, None, None, None, None)),
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None))
           ) =>
         None
       case UkOtherProperty(Some(UkOtherPropertyIncome(None, None, None, None, None, None)), expensesMaybe) =>
         Some(UkOtherProperty(None, expensesMaybe))
       case UkOtherProperty(
             incomeMaybe,
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
+            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None, None))
           ) =>
         Some(UkOtherProperty(incomeMaybe, None))
 
@@ -138,17 +138,18 @@ object UkOtherPropertyIncome {
 }
 
 case class UkOtherPropertyExpenses(
-  premisesRunningCosts: Option[BigDecimal],
-  repairsAndMaintenance: Option[BigDecimal],
-  financialCosts: Option[BigDecimal],
-  professionalFees: Option[BigDecimal],
-  travelCosts: Option[BigDecimal],
-  costOfServices: Option[BigDecimal],
-  other: Option[BigDecimal],
-  residentialFinancialCost: Option[BigDecimal],
-  residentialFinancialCostsCarriedForward: Option[BigDecimal],
-  ukOtherRentARoom: Option[UkRentARoomExpense],
-  consolidatedExpenses: Option[BigDecimal]
+  premisesRunningCosts: Option[BigDecimal] = None,
+  repairsAndMaintenance: Option[BigDecimal] = None,
+  financialCosts: Option[BigDecimal] = None,
+  professionalFees: Option[BigDecimal] = None,
+  travelCosts: Option[BigDecimal] = None,
+  costOfServices: Option[BigDecimal] = None,
+  other: Option[BigDecimal] = None,
+  residentialFinancialCost: Option[BigDecimal] = None,
+  residentialFinancialCostsCarriedForward: Option[BigDecimal] = None,
+  ukOtherRentARoom: Option[UkRentARoomExpense] = None,
+  consolidatedExpenses: Option[BigDecimal] = None,     // API#1861 (Create) expects consolidatedExpenses
+  consolidatedExpense: Option[BigDecimal] = None,      // API#1958 (Update) / API#1595 and API#1862 (Get) expects consolidatedExpense
 )
 
 object UkOtherPropertyExpenses {
