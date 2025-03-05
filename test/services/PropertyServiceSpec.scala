@@ -658,6 +658,46 @@ class PropertyServiceSpec
     }
   }
 
+  "save rent a room allowances" should {
+
+    val mtditid = "1234567890"
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+    val allowances = RentARoomAllowances(
+      None,
+      Some(11),
+      Some(11),
+      Some(11),
+      Some(11)
+    )
+    val annualSubmission = createAnnualSubmission(None, None)
+    "return no content for valid request" in {
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+      mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, ().asRight[ApiError])
+      await(underTest.saveRentARoomAllowances(ctx, allowances).value) shouldBe Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+      mockGetPropertyAnnualSubmission(
+        taxYear,
+        nino,
+        incomeSourceId,
+        Some(annualSubmission).asRight[ApiError]
+      )
+      mockCreateAnnualSubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+      )
+      await(underTest.saveRentARoomAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
   def createAnnualSubmission(
     sbasMaybe: Option[List[StructuredBuildingAllowance]],
     esbasMaybe: Option[List[Esba]]

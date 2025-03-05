@@ -497,17 +497,20 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       firstLevelDiff shouldBe List("ukOtherProperty")
       secondLevelDiff shouldBe List("expenses")
 
-//      thirdLevelDiffOnExpense should be(
-//        List(
-//          "premisesRunningCosts",
-//          "repairsAndMaintenance",
-//          "financialCosts",
-//          "professionalFees",
-//          "travelCosts",
-//          "costOfServices",
-//          "other"
-//        )
-//      )
+      thirdLevelDiffOnExpense should be(
+        List("premisesRunningCosts",
+          "repairsAndMaintenance",
+          "financialCosts",
+          "professionalFees",
+          "travelCosts",
+          "costOfServices",
+          "other",
+          "residentialFinancialCost",
+          "residentialFinancialCostsCarriedForward",
+          "ukOtherRentARoom",
+          "consolidatedExpenses",
+          "consolidatedExpense")
+      )
     }
 
     "be generated from rar expenses and not override existing other fields" in {
@@ -553,16 +556,20 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       firstLevelDiff shouldBe List("ukOtherProperty")
       secondLevelDiff shouldBe List("expenses")
 
-//      thirdLevelDiffOnExpense should be(
-//        List(
-//          "premisesRunningCosts",
-//          "repairsAndMaintenance",
-//          "professionalFees",
-//          "costOfServices",
-//          "other",
-//          "consolidatedExpenses"
-//        )
-//      )
+      thirdLevelDiffOnExpense should be(
+        List("premisesRunningCosts",
+          "repairsAndMaintenance",
+          "financialCosts",
+          "professionalFees",
+          "travelCosts",
+          "costOfServices",
+          "other",
+          "residentialFinancialCost",
+          "residentialFinancialCostsCarriedForward",
+          "ukOtherRentARoom",
+          "consolidatedExpenses",
+          "consolidatedExpense")
+      )
     }
 
     "be generated from rentals income and not override existing other fields" in {
