@@ -149,7 +149,7 @@ case class UkOtherPropertyExpenses(
   residentialFinancialCostsCarriedForward: Option[BigDecimal] = None,
   ukOtherRentARoom: Option[UkRentARoomExpense] = None,
   consolidatedExpenses: Option[BigDecimal] = None,     // API#1861 (Create) expects consolidatedExpenses
-  consolidatedExpense: Option[BigDecimal] = None,      // API#1958 (Update) / API#1595 and API#1862 (Get) expects consolidatedExpense
+  consolidatedExpense: Option[BigDecimal] = None       // API#1958 (Update) / API#1595 and API#1862 (Get) expects consolidatedExpense
 )
 
 object UkOtherPropertyExpenses {
