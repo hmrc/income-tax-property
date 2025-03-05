@@ -390,11 +390,23 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       firstLevelDiff shouldBe List("ukOtherProperty")
       secondLevelDiff shouldBe List("income", "expenses")
       thirdLevelDiffOnIncome should be(
-        List("ukOtherRentARoom")
+        List("premiumsOfLeaseGrant", "reversePremiums", "periodAmount", "taxDeducted", "otherIncome", "ukOtherRentARoom")
       )
 
       thirdLevelDiffOnExpense should be(
-        List("ukOtherRentARoom")
+        List(
+          "premisesRunningCosts",
+          "repairsAndMaintenance",
+          "financialCosts",
+          "professionalFees",
+          "travelCosts",
+          "costOfServices",
+          "other",
+          "residentialFinancialCost",
+          "residentialFinancialCostsCarriedForward",
+          "ukOtherRentARoom",
+          "consolidatedExpenses"
+        )
       )
     }
 
@@ -444,11 +456,23 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       firstLevelDiff shouldBe List("ukOtherProperty")
       secondLevelDiff shouldBe List("income", "expenses")
       thirdLevelDiffOnIncome should be(
-        List("ukOtherRentARoom")
+        List("premiumsOfLeaseGrant", "reversePremiums", "periodAmount", "taxDeducted", "otherIncome", "ukOtherRentARoom")
       )
 
       thirdLevelDiffOnExpense should be(
-        List("ukOtherRentARoom")
+        List(
+          "premisesRunningCosts",
+          "repairsAndMaintenance",
+          "financialCosts",
+          "professionalFees",
+          "travelCosts",
+          "costOfServices",
+          "other",
+          "residentialFinancialCost",
+          "residentialFinancialCostsCarriedForward",
+          "ukOtherRentARoom",
+          "consolidatedExpenses"
+        )
       )
     }
 
@@ -495,7 +519,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
 
       firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("expenses")
+      secondLevelDiff shouldBe List("income", "expenses")
 
       thirdLevelDiffOnExpense should be(
         List("premisesRunningCosts",
@@ -554,7 +578,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
 
       firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("expenses")
+      secondLevelDiff shouldBe List("income", "expenses")
 
       thirdLevelDiffOnExpense should be(
         List("premisesRunningCosts",
@@ -611,10 +635,17 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       )
 
       firstLevelDiff shouldBe List("ukOtherProperty")
-      secondLevelDiff shouldBe List("income")
+      secondLevelDiff shouldBe List("income", "expenses")
 
       thirdLevelDiffOnExpense should be(
-        List("premiumsOfLeaseGrant", "reversePremiums", "periodAmount", "taxDeducted", "otherIncome")
+        List(
+          "premiumsOfLeaseGrant",
+          "reversePremiums",
+          "periodAmount",
+          "taxDeducted",
+          "otherIncome",
+          "ukOtherRentARoom"
+        )
       )
     }
 

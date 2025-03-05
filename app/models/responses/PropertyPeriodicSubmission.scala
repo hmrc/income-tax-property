@@ -125,12 +125,12 @@ object UkOtherProperty {
 }
 
 case class UkOtherPropertyIncome(
-  premiumsOfLeaseGrant: Option[BigDecimal],
-  reversePremiums: Option[BigDecimal],
-  periodAmount: Option[BigDecimal],
-  taxDeducted: Option[BigDecimal],
-  otherIncome: Option[BigDecimal],
-  ukOtherRentARoom: Option[RentARoomIncome]
+  premiumsOfLeaseGrant: Option[BigDecimal] = None,
+  reversePremiums: Option[BigDecimal] = None,
+  periodAmount: Option[BigDecimal] = None,
+  taxDeducted: Option[BigDecimal] = None,
+  otherIncome: Option[BigDecimal] = None,
+  ukOtherRentARoom: Option[RentARoomIncome] = None
 )
 
 object UkOtherPropertyIncome {
