@@ -743,7 +743,7 @@ class JourneyAnswersControllerSpec
                                                  |                }
                                                  |            }
                                                  |        ],
-                                                 |        "sbaClaims" : false
+                                                 |        "structureAndBuildingAllowanceClaims" : false
                                                  |}""".stripMargin)
 
     val ctx: JourneyContext =
