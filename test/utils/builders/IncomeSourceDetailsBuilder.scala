@@ -25,7 +25,7 @@ object IncomeSourceDetailsBuilder {
 
   private val taxYear = LocalDate.now.getYear
 
-  val anIncomeSourceDetails = IncomeSourceDetailsModel(
+  val anIncomeSourceDetails: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
     processingDate = LocalDateTime.of(LocalDate.parse(s"${taxYear - 5}-03-13"), LocalTime.of(10, 11)),
     taxPayerDisplayResponse = TaxPayerDisplayResponse(
       safeId = "EK3074559847852",
@@ -85,6 +85,133 @@ object IncomeSourceDetailsBuilder {
         firstAccountingPeriodEndDate = Some(LocalDate.now()),
         latencyDetails = None
       )))
+    )
+  )
+
+  val ukPropertyDetails: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+    processingDate = LocalDateTime.of(LocalDate.parse(s"${taxYear - 5}-03-13"), LocalTime.of(10, 11)),
+    taxPayerDisplayResponse = TaxPayerDisplayResponse(
+      safeId = "EK3074559847852",
+      nino = "AC160000B",
+      mtdId = "160000",
+      yearOfMigration = Some("2022"),
+      propertyIncome = false,
+      businessData = None,
+      propertyData = Some(List(PropertyDetailsModel(
+        incomeSourceType = Some("uk-property"),
+        incomeSourceId = "3147a709e9-f3fa5-6edf-4e3c701-8f6500a-c10dde61c3c11afe8475",
+        accountingPeriodStartDate = LocalDate.now().minusDays(1),
+        accountingPeriodEndDate = LocalDate.now(),
+        tradingStartDate = Some(LocalDate.now()),
+        cashOrAccruals = Some(false),
+        numPropRented = Some(1),
+        numPropRentedUK = Some(1),
+        numPropRentedEEA = None,
+        numPropRentedNONEEA = None,
+        email = Some("statebenefits@email.com"),
+        cessationDate = None,
+        paperLess = Some(true),
+        incomeSourceStartDate = None,
+        firstAccountingPeriodStartDate = None,
+        firstAccountingPeriodEndDate = Some(LocalDate.now()),
+        latencyDetails = None
+      )))
+    )
+  )
+
+  val foreignPropertyDetails: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+    processingDate = LocalDateTime.of(LocalDate.parse(s"${taxYear - 5}-03-13"), LocalTime.of(10, 11)),
+    taxPayerDisplayResponse = TaxPayerDisplayResponse(
+      safeId = "EK3074559847852",
+      nino = "AC160000B",
+      mtdId = "160000",
+      yearOfMigration = Some("2022"),
+      propertyIncome = false,
+      businessData = None,
+      propertyData = Some(List(PropertyDetailsModel(
+        incomeSourceType = Some("foreign-property"),
+        incomeSourceId = "3147a709e9-f3fa5-6edf-4e3c701-8f6500a-c10dde61c3c11afe8475",
+        accountingPeriodStartDate = LocalDate.now().minusDays(1),
+        accountingPeriodEndDate = LocalDate.now(),
+        tradingStartDate = Some(LocalDate.now()),
+        cashOrAccruals = Some(false),
+        numPropRented = Some(1),
+        numPropRentedUK = Some(1),
+        numPropRentedEEA = None,
+        numPropRentedNONEEA = None,
+        email = Some("statebenefits@email.com"),
+        cessationDate = None,
+        paperLess = Some(true),
+        incomeSourceStartDate = None,
+        firstAccountingPeriodStartDate = None,
+        firstAccountingPeriodEndDate = Some(LocalDate.now()),
+        latencyDetails = None
+      )))
+    )
+  )
+
+  val mixedPropertyDetails: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+    processingDate = LocalDateTime.of(LocalDate.parse(s"${taxYear - 5}-03-13"), LocalTime.of(10, 11)),
+    taxPayerDisplayResponse = TaxPayerDisplayResponse(
+      safeId = "EK3074559847852",
+      nino = "AC160000B",
+      mtdId = "160000",
+      yearOfMigration = Some("2022"),
+      propertyIncome = false,
+      businessData = None,
+      propertyData = Some(List(
+        PropertyDetailsModel(
+          incomeSourceType = Some("uk-property"),
+          incomeSourceId = "3147a709e9-f3fa5-6edf-4e3c701-8f6500a-c10dde61c3c11afe8475",
+          accountingPeriodStartDate = LocalDate.now().minusDays(1),
+          accountingPeriodEndDate = LocalDate.now(),
+          tradingStartDate = Some(LocalDate.now()),
+          cashOrAccruals = Some(false),
+          numPropRented = Some(1),
+          numPropRentedUK = Some(1),
+          numPropRentedEEA = None,
+          numPropRentedNONEEA = None,
+          email = Some("statebenefits@email.com"),
+          cessationDate = None,
+          paperLess = Some(true),
+          incomeSourceStartDate = None,
+          firstAccountingPeriodStartDate = None,
+          firstAccountingPeriodEndDate = Some(LocalDate.now()),
+          latencyDetails = None
+        ),
+        PropertyDetailsModel(
+          incomeSourceType = Some("foreign-property"),
+          incomeSourceId = "3147a709e9-f3fa5-6edf-4e3c701-8f6500a-c10dde61c3c11afe8475",
+          accountingPeriodStartDate = LocalDate.now().minusDays(1),
+          accountingPeriodEndDate = LocalDate.now(),
+          tradingStartDate = Some(LocalDate.now()),
+          cashOrAccruals = Some(false),
+          numPropRented = Some(1),
+          numPropRentedUK = Some(1),
+          numPropRentedEEA = None,
+          numPropRentedNONEEA = None,
+          email = Some("statebenefits@email.com"),
+          cessationDate = None,
+          paperLess = Some(true),
+          incomeSourceStartDate = None,
+          firstAccountingPeriodStartDate = None,
+          firstAccountingPeriodEndDate = Some(LocalDate.now()),
+          latencyDetails = None
+        )
+      ))
+    )
+  )
+
+  val nonePropertyDetails: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+    processingDate = LocalDateTime.of(LocalDate.parse(s"${taxYear - 5}-03-13"), LocalTime.of(10, 11)),
+    taxPayerDisplayResponse = TaxPayerDisplayResponse(
+      safeId = "EK3074559847852",
+      nino = "AC160000B",
+      mtdId = "160000",
+      yearOfMigration = Some("2022"),
+      propertyIncome = false,
+      businessData = None,
+      propertyData = None
     )
   )
 }
