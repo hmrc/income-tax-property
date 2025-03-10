@@ -31,18 +31,18 @@ object EsbaInfoToSave {
 object EsbaInfoExtensions {
   implicit class EsbaExtensions(esbaInfo: EsbaInfo) {
 
-    def toEsba: List[Esba] = esbaInfo.esbas.map(esbaInRequest =>
+    def toEsba: List[Esba] = esbaInfo.enhancedStructureBuildingAllowances.map(esbaInRequest =>
       Esba(
-        esbaInRequest.esbaClaim,
+        esbaInRequest.enhancedStructureBuildingAllowanceClaim,
         Some(
-          StructuredBuildingAllowanceDate(esbaInRequest.esbaQualifyingDate, esbaInRequest.esbaQualifyingAmount)
+          StructuredBuildingAllowanceDate(esbaInRequest.enhancedStructureBuildingAllowanceQualifyingDate, esbaInRequest.enhancedStructureBuildingAllowanceQualifyingAmount)
         ),
         StructuredBuildingAllowanceBuilding(
-          Some(esbaInRequest.esbaAddress.buildingName.value),
+          Some(esbaInRequest.enhancedStructureBuildingAllowanceAddress.buildingName.value),
           Some(
-            esbaInRequest.esbaAddress.buildingNumber.value
+            esbaInRequest.enhancedStructureBuildingAllowanceAddress.buildingNumber.value
           ),
-          esbaInRequest.esbaAddress.postCode.value
+          esbaInRequest.enhancedStructureBuildingAllowanceAddress.postCode.value
         )
       )
     )

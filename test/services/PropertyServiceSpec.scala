@@ -759,7 +759,7 @@ class PropertyServiceSpec
 
       val esbaInfo = EsbaInfo(
         claimEnhancedStructureBuildingAllowance = true,
-        esbaClaims = Some(true),
+        enhancedStructureBuildingAllowanceClaims = Some(true),
         esbasToBeAdded
       )
       val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)

@@ -599,39 +599,39 @@ class JourneyAnswersControllerSpec
   "update esba section" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimEnhancedStructureBuildingAllowance" : true,
-                                                 | "esbas": [
+                                                 | "enhancedStructureBuildingAllowances": [
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2020-04-04",
-                                                 |                "esbaQualifyingAmount" : 12,
-                                                 |                "esbaClaim" : 43,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 43,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "name12",
                                                  |                    "buildingNumber" : "123",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2023-01-22",
-                                                 |                "esbaQualifyingAmount" : 535,
-                                                 |                "esbaClaim" : 54,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 54,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "235",
                                                  |                    "buildingNumber" : "3",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2024-02-12",
-                                                 |                "esbaQualifyingAmount" : 22,
-                                                 |                "esbaClaim" : 23,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 23,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "12",
                                                  |                    "buildingNumber" : "2",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            }
                                                  |        ],
-                                                 |        "esbaClaims" : false
+                                                 |        "enhancedStructureBuildingAllowanceClaims" : false
                                                  |}""".stripMargin)
 
     val ctx: JourneyContext =
@@ -782,7 +782,7 @@ class JourneyAnswersControllerSpec
         Some(
           EsbaInfo(
             claimEnhancedStructureBuildingAllowance = true,
-            esbaClaims = Some(true),
+            enhancedStructureBuildingAllowanceClaims = Some(true),
             List()
           )
         ),
@@ -1137,8 +1137,7 @@ class JourneyAnswersControllerSpec
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            }
-                                                 |        ],
-                                                 |        "sbaClaims" : false
+                                                 |        ]
                                                  |}""".stripMargin)
 
     val ctx: JourneyContext =
@@ -1246,39 +1245,39 @@ class JourneyAnswersControllerSpec
   "create or update esba section for combined journey" should {
     val validRequestBody: JsValue = Json.parse("""{
                                                  | "claimEnhancedStructureBuildingAllowance" : true,
-                                                 | "esbas": [
+                                                 | "enhancedStructureBuildingAllowances": [
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2020-04-04",
-                                                 |                "esbaQualifyingAmount" : 12,
-                                                 |                "esbaClaim" : 43,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 43,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "name12",
                                                  |                    "buildingNumber" : "123",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2023-01-22",
-                                                 |                "esbaQualifyingAmount" : 535,
-                                                 |                "esbaClaim" : 54,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 54,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "235",
                                                  |                    "buildingNumber" : "3",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            },
                                                  |            {
-                                                 |                "esbaQualifyingDate" : "2024-02-12",
-                                                 |                "esbaQualifyingAmount" : 22,
-                                                 |                "esbaClaim" : 23,
-                                                 |                "esbaAddress" : {
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
+                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
+                                                 |                "enhancedStructureBuildingAllowanceClaim" : 23,
+                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
                                                  |                    "buildingName" : "12",
                                                  |                    "buildingNumber" : "2",
                                                  |                    "postCode" : "XX1 1XX"
                                                  |                }
                                                  |            }
                                                  |        ],
-                                                 |        "esbaClaims" : false
+                                                 |        "enhancedStructureBuildingAllowanceClaims" : false
                                                  |}""".stripMargin)
 
     val ctx: JourneyContext =

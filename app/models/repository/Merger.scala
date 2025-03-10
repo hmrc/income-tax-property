@@ -457,16 +457,16 @@ object Merger {
           Some(
             EsbaInfo(
               claimEnhancedStructureBuildingAllowance = extracted.claimEnhancedStructureBuildingAllowance,
-              esbaClaims = extracted.esbaClaims,
-              esbas = fromDownstream
+              enhancedStructureBuildingAllowanceClaims = extracted.esbaClaims,
+              enhancedStructureBuildingAllowances = fromDownstream
             )
           )
         case (None, Some(fromDownstream)) => // Todo: How to act here???
           Some(
             EsbaInfo(
               claimEnhancedStructureBuildingAllowance = true,
-              esbaClaims = Some(false), // ToDo:???
-              esbas = fromDownstream
+              enhancedStructureBuildingAllowanceClaims = Some(false), // ToDo:???
+              enhancedStructureBuildingAllowances = fromDownstream
             )
           )
         case _ => None
