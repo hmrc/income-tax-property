@@ -158,7 +158,7 @@ trait MockForeignPropertyService extends MockFactory {
     Boolean
   ]] = {
     val compareSba: ForeignPropertySbaWithCountryCode => Boolean = other =>
-      foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance == other.claimStructureBuildingAllowance &&
+      foreignPropertySbaWithCountryCode.isClaimStructureBuildingAllowance == other.isClaimStructureBuildingAllowance &&
       foreignPropertySbaWithCountryCode.countryCode == other.countryCode &&
         foreignPropertySbaWithCountryCode.allowances.map(_.toSeq) == other.allowances.map(_.toSeq)
     (mockForeignPropertyService

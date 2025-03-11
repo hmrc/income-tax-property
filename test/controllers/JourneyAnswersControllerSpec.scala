@@ -90,10 +90,10 @@ class JourneyAnswersControllerSpec
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAbout)
 
     val validRequestBody: JsValue = Json.parse("""{
-                                                 |    "jointlyLetYesOrNo" : true,
+                                                 |    "isJointlyLet" : true,
                                                  |    "totalIncomeAmount" : 55.22,
                                                  |    "claimExpensesOrRelief" : {
-                                                 |        "claimExpensesOrReliefYesNo" : true,
+                                                 |        "isClaimExpensesOrRelief" : true,
                                                  |        "rentARoomAmount" : 10.22
                                                  |    }
                                                  |}""".stripMargin)
@@ -105,9 +105,9 @@ class JourneyAnswersControllerSpec
         ctx,
         nino,
         RaRAbout(
-          jointlyLetYesOrNo = true,
+          isJointlyLet = true,
           55.22,
-          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+          ClaimExpensesOrRelief(isClaimExpensesOrRelief = true, Some(10.22))
         ),
         result = true
       )
@@ -130,12 +130,12 @@ class JourneyAnswersControllerSpec
 
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "balancingCharge" : {
-                                                 |        "balancingChargeYesNo" : true,
+                                                 |        "isBalancingCharge" : true,
                                                  |        "balancingChargeAmount" : 12.34
                                                  |    },
                                                  |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12,
                                                  |    "unusedLossesBroughtForward" : {
-                                                 |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                 |        "isUnusedLossesBroughtForward" : true,
                                                  |        "unusedLossesBroughtForwardAmount" : 12.56
                                                  |    },
                                                  |    "whenYouReportedTheLoss" : "y2018to2019"
@@ -148,9 +148,9 @@ class JourneyAnswersControllerSpec
         ctx,
         nino,
         RaRAdjustments(
-          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
           Some(BigDecimal(12)),
-          Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
+          Some(UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(12.56))),
           Some(WhenYouReportedTheLoss.y2018to2019)
         ),
         true.asRight[ServiceError]
@@ -174,9 +174,9 @@ class JourneyAnswersControllerSpec
         ctx,
         nino,
         RaRAdjustments(
-          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
           Some(BigDecimal(12)),
-          Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
+          Some(UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(12.56))),
           Some(WhenYouReportedTheLoss.y2018to2019)
         ),
         ApiServiceError(500).asLeft[Boolean]
@@ -192,7 +192,7 @@ class JourneyAnswersControllerSpec
 
     val validRequestBody: JsValue = Json.parse("""
                                                  |{
-                                                 |   "claimPropertyIncomeAllowanceYesOrNo": true
+                                                 |   "isClaimPropertyIncomeAllowance": true
                                                  |}
                                                  |""".stripMargin)
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
@@ -202,7 +202,7 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       mockPersistAnswers(
         ctx,
-        PropertyRentalsAbout(claimPropertyIncomeAllowanceYesOrNo = true)
+        PropertyRentalsAbout(isClaimPropertyIncomeAllowance = true)
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
@@ -255,18 +255,18 @@ class JourneyAnswersControllerSpec
                                                             |{
                                                             |  "privateUseAdjustment": 12.34,
                                                             |  "balancingCharge": {
-                                                            |    "balancingChargeYesNo": true,
+                                                            |    "isBalancingCharge": true,
                                                             |    "balancingChargeAmount": 108
                                                             |  },
                                                             |  "propertyIncomeAllowance": 34.56,
                                                             |  "renovationAllowanceBalancingCharge": {
-                                                            |    "renovationAllowanceBalancingChargeYesNo": true,
+                                                            |    "isRenovationAllowanceBalancingCharge": true,
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
                                                             |  "unusedResidentialFinanceCost": 78.89,
                                                             |  "unusedLossesBroughtForward" : {
-                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "isUnusedLossesBroughtForward" : true,
                                                             |        "unusedLossesBroughtForwardAmount" : 12.56
                                                             |    },
                                                             |    "whenYouReportedTheLoss" : "y2018to2019"
@@ -282,15 +282,15 @@ class JourneyAnswersControllerSpec
         nino,
         PropertyRentalAdjustments(
           BigDecimal(12.34),
-          BalancingCharge(balancingChargeYesNo = true, Some(108)),
+          BalancingCharge(isBalancingCharge = true, Some(108)),
           Some(BigDecimal(34.56)),
           RenovationAllowanceBalancingCharge(
-            renovationAllowanceBalancingChargeYesNo = true,
+            isRenovationAllowanceBalancingCharge = true,
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
           Some(BigDecimal(78.89)),
-          UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56)),
+          UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(12.56)),
           Some(y2018to2019)
         )
       )
@@ -356,15 +356,15 @@ class JourneyAnswersControllerSpec
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {
-                                                 |                "taxDeductedYesNo" : true,
+                                                 |                "isTaxDeducted" : true,
                                                  |                "taxDeductedAmount" : 20
                                                  |            },
                                                  |            "premiumsGrantLease" : {
-                                                 |                "premiumsGrantLeaseReceived" : true,
+                                                 |                "isPremiumsGrantLeaseReceived" : true,
                                                  |                "premiumsGrantLease" : 5
                                                  |            },
                                                  |            "reversePremiumsReceived" : {
-                                                 |                "reversePremiumsReceived" : true,
+                                                 |                "isReversePremiumsReceived" : true,
                                                  |                "reversePremiums" : 10
                                                  |            }
                                                  |        }
@@ -406,7 +406,7 @@ class JourneyAnswersControllerSpec
     val rentARoomNonConsolidatedRequest: JsValue = Json.parse(
       """{
         |  "consolidatedExpenses": {
-        |     "consolidatedExpensesYesOrNo": true,
+        |     "isConsolidatedExpenses": true,
         |     "consolidatedExpensesAmount": 1000
         |  },
         |  "rentsRatesAndInsurance": 12,
@@ -427,7 +427,7 @@ class JourneyAnswersControllerSpec
       """
         |{
         |  "consolidatedExpenses": {
-        |     "consolidatedExpensesYesOrNo": true,
+        |     "isConsolidatedExpenses": true,
         |     "consolidatedExpensesAmount": 1000
         |  }
         |}
@@ -546,7 +546,7 @@ class JourneyAnswersControllerSpec
 
     val createOrUpdateUIRequest: JsValue = Json.parse("""{
                                                         |  "consolidatedExpenses": {
-                                                        |    "consolidatedExpensesYesOrNo": false
+                                                        |    "isConsolidatedExpenses": false
                                                         |  },
                                                         |  "rentsRatesAndInsurance": 100,
                                                         |  "repairsAndMaintenanceCosts": 200,
@@ -629,7 +629,7 @@ class JourneyAnswersControllerSpec
   "update esba section" should {
     val validRequestBody: JsValue =
       Json.parse("""{
-                   | "claimEnhancedStructureBuildingAllowance" : true,
+                   | "isClaimEnhancedStructureBuildingAllowance" : true,
                    | "enhancedStructureBuildingAllowances": [
                    |            {
                    |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
@@ -662,7 +662,7 @@ class JourneyAnswersControllerSpec
                    |                }
                    |            }
                    |        ],
-                   |        "enhancedStructureBuildingAllowanceClaims" : false
+                   |        "isEnhancedStructureBuildingAllowanceClaims" : false
                    |}""".stripMargin)
 
     val ctx: JourneyContext =
@@ -716,7 +716,7 @@ class JourneyAnswersControllerSpec
 
   "update sba section" should {
     val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimStructureBuildingAllowance" : true,
+                                                 | "isClaimStructureBuildingAllowance" : true,
                                                  | "structureBuildingFormGroup": [
                                                  |            {
                                                  |                "structureBuildingQualifyingDate" : "2020-04-04",
@@ -812,8 +812,8 @@ class JourneyAnswersControllerSpec
         None,
         Some(
           EsbaInfo(
-            claimEnhancedStructureBuildingAllowance = true,
-            enhancedStructureBuildingAllowanceClaims = Some(true),
+            isClaimEnhancedStructureBuildingAllowance = true,
+            isEnhancedStructureBuildingAllowanceClaims = Some(true),
             List()
           )
         ),
@@ -869,12 +869,12 @@ class JourneyAnswersControllerSpec
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomAbout)
 
     val validRequestBody: JsValue = Json.parse("""{
-                                                 |    "jointlyLetYesOrNo" : true,
+                                                 |    "isJointlyLet" : true,
                                                  |    "totalIncomeAmount" : 55.22,
-                                                 |    "claimPropertyIncomeAllowanceYesOrNo": true,
+                                                 |    "isClaimPropertyIncomeAllowance": true,
                                                  |    "propertyRentalIncome": 22.33,
                                                  |    "claimExpensesOrRelief" : {
-                                                 |        "claimExpensesOrReliefYesNo" : true,
+                                                 |        "isClaimExpensesOrRelief" : true,
                                                  |        "rentARoomAmount" : 10.22
                                                  |    }
                                                  |}""".stripMargin)
@@ -890,11 +890,11 @@ class JourneyAnswersControllerSpec
         journeyContextForPropertyRentalsAndRentARoomAbout,
         nino,
         RentalsAndRaRAbout(
-          jointlyLetYesOrNo = true,
+          isJointlyLet = true,
           55.22,
-          claimPropertyIncomeAllowanceYesOrNo = true,
+          isClaimPropertyIncomeAllowance = true,
           22.33,
-          ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(10.22))
+          ClaimExpensesOrRelief(isClaimExpensesOrRelief = true, Some(10.22))
         ),
         result = true
       )
@@ -918,15 +918,15 @@ class JourneyAnswersControllerSpec
                                                  |            "isNonUKLandlord" : false,
                                                  |            "otherIncomeFromProperty" : 25,
                                                  |            "deductingTax" : {
-                                                 |                "taxDeductedYesNo" : true,
+                                                 |                "isTaxDeducted" : true,
                                                  |                "taxDeductedAmount" : 20
                                                  |            },
                                                  |            "premiumsGrantLease" : {
-                                                 |                "premiumsGrantLeaseReceived" : true,
+                                                 |                "isPremiumsGrantLeaseReceived" : true,
                                                  |                "premiumsGrantLease" : 5
                                                  |            },
                                                  |            "reversePremiumsReceived" : {
-                                                 |                "reversePremiumsReceived" : true,
+                                                 |                "isReversePremiumsReceived" : true,
                                                  |                "reversePremiums" : 10
                                                  |            }
                                                  |        }
@@ -968,7 +968,7 @@ class JourneyAnswersControllerSpec
     val rentARoomNonConsolidatedRequest: JsValue = Json.parse(
       """{
         |  "consolidatedExpenses": {
-        |     "consolidatedExpensesYesOrNo": false
+        |     "isConsolidatedExpenses": false
         |  },
         |  "rentsRatesAndInsurance": 12,
         |  "repairsAndMaintenanceCosts": 23,
@@ -988,7 +988,7 @@ class JourneyAnswersControllerSpec
       """
         |{
         |  "consolidatedExpenses": {
-        |     "consolidatedExpensesYesOrNo": true,
+        |     "isConsolidatedExpenses": true,
         |     "consolidatedExpensesAmount": 1000
         |  }
         |}
@@ -1146,7 +1146,7 @@ class JourneyAnswersControllerSpec
 
   "update sba section for rentals and rent a room" should {
     val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimStructureBuildingAllowance" : true,
+                                                 | "isClaimStructureBuildingAllowance" : true,
                                                  | "structureBuildingFormGroup": [
                                                  |            {
                                                  |                "structureBuildingQualifyingDate" : "2020-04-04",
@@ -1233,18 +1233,18 @@ class JourneyAnswersControllerSpec
                                                             |{
                                                             |  "privateUseAdjustment": 12.34,
                                                             |  "balancingCharge": {
-                                                            |    "balancingChargeYesNo": true,
+                                                            |    "isBalancingCharge": true,
                                                             |    "balancingChargeAmount": 108
                                                             |  },
                                                             |  "propertyIncomeAllowance": 34.56,
                                                             |  "renovationAllowanceBalancingCharge": {
-                                                            |    "renovationAllowanceBalancingChargeYesNo": true,
+                                                            |    "isRenovationAllowanceBalancingCharge": true,
                                                             |    "renovationAllowanceBalancingChargeAmount": 92
                                                             |  },
                                                             |  "residentialFinanceCost": 56.78,
                                                             |  "unusedResidentialFinanceCost": 78.89,
                                                             |  "unusedLossesBroughtForward" : {
-                                                            |        "unusedLossesBroughtForwardYesOrNo" : true,
+                                                            |        "isUnusedLossesBroughtForward" : true,
                                                             |        "unusedLossesBroughtForwardAmount" : 12.56
                                                             |    },
                                                             |    "whenYouReportedTheLoss" : "y2018to2019"
@@ -1260,15 +1260,15 @@ class JourneyAnswersControllerSpec
         nino,
         PropertyRentalAdjustments(
           BigDecimal(12.34),
-          BalancingCharge(balancingChargeYesNo = true, Some(108)),
+          BalancingCharge(isBalancingCharge = true, Some(108)),
           Some(BigDecimal(34.56)),
           RenovationAllowanceBalancingCharge(
-            renovationAllowanceBalancingChargeYesNo = true,
+            isRenovationAllowanceBalancingCharge = true,
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
           Some(BigDecimal(78.89)),
-          UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56)),
+          UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(12.56)),
           Some(y2018to2019)
         )
       )
@@ -1288,7 +1288,7 @@ class JourneyAnswersControllerSpec
   "create or update esba section for combined journey" should {
     val validRequestBody: JsValue =
       Json.parse("""{
-                   | "claimEnhancedStructureBuildingAllowance" : true,
+                   | "isClaimEnhancedStructureBuildingAllowance" : true,
                    | "enhancedStructureBuildingAllowances": [
                    |            {
                    |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
@@ -1321,7 +1321,7 @@ class JourneyAnswersControllerSpec
                    |                }
                    |            }
                    |        ],
-                   |        "enhancedStructureBuildingAllowanceClaims" : false
+                   |        "isEnhancedStructureBuildingAllowanceClaims" : false
                    |}""".stripMargin)
 
     val ctx: JourneyContext =

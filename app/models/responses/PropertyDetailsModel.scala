@@ -27,14 +27,14 @@ case class PropertyDetailsModel(
   accountingPeriodStartDate: LocalDate,
   accountingPeriodEndDate: LocalDate,
   tradingStartDate: Option[LocalDate],
-  cashOrAccruals: Option[Boolean],
+  isCashOrAccruals: Option[Boolean],
   numPropRented: Option[Int],
   numPropRentedUK: Option[Int],
   numPropRentedEEA: Option[Int],
   numPropRentedNONEEA: Option[Int],
   email: Option[String],
   cessationDate: Option[LocalDate],
-  paperLess: Option[Boolean],
+  isPaperless: Option[Boolean],
   incomeSourceStartDate: Option[LocalDate],
   firstAccountingPeriodStartDate: Option[LocalDate],
   firstAccountingPeriodEndDate: Option[LocalDate],
@@ -48,7 +48,7 @@ object PropertyDetailsModel {
     PropertyDetails(
       propertyDetailsModel.incomeSourceType,
       propertyDetailsModel.tradingStartDate,
-      propertyDetailsModel.cashOrAccruals,
+      propertyDetailsModel.isCashOrAccruals,
       propertyDetailsModel.incomeSourceId
     )
 }

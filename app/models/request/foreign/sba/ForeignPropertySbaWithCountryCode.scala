@@ -22,7 +22,7 @@ import java.time.LocalDate
 
 case class ForeignPropertySbaWithCountryCode(
   countryCode: String,
-  claimStructureBuildingAllowance: Boolean,
+  isClaimStructureBuildingAllowance: Boolean,
   allowances: Option[Seq[ForeignStructureBuildingAllowance]]
 )
 

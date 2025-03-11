@@ -243,7 +243,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             _.copy(ukOtherPropertyAnnualAdjustments =
               annualSubmissionAfterAdditionOfEsbas.ukOtherProperty.flatMap(
                 _.ukOtherPropertyAnnualAdjustments
-                  .map(_.copy(ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))))
+                  .map(_.copy(ukOtherRentARoom = Some(UkRentARoom(ukRaRAbout.isJointlyLet))))
               )
             )
           )

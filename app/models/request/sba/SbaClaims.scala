@@ -18,7 +18,7 @@ package models.request.sba
 
 import play.api.libs.json.{Format, Json}
 
-final case class SbaClaims(value: Boolean) extends AnyVal
+final case class SbaClaims(isSbaClaims: Boolean) extends AnyVal
 
 object SbaClaims {
   implicit val format: Format[SbaClaims] = Json.valueFormat[SbaClaims]

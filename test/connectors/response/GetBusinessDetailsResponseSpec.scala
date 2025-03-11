@@ -41,7 +41,7 @@ class GetBusinessDetailsResponseSpec extends UnitTest {
       "status is OK and valid jsValue" in {
         val incomeSourceDetailsModel = IncomeSourceDetailsModel(
           LocalDateTime.now,
-          TaxPayerDisplayResponse("safeId", "nino", "mtdId", Some("1234"), propertyIncome = true, None, None)
+          TaxPayerDisplayResponse("safeId", "nino", "mtdId", Some("1234"), isPropertyIncome = true, None, None)
         )
 
         val httpResponse: HttpResponse = HttpResponse.apply(OK, incomeSourceDetailsModel.toJson.toString, anyHeaders)

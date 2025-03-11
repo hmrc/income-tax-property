@@ -151,25 +151,25 @@ class MergerSpec extends UnitTest {
         uopoa            <- uop.ukOtherPropertyAnnualAdjustments
       } yield (uopoa, expensesPeriodic)
 
-      val balancingChargeYesNo = true
-      val renovationAllowanceBalancingChargeYesNo = false
-      val unusedLossesBroughtForwardYesOrNo = true
+      val isBalancingCharge = true
+      val isRenovationAllowanceBalancingCharge = false
+      val isUnusedLossesBroughtForward = true
       val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] =
-        Some(AdjustmentStoreAnswers(balancingChargeYesNo, renovationAllowanceBalancingChargeYesNo, unusedLossesBroughtForwardYesOrNo))
+        Some(AdjustmentStoreAnswers(isBalancingCharge, isRenovationAllowanceBalancingCharge, isUnusedLossesBroughtForward))
       val propertyRentalAdjustments: Option[PropertyRentalAdjustments] =
         adjustmentStoreAnswers.merge(ukOtherAdjustmentsAndExpensesMaybe)
       propertyRentalAdjustments shouldBe Some(
         PropertyRentalAdjustments(
           BigDecimal(privateUseAdjustments),
-          BalancingCharge(balancingChargeYesNo, Some(balancingCharge)),
+          BalancingCharge(isBalancingCharge, Some(balancingCharge)),
           None, // Todo: fromWhere?
           RenovationAllowanceBalancingCharge(
-            renovationAllowanceBalancingChargeYesNo,
+            isRenovationAllowanceBalancingCharge,
             Some(businessPremisesRenovationAllowanceBalancingCharges)
           ),
           residentialFinanceCost,
           Some(residentialFinanceCostCarriedForward),
-          UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo, Some(unusedLossesBroughtForward)),
+          UnusedLossesBroughtForward(isUnusedLossesBroughtForward, Some(unusedLossesBroughtForward)),
           Some(whenReportedTheLoss)
         )
       )

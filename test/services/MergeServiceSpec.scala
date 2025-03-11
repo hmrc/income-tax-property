@@ -68,7 +68,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
           isNonUKLandlord = true,
           567,
           999,
-          Some(DeductingTax(taxDeductedYesNo = true, Some(BigDecimal(2340)))),
+          Some(DeductingTax(isTaxDeducted = true, Some(BigDecimal(2340)))),
           None,
           None,
           None,
@@ -270,9 +270,9 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         ukOtherProperty = None
       )
 
-      val balancingChargeYesNo = true
-      val foreignUnusedResidentialFinanceCostYesNo = true
-      val unusedLossesPreviousYearsYesNo = true
+      val isBalancingCharge = true
+      val isForeignUnusedResidentialFinanceCost = true
+      val isUnusedLossesPreviousYears = true
       val whenYouReportedTheLoss = ForeignWhenYouReportedTheLoss.y2019to2020
       val repositoryAnswers = Map(
         countryCode -> JourneyAnswers(
@@ -283,9 +283,9 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
           countryCode = Some(countryCode),
           status = InProgress,
           data = Json.toJsObject(ForeignAdjustmentsStoreAnswers(
-            balancingChargeYesNo = balancingChargeYesNo,
-            foreignUnusedResidentialFinanceCostYesNo = Some(foreignUnusedResidentialFinanceCostYesNo),
-            unusedLossesPreviousYearsYesNo = unusedLossesPreviousYearsYesNo,
+            isBalancingCharge = isBalancingCharge,
+            isForeignUnusedResidentialFinanceCost = Some(isForeignUnusedResidentialFinanceCost),
+            isUnusedLossesPreviousYears = isUnusedLossesPreviousYears,
             whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
           )),
           createdAt = Instant.now,
@@ -297,11 +297,11 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       val result = service.mergeForeignPropertyAdjustments(aPropertyAnnualSubmission, Some(aPropertyPeriodicSubmission), Some(repositoryAnswers))
       val expected = ForeignAdjustmentsAnswers(
           privateUseAdjustment = Some(privateUseAdjustment),
-          balancingCharge = Some(BalancingCharge(balancingChargeYesNo, Some(balancingCharge))),
+          balancingCharge = Some(BalancingCharge(isBalancingCharge, Some(balancingCharge))),
           residentialFinanceCost = Some(residentialFinancialCost),
-          unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(foreignUnusedResidentialFinanceCostYesNo, Some(broughtFwdResidentialFinancialCost))),
+          unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(isForeignUnusedResidentialFinanceCost, Some(broughtFwdResidentialFinancialCost))),
           propertyIncomeAllowanceClaim = propertyAllowanceClaim,
-          unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(unusedLossesPreviousYearsYesNo, None)),
+          unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(isUnusedLossesPreviousYears, None)),
           whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
         )
       result shouldBe Some(Map(countryCode -> expected))

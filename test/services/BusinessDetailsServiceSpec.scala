@@ -46,7 +46,7 @@ class BusinessDetailsServiceSpec extends UnitTest with MockBusinessDetailsConnec
     "return error when GetBusinessDetails does not return data" in {
       val incomeSourceModel = IncomeSourceDetailsModel(
         LocalDateTime.now(),
-        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, propertyIncome = true, None, None)
+        TaxPayerDisplayResponse("safeID", "Nino", "mtdID", None, isPropertyIncome = true, None, None)
       )
 
       mockGetBusinessDetails("some-nino", Right(Some(incomeSourceModel)))
@@ -83,7 +83,7 @@ class BusinessDetailsServiceSpec extends UnitTest with MockBusinessDetailsConnec
           "Nino",
           "mtdID",
           None,
-          propertyIncome = true,
+          isPropertyIncome = true,
           None,
           Some(Seq(propertyDetailsModel))
         )
@@ -146,7 +146,7 @@ class BusinessDetailsServiceSpec extends UnitTest with MockBusinessDetailsConnec
           "Nino",
           "mtdID",
           None,
-          propertyIncome = true,
+          isPropertyIncome = true,
           None,
           Some(Seq(ukPropertyDetailsModel, foreignPropertyDetailsModel))
         )

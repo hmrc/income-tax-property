@@ -27,8 +27,8 @@ import utils.UnitTest
 import java.time.{LocalDate, LocalDateTime}
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
-    claimEnhancedStructureBuildingAllowance = true,
-    enhancedStructureBuildingAllowanceClaims = Some(false),
+    isClaimEnhancedStructureBuildingAllowance = true,
+    isEnhancedStructureBuildingAllowanceClaims = Some(false),
     List(
       EsbaInUpstream(
         LocalDate.parse("2020-04-04"),
@@ -63,7 +63,7 @@ class EsbaInfoSpec extends UnitTest {
     )
   )
   val validRequestBody: JsValue = Json.parse("""{
-                                               | "claimEnhancedStructureBuildingAllowance" : true,
+                                               | "isClaimEnhancedStructureBuildingAllowance" : true,
                                                | "enhancedStructureBuildingAllowances": [
                                                |            {
                                                |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
@@ -96,7 +96,7 @@ class EsbaInfoSpec extends UnitTest {
                                                |                }
                                                |            }
                                                |        ],
-                                               |        "enhancedStructureBuildingAllowanceClaims" : false
+                                               |        "isEnhancedStructureBuildingAllowanceClaims" : false
                                                |}""".stripMargin)
 
   val submission = PropertyAnnualSubmission(
@@ -187,8 +187,8 @@ class EsbaInfoSpec extends UnitTest {
 
     "convert to from EsbaInfo to EsbaInfoToSave" in {
       esbaInfo.extractToSavePart() shouldBe EsbaInfoToSave(
-        esbaInfo.claimEnhancedStructureBuildingAllowance,
-        esbaInfo.enhancedStructureBuildingAllowanceClaims
+        esbaInfo.isClaimEnhancedStructureBuildingAllowance,
+        esbaInfo.isEnhancedStructureBuildingAllowanceClaims
       )
     }
   }

@@ -19,9 +19,9 @@ package models.responses
 import play.api.libs.json.{Format, Json}
 
 case class ForeignIncomeStoreAnswers(
-  premiumsGrantLeaseReceived: Boolean,
-  premiumsOfLeaseGrantAgreed: Boolean,
-  calculatedPremiumLeaseTaxable: Boolean,
+  isPremiumsGrantLeaseReceived: Boolean,
+  isPremiumsOfLeaseGrantAgreed: Boolean,
+  isCalculatedPremiumLeaseTaxable: Boolean,
   twelveMonthPeriodsInLease: Option[BigDecimal],
   receivedGrantLeaseAmount: Option[BigDecimal]
 )

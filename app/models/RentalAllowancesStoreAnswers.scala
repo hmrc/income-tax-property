@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class RentalAllowancesStoreAnswers(capitalAllowancesForACarYesNo: Boolean)
+case class RentalAllowancesStoreAnswers(isCapitalAllowancesForACar: Boolean)
 
 object RentalAllowancesStoreAnswers {
   implicit val formats: OFormat[RentalAllowancesStoreAnswers] = Json.format[RentalAllowancesStoreAnswers]

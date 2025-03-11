@@ -452,7 +452,7 @@ class PropertyService @Inject() (
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
       submissionSuccess <- if(
-          !esbaInfo.claimEnhancedStructureBuildingAllowance ||
+          !esbaInfo.isClaimEnhancedStructureBuildingAllowance ||
             esbaInfo.enhancedStructureBuildingAllowances.isEmpty
       ){
         ITPEnvelope.liftPure(())
@@ -484,7 +484,7 @@ class PropertyService @Inject() (
     sbaInfo: SbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      submissionSuccess <- if(!sbaInfo.claimStructureBuildingAllowance || sbaInfo.structureBuildingFormGroup.isEmpty) {
+      submissionSuccess <- if(!sbaInfo.isClaimStructureBuildingAllowance || sbaInfo.structureBuildingFormGroup.isEmpty) {
           ITPEnvelope.liftPure(())
         } else {
           for {
@@ -529,7 +529,7 @@ class PropertyService @Inject() (
            )
       res <- persistAnswers(
                ctx,
-               ClaimExpensesOrRRRYesNo(rarAbout.claimExpensesOrRelief.claimExpensesOrReliefYesNo)
+               IsClaimExpensesOrRRR(rarAbout.claimExpensesOrRelief.isClaimExpensesOrRelief)
              )
 
     } yield res
@@ -557,11 +557,11 @@ class PropertyService @Inject() (
            )
       _ <- persistAnswers(
              ctx,
-             ClaimExpensesOrRRRYesNo(rentalsAndRaRAbout.claimExpensesOrRelief.claimExpensesOrReliefYesNo)
+             IsClaimExpensesOrRRR(rentalsAndRaRAbout.claimExpensesOrRelief.isClaimExpensesOrRelief)
            )
       res <- persistAnswers(
                ctx,
-               ClaimPropertyIncomeAllowanceYesOrNo(rentalsAndRaRAbout.claimPropertyIncomeAllowanceYesOrNo)
+               IsClaimPropertyIncomeAllowance(rentalsAndRaRAbout.isClaimPropertyIncomeAllowance)
              )
 
     } yield res
@@ -600,7 +600,7 @@ class PropertyService @Inject() (
                             }
       _ <- persistAnswers(
         ctx,
-        ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.consolidatedExpensesYesOrNo))
+        ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
       )
     } yield submissionResponse
 
@@ -640,7 +640,7 @@ class PropertyService @Inject() (
                             }
       _ <- persistAnswers(
         ctx,
-        RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.consolidatedExpensesYesOrNo))
+        RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
       )
     } yield submissionResponse
 
@@ -721,9 +721,9 @@ class PropertyService @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(
-      propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
-      propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo,
-      propertyRentalAdjustment.unusedLossesBroughtForward.unusedLossesBroughtForwardYesOrNo)
+      propertyRentalAdjustment.balancingCharge.isBalancingCharge,
+      propertyRentalAdjustment.renovationAllowanceBalancingCharge.isRenovationAllowanceBalancingCharge,
+      propertyRentalAdjustment.unusedLossesBroughtForward.isUnusedLossesBroughtForward)
     for {
       maybePeriodicSubmission <- getPeriodicSubmission(
                                    context.taxYear,
@@ -829,8 +829,8 @@ class PropertyService @Inject() (
            )
       res <- {
         raRAdjustments.balancingCharge match {
-          case Some(BalancingCharge(raRbalancingChargeYesNo, _)) =>
-            persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
+          case Some(BalancingCharge(isRaRbalancingCharge, _)) =>
+            persistAnswers(ctx, IsRaRBalancingCharge(isRaRbalancingCharge))
           case _ => ITPEnvelope.liftPure(true)
         }
       }
@@ -855,7 +855,7 @@ class PropertyService @Inject() (
     rentalAllowances: RentalAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers(rentalAllowances.capitalAllowancesForACar.exists(_.capitalAllowancesForACarYesNo))
+    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers(rentalAllowances.capitalAllowancesForACar.exists(_.isCapitalAllowancesForACar))
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 

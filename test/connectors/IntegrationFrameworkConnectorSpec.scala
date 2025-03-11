@@ -828,7 +828,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
                                              |    {
                                              |      "countryCode": "FR",
                                              |      "income": {
-                                             |        "foreignTaxCreditRelief": true,
+                                             |        "isForeignTaxCreditRelief": true,
                                              |        "foreignTaxPaidOrDeducted": 543
                                              |      },
                                              |      "expenses": {

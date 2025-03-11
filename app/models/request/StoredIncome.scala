@@ -20,11 +20,11 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class StoredIncome(
   isNonUKLandlord: Boolean,
-  taxDeductedYesNo: Option[Boolean],
+  isTaxDeducted: Option[Boolean],
   calculatedFigureYourself: Option[CalculatedFigureYourself],
   yearLeaseAmount: Option[BigDecimal],
   receivedGrantLeaseAmount: Option[BigDecimal],
-  premiumsGrantLeaseYesNo: Option[Boolean]
+  isPremiumsGrantLease: Option[Boolean]
 )
 
 object StoredIncome {
@@ -33,42 +33,42 @@ object StoredIncome {
   def fromRentalsIncome(rentalsIncome: PropertyRentalsIncome): StoredIncome =
     StoredIncome(
       isNonUKLandlord = rentalsIncome.isNonUKLandlord,
-      taxDeductedYesNo = rentalsIncome.deductingTax.map(_.taxDeductedYesNo),
+      isTaxDeducted = rentalsIncome.deductingTax.map(_.isTaxDeducted),
       calculatedFigureYourself = rentalsIncome.calculatedFigureYourself,
       yearLeaseAmount = rentalsIncome.yearLeaseAmount,
       receivedGrantLeaseAmount = rentalsIncome.receivedGrantLeaseAmount,
-      premiumsGrantLeaseYesNo = rentalsIncome.premiumsGrantLease.map(_.premiumsGrantLeaseReceived)
+      isPremiumsGrantLease = rentalsIncome.premiumsGrantLease.map(_.isPremiumsGrantLeaseReceived)
     )
 
   def fromRentalsAndRaRIncome(rentalsAndRaRIncome: RentalsAndRaRIncome): StoredIncome =
     StoredIncome(
       isNonUKLandlord = rentalsAndRaRIncome.isNonUKLandlord,
-      taxDeductedYesNo = rentalsAndRaRIncome.deductingTax.map(_.taxDeductedYesNo),
+      isTaxDeducted = rentalsAndRaRIncome.deductingTax.map(_.isTaxDeducted),
       calculatedFigureYourself = rentalsAndRaRIncome.calculatedFigureYourself,
       yearLeaseAmount = rentalsAndRaRIncome.yearLeaseAmount,
       receivedGrantLeaseAmount = rentalsAndRaRIncome.receivedGrantLeaseAmount,
-      premiumsGrantLeaseYesNo = rentalsAndRaRIncome.premiumsGrantLease.map(_.premiumsGrantLeaseReceived)
+      isPremiumsGrantLease = rentalsAndRaRIncome.premiumsGrantLease.map(_.isPremiumsGrantLeaseReceived)
     )
 }
 
-final case class PremiumsGrantLease(premiumsGrantLeaseReceived: Boolean, premiumsGrantLease: Option[BigDecimal])
+final case class PremiumsGrantLease(isPremiumsGrantLeaseReceived: Boolean, premiumsGrantLease: Option[BigDecimal])
 
 object PremiumsGrantLease {
   implicit val format: OFormat[PremiumsGrantLease] = Json.format[PremiumsGrantLease]
 }
-final case class ReversePremiumsReceived(reversePremiumsReceived: Boolean, reversePremiums: Option[BigDecimal])
+final case class ReversePremiumsReceived(isReversePremiumsReceived: Boolean, reversePremiums: Option[BigDecimal])
 
 object ReversePremiumsReceived {
   implicit val format: OFormat[ReversePremiumsReceived] = Json.format[ReversePremiumsReceived]
 }
 
-final case class CalculatedFigureYourself(calculatedFigureYourself: Boolean, amount: Option[BigDecimal])
+final case class CalculatedFigureYourself(isCalculatedFigureYourself: Boolean, amount: Option[BigDecimal])
 
 object CalculatedFigureYourself {
   implicit val format: OFormat[CalculatedFigureYourself] = Json.format[CalculatedFigureYourself]
 }
 
-final case class DeductingTax(taxDeductedYesNo: Boolean, taxDeductedAmount: Option[BigDecimal])
+final case class DeductingTax(isTaxDeducted: Boolean, taxDeductedAmount: Option[BigDecimal])
 
 object DeductingTax {
   implicit val format: OFormat[DeductingTax] = Json.format[DeductingTax]

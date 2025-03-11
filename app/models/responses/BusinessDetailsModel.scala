@@ -28,10 +28,10 @@ case class BusinessDetailsModel(incomeSourceId: String,
                                 businessContactDetails: Option[BusinessContactDetails],
                                 tradingStartDate: Option[LocalDate],
                                 latencyDetails: Option[LatencyDetails],
-                                cashOrAccruals: Option[Boolean],
-                                seasonal: Option[Boolean],
+                                isCashOrAccruals: Option[Boolean],
+                                isSeasonal: Option[Boolean],
                                 cessationDate: Option[LocalDate],
-                                paperless: Option[Boolean],
+                                isPaperless: Option[Boolean],
                                 firstAccountingPeriodStartDate: Option[LocalDate],
                                 firstAccountingPeriodEndDate: Option[LocalDate])
 

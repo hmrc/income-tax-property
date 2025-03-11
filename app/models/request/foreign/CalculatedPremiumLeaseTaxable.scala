@@ -19,7 +19,7 @@ package models.request.foreign
 import play.api.libs.json.{Format, Json}
 
 final case class CalculatedPremiumLeaseTaxable(
-  calculatedPremiumLeaseTaxable: Boolean,
+  isCalculatedPremiumLeaseTaxable: Boolean,
   premiumsOfLeaseGrant: Option[BigDecimal]
 )
 

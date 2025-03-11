@@ -240,7 +240,7 @@ class ForeignPropertyServiceSpec
     val foreignPropertyTaxWithCountryCode =
       ForeignPropertyTaxWithCountryCode(
         "ESP",
-        Some(ForeignIncomeTax(foreignIncomeTaxYesNo = true, Some(BigDecimal(50)))),
+        Some(ForeignIncomeTax(isForeignIncomeTax = true, Some(BigDecimal(50)))),
         Some(false)
       )
 
@@ -299,15 +299,15 @@ class ForeignPropertyServiceSpec
       val toDate = TaxYear.endDate(taxYear.endYear)
       val periodicSubmissionId = "1"
       val countryCode = "USA"
-      val foreignIncomeTaxYesNo = true
-      val foreignTaxCreditRelief = Some(foreignIncomeTaxYesNo)
+      val isForeignIncomeTax = true
+      val foreignTaxCreditRelief = Some(isForeignIncomeTax)
       val foreignTaxPaidOrDeducted = Some(BigDecimal(56.78))
       val foreignProperty = ForeignProperty(
         countryCode = countryCode,
         income = Some(
           ForeignPropertyIncome(
             rentIncome = Some(ForeignPropertyRentIncome(rentAmount = BigDecimal(12.34))),
-            foreignTaxCreditRelief = foreignTaxCreditRelief,
+            isForeignTaxCreditRelief = foreignTaxCreditRelief,
             premiumsOfLeaseGrant = Some(BigDecimal(13.34)),
             otherPropertyIncome = Some(BigDecimal(24.56)),
             foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted,
@@ -334,11 +334,11 @@ class ForeignPropertyServiceSpec
         countryCode = countryCode,
         foreignIncomeTax = Some(
           ForeignIncomeTax(
-            foreignIncomeTaxYesNo = foreignIncomeTaxYesNo,
+            isForeignIncomeTax = isForeignIncomeTax,
             foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
           )
         ),
-        foreignTaxCreditRelief = foreignTaxCreditRelief
+        isForeignTaxCreditRelief = foreignTaxCreditRelief
       )
 
       val propertyPeriodicSubmission = PropertyPeriodicSubmission(
@@ -446,7 +446,7 @@ class ForeignPropertyServiceSpec
 
     val foreignPropertyExpenses = ForeignPropertyExpensesWithCountryCode(
       countryCode = "BRA",
-      consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
+      consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedOrIndividualExpenses = false, None)),
       premisesRunningCosts = Some(50),
       repairsAndMaintenance = Some(60),
       financialCosts = Some(675),
@@ -565,14 +565,14 @@ class ForeignPropertyServiceSpec
     val foreignIncome = ForeignIncomeWithCountryCode(
       countryCode = "AUS",
       rentIncome = 1.0,
-      premiumsGrantLeaseReceived = true,
+      isPremiumsGrantLeaseReceived = true,
       otherPropertyIncome = BigDecimal(54.94),
       calculatedPremiumLeaseTaxable =
-        Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+        Some(CalculatedPremiumLeaseTaxable(isCalculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
       receivedGrantLeaseAmount = Some(3.45),
       twelveMonthPeriodsInLease = Some(5),
       premiumsOfLeaseGrantAgreed =
-        Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
+        Some(PremiumsOfLeaseGrantAgreed(isPremiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(54.9)))
     )
 
     "call create foreign periodic submission request when periodic submission is empty and return no content for valid request" in {
@@ -637,7 +637,7 @@ class ForeignPropertyServiceSpec
                 income = Some(
                   ForeignPropertyIncome(
                     rentIncome = Some(ForeignPropertyRentIncome(rentAmount = 12345.75)),
-                    foreignTaxCreditRelief = Some(true),
+                    isForeignTaxCreditRelief = Some(true),
                     premiumsOfLeaseGrant = Some(234.50),
                     otherPropertyIncome = Some(345.65),
                     foreignTaxPaidOrDeducted = Some(456.75),
@@ -946,17 +946,17 @@ class ForeignPropertyServiceSpec
     val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
       countryCode = "AUS",
       privateUseAdjustment = BigDecimal(25.25),
-      balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
+      balancingCharge = BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(BigDecimal(50.50))),
       residentialFinanceCost = Some(BigDecimal(75.75)),
       unusedResidentialFinanceCost = Some(
         ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
+          isForeignUnusedResidentialFinanceCost = true,
           foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
         )
       ),
       propertyIncomeAllowanceClaim = None,
       unusedLossesPreviousYears = UnusedLossesPreviousYears(
-        unusedLossesPreviousYearsYesNo = true,
+        isUnusedLossesPreviousYears = true,
         unusedLossesPreviousYearsAmount = Some(BigDecimal(80.8))
       ),
       whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
@@ -1101,7 +1101,7 @@ class ForeignPropertyServiceSpec
 
     val foreignPropertySbaWithCountryCode = ForeignPropertySbaWithCountryCode(
       countryCode = "AUS",
-      claimStructureBuildingAllowance = true,
+      isClaimStructureBuildingAllowance = true,
       allowances = Some(
         Seq(
           ForeignStructureBuildingAllowance(
@@ -1181,7 +1181,7 @@ class ForeignPropertyServiceSpec
     "return true but not call downstream when not claiming SBA" in {
       val foreignPropertySbaWithCountryCodeNoClaim = ForeignPropertySbaWithCountryCode(
         countryCode = "AUS",
-        claimStructureBuildingAllowance = false,
+        isClaimStructureBuildingAllowance = false,
         allowances = None
       )
 

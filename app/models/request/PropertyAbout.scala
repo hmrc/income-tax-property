@@ -21,7 +21,7 @@ import models.UKPropertySelect
 import play.api.libs.json.{Json, OFormat}
 
 
-case class PropertyAbout(totalIncome: String, ukProperty: Option[Seq[UKPropertySelect]], reportPropertyIncome: Option[Boolean])
+case class PropertyAbout(totalIncome: String, ukProperty: Option[Seq[UKPropertySelect]], isReportPropertyIncome: Option[Boolean])
 object PropertyAbout {
   implicit val formats: OFormat[PropertyAbout] = Json.format[PropertyAbout]
 }

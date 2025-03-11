@@ -64,7 +64,7 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
               {
                 "countryCode": "FR",
                 "income": {
-                  "foreignTaxCreditRelief": true,
+                  "isForeignTaxCreditRelief": true,
                   "foreignTaxPaidOrDeducted": 543.00
                 },
                 "expenses": {
@@ -89,8 +89,8 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
     "create a request successfully using fromForeignPropertyTax" in {
       val taxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "FR",
-        foreignTaxCreditRelief = Some(true),
-        foreignIncomeTax = Some(ForeignIncomeTax(foreignIncomeTaxYesNo = true, Some(50.0)))
+        isForeignTaxCreditRelief = Some(true),
+        foreignIncomeTax = Some(ForeignIncomeTax(isForeignIncomeTax = true, Some(50.0)))
       )
 
       val periodicSubmission = Some(
@@ -136,7 +136,7 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
 
       foreignProperty.countryCode shouldBe "FR"
       foreignProperty.income shouldBe defined
-      foreignProperty.income.get.foreignTaxCreditRelief shouldBe Some(true)
+      foreignProperty.income.get.isForeignTaxCreditRelief shouldBe Some(true)
       foreignProperty.income.get.foreignTaxPaidOrDeducted shouldBe Some(50.0) // Default to 0 if not provided
       foreignProperty.expenses shouldBe defined
     }
@@ -144,7 +144,7 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
     "handle None for periodicSubmission in fromForeignPropertyTax" in {
       val taxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "FR",
-        foreignTaxCreditRelief = Some(false),
+        isForeignTaxCreditRelief = Some(false),
         foreignIncomeTax = None
       )
 
@@ -158,7 +158,7 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
 
       foreignProperty.countryCode shouldBe "FR"
       foreignProperty.income shouldBe defined
-      foreignProperty.income.get.foreignTaxCreditRelief shouldBe Some(false)
+      foreignProperty.income.get.isForeignTaxCreditRelief shouldBe Some(false)
       foreignProperty.income.get.foreignTaxPaidOrDeducted shouldBe Some(0.0) // Default to 0 if not provided
       foreignProperty.expenses shouldBe None
     }

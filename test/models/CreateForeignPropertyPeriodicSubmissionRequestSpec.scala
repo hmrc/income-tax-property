@@ -54,7 +54,7 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       val taxYear = TaxYear(2024)
       val foreignPropertyIncome = ForeignPropertyIncome(
         rentIncome = Some(ForeignPropertyRentIncome(BigDecimal(100))),
-        foreignTaxCreditRelief = Some(true),
+        isForeignTaxCreditRelief = Some(true),
         premiumsOfLeaseGrant = Some(50),
         otherPropertyIncome = Some(200),
         foreignTaxPaidOrDeducted = Some(25),
@@ -86,7 +86,7 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
 
       val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "GB",
-        foreignTaxCreditRelief = Some(true),
+        isForeignTaxCreditRelief = Some(true),
         foreignIncomeTax = None
       )
 
@@ -118,7 +118,7 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       val taxYear = TaxYear(2024)
       val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "GB",
-        foreignTaxCreditRelief = Some(true),
+        isForeignTaxCreditRelief = Some(true),
         foreignIncomeTax = None
       )
 
@@ -140,7 +140,7 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       val taxYear = TaxYear(2024)
       val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "GB",
-        foreignTaxCreditRelief = Some(true),
+        isForeignTaxCreditRelief = Some(true),
         foreignIncomeTax = None
       )
 
@@ -162,7 +162,7 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       result shouldBe a[Right[_, _]]
       val request = result.toOption.get
 
-      request.foreignProperty.get.head.income.get.foreignTaxCreditRelief shouldBe Some(true)
+      request.foreignProperty.get.head.income.get.isForeignTaxCreditRelief shouldBe Some(true)
       request.foreignProperty.get.head.income.get.rentIncome shouldBe None
     }
 

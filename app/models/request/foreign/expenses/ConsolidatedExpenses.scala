@@ -18,7 +18,7 @@ package models.request.foreign.expenses
 
 import play.api.libs.json.{Format, Json}
 
-final case class ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo: Boolean, consolidatedExpense: Option[BigDecimal])
+final case class ConsolidatedExpenses(isConsolidatedOrIndividualExpenses: Boolean, consolidatedExpense: Option[BigDecimal])
 
 object ConsolidatedExpenses {
   implicit val format: Format[ConsolidatedExpenses] = Json.format

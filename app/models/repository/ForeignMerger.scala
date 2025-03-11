@@ -48,14 +48,14 @@ object ForeignMerger {
               countryCode -> ForeignPropertyTax(
                 foreignIncomeTax = Some(
                   ForeignIncomeTax(
-                    foreignIncomeTaxYesNo = extractedMap
+                    isForeignIncomeTax = extractedMap
                       .get(countryCode)
-                      .flatMap(_.foreignIncomeTaxYesNo)
+                      .flatMap(_.isForeignIncomeTax)
                       .getOrElse(foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined),
                     foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
                   )
                 ),
-                foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
+                foreignTaxCreditRelief = foreignPropertyIncome.isForeignTaxCreditRelief
               )
           }
           Option.when(result.nonEmpty)(result)
@@ -65,11 +65,11 @@ object ForeignMerger {
               countryCode -> ForeignPropertyTax(
                 foreignIncomeTax = Some(
                   ForeignIncomeTax(
-                    foreignIncomeTaxYesNo = foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined,
+                    isForeignIncomeTax = foreignPropertyIncome.foreignTaxPaidOrDeducted.isDefined,
                     foreignTaxPaidOrDeducted = foreignPropertyIncome.foreignTaxPaidOrDeducted
                   )
                 ),
-                foreignTaxCreditRelief = foreignPropertyIncome.foreignTaxCreditRelief
+                foreignTaxCreditRelief = foreignPropertyIncome.isForeignTaxCreditRelief
               )
           }
           Option.when(result.nonEmpty)(result)
@@ -89,7 +89,7 @@ object ForeignMerger {
         case (Some(extractedMap), Some(downStreamMap)) =>
           val result = downStreamMap.map { case (countryCode, maybeAllowances) =>
             countryCode -> ForeignSbaInfo(
-              claimStructureBuildingAllowance = extractedMap.get(countryCode).exists(_.claimStructureBuildingAllowance),
+              isClaimStructureBuildingAllowance = extractedMap.get(countryCode).exists(_.isClaimStructureBuildingAllowance),
               allowances = maybeAllowances
                 .map(_.map(fromSbaDownstreamToUpstream))
             )
@@ -99,7 +99,7 @@ object ForeignMerger {
         case (_, Some(downStreamMap)) =>
           val result = downStreamMap.map { case (countryCode, maybeAllowances) =>
             countryCode -> ForeignSbaInfo(
-              claimStructureBuildingAllowance = maybeAllowances.isDefined,
+              isClaimStructureBuildingAllowance = maybeAllowances.isDefined,
               allowances = maybeAllowances
                 .map(_.map(fromSbaDownstreamToUpstream))
             )
@@ -142,18 +142,18 @@ object ForeignMerger {
               val storeAnswersMaybe = extractedMap.get(countryCode)
               countryCode -> ForeignIncomeAnswers(
                 rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
-                premiumsGrantLeaseReceived = storeAnswersMaybe
-                  .map(_.premiumsGrantLeaseReceived)
+                isPremiumsGrantLeaseReceived = storeAnswersMaybe
+                  .map(_.isPremiumsGrantLeaseReceived)
                   .getOrElse(foreignPropertyIncome.premiumsOfLeaseGrant.isDefined),
                 otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
                 calculatedPremiumLeaseTaxable = storeAnswersMaybe.map(storeAnswers =>
-                  CalculatedPremiumLeaseTaxable(storeAnswers.calculatedPremiumLeaseTaxable, None)
+                  CalculatedPremiumLeaseTaxable(storeAnswers.isCalculatedPremiumLeaseTaxable, None)
                 ),
                 receivedGrantLeaseAmount = storeAnswersMaybe.flatMap(_.receivedGrantLeaseAmount),
                 twelveMonthPeriodsInLease = storeAnswersMaybe.flatMap(_.twelveMonthPeriodsInLease),
                 premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
                   PremiumsOfLeaseGrantAgreed(
-                    premiumsOfLeaseGrantAgreed = true,
+                    isPremiumsOfLeaseGrantAgreed = true,
                     premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
                   )
                 )
@@ -165,14 +165,14 @@ object ForeignMerger {
             case (countryCode, foreignPropertyIncome) =>
               countryCode -> ForeignIncomeAnswers(
                 rentIncome = foreignPropertyIncome.rentIncome.map(_.rentAmount),
-                premiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
+                isPremiumsGrantLeaseReceived = foreignPropertyIncome.premiumsOfLeaseGrant.isDefined,
                 otherPropertyIncome = foreignPropertyIncome.otherPropertyIncome,
                 calculatedPremiumLeaseTaxable = None,
                 receivedGrantLeaseAmount = None,
                 twelveMonthPeriodsInLease = None,
                 premiumsOfLeaseGrantAgreed = foreignPropertyIncome.premiumsOfLeaseGrant.map(premiumsOfLeaseGrant =>
                   PremiumsOfLeaseGrantAgreed(
-                    premiumsOfLeaseGrantAgreed = true,
+                    isPremiumsOfLeaseGrantAgreed = true,
                     premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant)
                   )
                 )
@@ -200,13 +200,13 @@ object ForeignMerger {
                 consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense
                   .map { consolidatedExpenseAmount =>
                     ConsolidatedExpenses(
-                      consolidatedOrIndividualExpensesYesNo = true,
+                      isConsolidatedOrIndividualExpenses = true,
                       consolidatedExpense = Some(consolidatedExpenseAmount)
                     )
                   }
                   .orElse(
                     storeAnswersMaybe.map(ce =>
-                      ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = ce.consolidatedExpensesYesOrNo, None)
+                      ConsolidatedExpenses(isConsolidatedOrIndividualExpenses = ce.isConsolidatedExpenses, None)
                     )
                   ),
                 premisesRunningCosts = foreignPropertyExpenses.premisesRunningCosts,
@@ -224,7 +224,7 @@ object ForeignMerger {
               countryCode -> ForeignExpensesAnswers(
                 consolidatedExpenses = foreignPropertyExpenses.consolidatedExpense.map { consolidatedExpenseAmount =>
                   ConsolidatedExpenses(
-                    consolidatedOrIndividualExpensesYesNo = true,
+                    isConsolidatedOrIndividualExpenses = true,
                     consolidatedExpense = Some(consolidatedExpenseAmount)
                   )
                 },
@@ -260,29 +260,29 @@ object ForeignMerger {
                 privateUseAdjustment = adjustments.privateUseAdjustment,
                 balancingCharge = adjustments.balancingCharge
                   .map { balancingCharge =>
-                    BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
+                    BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(balancingCharge))
                   }
                   .orElse(storeAnswersMaybe.map { storeAnswers =>
-                    BalancingCharge(storeAnswers.balancingChargeYesNo, None)
+                    BalancingCharge(storeAnswers.isBalancingCharge, None)
                   }),
                 residentialFinanceCost = expenses.residentialFinancialCost,
                 unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost
                   .map { unusedResidentialFinanceCost =>
                     ForeignUnusedResidentialFinanceCost(
-                      foreignUnusedResidentialFinanceCostYesNo = true,
+                      isForeignUnusedResidentialFinanceCost = true,
                       foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
                     )
                   }
                   .orElse(
                     storeAnswersMaybe.flatMap(storeAnswers =>
-                      storeAnswers.foreignUnusedResidentialFinanceCostYesNo.map(unusedResidentialFinanceCostYesNo =>
-                        ForeignUnusedResidentialFinanceCost(unusedResidentialFinanceCostYesNo, None)
+                      storeAnswers.isForeignUnusedResidentialFinanceCost.map(isUnusedResidentialFinanceCost =>
+                        ForeignUnusedResidentialFinanceCost(isUnusedResidentialFinanceCost, None)
                       )
                     )
                   ),
                 propertyIncomeAllowanceClaim = maybePIA,
                 unusedLossesPreviousYears = storeAnswersMaybe.map { storeAnswers =>
-                  UnusedLossesPreviousYears(storeAnswers.unusedLossesPreviousYearsYesNo, None)
+                  UnusedLossesPreviousYears(storeAnswers.isUnusedLossesPreviousYears, None)
                 },
                 whenYouReportedTheLoss = storeAnswersMaybe.flatMap(_.whenYouReportedTheLoss)
               )
@@ -294,13 +294,13 @@ object ForeignMerger {
               countryCode -> ForeignAdjustmentsAnswers(
                 privateUseAdjustment = adjustments.privateUseAdjustment,
                 balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
-                  BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
+                  BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(balancingCharge))
                 },
                 residentialFinanceCost = expenses.residentialFinancialCost,
                 unusedResidentialFinanceCost =
                   expenses.broughtFwdResidentialFinancialCost.map { unusedResidentialFinanceCost =>
                     ForeignUnusedResidentialFinanceCost(
-                      foreignUnusedResidentialFinanceCostYesNo = true,
+                      isForeignUnusedResidentialFinanceCost = true,
                       foreignUnusedResidentialFinanceCostAmount = Some(unusedResidentialFinanceCost)
                     )
                   },
@@ -337,10 +337,10 @@ object ForeignMerger {
               electricChargePointAllowance = allowances.electricChargePointAllowance,
               structuredBuildingAllowance = allowances.structuredBuildingAllowance,
               capitalAllowancesForACar = storeAnswersMaybe.map { foreignPropertyAllowancesStoreAnswers =>
-                if (foreignPropertyAllowancesStoreAnswers.capitalAllowancesForACarYesNo.exists(identity)) {
-                  CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, capitalAllowancesForACarAmount = allowances.otherCapitalAllowance)
+                if (foreignPropertyAllowancesStoreAnswers.isCapitalAllowancesForACar.exists(identity)) {
+                  CapitalAllowancesForACar(isCapitalAllowancesForACar = true, capitalAllowancesForACarAmount = allowances.otherCapitalAllowance)
                 } else {
-                  CapitalAllowancesForACar(capitalAllowancesForACarYesNo = false, capitalAllowancesForACarAmount = None)
+                  CapitalAllowancesForACar(isCapitalAllowancesForACar = false, capitalAllowancesForACarAmount = None)
                 }
               }
             )

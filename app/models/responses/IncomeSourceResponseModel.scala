@@ -38,7 +38,7 @@ object IncomeSourceDetailsModel {
                                      nino: String,
                                      mtdId: String,
                                      yearOfMigration: Option[String],
-                                     propertyIncome: Boolean,
+                                     isPropertyIncome: Boolean,
                                      businessData: Option[Seq[BusinessDetailsModel]],
                                      propertyData: Option[Seq[PropertyDetailsModel]])
 

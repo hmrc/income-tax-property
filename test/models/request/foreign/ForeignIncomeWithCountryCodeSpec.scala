@@ -28,13 +28,13 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
       | {
       |    "countryCode": "AUS",
       |    "rentIncome": 1,
-      |    "premiumsGrantLeaseReceived": true,
+      |    "isPremiumsGrantLeaseReceived": true,
       |    "otherPropertyIncome": 5,
       |    "calculatedPremiumLeaseTaxable": {
-      |      "calculatedPremiumLeaseTaxable": false
+      |      "isCalculatedPremiumLeaseTaxable": false
       |    },
       |    "premiumsOfLeaseGrantAgreed": {
-      |      "premiumsOfLeaseGrantAgreed": true,
+      |      "isPremiumsOfLeaseGrantAgreed": true,
       |      "premiumsOfLeaseGrant": 1.92
       |    },
       |    "receivedGrantLeaseAmount": 2,
@@ -48,14 +48,14 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
       val model: ForeignIncomeWithCountryCode = ForeignIncomeWithCountryCode(
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
-        premiumsGrantLeaseReceived = true,
+        isPremiumsGrantLeaseReceived = true,
         otherPropertyIncome = BigDecimal(5),
         calculatedPremiumLeaseTaxable =
-          Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+          Some(CalculatedPremiumLeaseTaxable(isCalculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
         receivedGrantLeaseAmount = Some(BigDecimal(2)),
         twelveMonthPeriodsInLease = Some(BigDecimal(3)),
         premiumsOfLeaseGrantAgreed = Some(
-          PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(BigDecimal(1.92)))
+          PremiumsOfLeaseGrantAgreed(isPremiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(BigDecimal(1.92)))
         )
       )
 
@@ -67,14 +67,14 @@ class ForeignIncomeWithCountryCodeSpec extends AnyFreeSpec with Matchers with Op
       val foreignIncomeModel = ForeignIncomeWithCountryCode(
         countryCode = "AUS",
         rentIncome = BigDecimal(1),
-        premiumsGrantLeaseReceived = true,
+        isPremiumsGrantLeaseReceived = true,
         otherPropertyIncome = BigDecimal(5),
         calculatedPremiumLeaseTaxable =
-          Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
+          Some(CalculatedPremiumLeaseTaxable(isCalculatedPremiumLeaseTaxable = false, premiumsOfLeaseGrant = None)),
         receivedGrantLeaseAmount = Some(BigDecimal(2)),
         twelveMonthPeriodsInLease = Some(BigDecimal(3)),
         premiumsOfLeaseGrantAgreed = Some(
-          PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(BigDecimal(1.92)))
+          PremiumsOfLeaseGrantAgreed(isPremiumsOfLeaseGrantAgreed = true, premiumsOfLeaseGrant = Some(BigDecimal(1.92)))
         )
       )
 

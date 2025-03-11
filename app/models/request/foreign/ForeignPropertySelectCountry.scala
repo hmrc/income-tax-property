@@ -20,10 +20,10 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ForeignPropertySelectCountry(
                                                totalIncome: TotalIncome,
-                                               reportPropertyIncome: Option[Boolean],
+                                               isReportPropertyIncome: Option[Boolean],
                                                incomeCountries: Option[Array[Country]],
-                                               addAnotherCountry: Option[Boolean],
-                                               claimPropertyIncomeAllowance: Option[Boolean]
+                                               isAddAnotherCountry: Option[Boolean],
+                                               isClaimPropertyIncomeAllowance: Option[Boolean]
 )
 
 object ForeignPropertySelectCountry {

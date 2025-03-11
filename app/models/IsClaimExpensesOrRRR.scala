@@ -18,8 +18,8 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class RaRBalancingChargeYesNo(raRBalancingChargeYesNo: Boolean)
+final case class IsClaimExpensesOrRRR(isClaimExpensesOrRRR: Boolean)
 
-object RaRBalancingChargeYesNo {
-  implicit val format: OFormat[RaRBalancingChargeYesNo] = Json.format[RaRBalancingChargeYesNo]
+object IsClaimExpensesOrRRR {
+  implicit val format: OFormat[IsClaimExpensesOrRRR] = Json.format[IsClaimExpensesOrRRR]
 }

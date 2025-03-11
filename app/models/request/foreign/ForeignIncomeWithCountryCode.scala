@@ -21,7 +21,7 @@ import play.api.libs.json.{Format, Json}
 case class ForeignIncomeWithCountryCode(
   countryCode: String,
   rentIncome: BigDecimal,
-  premiumsGrantLeaseReceived: Boolean,
+  isPremiumsGrantLeaseReceived: Boolean,
   otherPropertyIncome: BigDecimal,
   calculatedPremiumLeaseTaxable: Option[CalculatedPremiumLeaseTaxable],
   receivedGrantLeaseAmount: Option[BigDecimal],

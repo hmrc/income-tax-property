@@ -18,7 +18,7 @@ package models.common
 
 import play.api.libs.json.{Json, OFormat}
 
-case class JourneyStatusData (val status: JourneyStatus)
+case class JourneyStatusData (status: JourneyStatus)
 
 object JourneyStatusData {
   implicit val format: OFormat[JourneyStatusData] = Json.format

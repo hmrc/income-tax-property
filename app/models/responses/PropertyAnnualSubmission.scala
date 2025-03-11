@@ -137,7 +137,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
+      Some(UkRentARoom(rentalsAndRaRAbout.isJointlyLet))
     )(amendedAnnualSubmission)
 
     ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
@@ -170,7 +170,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
+      Some(UkRentARoom(ukRaRAbout.isJointlyLet))
     )(amendedAnnualSubmission)
 
     resultWithUkRentARoom
@@ -458,7 +458,7 @@ object PropertyAnnualSubmission {
 }
 
 
-case class UkRentARoom(jointlyLet: Boolean)
+case class UkRentARoom(isJointlyLet: Boolean)
 
 object UkRentARoom {
   implicit val format: OFormat[UkRentARoom] = Json.format[UkRentARoom]
@@ -496,7 +496,7 @@ case class UkOtherAdjustments(
   balancingCharge: Option[BigDecimal],
   privateUseAdjustment: Option[BigDecimal],
   businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
-  nonResidentLandlord: Option[Boolean],
+  isNonResidentLandlord: Option[Boolean],
   ukOtherRentARoom: Option[UkRentARoom],  // API#1598 (Get), API#1597 (Create/Update) and API#1804 (Create/Update) expects ukOtherRentARoom
   rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
   whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]

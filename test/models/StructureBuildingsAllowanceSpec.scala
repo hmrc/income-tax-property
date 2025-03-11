@@ -27,7 +27,7 @@ import java.time.{LocalDate, LocalDateTime}
 
 class StructureBuildingsAllowanceSpec extends UnitTest {
   val sbaInfo: SbaInfo = SbaInfo(
-    claimStructureBuildingAllowance = true,
+    isClaimStructureBuildingAllowance = true,
     List(
       Sba(
         LocalDate.parse("2020-04-04"),
@@ -62,7 +62,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
     )
   )
   val validRequestBody: JsValue = Json.parse("""{
-                                               | "claimStructureBuildingAllowance" : true,
+                                               | "isClaimStructureBuildingAllowance" : true,
                                                | "structureBuildingFormGroup": [
                                                |            {
                                                |                "structureBuildingQualifyingDate" : "2020-04-04",
@@ -183,7 +183,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
 
     "convert to from StructureBuildingsAllowance to SbaInfoToSave" in {
       sbaInfo.toSbaToSave shouldBe SbaInfoToSave(
-        sbaInfo.claimStructureBuildingAllowance
+        sbaInfo.isClaimStructureBuildingAllowance
       )
     }
   }

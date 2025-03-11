@@ -45,7 +45,7 @@ object ForeignProperty {
 
 case class ForeignPropertyIncome(
   rentIncome: Option[ForeignPropertyRentIncome],
-  foreignTaxCreditRelief: Option[Boolean],
+  isForeignTaxCreditRelief: Option[Boolean],
   premiumsOfLeaseGrant: Option[BigDecimal],
   otherPropertyIncome: Option[BigDecimal],
   foreignTaxPaidOrDeducted: Option[BigDecimal],

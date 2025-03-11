@@ -97,7 +97,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
 
     val foreignPropertyIncome = ForeignPropertyIncome(
       rentIncome = maybeForeignPropertyIncome.flatMap(_.rentIncome),
-      foreignTaxCreditRelief = foreignPropertyTaxWithCountryCode.foreignTaxCreditRelief,
+      isForeignTaxCreditRelief = foreignPropertyTaxWithCountryCode.isForeignTaxCreditRelief,
       premiumsOfLeaseGrant = maybeForeignPropertyIncome.flatMap(_.premiumsOfLeaseGrant),
       otherPropertyIncome = maybeForeignPropertyIncome.flatMap(_.otherPropertyIncome),
       foreignTaxPaidOrDeducted =
@@ -254,7 +254,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
       premiumsOfLeaseGrant = foreignIncomeWithCountryCode.premiumsOfLeaseGrantAgreed.fold(
         maybeForeignPropertyIncome.flatMap(_.premiumsOfLeaseGrant)
       )(_.premiumsOfLeaseGrant),
-      foreignTaxCreditRelief = maybeForeignPropertyIncome.flatMap(_.foreignTaxCreditRelief),
+      isForeignTaxCreditRelief = maybeForeignPropertyIncome.flatMap(_.isForeignTaxCreditRelief),
       foreignTaxPaidOrDeducted = maybeForeignPropertyIncome.flatMap(_.foreignTaxPaidOrDeducted),
       specialWithholdingTaxOrUkTaxPaid = maybeForeignPropertyIncome.flatMap(_.specialWithholdingTaxOrUkTaxPaid)
     )

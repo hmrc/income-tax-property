@@ -27,7 +27,7 @@ trait Extractor[T, U] {
 object Extractor {
   implicit object EsbaExtractor extends Extractor[EsbaInfo, EsbaInfoToSave] {
     override def extractToSavePart(withAll: EsbaInfo): EsbaInfoToSave = {
-      EsbaInfoToSave(withAll.claimEnhancedStructureBuildingAllowance, withAll.enhancedStructureBuildingAllowanceClaims)
+      EsbaInfoToSave(withAll.isClaimEnhancedStructureBuildingAllowance, withAll.isEnhancedStructureBuildingAllowanceClaims)
     }
   }
 

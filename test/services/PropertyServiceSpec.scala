@@ -486,10 +486,10 @@ class PropertyServiceSpec
     val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
-      BalancingCharge(balancingChargeYesNo = true, Some(108)),
+      BalancingCharge(isBalancingCharge = true, Some(108)),
       Some(BigDecimal(34.56)),
       RenovationAllowanceBalancingCharge(
-        renovationAllowanceBalancingChargeYesNo = true,
+        isRenovationAllowanceBalancingCharge = true,
         renovationAllowanceBalancingChargeAmount = Some(92)
       ),
       BigDecimal(56.78),
@@ -821,8 +821,8 @@ class PropertyServiceSpec
       )
 
       val esbaInfo = EsbaInfo(
-        claimEnhancedStructureBuildingAllowance = true,
-        enhancedStructureBuildingAllowanceClaims = Some(true),
+        isClaimEnhancedStructureBuildingAllowance = true,
+        isEnhancedStructureBuildingAllowanceClaims = Some(true),
         esbasToBeAdded
       )
       val annualSubmissionWithoutEsbas = createAnnualSubmission(None, None)
@@ -869,7 +869,7 @@ class PropertyServiceSpec
       )
 
       val sbaInfo = SbaInfo(
-        claimStructureBuildingAllowance = true,
+        isClaimStructureBuildingAllowance = true,
         sbasToBeAdded
       )
 
@@ -907,12 +907,12 @@ class PropertyServiceSpec
       isNonUKLandlord = true,
       12.34,
       13.46,
-      Some(DeductingTax(taxDeductedYesNo = true, Some(14.51))),
-      Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(14.75))),
+      Some(DeductingTax(isTaxDeducted = true, Some(14.51))),
+      Some(CalculatedFigureYourself(isCalculatedFigureYourself = true, Some(14.75))),
       Some(98.78),
       Some(64.23),
-      Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(93.85))),
-      Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
+      Some(PremiumsGrantLease(isPremiumsGrantLeaseReceived = true, Some(93.85))),
+      Some(ReversePremiumsReceived(isReversePremiumsReceived = true, Some(913.84)))
     )
     "return no content for valid request" in {
       val fromDate = LocalDate.now().minusMonths(1)
@@ -1013,12 +1013,12 @@ class PropertyServiceSpec
     val rentalsAndRaRIncome = RentalsAndRaRIncome(
       isNonUKLandlord = true,
       otherIncomeFromProperty = 98.45,
-      deductingTax = Some(DeductingTax(taxDeductedYesNo = true, Some(125.50))),
-      calculatedFigureYourself = Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(58.75))),
+      deductingTax = Some(DeductingTax(isTaxDeducted = true, Some(125.50))),
+      calculatedFigureYourself = Some(CalculatedFigureYourself(isCalculatedFigureYourself = true, Some(58.75))),
       yearLeaseAmount = Some(55.78),
       receivedGrantLeaseAmount = Some(65.05),
-      premiumsGrantLease = Some(PremiumsGrantLease(premiumsGrantLeaseReceived = true, Some(93.85))),
-      reversePremiumsReceived = Some(ReversePremiumsReceived(reversePremiumsReceived = true, Some(913.84)))
+      premiumsGrantLease = Some(PremiumsGrantLease(isPremiumsGrantLeaseReceived = true, Some(93.85))),
+      reversePremiumsReceived = Some(ReversePremiumsReceived(isReversePremiumsReceived = true, Some(913.84)))
     )
 
     "return no content for valid request" in {
@@ -1935,7 +1935,7 @@ class PropertyServiceSpec
                repository
                  .upsertAnswers(
                    ctx.toJourneyContext(JourneyName.RentalESBA),
-                   Json.toJson(EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false)))
+                   Json.toJson(EsbaInfoToSave(isClaimEnhancedStructureBuildingAllowance = true, isEsbaClaims = Some(false)))
                  )
                  .map(_.asRight[ServiceError])
              )
@@ -2025,7 +2025,7 @@ class PropertyServiceSpec
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
                  Json.toJsObject(
-                   EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false))
+                   EsbaInfoToSave(isClaimEnhancedStructureBuildingAllowance = true, isEsbaClaims = Some(false))
                  )
                ).map(_.asRight[ServiceError])
              )
@@ -2035,7 +2035,7 @@ class PropertyServiceSpec
                  repository,
                  ctx.toJourneyContext(JourneyName.RentalESBA),
                  Json.toJsObject(
-                   EsbaInfoToSave(claimEnhancedStructureBuildingAllowance = true, esbaClaims = Some(false))
+                   EsbaInfoToSave(isClaimEnhancedStructureBuildingAllowance = true, isEsbaClaims = Some(false))
                  )
                ).map(_.asRight[ServiceError])
              )
@@ -2056,10 +2056,10 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val ukRaRAbout = RaRAbout(
-      jointlyLetYesOrNo = true,
+      isJointlyLet = true,
       55.22,
       ClaimExpensesOrRelief(
-        claimExpensesOrReliefYesNo = true,
+        isClaimExpensesOrRelief = true,
         Some(22.55)
       )
     )
@@ -2122,7 +2122,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     Some(false),
-                    Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo)),
+                    Some(UkRentARoom(ukRaRAbout.isJointlyLet)),
                     None,
                     None
                   )
@@ -2202,12 +2202,12 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val rentalsAndRaRAbout = RentalsAndRaRAbout(
-      jointlyLetYesOrNo = true,
+      isJointlyLet = true,
       55.22,
-      claimPropertyIncomeAllowanceYesOrNo = true,
+      isClaimPropertyIncomeAllowance = true,
       22.33,
       ClaimExpensesOrRelief(
-        claimExpensesOrReliefYesNo = true,
+        isClaimExpensesOrRelief = true,
         Some(22.55)
       )
     )
@@ -2270,7 +2270,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     Some(false),
-                    Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo)),
+                    Some(UkRentARoom(rentalsAndRaRAbout.isJointlyLet)),
                     None,
                     None
                   )
@@ -2355,7 +2355,7 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+      Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
       None,
       None,
       None

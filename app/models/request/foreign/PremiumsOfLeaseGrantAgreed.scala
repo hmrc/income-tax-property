@@ -19,7 +19,7 @@ package models.request.foreign
 import play.api.libs.json.{Format, Json}
 
 case class PremiumsOfLeaseGrantAgreed(
-  premiumsOfLeaseGrantAgreed: Boolean,
+  isPremiumsOfLeaseGrantAgreed: Boolean,
   premiumsOfLeaseGrant: Option[BigDecimal]
 )
 

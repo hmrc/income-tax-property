@@ -19,7 +19,7 @@ package models.responses
 import play.api.libs.json.{Format, Json}
 
 case class ForeignPropertySbaStoreAnswers(
-  claimStructureBuildingAllowance: Boolean
+  isClaimStructureBuildingAllowance: Boolean
 )
 
 object ForeignPropertySbaStoreAnswers {

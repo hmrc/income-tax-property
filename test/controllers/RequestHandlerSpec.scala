@@ -44,15 +44,15 @@ class RequestHandlerSpec
                                                |            "isNonUKLandlord" : false,
                                                |            "otherIncomeFromProperty" : 25,
                                                |            "deductingTax" : {
-                                               |                "taxDeductedYesNo" : true,
+                                               |                "isTaxDeducted" : true,
                                                |                "taxDeductedAmount" : 20
                                                |            },
                                                |            "premiumsGrantLease" : {
-                                               |                "premiumsGrantLeaseReceived" : true,
+                                               |                "isPremiumsGrantLeaseReceived" : true,
                                                |                "premiumsGrantLease" : 5
                                                |            },
                                                |            "reversePremiumsReceived" : {
-                                               |                "reversePremiumsReceived" : true,
+                                               |                "isReversePremiumsReceived" : true,
                                                |                "reversePremiums" : 10
                                                |            }
                                                |        }

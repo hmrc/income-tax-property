@@ -327,10 +327,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         .fromEntity(
           None,
           RaRAbout(
-            jointlyLetYesOrNo = false,
+            isJointlyLet = false,
             12.34,
             ClaimExpensesOrRelief(
-              claimExpensesOrReliefYesNo = false,
+              isClaimExpensesOrRelief = false,
               None
             )
           )

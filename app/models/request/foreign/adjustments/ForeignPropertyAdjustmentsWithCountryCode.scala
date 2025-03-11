@@ -40,7 +40,7 @@ object ForeignPropertyAdjustmentsWithCountryCode {
 
 
 final case class ForeignUnusedResidentialFinanceCost (
-                                                       foreignUnusedResidentialFinanceCostYesNo: Boolean,
+                                                       isForeignUnusedResidentialFinanceCost: Boolean,
                                                        foreignUnusedResidentialFinanceCostAmount: Option[BigDecimal]
                                                      )
 object ForeignUnusedResidentialFinanceCost {
@@ -49,7 +49,7 @@ object ForeignUnusedResidentialFinanceCost {
 
 
 final case class UnusedLossesPreviousYears(
-                                            unusedLossesPreviousYearsYesNo: Boolean,
+                                            isUnusedLossesPreviousYears: Boolean,
                                             unusedLossesPreviousYearsAmount: Option[BigDecimal]
                                           )
 

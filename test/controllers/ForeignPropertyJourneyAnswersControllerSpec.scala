@@ -124,7 +124,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |{
                    |  "countryCode": "USA",
                    |  "foreignIncomeTax": {
-                   |    "foreignIncomeTaxYesNo": true,
+                   |    "isForeignIncomeTax": true,
                    |    "foreignTaxPaidOrDeducted": 65
                    |     },
                    |  "foreignTaxCreditRelief": true
@@ -197,20 +197,20 @@ class ForeignPropertyJourneyAnswersControllerSpec
       Json.parse("""{
                    |    "countryCode": "AUS",
                    |    "rentIncome": 541.65,
-                   |    "premiumsGrantLeaseReceived": true,
+                   |    "isPremiumsGrantLeaseReceived": true,
                    |    "reversePremiumsReceived": {
-                   |      "reversePremiumsReceived": true,
+                   |      "isReversePremiumsReceived": true,
                    |      "reversePremiums": 434.45
                    |    },
                    |    "otherPropertyIncome": 102.50,
                    |    "calculatedPremiumLeaseTaxable": {
-                   |      "calculatedPremiumLeaseTaxable": true,
+                   |      "isCalculatedPremiumLeaseTaxable": true,
                    |      "premiumsOfLeaseGrant": 23.85
                    |    },
                    |    "receivedGrantLeaseAmount": 54.25,
                    |    "twelveMonthPeriodsInLease": 6,
                    |    "premiumsOfLeaseGrantAgreed" : {
-                   |      "premiumsOfLeaseGrantAgreed": true,
+                   |      "isPremiumsOfLeaseGrantAgreed": true,
                    |      "premiumsOfLeaseGrant": 9
                    |    }
                    |}""".stripMargin)
@@ -275,7 +275,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |
                    |     "countryCode" : "ESP",
                    |     "consolidatedExpenses": {
-                   |        "consolidatedOrIndividualExpensesYesNo": false
+                   |        "isConsolidatedOrIndividualExpenses": false
                    |     },
                    |      "premisesRunningCosts" : 70,
                    |      "repairsAndMaintenance" : 80,
@@ -395,16 +395,16 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |  "countryCode": "AUS",
                    |  "privateUseAdjustment": 231.45,
                    |  "balancingCharge": {
-                   |    "balancingChargeYesNo": true,
+                   |    "isBalancingCharge": true,
                    |    "balancingChargeAmount": 108
                    |  },
                    |  "residentialFinanceCost": 490.58,
                    |  "unusedResidentialFinanceCost": {
-                   |    "foreignUnusedResidentialFinanceCostYesNo": true,
+                   |    "isForeignUnusedResidentialFinanceCost": true,
                    |    "foreignUnusedResidentialFinanceCostAmount": 110.10
                    |  },
                    |  "unusedLossesPreviousYears": {
-                   |    "unusedLossesPreviousYearsYesNo": true,
+                   |    "isUnusedLossesPreviousYears": true,
                    |    "unusedLossesPreviousYearsAmount": 80.80
                    |  },
                    |  "whenYouReportedTheLoss": "y2018to2019"
@@ -433,17 +433,17 @@ class ForeignPropertyJourneyAnswersControllerSpec
         countryCode = "AUS",
         privateUseAdjustment = 231.45,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)
         ),
         residentialFinanceCost = Some(490.58),
         unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
+          isForeignUnusedResidentialFinanceCost = true,
           foreignUnusedResidentialFinanceCostAmount = Some(110.10)
         )),
         propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
-          unusedLossesPreviousYearsYesNo = true,
+          isUnusedLossesPreviousYears = true,
           unusedLossesPreviousYearsAmount = Some(80.80)
         ),
         whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
@@ -489,7 +489,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       Json.parse("""
                    |{
                    |    "countryCode": "AUS",
-                   |    "claimStructureBuildingAllowance": true,
+                   |    "isClaimStructureBuildingAllowance": true,
                    |    "allowances":
                    |    [
                    |        {
@@ -523,7 +523,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
       val foreignPropertySbaWithCountryCode = validForeignPropertySba.as[ForeignPropertySbaWithCountryCode]
 
       foreignPropertySbaWithCountryCode.countryCode shouldBe "AUS"
-      foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance shouldBe true
+      foreignPropertySbaWithCountryCode.isClaimStructureBuildingAllowance shouldBe true
       foreignPropertySbaWithCountryCode.allowances.get shouldBe Seq(
         ForeignStructureBuildingAllowance(
           foreignStructureBuildingAllowanceClaim = 100000,

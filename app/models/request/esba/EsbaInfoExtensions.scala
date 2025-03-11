@@ -20,8 +20,8 @@ import models.responses.{Esba, StructuredBuildingAllowanceBuilding, StructuredBu
 import play.api.libs.json.{Json, OFormat}
 
 final case class EsbaInfoToSave(
-  claimEnhancedStructureBuildingAllowance: Boolean,
-  esbaClaims: Option[Boolean]
+  isClaimEnhancedStructureBuildingAllowance: Boolean,
+  isEsbaClaims: Option[Boolean]
 )
 
 object EsbaInfoToSave {

@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ForeignPropertyExpensesStoreAnswers(consolidatedExpensesYesOrNo: Boolean)
+case class ForeignPropertyExpensesStoreAnswers(isConsolidatedExpenses: Boolean)
 
 object ForeignPropertyExpensesStoreAnswers {
   implicit val expensesAnswersFormat: OFormat[ForeignPropertyExpensesStoreAnswers] =
