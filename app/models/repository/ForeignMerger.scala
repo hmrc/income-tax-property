@@ -260,10 +260,10 @@ object ForeignMerger {
                 privateUseAdjustment = adjustments.privateUseAdjustment,
                 balancingCharge = adjustments.balancingCharge
                   .map { balancingCharge =>
-                    BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
+                    BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(balancingCharge))
                   }
                   .orElse(storeAnswersMaybe.map { storeAnswers =>
-                    BalancingCharge(storeAnswers.balancingChargeYesNo, None)
+                    BalancingCharge(storeAnswers.isBalancingCharge, None)
                   }),
                 residentialFinanceCost = expenses.residentialFinancialCost,
                 unusedResidentialFinanceCost = expenses.broughtFwdResidentialFinancialCost
@@ -294,7 +294,7 @@ object ForeignMerger {
               countryCode -> ForeignAdjustmentsAnswers(
                 privateUseAdjustment = adjustments.privateUseAdjustment,
                 balancingCharge = adjustments.balancingCharge.map { balancingCharge =>
-                  BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(balancingCharge))
+                  BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(balancingCharge))
                 },
                 residentialFinanceCost = expenses.residentialFinancialCost,
                 unusedResidentialFinanceCost =

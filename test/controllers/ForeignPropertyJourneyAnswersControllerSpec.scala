@@ -395,7 +395,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |  "countryCode": "AUS",
                    |  "privateUseAdjustment": 231.45,
                    |  "balancingCharge": {
-                   |    "balancingChargeYesNo": true,
+                   |    "isBalancingCharge": true,
                    |    "balancingChargeAmount": 108
                    |  },
                    |  "residentialFinanceCost": 490.58,
@@ -433,7 +433,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
         countryCode = "AUS",
         privateUseAdjustment = 231.45,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)
         ),
         residentialFinanceCost = Some(490.58),

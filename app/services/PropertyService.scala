@@ -710,7 +710,7 @@ class PropertyService @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(
-      propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
+      propertyRentalAdjustment.balancingCharge.isBalancingCharge,
       propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo
     )
     for {
@@ -806,8 +806,8 @@ class PropertyService @Inject() (
            )
       res <- {
         raRAdjustments.balancingCharge match {
-          case Some(BalancingCharge(raRbalancingChargeYesNo, _)) =>
-            persistAnswers(ctx, RaRBalancingChargeYesNo(raRbalancingChargeYesNo))
+          case Some(BalancingCharge(isRaRbalancingCharge, _)) =>
+            persistAnswers(ctx, IsRaRBalancingCharge(isRaRbalancingCharge))
           case _ => ITPEnvelope.liftPure(true)
         }
       }

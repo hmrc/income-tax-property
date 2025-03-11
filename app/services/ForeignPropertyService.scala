@@ -538,7 +538,7 @@ class ForeignPropertyService @Inject() (
       res <- persistForeignAnswers(
         journeyContext,
         ForeignAdjustmentsStoreAnswers(
-          balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
+          isBalancingCharge = foreignAdjustmentsWithCountryCode.balancingCharge.isBalancingCharge,
           foreignUnusedResidentialFinanceCostYesNo =
             foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(
               _.foreignUnusedResidentialFinanceCostYesNo

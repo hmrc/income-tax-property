@@ -482,7 +482,7 @@ class PropertyServiceSpec
     val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
-      BalancingCharge(balancingChargeYesNo = true, Some(108)),
+      BalancingCharge(isBalancingCharge = true, Some(108)),
       Some(BigDecimal(34.56)),
       RenovationAllowanceBalancingCharge(
         renovationAllowanceBalancingChargeYesNo = true,
@@ -2291,7 +2291,7 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+      Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
       None,
       None,
       None

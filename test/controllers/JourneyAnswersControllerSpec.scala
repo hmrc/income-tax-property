@@ -129,7 +129,7 @@ class JourneyAnswersControllerSpec
 
     val validRequestBody: JsValue = Json.parse("""{
                                                  |    "balancingCharge" : {
-                                                 |        "balancingChargeYesNo" : true,
+                                                 |        "isBalancingCharge" : true,
                                                  |        "balancingChargeAmount" : 12.34
                                                  |    },
                                                  |    "unusedResidentialPropertyFinanceCostsBroughtFwd": 12,
@@ -147,7 +147,7 @@ class JourneyAnswersControllerSpec
         ctx,
         nino,
         RaRAdjustments(
-          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
           Some(BigDecimal(12)),
           Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
           Some(WhenYouReportedTheLoss.y2018to2019)),
@@ -172,7 +172,7 @@ class JourneyAnswersControllerSpec
         ctx,
         nino,
         RaRAdjustments(
-          Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+          Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
           Some(BigDecimal(12)),
           Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
           Some(WhenYouReportedTheLoss.y2018to2019)),
@@ -252,7 +252,7 @@ class JourneyAnswersControllerSpec
                                                             |{
                                                             |  "privateUseAdjustment": 12.34,
                                                             |  "balancingCharge": {
-                                                            |    "balancingChargeYesNo": true,
+                                                            |    "isBalancingCharge": true,
                                                             |    "balancingChargeAmount": 108
                                                             |  },
                                                             |  "propertyIncomeAllowance": 34.56,
@@ -279,7 +279,7 @@ class JourneyAnswersControllerSpec
         nino,
         PropertyRentalAdjustments(
           BigDecimal(12.34),
-          BalancingCharge(balancingChargeYesNo = true, Some(108)),
+          BalancingCharge(isBalancingCharge = true, Some(108)),
           Some(BigDecimal(34.56)),
           RenovationAllowanceBalancingCharge(
             renovationAllowanceBalancingChargeYesNo = true,
@@ -1193,7 +1193,7 @@ class JourneyAnswersControllerSpec
                                                             |{
                                                             |  "privateUseAdjustment": 12.34,
                                                             |  "balancingCharge": {
-                                                            |    "balancingChargeYesNo": true,
+                                                            |    "isBalancingCharge": true,
                                                             |    "balancingChargeAmount": 108
                                                             |  },
                                                             |  "propertyIncomeAllowance": 34.56,
@@ -1220,7 +1220,7 @@ class JourneyAnswersControllerSpec
         nino,
         PropertyRentalAdjustments(
           BigDecimal(12.34),
-          BalancingCharge(balancingChargeYesNo = true, Some(108)),
+          BalancingCharge(isBalancingCharge = true, Some(108)),
           Some(BigDecimal(34.56)),
           RenovationAllowanceBalancingCharge(
             renovationAllowanceBalancingChargeYesNo = true,

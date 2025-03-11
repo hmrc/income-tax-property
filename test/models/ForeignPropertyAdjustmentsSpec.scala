@@ -30,7 +30,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)),
         residentialFinanceCost = None,
         unusedResidentialFinanceCost = None,
@@ -48,7 +48,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": true,
+          |    "isBalancingCharge": true,
           |    "balancingChargeAmount": 108
           |  },
           |  "propertyIncomeAllowanceClaim": 12.34,
@@ -71,7 +71,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": true,
+          |    "isBalancingCharge": true,
           |    "balancingChargeAmount": 108
           |  },
           |  "residentialFinanceCost": 300,
@@ -91,7 +91,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)),
         residentialFinanceCost = Some(300.00),
         unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
@@ -129,7 +129,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": false
+          |    "isBalancingCharge": false
           |  },
           |  "residentialFinanceCost": 300,
           |  "unusedResidentialFinanceCost": {
@@ -146,7 +146,7 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = false,
+          isBalancingCharge = false,
           balancingChargeAmount = None
         ),
         residentialFinanceCost = Some(300.00),

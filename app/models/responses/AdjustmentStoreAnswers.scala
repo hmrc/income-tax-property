@@ -19,7 +19,7 @@ package models.responses
 import play.api.libs.json.{OFormat, Json}
 
 case class AdjustmentStoreAnswers(
-                              balancingChargeYesNo: Boolean,
+                              isBalancingCharge: Boolean,
                               renovationAllowanceBalancingChargeYesNo: Boolean
                             )
 

@@ -363,7 +363,7 @@ class ForeignMergerSpec extends UnitTest {
         val whenYouReportedTheLoss = Some(y2019to2020)
         val foreignAdjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] =
           Some(Map(countryCode -> ForeignAdjustmentsStoreAnswers(
-            balancingChargeYesNo = true,
+            isBalancingCharge = true,
             foreignUnusedResidentialFinanceCostYesNo = Some(true),
             unusedLossesPreviousYearsYesNo = true,
             whenYouReportedTheLoss = whenYouReportedTheLoss,
@@ -372,7 +372,7 @@ class ForeignMergerSpec extends UnitTest {
           Map(
             countryCode -> ForeignAdjustmentsAnswers(
               privateUseAdjustment = privateUseAdjustment,
-              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              balancingCharge = Some(BalancingCharge(isBalancingCharge = true, balancingCharge)),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
                 foreignUnusedResidentialFinanceCostYesNo = true,
@@ -392,7 +392,7 @@ class ForeignMergerSpec extends UnitTest {
           Map(
             countryCode -> ForeignAdjustmentsAnswers(
               privateUseAdjustment = privateUseAdjustment,
-              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              balancingCharge = Some(BalancingCharge(isBalancingCharge = true, balancingCharge)),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
                 foreignUnusedResidentialFinanceCostYesNo = true,

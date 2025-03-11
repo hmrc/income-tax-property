@@ -946,7 +946,7 @@ class ForeignPropertyServiceSpec
     val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
       countryCode = "AUS",
       privateUseAdjustment = BigDecimal(25.25),
-      balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
+      balancingCharge = BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(BigDecimal(50.50))),
       residentialFinanceCost = Some(BigDecimal(75.75)),
       unusedResidentialFinanceCost = Some(
         ForeignUnusedResidentialFinanceCost(

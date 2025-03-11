@@ -258,7 +258,7 @@ class JourneyAnswersIntegrationSpec
           adjustments = Some(
             PropertyRentalAdjustments(
               23,
-              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              BalancingCharge(isBalancingCharge = true, Some(32)),
               Some(0),
               RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
               21,
@@ -330,7 +330,7 @@ class JourneyAnswersIntegrationSpec
           ),
           raRAdjustments =
             Some(RaRAdjustments(
-              Some(BalancingCharge(balancingChargeYesNo = true, Some(32))),
+              Some(BalancingCharge(isBalancingCharge = true, Some(32))),
               Some(34.56),
               Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41))),
               Some(WhenYouReportedTheLoss.y2018to2019))
@@ -356,7 +356,7 @@ class JourneyAnswersIntegrationSpec
           rentalsAndRaRAdjustments = Some(
             PropertyRentalAdjustments(
               23,
-              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              BalancingCharge(isBalancingCharge = true, Some(32)),
               None,
               RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
               21,
@@ -427,7 +427,7 @@ class JourneyAnswersIntegrationSpec
       val rentARoomAdjustments = RaRAdjustments(
         Some(
           BalancingCharge(
-            balancingChargeYesNo = true,
+            isBalancingCharge = true,
             Some(12.34)
           )
         ),

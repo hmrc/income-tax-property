@@ -365,8 +365,8 @@ object Merger {
             PropertyRentalAdjustments(
               privateUseAdjustment = fromDownstreamAdjustment.privateUseAdjustment.get,
               balancingCharge = BalancingCharge(
-                balancingChargeYesNo = extractedMaybe
-                  .map(_.balancingChargeYesNo)
+                isBalancingCharge = extractedMaybe
+                  .map(_.isBalancingCharge)
                   .getOrElse(!fromDownstreamAdjustment.balancingCharge.isEmpty),
                 balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
               ),
@@ -424,8 +424,8 @@ object Merger {
             RaRAdjustments(
               balancingCharge = Some(
                 BalancingCharge(
-                  balancingChargeYesNo = extractedMaybe
-                    .flatMap(_.balancingCharge.map(_.balancingChargeYesNo))
+                  isBalancingCharge = extractedMaybe
+                    .flatMap(_.balancingCharge.map(_.isBalancingCharge))
                     .getOrElse(fromDownstreamAdjustment.balancingCharge.isDefined),
                   balancingChargeAmount = fromDownstreamAdjustment.balancingCharge
                 )

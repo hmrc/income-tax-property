@@ -270,7 +270,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         ukOtherProperty = None
       )
 
-      val balancingChargeYesNo = true
+      val isBalancingCharge = true
       val foreignUnusedResidentialFinanceCostYesNo = true
       val unusedLossesPreviousYearsYesNo = true
       val whenYouReportedTheLoss = ForeignWhenYouReportedTheLoss.y2019to2020
@@ -283,7 +283,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
           countryCode = Some(countryCode),
           status = InProgress,
           data = Json.toJsObject(ForeignAdjustmentsStoreAnswers(
-            balancingChargeYesNo = balancingChargeYesNo,
+            isBalancingCharge = isBalancingCharge,
             foreignUnusedResidentialFinanceCostYesNo = Some(foreignUnusedResidentialFinanceCostYesNo),
             unusedLossesPreviousYearsYesNo = unusedLossesPreviousYearsYesNo,
             whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
@@ -297,7 +297,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       val result = service.mergeForeignPropertyAdjustments(aPropertyAnnualSubmission, Some(aPropertyPeriodicSubmission), Some(repositoryAnswers))
       val expected = ForeignAdjustmentsAnswers(
           privateUseAdjustment = Some(privateUseAdjustment),
-          balancingCharge = Some(BalancingCharge(balancingChargeYesNo, Some(balancingCharge))),
+          balancingCharge = Some(BalancingCharge(isBalancingCharge, Some(balancingCharge))),
           residentialFinanceCost = Some(residentialFinancialCost),
           unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(foreignUnusedResidentialFinanceCostYesNo, Some(broughtFwdResidentialFinancialCost))),
           propertyIncomeAllowanceClaim = propertyAllowanceClaim,
