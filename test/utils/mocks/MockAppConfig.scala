@@ -26,7 +26,5 @@ trait MockAppConfig extends MockFactory {
 
   object MockAppConfig {
 
-    def emaSupportingAgentsEnabled(response: Boolean): CallHandler0[Boolean] =
-      (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returns(response)
   }
 }

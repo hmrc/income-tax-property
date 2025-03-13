@@ -17,7 +17,7 @@
 package utils.mocks
 
 import models.auth.DelegatedAuthRules
-import models.auth.Enrolment.{Individual, SupportingAgent}
+import models.auth.Enrolment.Individual
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.auth.core._
@@ -39,11 +39,6 @@ trait MockAuthConnector extends MockFactory {
       .withIdentifier(Individual.value, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
 
-  val secondaryAgentPredicate: String => Enrolment = mtdId =>
-    Enrolment(SupportingAgent.key)
-      .withIdentifier(SupportingAgent.value, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
-
   def mockAuthConnectorResponse[A](predicate: Predicate, retrieval: Retrieval[A])
                                   (returnValue: Future[A]): CallHandler4[Predicate, Retrieval[A], HeaderCarrier, ExecutionContext, Future[A]] =
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[A])(_: HeaderCarrier, _: ExecutionContext))
@@ -58,9 +53,6 @@ trait MockAuthConnector extends MockFactory {
 
   def mockAuthAsPrimaryAgent(mtdId: String)(enrolments: Enrolments): AuthConnectorResponse[Enrolments] =
     mockAuthConnectorResponse(primaryAgentPredicate(mtdId), Retrievals.allEnrolments)(Future.successful(enrolments))
-
-  def mockAuthAsSecondaryAgent(mtdId: String)(enrolments: Enrolments): AuthConnectorResponse[Enrolments] =
-    mockAuthConnectorResponse(secondaryAgentPredicate(mtdId), Retrievals.allEnrolments)(Future.successful(enrolments))
 
   def mockAuthAsIndividual(response: Enrolments ~ ConfidenceLevel): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] =
     mockAuthConnectorResponse(EmptyPredicate, Retrievals.allEnrolments and Retrievals.confidenceLevel)(Future.successful(response))
