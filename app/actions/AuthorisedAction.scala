@@ -16,9 +16,8 @@
 
 package actions
 
-import config.AppConfig
 import models.auth.DelegatedAuthRules
-import models.auth.Enrolment.{Agent, Individual, SupportingAgent}
+import models.auth.Enrolment.{Agent, Individual}
 import models.{User, auth}
 import play.api.Logger
 import play.api.mvc.Results.{InternalServerError, Unauthorized}
@@ -38,8 +37,7 @@ case class AuthorisationRequest[T](user: User, request: Request[T]) extends Wrap
 class AuthorisedAction @Inject() (
                                    defaultActionBuilder: DefaultActionBuilder,
                                    val authConnector: AuthConnector,
-                                   cc: ControllerComponents,
-                                   appConfig: AppConfig
+                                   cc: ControllerComponents
                                  ) extends AuthorisedFunctions {
 
   private lazy val logger: Logger = Logger.apply(this.getClass)
@@ -117,36 +115,17 @@ class AuthorisedAction @Inject() (
       .withIdentifier(Individual.value, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
 
-  private[actions] def secondaryAgentPredicate(mtdId: String): Predicate =
-    Enrolment(SupportingAgent.key)
-      .withIdentifier(SupportingAgent.value, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
-
   private[actions] def agentAuthentication[A](block: AuthorisationRequest[A] => Future[Result], mtdItId: String)
                                              (implicit request: Request[A], hc: HeaderCarrier): Future[Result] =
     authorised(agentAuthPredicate(mtdItId))
       .retrieve(allEnrolments) {
         populateAgent(block, mtdItId, _, isSecondaryAgent = false)
-      }.recoverWith(agentRecovery(block, mtdItId))
+      }.recoverWith(agentRecovery())
 
-  private def agentRecovery[A](block: AuthorisationRequest[A] => Future[Result], mtdItId: String)
-                              (implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+  private def agentRecovery[A](): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
       logger.info("[AuthorisedAction][agentAuthentication] - No active session.")
       unauthorized
-    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
-      authorised(secondaryAgentPredicate(mtdItId))
-        .retrieve(allEnrolments) {
-          populateAgent(block, mtdItId, _, isSecondaryAgent = true)
-        }
-        .recover {
-          case _: AuthorisationException =>
-            logger.warn("[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
-            Unauthorized
-          case e =>
-            logger.error(s"[AuthorisedAction][agentAuthentication] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
-            InternalServerError
-        }
     case _: AuthorisationException =>
       logger.warn("[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
       unauthorized

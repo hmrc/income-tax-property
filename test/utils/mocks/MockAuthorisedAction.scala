@@ -24,7 +24,6 @@ import play.api.test.Helpers.stubMessagesControllerComponents
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
-import utils.AppConfigStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -34,7 +33,7 @@ trait MockAuthorisedAction extends MockFactory with MockAuthConnector {
   private val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mcc.parsers.default)
 
   protected val mockAuthorisedAction: AuthorisedAction =
-    new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mcc, new AppConfigStub().config())
+    new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mcc)
 
   def mockAuthorisation(): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] = {
     val individualEnrolments: Enrolments = Enrolments(

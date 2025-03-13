@@ -36,7 +36,6 @@ trait AppConfig {
   def getConfString(confKey: String, defString: => String): String
   def getConfInt(confKey: String, defInt: => Int): Int
   def throwConfigNotFoundError(key: String): RuntimeException
-  def emaSupportingAgentsEnabled: Boolean
 }
 
 @Singleton
@@ -79,7 +78,5 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
   override def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
-
-  override def emaSupportingAgentsEnabled: Boolean = config.get[Boolean]("feature-switch.ema-supporting-agents-enabled")
 
 }
