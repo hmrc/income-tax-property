@@ -119,7 +119,7 @@ class AuthorisedAction @Inject() (
                                              (implicit request: Request[A], hc: HeaderCarrier): Future[Result] =
     authorised(agentAuthPredicate(mtdItId))
       .retrieve(allEnrolments) {
-        populateAgent(block, mtdItId, _, isSecondaryAgent = false)
+        populateAgent(block, mtdItId, _)
       }.recoverWith(agentRecovery())
 
   private def agentRecovery[A](): PartialFunction[Throwable, Future[Result]] = {
@@ -136,11 +136,10 @@ class AuthorisedAction @Inject() (
 
   private def populateAgent[A](block: AuthorisationRequest[A] => Future[Result],
                                mtdItId: String,
-                               enrolments: Enrolments,
-                               isSecondaryAgent: Boolean)(implicit request: Request[A]): Future[Result] =
+                               enrolments: Enrolments)(implicit request: Request[A]): Future[Result] =
     enrolmentGetIdentifierValue(Agent.key, Agent.value, enrolments) match {
       case Some(arn) =>
-        block(AuthorisationRequest(User(mtdItId, Some(arn), isSecondaryAgent), request))
+        block(AuthorisationRequest(User(mtdItId, Some(arn)), request))
       case None =>
         val logMessage = "[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment."
         logger.warn(logMessage)
