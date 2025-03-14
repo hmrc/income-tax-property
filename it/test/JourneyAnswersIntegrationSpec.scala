@@ -278,7 +278,7 @@ class JourneyAnswersIntegrationSpec
           esbasWithSupportingQuestions = Some(
             EsbaInfo(
               claimEnhancedStructureBuildingAllowance = true,
-              esbaClaims = Some(false),
+              enhancedStructureBuildingAllowanceClaims = Some(false),
               List(
                 EsbaInUpstream(
                   LocalDate.parse("2024-01-01"),
@@ -376,7 +376,7 @@ class JourneyAnswersIntegrationSpec
           rentalsAndRaREsbasWithSupportingQuestions = Some(
             EsbaInfo(
               claimEnhancedStructureBuildingAllowance = true,
-              esbaClaims = Some(false),
+              enhancedStructureBuildingAllowanceClaims = Some(false),
               List(
                 EsbaInUpstream(
                   LocalDate.parse("2024-01-01"),

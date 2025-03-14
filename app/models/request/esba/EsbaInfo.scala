@@ -23,10 +23,10 @@ import play.api.libs.json.{Json, OFormat}
 import java.time.LocalDate
 
 final case class EsbaInUpstream(
-  esbaQualifyingDate: LocalDate,
-  esbaQualifyingAmount: BigDecimal,
-  esbaClaim: BigDecimal,
-  esbaAddress: Address
+                                 enhancedStructureBuildingAllowanceQualifyingDate: LocalDate,
+                                 enhancedStructureBuildingAllowanceQualifyingAmount: BigDecimal,
+                                 enhancedStructureBuildingAllowanceClaim: BigDecimal,
+                                 enhancedStructureBuildingAllowanceAddress: Address
 )
 
 object EsbaInUpstream {
@@ -64,8 +64,8 @@ object EsbaInUpstream {
 
 final case class EsbaInfo(
   claimEnhancedStructureBuildingAllowance: Boolean,
-  esbaClaims: Option[Boolean],
-  esbas: List[EsbaInUpstream]
+  enhancedStructureBuildingAllowanceClaims: Option[Boolean],
+  enhancedStructureBuildingAllowances: List[EsbaInUpstream]
 )
 
 object EsbaInfo {
