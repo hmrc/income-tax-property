@@ -625,12 +625,10 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-      _ <- raRExpenses.consolidatedExpenses match {
-             case Some(consolidatedExpenses) =>
-               persistAnswers(ctx, RentARoomExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
-             case None =>
-               ITPEnvelope.liftPure(None)
-           }
+      _ <- persistAnswers(
+        ctx,
+        RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.consolidatedExpensesYesOrNo))
+      )
     } yield submissionResponse
 
   def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
@@ -863,30 +861,35 @@ class PropertyService @Inject() (
     rentARoomAllowances: RentARoomAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
     val rentARoomAllowancesStoreAnswers = RentARoomAllowancesStoreAnswers(
-      rentARoomAllowances.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+      Some(rentARoomAllowances.capitalAllowancesForACar.exists(_.capitalAllowancesForACarYesNo))
     )
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
-      propertyAnnualSubmissionFromDownstream <-
-        this
-          .getPropertyAnnualSubmission(
+      _ <- rentARoomAllowances.capitalAllowancesForACar match {
+        case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(())
+        case _ => for {
+          propertyAnnualSubmissionFromDownstream <-
+            this
+              .getPropertyAnnualSubmission(
+                ctx.taxYear,
+                ctx.nino,
+                ctx.incomeSourceId
+              )
+              .leftFlatMap {
+                case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+                case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+              }
+          _ <- createOrUpdateAnnualSubmission(
             ctx.taxYear,
+            ctx.incomeSourceId,
             ctx.nino,
-            ctx.incomeSourceId
+            PropertyAnnualSubmission
+              .fromRaRAllowances(propertyAnnualSubmissionFromDownstream, rentARoomAllowances)
           )
-          .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
-      _ <- createOrUpdateAnnualSubmission(
-             ctx.taxYear,
-             ctx.incomeSourceId,
-             ctx.nino,
-             PropertyAnnualSubmission
-               .fromRaRAllowances(propertyAnnualSubmissionFromDownstream, rentARoomAllowances)
-           )
+        } yield ()
+      }
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
     } yield res
   }
