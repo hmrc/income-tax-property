@@ -32,7 +32,7 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
+import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout, LossType}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -65,6 +65,8 @@ class PropertyServiceSpec
   private val taxableEntityId = Nino("taxableEntityId")
   val taxYear: TaxYear = TaxYear(2024)
   val whenYouReportedTheLoss: WhenYouReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
+  val lossId = "lossId"
+  val lossAmount = BigDecimal(32.47)
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -565,7 +567,8 @@ class PropertyServiceSpec
           )
         )
       )
-      val broughtForwardLosses = BroughtForwardLosses(Seq(BroughtForwardLossResponseWithId("test", "test2", UKProperty, BigDecimal(32.32), "2022", "2022")))
+      val broughtForwardLosses = BroughtForwardLosses(Seq(BroughtForwardLossResponseWithId("lossId", "businessId", UKProperty, BigDecimal(32.32), "2022", "2022")))
+      val broughtForwardLossResponse = BroughtForwardLossResponse("businessId", UKProperty, BigDecimal(32.32), "2022", "2022")
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
       mockCreateAnnualSubmission(
         taxYear,
@@ -578,7 +581,15 @@ class PropertyServiceSpec
         whenYouReportedTheLoss,
         nino,
         incomeSourceId,
-        broughtForwardLosses.asRight[ApiError])
+        broughtForwardLosses.asRight[ApiError]
+      )
+      mockUpdateBroughtForwardLoss(
+        whenYouReportedTheLoss,
+        nino,
+        lossId,
+        lossAmount,
+        broughtForwardLossResponse.asRight[ApiError]
+      )
       await(
         underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value
       ) shouldBe Right(true)
