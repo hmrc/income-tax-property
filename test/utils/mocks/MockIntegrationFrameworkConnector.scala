@@ -329,5 +329,25 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .expects(taxYearBroughtForwardFrom, nino, incomeSourceId, *)
       .returning(Future.successful(result))
 
+  def mockUpdateBroughtForwardLoss(
+                                   taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+                                   nino: Nino,
+                                   lossId: String,
+                                   lossAmount: BigDecimal,
+                                   result: Either[ApiError, BroughtForwardLossResponse]
+                                 ): CallHandler5[WhenYouReportedTheLoss, Nino, String, BigDecimal, HeaderCarrier, Future[Either[ApiError, BroughtForwardLossResponse]]] =
+    (mockIntegrationFrameworkConnector
+      .updateBroughtForwardLoss(
+        _: WhenYouReportedTheLoss,
+        _: Nino,
+        _: String,
+        _: BigDecimal
+      )(
+        _: HeaderCarrier
+      )
+      )
+      .expects(taxYearBroughtForwardFrom, nino, lossId, lossAmount, *)
+      .returning(Future.successful(result))
+
 
 }

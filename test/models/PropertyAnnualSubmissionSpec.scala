@@ -16,7 +16,6 @@
 
 package models
 
-import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.request._
 import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignPropertyAdjustments}
 import models.request.ukrentaroom.RaRAdjustments
