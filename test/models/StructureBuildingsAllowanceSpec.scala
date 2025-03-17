@@ -26,7 +26,7 @@ import utils.UnitTest
 import java.time.{LocalDate, LocalDateTime}
 
 class StructureBuildingsAllowanceSpec extends UnitTest {
-  val sbaInfo = SbaInfo(
+  val sbaInfo: SbaInfo = SbaInfo(
     claimStructureBuildingAllowance = true,
     List(
       Sba(
@@ -63,7 +63,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
   )
   val validRequestBody: JsValue = Json.parse("""{
                                                | "claimStructureBuildingAllowance" : true,
-                                               | "allowances": [
+                                               | "structureBuildingFormGroup": [
                                                |            {
                                                |                "structureBuildingQualifyingDate" : "2020-04-04",
                                                |                "structureBuildingQualifyingAmount" : 12,
@@ -97,7 +97,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
                                                |        ]
                                                |}""".stripMargin)
 
-  val submission = PropertyAnnualSubmission(
+  val submission: PropertyAnnualSubmission = PropertyAnnualSubmission(
     Some(LocalDateTime.now()),
     None,
     Some(
@@ -158,7 +158,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
   "SbaInfoExtension" should {
 
     "convert from sbaInfo to structureBuildingFormGroup" in {
-      val sbas = sbaInfo.allowances.map(sbaInRequest =>
+      val sbas = sbaInfo.structureBuildingFormGroup.map(sbaInRequest =>
         StructuredBuildingAllowance(
           sbaInRequest.structureBuildingAllowanceClaim,
           Some(
@@ -182,8 +182,7 @@ class StructureBuildingsAllowanceSpec extends UnitTest {
 
     "convert to from StructureBuildingsAllowance to SbaInfoToSave" in {
       sbaInfo.toSbaToSave shouldBe SbaInfoToSave(
-        Some(sbaInfo.claimStructureBuildingAllowance),
-        sbaInfo.allowances
+        sbaInfo.claimStructureBuildingAllowance
       )
     }
   }

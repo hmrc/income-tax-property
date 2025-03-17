@@ -469,6 +469,11 @@ object Merger {
               enhancedStructureBuildingAllowances = fromDownstream
             )
           )
+        case (Some(extracted), _) => Some(EsbaInfo(
+          claimEnhancedStructureBuildingAllowance = extracted.claimEnhancedStructureBuildingAllowance,
+          enhancedStructureBuildingAllowanceClaims = extracted.esbaClaims,
+          enhancedStructureBuildingAllowances = List.empty
+        ))
         case _ => None
       }
 
@@ -496,6 +501,10 @@ object Merger {
               structureBuildingFormGroup = fromDownstream.map(fromSbaDownstreamToUpstream)
             )
           )
+        case (Some(extracted), _) => Some(SbaInfo(
+          claimStructureBuildingAllowance = extracted.claimStructureBuildingAllowance,
+          structureBuildingFormGroup = List.empty
+        ))
         case _ => None
       }
 
