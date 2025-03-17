@@ -16,6 +16,7 @@
 
 package models
 
+import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.request._
 import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignPropertyAdjustments}
 import models.request.ukrentaroom.RaRAdjustments
@@ -261,7 +262,9 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           Some(35.79)
         ),
         13.57,
-        Some(91.35)
+        Some(91.35),
+        UnusedLossesBroughtForward(true, Some(32.47)),
+        Some(WhenYouReportedTheLoss.y2018to2019)
       )
 
       val firstLevelDiff = diff(

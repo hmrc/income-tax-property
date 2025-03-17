@@ -19,10 +19,10 @@ package utils.mocks
 import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
+import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, UpdateForeignPropertyPeriodicSubmissionRequest, CreateForeignPropertyPeriodicSubmissionRequest, AnnualForeignPropertySubmissionAllowances}
+import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
-import org.scalamock.handlers.{CallHandler4, CallHandler5, CallHandler6}
+import org.scalamock.handlers.{CallHandler6, CallHandler4, CallHandler5}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -309,6 +309,24 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
         _: HeaderCarrier
       ))
       .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
+      .returning(Future.successful(result))
+
+  def mockGetBroughtForwardLosses(
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    nino: Nino,
+    incomeSourceId: IncomeSourceId,
+    result: Either[ApiError, BroughtForwardLosses]
+  ): CallHandler4[WhenYouReportedTheLoss, Nino, IncomeSourceId, HeaderCarrier, Future[Either[ApiError, BroughtForwardLosses]]] =
+    (mockIntegrationFrameworkConnector
+      .getBroughtForwardLosses(
+        _: WhenYouReportedTheLoss,
+        _: Nino,
+        _: IncomeSourceId
+      )(
+        _: HeaderCarrier
+      )
+    )
+      .expects(taxYearBroughtForwardFrom, nino, incomeSourceId, *)
       .returning(Future.successful(result))
 
 

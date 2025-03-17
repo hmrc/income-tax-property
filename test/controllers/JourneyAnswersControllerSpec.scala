@@ -28,6 +28,8 @@ import models.request.esba.EsbaInfo
 import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
+import models.request.{WhenYouReportedTheLoss, UnusedLossesBroughtForward}
+import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.responses._
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
@@ -287,7 +289,9 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          Some(BigDecimal(78.89))
+          Some(BigDecimal(78.89)),
+          UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56)),
+          Some(y2018to2019)
         )
       )
 
@@ -1259,7 +1263,9 @@ class JourneyAnswersControllerSpec
             renovationAllowanceBalancingChargeAmount = Some(92)
           ),
           BigDecimal(56.78),
-          Some(BigDecimal(78.89))
+          Some(BigDecimal(78.89)),
+          UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56)),
+          Some(y2018to2019)
         )
       )
 
