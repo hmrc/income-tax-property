@@ -28,7 +28,7 @@ import java.time.{LocalDate, LocalDateTime}
 class EsbaInfoSpec extends UnitTest {
   val esbaInfo = EsbaInfo(
     claimEnhancedStructureBuildingAllowance = true,
-    esbaClaims = Some(false),
+    enhancedStructureBuildingAllowanceClaims = Some(false),
     List(
       EsbaInUpstream(
         LocalDate.parse("2020-04-04"),
@@ -64,39 +64,39 @@ class EsbaInfoSpec extends UnitTest {
   )
   val validRequestBody: JsValue = Json.parse("""{
                                                | "claimEnhancedStructureBuildingAllowance" : true,
-                                               | "esbas": [
+                                               | "enhancedStructureBuildingAllowances": [
                                                |            {
-                                               |                "esbaQualifyingDate" : "2020-04-04",
-                                               |                "esbaQualifyingAmount" : 12,
-                                               |                "esbaClaim" : 43,
-                                               |                "esbaAddress" : {
+                                               |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
+                                               |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
+                                               |                "enhancedStructureBuildingAllowanceClaim" : 43,
+                                               |                "enhancedStructureBuildingAllowanceAddress" : {
                                                |                    "buildingName" : "name12",
                                                |                    "buildingNumber" : "123",
                                                |                    "postCode" : "XX1 1XX"
                                                |                }
                                                |            },
                                                |            {
-                                               |                "esbaQualifyingDate" : "2023-01-22",
-                                               |                "esbaQualifyingAmount" : 535,
-                                               |                "esbaClaim" : 54,
-                                               |                "esbaAddress" : {
+                                               |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
+                                               |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
+                                               |                "enhancedStructureBuildingAllowanceClaim" : 54,
+                                               |                "enhancedStructureBuildingAllowanceAddress" : {
                                                |                    "buildingName" : "235",
                                                |                    "buildingNumber" : "3",
                                                |                    "postCode" : "XX1 1XX"
                                                |                }
                                                |            },
                                                |            {
-                                               |                "esbaQualifyingDate" : "2024-02-12",
-                                               |                "esbaQualifyingAmount" : 22,
-                                               |                "esbaClaim" : 23,
-                                               |                "esbaAddress" : {
+                                               |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
+                                               |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
+                                               |                "enhancedStructureBuildingAllowanceClaim" : 23,
+                                               |                "enhancedStructureBuildingAllowanceAddress" : {
                                                |                    "buildingName" : "12",
                                                |                    "buildingNumber" : "2",
                                                |                    "postCode" : "XX1 1XX"
                                                |                }
                                                |            }
                                                |        ],
-                                               |        "esbaClaims" : false
+                                               |        "enhancedStructureBuildingAllowanceClaims" : false
                                                |}""".stripMargin)
 
   val submission = PropertyAnnualSubmission(
@@ -165,18 +165,18 @@ class EsbaInfoSpec extends UnitTest {
   "EsbaInfoExtension" should {
 
     "convert from esbaInfo to esbas" in {
-      val esbas = esbaInfo.esbas.map(esbaInRequest =>
+      val esbas = esbaInfo.enhancedStructureBuildingAllowances.map(esbaInRequest =>
         Esba(
-          esbaInRequest.esbaClaim,
+          esbaInRequest.enhancedStructureBuildingAllowanceClaim,
           Some(
-            StructuredBuildingAllowanceDate(esbaInRequest.esbaQualifyingDate, esbaInRequest.esbaQualifyingAmount)
+            StructuredBuildingAllowanceDate(esbaInRequest.enhancedStructureBuildingAllowanceQualifyingDate, esbaInRequest.enhancedStructureBuildingAllowanceQualifyingAmount)
           ),
           StructuredBuildingAllowanceBuilding(
-            Some(esbaInRequest.esbaAddress.buildingName.value),
+            Some(esbaInRequest.enhancedStructureBuildingAllowanceAddress.buildingName.value),
             Some(
-              esbaInRequest.esbaAddress.buildingNumber.value
+              esbaInRequest.enhancedStructureBuildingAllowanceAddress.buildingNumber.value
             ),
-            esbaInRequest.esbaAddress.postCode.value
+            esbaInRequest.enhancedStructureBuildingAllowanceAddress.postCode.value
           )
         )
       )
@@ -187,7 +187,7 @@ class EsbaInfoSpec extends UnitTest {
     "convert to from EsbaInfo to EsbaInfoToSave" in {
       esbaInfo.extractToSavePart() shouldBe EsbaInfoToSave(
         esbaInfo.claimEnhancedStructureBuildingAllowance,
-        esbaInfo.esbaClaims
+        esbaInfo.enhancedStructureBuildingAllowanceClaims
       )
     }
   }
