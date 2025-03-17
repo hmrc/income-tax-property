@@ -249,16 +249,7 @@ class AuthorisedActionSpec extends UnitTest
         await(result).header.status shouldBe UNAUTHORIZED
       }
 
-      "the authorisation service returns an AuthorisationException exception (EMA Supporting Agent Disabled)" in {
-
-        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-
-        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
-
-        await(result).header.status shouldBe UNAUTHORIZED
-      }
-
-      "the authorisation service returns an AuthorisationException for secondary agent check (EMA Supporting Agent Enabled)" in {
+      "the authorisation service returns an AuthorisationException for secondary agent check" in {
 
         mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
 
