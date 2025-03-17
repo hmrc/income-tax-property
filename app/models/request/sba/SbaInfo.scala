@@ -34,7 +34,7 @@ object Sba {
 
 final case class SbaInfo(
   claimStructureBuildingAllowance: Boolean,
-  allowances: List[Sba]
+  structureBuildingFormGroup: List[Sba]
 )
 
 object SbaInfo {

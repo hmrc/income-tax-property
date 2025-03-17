@@ -192,7 +192,7 @@ class MergeService @Inject() (implicit
       rentalsAndRaRAdjustments = adjustmentsRentalsAndRaRMaybe,
       allowancesMaybe,
       rentalsAndRaRAllowances = allowancesRentalsAndRaRMaybe,
-      esbaInfoMaybe,
+      esbasWithSupportingQuestions = esbaInfoMaybe,
       rentalsAndRaREsbasWithSupportingQuestions = esbaInfoRentalsAndRaRMaybe,
       sbasWithSupportingQuestions = sbaInfoMaybe,
       rentalsAndRaRSbasWithSupportingQuestions = sbaInfoAndRaRMaybe,
