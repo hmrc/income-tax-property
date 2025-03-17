@@ -20,7 +20,8 @@ import play.api.libs.json.{OFormat, Json}
 
 case class AdjustmentStoreAnswers(
                               balancingChargeYesNo: Boolean,
-                              renovationAllowanceBalancingChargeYesNo: Boolean
+                              renovationAllowanceBalancingChargeYesNo: Boolean,
+                              unusedLossesBroughtForwardYesOrNo: Boolean
                             )
 
 object AdjustmentStoreAnswers {

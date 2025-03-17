@@ -385,12 +385,29 @@ object Merger {
                   fromDownstreamAdjustment.businessPremisesRenovationAllowanceBalancingCharges
               ),
               residentialFinanceCost = residentialFinanceCost,
-              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward)
+              unusedResidentialFinanceCost = Some(residentialFinanceCostCarriedForward),
+              unusedLossesBroughtForward = UnusedLossesBroughtForward(
+                unusedLossesBroughtForwardYesOrNo = extractedMaybe
+                  .map(_.unusedLossesBroughtForwardYesOrNo)
+                  .getOrElse(!fromDownstreamAdjustment.lossBroughtForward.isEmpty),
+                unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+              ),
+              whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
             )
           )
         case _ => None
       }
   }
+
+//  unusedLossesBroughtForward = Some(
+//    UnusedLossesBroughtForward(
+//      unusedLossesBroughtForwardYesOrNo = extractedMaybe
+//        .flatMap(_.unusedLossesBroughtForward.map(_.unusedLossesBroughtForwardYesOrNo))
+//        .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
+//      unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
+//    )
+//  ),
+//  whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
 
   implicit object RaRAdjustmentsMerger
       extends Merger[Option[RaRAdjustments], Option[RentARoomAdjustmentsStoreAnswers], Option[
