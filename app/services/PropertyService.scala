@@ -451,13 +451,22 @@ class PropertyService @Inject() (
     esbaInfo: EsbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      annualSubmission <- getAnnualSubmission(ctx, nino)
-      r <- this.createOrUpdateAnnualSubmission(
-             ctx.taxYear,
-             ctx.incomeSourceId,
-             nino,
-             PropertyAnnualSubmission.fromEsbas(annualSubmission, esbaInfo.toEsba)
-           )
+      submissionSuccess <- if(
+          !esbaInfo.claimEnhancedStructureBuildingAllowance ||
+            esbaInfo.enhancedStructureBuildingAllowances.isEmpty
+      ){
+        ITPEnvelope.liftPure(())
+      } else {
+        for {
+          annualSubmission <- getAnnualSubmission(ctx, nino)
+          r <- this.createOrUpdateAnnualSubmission(
+            ctx.taxYear,
+            ctx.incomeSourceId,
+            nino,
+            PropertyAnnualSubmission.fromEsbas(annualSubmission, esbaInfo.toEsba)
+          )
+        } yield r
+      }
       _ <- this
              .persistAnswers(ctx, esbaInfo.extractToSavePart())
              .map(isPersistSuccess =>
@@ -467,7 +476,7 @@ class PropertyService @Inject() (
                  logger.info("[saveEsbas] Persist successful")
                }
              )
-    } yield r
+    } yield submissionSuccess
 
   def saveSBA(
     ctx: JourneyContext,
@@ -475,13 +484,19 @@ class PropertyService @Inject() (
     sbaInfo: SbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      annualSubmission <- getAnnualSubmission(ctx, nino)
-      result <- this.createOrUpdateAnnualSubmission(
-                  ctx.taxYear,
-                  ctx.incomeSourceId,
-                  nino,
-                  PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba)
-                )
+      submissionSuccess <- if(!sbaInfo.claimStructureBuildingAllowance || sbaInfo.allowances.isEmpty) {
+          ITPEnvelope.liftPure(())
+        } else {
+          for {
+            annualSubmission <- getAnnualSubmission(ctx, nino)
+            result <- this.createOrUpdateAnnualSubmission(
+              ctx.taxYear,
+              ctx.incomeSourceId,
+              nino,
+              PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba)
+            )
+          } yield result
+        }
       _ <- this
              .persistAnswers(ctx, sbaInfo.toSbaToSave)
              .map(isPersistSuccess =>
@@ -491,7 +506,7 @@ class PropertyService @Inject() (
                  logger.info("[saveSBA] Persist successful")
                }
              )
-    } yield result
+    } yield submissionSuccess
 
   def saveRaRAbout(ctx: JourneyContext, nino: Nino, rarAbout: RaRAbout)(implicit
     hc: HeaderCarrier
