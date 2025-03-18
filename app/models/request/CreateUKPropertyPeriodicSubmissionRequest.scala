@@ -249,10 +249,10 @@ object CreateUKPropertyPeriodicSubmissionRequest {
             UkOtherPropertyExpenses(
               premisesRunningCosts = expenses.rentsRatesAndInsurance,
               repairsAndMaintenance = expenses.repairsAndMaintenanceCosts,
-              financialCosts = expenses.loanInterest,
-              professionalFees = expenses.otherProfessionalFee,
+              financialCosts = expenses.loanInterestOrOtherFinancialCost,
+              professionalFees = expenses.otherProfessionalFees,
               costOfServices = expenses.costsOfServicesProvided,
-              travelCosts = expenses.propertyBusinessTravelCost,
+              travelCosts = expenses.propertyBusinessTravelCosts,
               other = expenses.otherAllowablePropertyExpenses,
               residentialFinancialCostsCarriedForward = periodicSubmission.flatMap(
                 _.ukOtherProperty.flatMap(_.expenses.flatMap(_.residentialFinancialCostsCarriedForward))

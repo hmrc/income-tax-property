@@ -26,43 +26,14 @@ final case class ConsolidatedExpenses(
 object ConsolidatedExpenses {
   implicit val format: OFormat[ConsolidatedExpenses] = Json.format
 }
-//Rent A Room
-//===========
-//Rents, rates and insurance	£22	Change
-//Property repairs and maintenance	£22	Change
-//Legal, management or other professional fees	£22	Change
-//Costs of services provided, including wages	£22	Change
-//Residential property finance costs	£22	Change
-//Unused residential property finance costs brought forward	£22	Change
-//Other allowable property expenses	£22	Change
-
-//Property Rentals
-//Consolidated expenses	No	Change
-//Running costs of your property	£33	Change
-//Property repairs and maintenance	£2	Change
-//Loan interest or other financial costs	£2	Change
-//Legal, management or other professional fees	£2	Change
-//Costs of services provided, including wages	£2	Change
-//Property business travel costs	£2	Change
-//Other allowable property expenses
-
-//Property Rentals
-//Consolidated expenses	No	Change
-//Running costs of your property	£33	Change
-//Property repairs and maintenance	£2	Change
-//Loan interest or other financial costs	£2	Change
-//Legal, management or other professional fees	£2	Change
-//Costs of services provided, including wages	£2	Change
-//Property business travel costs	£2	Change
-//Other allowable property expenses
 final case class Expenses(
   consolidatedExpenses: Option[ConsolidatedExpenses],
   rentsRatesAndInsurance: Option[BigDecimal],
   repairsAndMaintenanceCosts: Option[BigDecimal],
-  loanInterest: Option[BigDecimal],
-  otherProfessionalFee: Option[BigDecimal],
+  loanInterestOrOtherFinancialCost: Option[BigDecimal],
+  otherProfessionalFees: Option[BigDecimal],
   costsOfServicesProvided: Option[BigDecimal],
-  propertyBusinessTravelCost: Option[BigDecimal],
+  propertyBusinessTravelCosts: Option[BigDecimal],
   otherAllowablePropertyExpenses: Option[BigDecimal]
 )
 
