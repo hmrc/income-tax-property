@@ -17,16 +17,10 @@
 package utils.mocks
 
 import config.AppConfig
-import org.scalamock.handlers.CallHandler0
 import org.scalamock.scalatest.MockFactory
 
 trait MockAppConfig extends MockFactory {
 
   lazy val mockAppConfig: AppConfig = mock[AppConfig]
 
-  object MockAppConfig {
-
-    def emaSupportingAgentsEnabled(response: Boolean): CallHandler0[Boolean] =
-      (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returns(response)
-  }
 }

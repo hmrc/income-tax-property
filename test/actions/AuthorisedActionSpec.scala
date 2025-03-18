@@ -16,8 +16,7 @@
 
 package actions
 
-import models.auth.DelegatedAuthRules
-import models.auth.Enrolment.{Agent, Individual, Nino, SupportingAgent}
+import models.auth.Enrolment.{Agent, Individual, Nino}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.SystemMaterializer
 import play.api.http.Status._
@@ -52,7 +51,7 @@ class AuthorisedActionSpec extends UnitTest
   private val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
   implicit val materializer: SystemMaterializer = SystemMaterializer(actorSystem)
 
-  private val underTest: AuthorisedAction = new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mockControllerComponents, mockAppConfig)
+  private val underTest: AuthorisedAction = new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mockControllerComponents)
 
   lazy val block: AuthorisationRequest[AnyContent] => Future[Result] = request =>
     Future.successful(Ok(s"mtditid: ${request.user.mtditid}${request.user.arn.fold("")(arn => " arn: " + arn)}"))
@@ -74,25 +73,13 @@ class AuthorisedActionSpec extends UnitTest
         }
       }
 
-      "the user is successfully verified as a Secondary Agent (EMA Supporting Agent enabled)" which {
+      "the user is UNAUTHORIZED verified as a Secondary Agent" which {
         "should return an OK(200) status" in {
-          MockAppConfig.emaSupportingAgentsEnabled(true)
           mockAuthAffinityGroup(AffinityGroup.Agent)
           mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new InsufficientConfidenceLevel)
-          mockAuthAsSecondaryAgent(mtditid)(Enrolments(Set(
-            Enrolment(
-              key = SupportingAgent.key,
-              identifiers = Seq(EnrolmentIdentifier(Individual.value, mtditid)),
-              state = "Activated",
-              delegatedAuthRule = Some(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
-            ),
-            Enrolment(Agent.key, Seq(EnrolmentIdentifier(Agent.value, arn)), "Activated")
-          )))
-
           val result = await(underTest.async(block)(requestWithMtditid))
 
-          result.header.status shouldBe OK
-          await(result.body.consumeData.map(_.utf8String)) shouldBe s"mtditid: $mtditid arn: $arn"
+          result.header.status shouldBe UNAUTHORIZED
         }
       }
 
@@ -237,30 +224,6 @@ class AuthorisedActionSpec extends UnitTest
           await(result.body.consumeData.map(_.utf8String)) shouldBe s"mtditid: $mtditid arn: $arn"
         }
       }
-
-      "the agent is authorised for the given user (Secondary Agent - EMA Supporting Agent Feature enabled)" which {
-
-        lazy val result = {
-          MockAppConfig.emaSupportingAgentsEnabled(true)
-          mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-          mockAuthConnectorResponse(secondaryAgentPredicate(mtditid), Retrievals.allEnrolments)(Future.successful(
-            Enrolments(Set(
-              Enrolment(Individual.key, Seq(EnrolmentIdentifier(Individual.value, mtditid)), "Activated"),
-              Enrolment(Agent.key, Seq(EnrolmentIdentifier(Agent.value, arn)), "Activated")
-            ))
-          ))
-
-          await(underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier))
-        }
-
-        "has a status of OK" in {
-          result.header.status shouldBe OK
-        }
-
-        "has the correct body" in {
-          await(result.body.consumeData.map(_.utf8String)) shouldBe s"mtditid: $mtditid arn: $arn"
-        }
-      }
     }
 
     "return an Unauthorised" when {
@@ -274,21 +237,9 @@ class AuthorisedActionSpec extends UnitTest
         await(result).header.status shouldBe UNAUTHORIZED
       }
 
-      "the authorisation service returns an AuthorisationException exception (EMA Supporting Agent Disabled)" in {
+      "the authorisation service returns an AuthorisationException " in {
 
-        MockAppConfig.emaSupportingAgentsEnabled(false)
         mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-
-        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
-
-        await(result).header.status shouldBe UNAUTHORIZED
-      }
-
-      "the authorisation service returns an AuthorisationException for secondary agent check (EMA Supporting Agent Enabled)" in {
-
-        MockAppConfig.emaSupportingAgentsEnabled(true)
-        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-        mockAuthReturnException(secondaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
 
         val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
 
@@ -312,17 +263,6 @@ class AuthorisedActionSpec extends UnitTest
       "the authorisation service returns an non-Auth related Exception for primary agent check" in {
 
         mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
-
-        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
-
-        await(result).header.status shouldBe INTERNAL_SERVER_ERROR
-      }
-
-      "the authorisation service returns a nonAuth related Exception for secondary agent check" in {
-
-        MockAppConfig.emaSupportingAgentsEnabled(true)
-        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-        mockAuthReturnException(secondaryAgentPredicate(mtditid), Retrievals.allEnrolments)(new Exception("bang"))
 
         val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
 
