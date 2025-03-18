@@ -17,14 +17,10 @@
 package utils.mocks
 
 import config.AppConfig
-import org.scalamock.handlers.CallHandler0
 import org.scalamock.scalatest.MockFactory
 
 trait MockAppConfig extends MockFactory {
 
   lazy val mockAppConfig: AppConfig = mock[AppConfig]
 
-  object MockAppConfig {
-
-  }
 }
