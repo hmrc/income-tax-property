@@ -122,7 +122,7 @@ class AuthorisedAction @Inject() (
         populateAgent(block, mtdItId, _)
       }.recoverWith(agentRecovery())
 
-  private def agentRecovery[A](): PartialFunction[Throwable, Future[Result]] = {
+  private def agentRecovery(): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
       logger.info("[AuthorisedAction][agentAuthentication] - No active session.")
       unauthorized
