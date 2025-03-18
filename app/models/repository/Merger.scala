@@ -289,7 +289,8 @@ object Merger {
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
-              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
+              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods
+                .orElse(fromDownstream.costOfReplacingDomesticItems),
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance
             )
           )
@@ -300,7 +301,8 @@ object Merger {
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
               businessPremisesRenovationAllowance = fromDownstream.businessPremisesRenovationAllowance,
-              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
+              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods
+                .orElse(fromDownstream.costOfReplacingDomesticItems),
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance
             )
           )
@@ -320,7 +322,8 @@ object Merger {
             RentARoomAllowances(
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
-              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods,
+              replacementOfDomesticGoodsAllowance = fromDownstream.costOfReplacingDomesticGoods
+                .orElse(fromDownstream.costOfReplacingDomesticItems),
               otherCapitalAllowance = fromDownstream.otherCapitalAllowance,
               capitalAllowancesForACar = fromDownstream.otherCapitalAllowance.map(amount =>
                 CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(amount))

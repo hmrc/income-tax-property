@@ -130,6 +130,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
             Some(90.12),
             Some(34.56),
             Some(78.90),
+            None,
             Some(
               Seq(
                 StructuredBuildingAllowance(
@@ -201,6 +202,7 @@ class PropertyAnnualSubmissionSpec extends UnitTest {
           ),
           Some(
             UkOtherAllowances(
+              None,
               None,
               None,
               None,
