@@ -224,18 +224,6 @@ class AuthorisedActionSpec extends UnitTest
           await(result.body.consumeData.map(_.utf8String)) shouldBe s"mtditid: $mtditid arn: $arn"
         }
       }
-
-      "the agent is NOT authorised for the given user (Secondary Agent)" which {
-
-        lazy val result = {
-          mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-          await(underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier))
-        }
-
-        "has a status of UNAUTHORIZED" in {
-          result.header.status shouldBe UNAUTHORIZED
-        }
-      }
     }
 
     "return an Unauthorised" when {
@@ -249,7 +237,7 @@ class AuthorisedActionSpec extends UnitTest
         await(result).header.status shouldBe UNAUTHORIZED
       }
 
-      "the authorisation service returns an AuthorisationException for secondary agent check" in {
+      "the authorisation service returns an AuthorisationException " in {
 
         mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
 
