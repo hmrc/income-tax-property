@@ -273,12 +273,13 @@ trait MockPropertyService extends MockFactory {
       .returning(EitherT.pure(true))
 
   def mockSavePropertyRentalAllowances[A](
-    ctx: JourneyContextWithNino,
+    ctx: JourneyContext,
+    nino: Nino,
     answers: RentalAllowances
-  ): CallHandler3[JourneyContextWithNino, RentalAllowances, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+  ): CallHandler4[JourneyContext, Nino, RentalAllowances, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
     (mockPropertyService
-      .savePropertyRentalAllowances(_: JourneyContextWithNino, _: RentalAllowances)(_: HeaderCarrier))
-      .expects(*, *, *)
+      .savePropertyRentalAllowances(_: JourneyContext, _:Nino, _: RentalAllowances)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(EitherT.pure(true))
 
   def mockSavePropertyRentalAdjustments[A](

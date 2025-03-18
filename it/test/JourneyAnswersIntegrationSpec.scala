@@ -271,6 +271,7 @@ class JourneyAnswersIntegrationSpec
           ),
           allowances = Some(
             RentalAllowances(
+              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),
@@ -371,6 +372,7 @@ class JourneyAnswersIntegrationSpec
           ),
           rentalsAndRaRAllowances = Some(
             RentalAllowances(
+              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),

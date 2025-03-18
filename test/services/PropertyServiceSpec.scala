@@ -682,8 +682,9 @@ class PropertyServiceSpec
   "save property rental allowances" should {
 
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+    val ctx = JourneyContext(taxYear, incomeSourceId, Mtditid(mtditid), JourneyName.RentalAllowances)
     val allowances = RentalAllowances(
+      None,
       Some(11),
       Some(11),
       Some(11),
@@ -700,7 +701,7 @@ class PropertyServiceSpec
         Some(annualSubmission).asRight[ApiError]
       )
       mockCreateAnnualSubmission(taxYear, incomeSourceId, nino, ().asRight[ApiError])
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Right(true)
+      await(underTest.savePropertyRentalAllowances(ctx, nino, allowances).value) shouldBe Right(true)
     }
 
     "return ApiError for invalid request" in {
@@ -716,7 +717,7 @@ class PropertyServiceSpec
         nino,
         Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
       )
-      await(underTest.savePropertyRentalAllowances(ctx, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
+      await(underTest.savePropertyRentalAllowances(ctx, nino, allowances).value) shouldBe Left(ApiServiceError(BAD_REQUEST))
     }
   }
 
@@ -1734,7 +1735,7 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          Some(RentalAllowances(None, None, None, None, None, None)),
+          Some(RentalAllowances(None, None, None, None, None, None, None)),
           esbaInfoRetrieved,
           None,
           None,
