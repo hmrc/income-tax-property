@@ -598,12 +598,10 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-      _ <- expenses.consolidatedExpenses match {
-             case Some(consolidatedExpenses) =>
-               persistAnswers(ctx, ExpensesStoreAnswers(consolidatedExpenses.consolidatedExpensesYesOrNo))
-             case None =>
-               ITPEnvelope.liftPure(None)
-           }
+      _ <- persistAnswers(
+        ctx,
+        ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.consolidatedExpensesYesOrNo))
+      )
     } yield submissionResponse
 
   def saveRaRExpenses(ctx: JourneyContext, nino: Nino, raRExpenses: RentARoomExpenses)(implicit
