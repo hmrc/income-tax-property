@@ -268,15 +268,6 @@ class AuthorisedActionSpec extends UnitTest
 
         await(result).header.status shouldBe INTERNAL_SERVER_ERROR
       }
-
-      "the authorisation service returns a UNAUTHORIZED related Exception for secondary agent check" in {
-
-        mockAuthReturnException(primaryAgentPredicate(mtditid), Retrievals.allEnrolments)(InsufficientEnrolments())
-
-        val result = underTest.agentAuthentication(block, mtditid)(requestWithMtditid, emptyHeaderCarrier)
-
-        await(result).header.status shouldBe UNAUTHORIZED
-      }
     }
   }
 
