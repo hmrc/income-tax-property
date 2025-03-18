@@ -484,7 +484,7 @@ class PropertyService @Inject() (
     sbaInfo: SbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      submissionSuccess <- if(!sbaInfo.claimStructureBuildingAllowance || sbaInfo.allowances.isEmpty) {
+      submissionSuccess <- if(!sbaInfo.claimStructureBuildingAllowance || sbaInfo.structureBuildingFormGroup.isEmpty) {
           ITPEnvelope.liftPure(())
         } else {
           for {
