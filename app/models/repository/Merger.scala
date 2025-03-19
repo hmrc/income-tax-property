@@ -399,16 +399,6 @@ object Merger {
       }
   }
 
-//  unusedLossesBroughtForward = Some(
-//    UnusedLossesBroughtForward(
-//      unusedLossesBroughtForwardYesOrNo = extractedMaybe
-//        .flatMap(_.unusedLossesBroughtForward.map(_.unusedLossesBroughtForwardYesOrNo))
-//        .getOrElse(fromDownstreamAdjustment.lossBroughtForward.isDefined),
-//      unusedLossesBroughtForwardAmount = fromDownstreamAdjustment.lossBroughtForward
-//    )
-//  ),
-//  whenYouReportedTheLoss = fromDownstreamAdjustment.whenYouReportedTheLoss
-
   implicit object RaRAdjustmentsMerger
       extends Merger[Option[RaRAdjustments], Option[RentARoomAdjustmentsStoreAnswers], Option[
         (UkOtherAdjustments, UkOtherPropertyExpenses)
