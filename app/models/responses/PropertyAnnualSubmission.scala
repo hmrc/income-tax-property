@@ -57,7 +57,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -88,7 +88,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -259,7 +259,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -318,7 +318,7 @@ object PropertyAnnualSubmission {
     val ukOtherAllowancesLens: Optional[AnnualUkOtherProperty, UkOtherAllowances] =
       Optional[AnnualUkOtherProperty, UkOtherAllowances] {
         case AnnualUkOtherProperty(_, None) =>
-          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None))
+          Some(UkOtherAllowances(None, None, None, None, None, None, None, None, None, None))
         case AnnualUkOtherProperty(_, uoa) => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
@@ -433,7 +433,8 @@ case class UkOtherAllowances(
   zeroEmissionGoodsVehicleAllowance: Option[BigDecimal],
   businessPremisesRenovationAllowance: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
-  costOfReplacingDomesticGoods: Option[BigDecimal],
+  costOfReplacingDomesticGoods: Option[BigDecimal],        // API 1598 (Get) expects costOfReplacingDomesticGoods
+  costOfReplacingDomesticItems: Option[BigDecimal] = None, // API 1805 (Get) expects costOfReplacingDomesticItems
   structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
   enhancedStructuredBuildingAllowance: Option[Seq[Esba]],
   zeroEmissionsCarAllowance: Option[BigDecimal],

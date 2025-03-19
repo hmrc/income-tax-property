@@ -94,6 +94,7 @@ class MergerSpec extends UnitTest {
               None,
               None,
               None,
+              None,
               Some(
                 Seq(
                   Esba(

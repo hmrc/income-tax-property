@@ -767,6 +767,7 @@ class PropertyServiceSpec
               None,
               None,
               None,
+              None,
               sbasMaybe,
               esbasMaybe,
               Some(34.56),
@@ -1600,6 +1601,7 @@ class PropertyServiceSpec
           None,
           Some(
             UkOtherAllowances(
+              None,
               None,
               None,
               None,

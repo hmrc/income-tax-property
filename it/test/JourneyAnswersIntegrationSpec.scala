@@ -94,6 +94,7 @@ class JourneyAnswersIntegrationSpec
             Some(4),
             Some(5),
             None,
+            None,
             Some(
               Seq(
                 Esba(
