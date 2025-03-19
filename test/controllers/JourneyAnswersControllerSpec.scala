@@ -19,24 +19,23 @@ package controllers
 import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.UKPropertySelect.PropertyRentals
-import models.common.JourneyName.{RentARoomAdjustments, RentARoomAbout, About}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedUkAndForeignPropertyData, FetchedUKPropertyData, FetchedPropertyData}
-import models.errors.{ServiceError, InvalidJsonFormatError, ApiServiceError, RepositoryError}
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
+import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
 import models.request._
 import models.request.esba.EsbaInfo
 import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{WhenYouReportedTheLoss, UnusedLossesBroughtForward}
 import models.responses._
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{Json, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
+import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -150,7 +149,8 @@ class JourneyAnswersControllerSpec
           Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
           Some(BigDecimal(12)),
           Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
-          Some(WhenYouReportedTheLoss.y2018to2019)),
+          Some(WhenYouReportedTheLoss.y2018to2019)
+        ),
         true.asRight[ServiceError]
       )
 
@@ -175,7 +175,8 @@ class JourneyAnswersControllerSpec
           Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
           Some(BigDecimal(12)),
           Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(12.56))),
-          Some(WhenYouReportedTheLoss.y2018to2019)),
+          Some(WhenYouReportedTheLoss.y2018to2019)
+        ),
         ApiServiceError(500).asLeft[Boolean]
       )
 
@@ -399,7 +400,8 @@ class JourneyAnswersControllerSpec
     val rentARoomNonConsolidatedRequest: JsValue = Json.parse(
       """{
         |  "consolidatedExpenses": {
-        |     "consolidatedExpensesYesOrNo": false
+        |     "consolidatedExpensesYesOrNo": true,
+        |     "consolidatedExpensesAmount": 1000
         |  },
         |  "rentsRatesAndInsurance": 12,
         |  "repairsAndMaintenanceCosts": 23,
@@ -443,6 +445,17 @@ class JourneyAnswersControllerSpec
     val rentARoomNonConsolidatedRequestBody: Expenses = rentARoomNonConsolidatedRequest.as[Expenses]
     val rentARoomConsolidatedRequestBody: Expenses = rentARoomConsolidatedRequest.as[Expenses]
     val rentARoomConsolidatedMoreThan85KBody: Expenses = rentARoomConsolidatedMoreThan85KRequest.as[Expenses]
+
+    "transpose all the values from the request body into the Expense model" in {
+      rentARoomNonConsolidatedRequestBody.consolidatedExpenses shouldBe Some(ConsolidatedExpenses(true, Some(1000)))
+      rentARoomNonConsolidatedRequestBody.rentsRatesAndInsurance shouldBe Some(12)
+      rentARoomNonConsolidatedRequestBody.repairsAndMaintenanceCosts shouldBe Some(23)
+      rentARoomNonConsolidatedRequestBody.costsOfServicesProvided shouldBe Some(45)
+      rentARoomNonConsolidatedRequestBody.propertyBusinessTravelCosts shouldBe Some(89)
+      rentARoomNonConsolidatedRequestBody.loanInterestOrOtherFinancialCost shouldBe Some(90)
+      rentARoomNonConsolidatedRequestBody.otherAllowablePropertyExpenses shouldBe Some(100)
+      rentARoomNonConsolidatedRequestBody.otherProfessionalFees shouldBe None
+    }
 
     "return created for valid request body" in {
 
@@ -531,20 +544,31 @@ class JourneyAnswersControllerSpec
                                                         |  },
                                                         |  "rentsRatesAndInsurance": 100,
                                                         |  "repairsAndMaintenanceCosts": 200,
-                                                        |  "loanInterest": 300,
-                                                        |  "otherProfessionalFee": 400,
+                                                        |  "loanInterestOrOtherFinancialCost": 300,
+                                                        |  "otherProfessionalFees": 400,
                                                         |  "costsOfServicesProvided": 500,
                                                         |  "otherAllowablePropertyExpenses": 600,
-                                                        |  "propertyBusinessTravelCost": 700
+                                                        |  "propertyBusinessTravelCosts": 700
                                                         |}""".stripMargin)
 
-    val createOrUpdateRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
+    val expensesFromUIRequestBody: Expenses = createOrUpdateUIRequest.as[Expenses]
+
+    "should deserialize all the fields submitted from the UI to the backend" in {
+      expensesFromUIRequestBody.consolidatedExpenses shouldBe Some(ConsolidatedExpenses(false, None))
+      expensesFromUIRequestBody.rentsRatesAndInsurance shouldBe Some(100)
+      expensesFromUIRequestBody.repairsAndMaintenanceCosts shouldBe Some(200)
+      expensesFromUIRequestBody.loanInterestOrOtherFinancialCost shouldBe Some(300)
+      expensesFromUIRequestBody.otherProfessionalFees shouldBe Some(400)
+      expensesFromUIRequestBody.costsOfServicesProvided shouldBe Some(500)
+      expensesFromUIRequestBody.otherAllowablePropertyExpenses shouldBe Some(600)
+      expensesFromUIRequestBody.propertyBusinessTravelCosts shouldBe Some(700)
+    }
 
     "return created for valid request body" in {
 
       mockAuthorisation()
 
-      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
+      mockSaveExpenses(ctx, nino, expensesFromUIRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePostRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino, "rental-expenses")(request))
@@ -554,7 +578,7 @@ class JourneyAnswersControllerSpec
     "should return no_content for valid request body" in {
       mockAuthorisation()
 
-      mockSaveExpenses(ctx, nino, createOrUpdateRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
+      mockSaveExpenses(ctx, nino, expensesFromUIRequestBody, Some(PeriodicSubmissionId("1")).asRight[ServiceError])
 
       val request = fakePutRequest.withJsonBody(createOrUpdateUIRequest)
       val result = await(underTest.saveExpenses(taxYear, incomeSourceId, nino, "rental-expenses")(request))
@@ -572,7 +596,7 @@ class JourneyAnswersControllerSpec
       mockSaveExpenses(
         ctx,
         nino,
-        createOrUpdateRequestBody,
+        expensesFromUIRequestBody,
         ApiServiceError(CONFLICT).asLeft[Option[PeriodicSubmissionId]]
       )
 
@@ -585,7 +609,7 @@ class JourneyAnswersControllerSpec
       mockSaveExpenses(
         ctx,
         nino,
-        createOrUpdateRequestBody,
+        expensesFromUIRequestBody,
         ApiServiceError(INTERNAL_SERVER_ERROR).asLeft[Option[PeriodicSubmissionId]]
       )
 
@@ -597,42 +621,43 @@ class JourneyAnswersControllerSpec
   }
 
   "update esba section" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimEnhancedStructureBuildingAllowance" : true,
-                                                 | "enhancedStructureBuildingAllowances": [
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 43,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "name12",
-                                                 |                    "buildingNumber" : "123",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 54,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "235",
-                                                 |                    "buildingNumber" : "3",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 23,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "12",
-                                                 |                    "buildingNumber" : "2",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            }
-                                                 |        ],
-                                                 |        "enhancedStructureBuildingAllowanceClaims" : false
-                                                 |}""".stripMargin)
+    val validRequestBody: JsValue =
+      Json.parse("""{
+                   | "claimEnhancedStructureBuildingAllowance" : true,
+                   | "enhancedStructureBuildingAllowances": [
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 43,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "name12",
+                   |                    "buildingNumber" : "123",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            },
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 54,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "235",
+                   |                    "buildingNumber" : "3",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            },
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 23,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "12",
+                   |                    "buildingNumber" : "2",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            }
+                   |        ],
+                   |        "enhancedStructureBuildingAllowanceClaims" : false
+                   |}""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalESBA)
@@ -801,13 +826,21 @@ class JourneyAnswersControllerSpec
         Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
       )
       val foreignPropertyData = FetchedForeignPropertyData(
-        None, None, None, None,None,None, None
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
       )
       val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
         None
       )
       val resultFromService = FetchedPropertyData(
-        ukPropertyData = uKPropertyData, foreignPropertyData = foreignPropertyData, ukAndForeignPropertyData = ukAndForeignPropertyData
+        ukPropertyData = uKPropertyData,
+        foreignPropertyData = foreignPropertyData,
+        ukAndForeignPropertyData = ukAndForeignPropertyData
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
@@ -1243,42 +1276,43 @@ class JourneyAnswersControllerSpec
   }
 
   "create or update esba section for combined journey" should {
-    val validRequestBody: JsValue = Json.parse("""{
-                                                 | "claimEnhancedStructureBuildingAllowance" : true,
-                                                 | "enhancedStructureBuildingAllowances": [
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 43,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "name12",
-                                                 |                    "buildingNumber" : "123",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 54,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "235",
-                                                 |                    "buildingNumber" : "3",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            },
-                                                 |            {
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
-                                                 |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
-                                                 |                "enhancedStructureBuildingAllowanceClaim" : 23,
-                                                 |                "enhancedStructureBuildingAllowanceAddress" : {
-                                                 |                    "buildingName" : "12",
-                                                 |                    "buildingNumber" : "2",
-                                                 |                    "postCode" : "XX1 1XX"
-                                                 |                }
-                                                 |            }
-                                                 |        ],
-                                                 |        "enhancedStructureBuildingAllowanceClaims" : false
-                                                 |}""".stripMargin)
+    val validRequestBody: JsValue =
+      Json.parse("""{
+                   | "claimEnhancedStructureBuildingAllowance" : true,
+                   | "enhancedStructureBuildingAllowances": [
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2020-04-04",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 12,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 43,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "name12",
+                   |                    "buildingNumber" : "123",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            },
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2023-01-22",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 535,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 54,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "235",
+                   |                    "buildingNumber" : "3",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            },
+                   |            {
+                   |                "enhancedStructureBuildingAllowanceQualifyingDate" : "2024-02-12",
+                   |                "enhancedStructureBuildingAllowanceQualifyingAmount" : 22,
+                   |                "enhancedStructureBuildingAllowanceClaim" : 23,
+                   |                "enhancedStructureBuildingAllowanceAddress" : {
+                   |                    "buildingName" : "12",
+                   |                    "buildingNumber" : "2",
+                   |                    "postCode" : "XX1 1XX"
+                   |                }
+                   |            }
+                   |        ],
+                   |        "enhancedStructureBuildingAllowanceClaims" : false
+                   |}""".stripMargin)
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(JourneyName.RentalsAndRaRESBA)

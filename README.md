@@ -3,18 +3,23 @@
 
 ## Running the service locally
 
-You will need to have the following:
-- Installed [MondoDB](https://docs.mongodb.com/manual/installation/)
-- Installed/configured [service manager](https://github.com/hmrc/service-manager).
+To run the service locally, ensure that the following dependencies are installed and properly configured:
 
-The service manager profile for this service is:
+- Rancher/Docker: Follow the installation guide on HMRC confluence 
+- MongoDB: Follow the [MongoDB](https://docs.mongodb.com/manual/installation/) installation guide to install and set up MongoDB being used by HMRC at the time
+- Service Manager: Install/configure Service Manager 2 [sm2](https://github.com/hmrc/sm2) to manage and run the service locally.
 
-    sm --start INCOME_TAX_PROPERTY
+Start MongoDB (if it isn't already running):
 
-Run the following command to start the remaining services locally:
+    docker run --restart unless-stopped -d -p 27017-27019:27017-27019 --name mongodb mongo:4.2
 
-    sudo mongod (If not already running)
-    sm --start INCOME_TAX_SUBMISSION_ALL -r
+Start the Income Tax Property Service: Use the Service Manager to start the service with the following command:
+
+    sm2 --start INCOME_TAX_PROPERTY
+
+Run the following command to start the additional required services locally:
+
+    sm2 --start INCOME_TAX_SUBMISSION_ALL -r
 
 ### License
 

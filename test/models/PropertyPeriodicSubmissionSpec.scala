@@ -32,10 +32,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
     consolidatedExpenses = None,
     rentsRatesAndInsurance = Some(100),
     repairsAndMaintenanceCosts = Some(200),
-    loanInterest = Some(300),
-    otherProfessionalFee = Some(400),
+    loanInterestOrOtherFinancialCost = Some(300),
+    otherProfessionalFees = Some(400),
     costsOfServicesProvided = Some(500),
-    propertyBusinessTravelCost = Some(600),
+    propertyBusinessTravelCosts = Some(600),
     otherAllowablePropertyExpenses = Some(700)
   )
 
@@ -467,10 +467,10 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
             ),
             rentsRatesAndInsurance = Some(191.35),
             repairsAndMaintenanceCosts = Some(179.13),
-            loanInterest = Some(158.14),
-            otherProfessionalFee = Some(170.36),
+            loanInterestOrOtherFinancialCost = Some(158.14),
+            otherProfessionalFees = Some(170.36),
             costsOfServicesProvided = Some(193.71),
-            propertyBusinessTravelCost = Some(159.37),
+            propertyBusinessTravelCosts = Some(159.37),
             otherAllowablePropertyExpenses = Some(115.93)
           )
         )
