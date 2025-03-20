@@ -663,6 +663,7 @@ class PropertyServiceSpec
     val mtditid = "1234567890"
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
     val allowances = RentalAllowances(
+      None,
       Some(11),
       Some(11),
       Some(11),
@@ -1713,7 +1714,7 @@ class PropertyServiceSpec
           None,
           None,
           None,
-          Some(RentalAllowances(None, None, None, None, None, None)),
+          Some(RentalAllowances(None, None, None, None, None, None, None)),
           esbaInfoRetrieved,
           None,
           None,

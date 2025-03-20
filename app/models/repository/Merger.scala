@@ -285,6 +285,10 @@ object Merger {
         case (Some(extracted), Some(fromDownstream)) =>
           Some(
             RentalAllowances(
+              capitalAllowancesForACar = Option.when(extracted.capitalAllowancesForACarYesNo)(
+                CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true,
+                  capitalAllowancesForACarAmount = fromDownstream.otherCapitalAllowance)
+              ),
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,
@@ -297,6 +301,7 @@ object Merger {
         case (None, Some(fromDownstream)) =>
           Some(
             RentalAllowances(
+              capitalAllowancesForACar = None,
               annualInvestmentAllowance = fromDownstream.annualInvestmentAllowance,
               zeroEmissionCarAllowance = fromDownstream.zeroEmissionsCarAllowance,
               zeroEmissionGoodsVehicleAllowance = fromDownstream.zeroEmissionGoodsVehicleAllowance,

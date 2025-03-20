@@ -323,6 +323,7 @@ class JourneyAnswersControllerSpec
       mockSavePropertyRentalAllowances(
         ctx,
         RentalAllowances(
+          None,
           Some(11),
           Some(11),
           Some(11),
@@ -1116,6 +1117,7 @@ class JourneyAnswersControllerSpec
       mockSavePropertyRentalAllowances(
         ctx,
         RentalAllowances(
+          None,
           Some(11),
           Some(11),
           Some(11),

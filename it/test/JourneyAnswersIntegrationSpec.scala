@@ -268,6 +268,7 @@ class JourneyAnswersIntegrationSpec
           ),
           allowances = Some(
             RentalAllowances(
+              None,
               Some(1),
               Some(7),
               Some(2),
@@ -366,6 +367,7 @@ class JourneyAnswersIntegrationSpec
           ),
           rentalsAndRaRAllowances = Some(
             RentalAllowances(
+              None,
               Some(1),
               Some(7),
               Some(2),

@@ -842,29 +842,34 @@ class PropertyService @Inject() (
     rentalAllowances: RentalAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val rentalAllowancesStoreAnswers = rentalAllowances
+    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers(rentalAllowances.capitalAllowancesForACar.exists(_.capitalAllowancesForACarYesNo))
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
-      propertyAnnualSubmissionFromDownstream <-
-        this
-          .getPropertyAnnualSubmission(
-            ctx.taxYear,
-            ctx.nino,
-            ctx.incomeSourceId
-          )
-          .leftFlatMap {
-            case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-            case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-          }
-      _ <- createOrUpdateAnnualSubmission(
-             ctx.taxYear,
-             ctx.incomeSourceId,
-             ctx.nino,
-             PropertyAnnualSubmission
-               .fromRentalAllowances(propertyAnnualSubmissionFromDownstream, rentalAllowances)
-           )
+      _ <- rentalAllowances.capitalAllowancesForACar match {
+             case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(())
+             case _ => for {
+               propertyAnnualSubmissionFromDownstream <-
+                 this
+                   .getPropertyAnnualSubmission(
+                     ctx.taxYear,
+                     ctx.nino,
+                     ctx.incomeSourceId
+                   )
+                   .leftFlatMap {
+                     case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+                     case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+                   }
+               _ <- createOrUpdateAnnualSubmission(
+                 ctx.taxYear,
+                 ctx.incomeSourceId,
+                 ctx.nino,
+                 PropertyAnnualSubmission
+                   .fromRentalAllowances(propertyAnnualSubmissionFromDownstream, rentalAllowances)
+               )
+             } yield ()
+           }
       res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentalAllowances), rentalAllowancesStoreAnswers)
     } yield res
   }
