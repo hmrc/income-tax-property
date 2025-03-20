@@ -19,6 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
+import models.LossType.UKProperty
 import models.common._
 import models.domain._
 import models.errors._
@@ -31,22 +32,22 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
+import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout, LossType}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, BAD_REQUEST}
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockMergeService, MockMongoJourneyAnswersRepository, MockIntegrationFrameworkConnector}
 import utils.{AppConfigStub, UnitTest}
 
-import java.time.{Clock, LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, Clock, LocalDate}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -63,6 +64,9 @@ class PropertyServiceSpec
   private val submissionId = "submissionId"
   private val taxableEntityId = Nino("taxableEntityId")
   val taxYear: TaxYear = TaxYear(2024)
+  val whenYouReportedTheLoss: WhenYouReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
+  val lossId = "lossId"
+  val lossAmount = BigDecimal(32.47)
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -489,7 +493,9 @@ class PropertyServiceSpec
         renovationAllowanceBalancingChargeAmount = Some(92)
       ),
       BigDecimal(56.78),
-      Some(BigDecimal(78.89))
+      Some(BigDecimal(78.89)),
+      UnusedLossesBroughtForward(true, Some(32.47)),
+      Some(WhenYouReportedTheLoss.y2018to2019)
     )
 
     "return a success with no content when the request is valid and data is persisted" in {
@@ -561,6 +567,8 @@ class PropertyServiceSpec
           )
         )
       )
+      val broughtForwardLosses = BroughtForwardLosses(Seq(BroughtForwardLossResponseWithId("lossId", "businessId", UKProperty, BigDecimal(32.32), "2022", "2022")))
+      val broughtForwardLossResponse = BroughtForwardLossResponse("businessId", UKProperty, BigDecimal(32.32), "2022", "2022")
       mockGetPropertyAnnualSubmission(taxYear, nino, incomeSourceId, Some(annualSubmission).asRight[ApiError])
       mockCreateAnnualSubmission(
         taxYear,
@@ -568,6 +576,19 @@ class PropertyServiceSpec
         nino,
         Some(updatedAnnualSubmission),
         ().asRight[ApiError]
+      )
+      mockGetBroughtForwardLosses(
+        whenYouReportedTheLoss,
+        nino,
+        incomeSourceId,
+        broughtForwardLosses.asRight[ApiError]
+      )
+      mockUpdateBroughtForwardLoss(
+        whenYouReportedTheLoss,
+        nino,
+        lossId,
+        lossAmount,
+        broughtForwardLossResponse.asRight[ApiError]
       )
       await(
         underTest.savePropertyRentalAdjustments(journeyContext, nino, propertyRentalAdjustments).value

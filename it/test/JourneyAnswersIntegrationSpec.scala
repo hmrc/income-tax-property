@@ -21,12 +21,13 @@ import models.RentalsAndRaRAbout
 import models.common.TaxYear
 import models.common.TaxYear.asTyBefore24
 import models.domain._
+import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -263,7 +264,9 @@ class JourneyAnswersIntegrationSpec
               Some(0),
               RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
               21,
-              Some(34.56)
+              Some(34.56),
+              UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41)),
+              Some(y2018to2019)
             )
           ),
           allowances = Some(
@@ -361,7 +364,9 @@ class JourneyAnswersIntegrationSpec
               None,
               RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
               21,
-              Some(34.56)
+              Some(34.56),
+              UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41)),
+              Some(y2018to2019)
             )
           ),
           rentalsAndRaRAllowances = Some(

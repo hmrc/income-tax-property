@@ -724,8 +724,8 @@ class PropertyService @Inject() (
 
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(
       propertyRentalAdjustment.balancingCharge.balancingChargeYesNo,
-      propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo
-    )
+      propertyRentalAdjustment.renovationAllowanceBalancingCharge.renovationAllowanceBalancingChargeYesNo,
+      propertyRentalAdjustment.unusedLossesBroughtForward.unusedLossesBroughtForwardYesOrNo)
     for {
       maybePeriodicSubmission <- getPeriodicSubmission(
                                    context.taxYear,
@@ -746,6 +746,18 @@ class PropertyService @Inject() (
                .fromPropertyRentalAdjustments(propertyRentalAdjustment, propertyAnnualSubmissionFromDownstream)
            )
       res <- persistAnswers(context, adjustmentStoreAnswers)
+      lbfSubmissionSuccess <- {
+        (propertyRentalAdjustment.unusedLossesBroughtForward, propertyRentalAdjustment.whenYouReportedTheLoss) match {
+          case (UnusedLossesBroughtForward(_, Some(lossAmount)), Some(taxYearBroughtForwardFrom)) =>
+            createOrUpdateBroughtForwardLoss(
+              taxYearBroughtForwardFrom,
+              nino,
+              context,
+              lossAmount
+            ).map(_ => true)
+          case _ => ITPEnvelope.liftPure(false)
+        }
+      }
     } yield res
 
   }
