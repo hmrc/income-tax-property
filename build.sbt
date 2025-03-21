@@ -45,7 +45,7 @@ Global / scalacOptions += "-Ymacro-annotations"
 inThisBuild(
   List(
     majorVersion := 0,
-    scalaVersion := "2.13.12",
+    scalaVersion := "2.13.16",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision
   )
