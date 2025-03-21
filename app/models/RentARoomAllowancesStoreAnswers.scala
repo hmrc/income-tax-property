@@ -20,7 +20,7 @@ import models.request.RentARoomAllowances
 import play.api.libs.json.{Json, OFormat}
 
 case class RentARoomAllowancesStoreAnswers(
-  raRCapitalAllowancesForACarYesOrNo: Option[Boolean]
+  raRCapitalAllowancesForACarYesOrNo: Boolean
 )
 
 object RentARoomAllowancesStoreAnswers {
@@ -28,7 +28,7 @@ object RentARoomAllowancesStoreAnswers {
 
   def fromJourneyAnswers(answers: RentARoomAllowances): RentARoomAllowancesStoreAnswers =
     RentARoomAllowancesStoreAnswers(
-      answers.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+      answers.capitalAllowancesForACar.exists(_.capitalAllowancesForACarYesNo)
     )
 
 }

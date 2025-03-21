@@ -367,10 +367,10 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
         "1597"
       )
     }
-    logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(body)}")
-
     // refactor: to fix bug
     val submissionRequest = body.copy(submittedOn = None)
+
+    logger.debug(s"createOrUpdateAnnualSubmission with url: $url, body: ${Json.toJson(submissionRequest)}")
 
     http
       .put(url"$url")(hcWithCorrelationId(hc))

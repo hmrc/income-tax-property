@@ -68,8 +68,10 @@ object PropertyAnnualSubmission {
     val focusFromAnnualSubmissionOnEsbasLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(esbasLens)
 
+    val amendedAnnualSubmission = swapRentARoom(propertyAnnualSubmission)
+
     val resultWithEsbas: PropertyAnnualSubmission =
-      focusFromAnnualSubmissionOnEsbasLens.replace(Some(esbas))(propertyAnnualSubmission)
+      focusFromAnnualSubmissionOnEsbasLens.replace(Some(esbas))(amendedAnnualSubmission)
 
     resultWithEsbas
   }
@@ -99,8 +101,10 @@ object PropertyAnnualSubmission {
     val focusFromAnnualSubmissionOnSbasLens =
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(sbasLens)
 
+    val amendedAnnualSubmission = swapRentARoom(propertyAnnualSubmission)
+
     val resultWithSbas: PropertyAnnualSubmission =
-      focusFromAnnualSubmissionOnSbasLens.replace(Some(sbas))(propertyAnnualSubmission)
+      focusFromAnnualSubmissionOnSbasLens.replace(Some(sbas))(amendedAnnualSubmission)
 
     resultWithSbas
   }
@@ -182,7 +186,7 @@ object PropertyAnnualSubmission {
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
         case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
+        case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
       }
@@ -199,9 +203,12 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToRenovationAllowanceBalancingChargeLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(renovationAllowanceBalancingChargeLens)
 
+    val amendedAnnualSubmission = swapRentARoom(request)
+
+
     val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
       propertyRentalAdjustments.balancingCharge.balancingChargeAmount
-    )(request)
+    )(amendedAnnualSubmission)
 
     val resultWithBalancingChargeAndPrivateUseAdjustment = focusFromRequestOnToPrivateUseAdjustmentLens.replace(
       Some(propertyRentalAdjustments.privateUseAdjustment)
@@ -228,7 +235,7 @@ object PropertyAnnualSubmission {
     val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
       Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
         case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
-        case AnnualUkOtherProperty(uoa, _)  => uoa.map(_.copy(rentARoom = None))
+        case AnnualUkOtherProperty(uoa, _)  => uoa
       } { uoa => auop =>
         auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
       }
@@ -238,9 +245,11 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToBalancingChargeLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
 
+    val amendedAnnualSubmission = swapRentARoom(propertyAnnualSubmission)
+
     val resultWithBalancingCharge = focusFromRequestOnToBalancingChargeLens.replace(
       raRAdjustments.balancingCharge.flatMap(_.balancingChargeAmount)
-    )(propertyAnnualSubmission)
+    )(amendedAnnualSubmission)
 
     resultWithBalancingCharge
   }
@@ -282,9 +291,11 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(costOfReplacingDomesticGoodsLens)
 
     // Results
+    val amendedAnnualSubmission = swapRentARoom(propertyAnnualSubmission)
+
     val resultWithzeroEmissionCarAllowance = focusFromRequestOnTozeroEmissionCarAllowanceLens.replace(
       rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
-    )(propertyAnnualSubmission)
+    )(amendedAnnualSubmission)
 
     val resultWithzeroEmissionGoodsVehicleAllowance = focusFromRequestOnTozeroEmissionGoodsVehicleAllowanceLens.replace(
       rentARoomAllowances.zeroEmissionGoodsVehicleAllowance
@@ -348,11 +359,12 @@ object PropertyAnnualSubmission {
       ukOtherPropertyLens.andThen(ukOtherAllowancesLens).andThen(businessPremisesRenovationAllowanceLens)
 
     // Results
+    val amendedAnnualSubmission = swapRentARoom(propertyAnnualSubmission)
 
     val resultWithbusinessPremisesRenovationAllowance =
       focusFromRequestOnTobusinessPremisesRenovationAllowanceLens.replace(
         rentalAllowances.businessPremisesRenovationAllowance
-      )(propertyAnnualSubmission)
+      )(amendedAnnualSubmission)
 
     val resultWithzeroEmissionsCarAllowance = focusFromRequestOnTozeroEmissionsCarAllowanceLens.replace(
       rentalAllowances.zeroEmissionCarAllowance
@@ -367,7 +379,7 @@ object PropertyAnnualSubmission {
     )(resultWithannualInvestmentAllowance)
 
     val resultWithotherCapitalAllowance = focusFromRequestOnTootherCapitalAllowanceLens.replace(
-      rentalAllowances.otherCapitalAllowance
+      rentalAllowances.otherCapitalAllowance.orElse(rentalAllowances.capitalAllowancesForACar.flatMap(_.capitalAllowancesForACarAmount))
     )(resultWithzeroEmissionGoodsVehicleAllowance)
 
     val resultWithcostOfReplacingDomesticGoods = focusFromRequestOnTocostOfReplacingDomesticGoodsLens.replace(
@@ -377,6 +389,38 @@ object PropertyAnnualSubmission {
     resultWithcostOfReplacingDomesticGoods
   }
 
+  def swapRentARoom(propertyAnnualSubmission: PropertyAnnualSubmission): PropertyAnnualSubmission = {
+    val ukOtherPropertyLens: Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] =
+      Optional[PropertyAnnualSubmission, AnnualUkOtherProperty] {
+        case PropertyAnnualSubmission(_, _, None) => Some(AnnualUkOtherProperty(None, None))
+        case PropertyAnnualSubmission(_, _, auop) => auop
+      } { auop => pas =>
+        pas.copy(ukOtherProperty = Some(auop))
+      }
+    val ukOtherAdjustmentsLens: Optional[AnnualUkOtherProperty, UkOtherAdjustments] =
+      Optional[AnnualUkOtherProperty, UkOtherAdjustments] {
+        case AnnualUkOtherProperty(None, _) => Some(UkOtherAdjustments(None, None, None, None, Some(false), None, None, None))
+        case AnnualUkOtherProperty(uoa, _)  => uoa
+      } { uoa => auop =>
+        auop.copy(ukOtherPropertyAnnualAdjustments = Some(uoa))
+      }
+
+    val rentARoomLens = GenLens[UkOtherAdjustments](_.rentARoom)
+    val focusFromRequestOnToRentARoomLens = ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(rentARoomLens)
+    val ukOtherRentARoomLens = GenLens[UkOtherAdjustments](_.ukOtherRentARoom)
+    val focusFromRequestOnToUkOtherRentARoomLens =
+      ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukOtherRentARoomLens)
+
+    val rentARoomValue = focusFromRequestOnToRentARoomLens.getOption(propertyAnnualSubmission).flatten
+    val ukOtherRentARoomValue = focusFromRequestOnToUkOtherRentARoomLens.getOption(propertyAnnualSubmission).flatten
+
+    (ukOtherRentARoomValue, rentARoomValue) match {
+      case (Some(_), None) => propertyAnnualSubmission
+      case _ =>
+        val result = focusFromRequestOnToRentARoomLens.replace(None)(propertyAnnualSubmission)
+        focusFromRequestOnToUkOtherRentARoomLens.replace(rentARoomValue)(result)
+    }
+  }
 }
 
 
@@ -419,7 +463,7 @@ case class UkOtherAdjustments(
   privateUseAdjustment: Option[BigDecimal],
   businessPremisesRenovationAllowanceBalancingCharges: Option[BigDecimal],
   nonResidentLandlord: Option[Boolean],
-  ukOtherRentARoom: Option[UkRentARoom], // API#1598 (Get) expects ukOtherRentARoom
+  ukOtherRentARoom: Option[UkRentARoom],  // API#1598 (Get), API#1597 (Create/Update) and API#1804 (Create/Update) expects ukOtherRentARoom
   rentARoom: Option[UkRentARoom],         // API#1805 (Get) expects rentARoom
   whenYouReportedTheLoss: Option[WhenYouReportedTheLoss]
 )
@@ -434,7 +478,7 @@ case class UkOtherAllowances(
   businessPremisesRenovationAllowance: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
   costOfReplacingDomesticGoods: Option[BigDecimal],        // API 1598 (Get) expects costOfReplacingDomesticGoods
-  costOfReplacingDomesticItems: Option[BigDecimal] = None, // API 1805 (Get) expects costOfReplacingDomesticItems
+  costOfReplacingDomesticItems: Option[BigDecimal],        // API 1805 (Get) expects costOfReplacingDomesticItems
   structuredBuildingAllowance: Option[Seq[StructuredBuildingAllowance]],
   enhancedStructuredBuildingAllowance: Option[Seq[Esba]],
   zeroEmissionsCarAllowance: Option[BigDecimal],

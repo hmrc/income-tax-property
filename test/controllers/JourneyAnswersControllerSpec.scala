@@ -19,7 +19,7 @@ package controllers
 import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.UKPropertySelect.PropertyRentals
-import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
+import models.common.JourneyName.{About, NoJourney, RentARoomAbout, RentARoomAdjustments}
 import models.common._
 import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
 import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
@@ -319,14 +319,16 @@ class JourneyAnswersControllerSpec
                                                  |  "otherCapitalAllowance": 11
                                                  |}
         """.stripMargin)
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+    val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentalAllowances)
 
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
       mockSavePropertyRentalAllowances(
         ctx,
+        nino,
         RentalAllowances(
+          None,
           Some(11),
           Some(11),
           Some(11),
@@ -1112,14 +1114,16 @@ class JourneyAnswersControllerSpec
                                                  |  "otherCapitalAllowance": 11
                                                  |}
         """.stripMargin)
-    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+    val ctx = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.RentARoomAllowances)
 
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
       mockSavePropertyRentalAllowances(
         ctx,
+        nino,
         RentalAllowances(
+          None,
           Some(11),
           Some(11),
           Some(11),
