@@ -17,10 +17,11 @@
 package connectors
 
 import models.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
+import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HttpResponse
 
-trait Parser {
+trait Parser extends Logging {
 
   protected val parserName: String
 
@@ -37,10 +38,14 @@ trait Parser {
       (singleErrorBody, multiErrorsBody) match {
         case (Some(error), _) => Left(ApiError(status, error))
         case (_, Some(error)) => Left(ApiError(status, error))
-        case _ => Left(ApiError(status, SingleErrorBody.parsingError))
+        case _ =>
+          logger.error(s"[Parser][handleError]: failed to parse error response as JSON: ${response.toString}")
+          Left(ApiError(status, SingleErrorBody.parsingError))
       }
     } catch {
-      case _: Exception => Left(ApiError(status, SingleErrorBody.parsingError))
+      case _: Exception =>
+        logger.error(s"[Parser][handleError]: failed to parse error response: ${response.toString}")
+        Left(ApiError(status, SingleErrorBody.parsingError))
     }
   }
 }
