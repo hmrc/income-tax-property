@@ -27,7 +27,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
     "serialize to JSON correctly" in {
       val expenses = ForeignPropertyExpensesWithCountryCode(
         countryCode = "US",
-        consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
+        consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedOrIndividualExpenses = false, None)),
         premisesRunningCosts = Some(150.50),
         repairsAndMaintenance = Some(300.00),
         financialCosts = Some(100.75),
@@ -40,7 +40,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
         """
           |{
           |  "countryCode": "US",
-          |  "consolidatedExpenses": { "consolidatedOrIndividualExpensesYesNo": false },
+          |  "consolidatedExpenses": { "isConsolidatedOrIndividualExpenses": false },
           |  "premisesRunningCosts": 150.50,
           |  "repairsAndMaintenance": 300.00,
           |  "financialCosts": 100.75,
@@ -59,7 +59,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
         """
           |{
           |  "countryCode": "US",
-          |  "consolidatedExpenses": { "consolidatedOrIndividualExpensesYesNo": false },
+          |  "consolidatedExpenses": { "isConsolidatedOrIndividualExpenses": false },
           |  "premisesRunningCosts": 150.50,
           |  "repairsAndMaintenance": 300.00,
           |  "financialCosts": 100.75,
@@ -72,7 +72,7 @@ class ForeignPropertyExpensesSpec extends PlaySpec {
 
       val expectedExpenses = ForeignPropertyExpensesWithCountryCode(
         countryCode = "US",
-        consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false,None)),
+        consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedOrIndividualExpenses = false,None)),
         premisesRunningCosts = Some(150.50),
         repairsAndMaintenance = Some(300.00),
         financialCosts = Some(100.75),

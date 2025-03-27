@@ -260,18 +260,18 @@ class JourneyAnswersIntegrationSpec
           adjustments = Some(
             PropertyRentalAdjustments(
               23,
-              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              BalancingCharge(isBalancingCharge = true, Some(32)),
               Some(0),
-              RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
+              RenovationAllowanceBalancingCharge(isRenovationAllowanceBalancingCharge = true, Some(14)),
               21,
               Some(34.56),
-              UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41)),
+              UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(41)),
               Some(y2018to2019)
             )
           ),
           allowances = Some(
             RentalAllowances(
-              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
+              Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),
@@ -300,7 +300,7 @@ class JourneyAnswersIntegrationSpec
               isNonUKLandlord = false,
               3,
               12,
-              Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
+              Some(DeductingTax(isTaxDeducted = true, Some(11))),
               None,
               None,
               None,
@@ -310,7 +310,7 @@ class JourneyAnswersIntegrationSpec
           ),
           propertyRentalsExpenses = Some(
             PropertyRentalsExpense(
-              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(ConsolidatedExpenses(isConsolidatedExpenses = true, Some(25))),
               Some(1),
               Some(2),
               Some(3),
@@ -321,11 +321,11 @@ class JourneyAnswersIntegrationSpec
             )
           ),
           raRAbout = Some(
-            RaRAbout(jointlyLetYesOrNo = true, 7, ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44)))
+            RaRAbout(isJointlyLet = true, 7, ClaimExpensesOrRelief(isClaimExpensesOrRelief = true, Some(44)))
           ),
           rarExpenses = Some(
             RentARoomExpenses(
-              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(ConsolidatedExpenses(isConsolidatedExpenses = true, Some(25))),
               Some(1),
               Some(2),
               Some(11),
@@ -335,14 +335,14 @@ class JourneyAnswersIntegrationSpec
           ),
           raRAdjustments =
             Some(RaRAdjustments(
-              Some(BalancingCharge(balancingChargeYesNo = true, Some(32))),
+              Some(BalancingCharge(isBalancingCharge = true, Some(32))),
               Some(34.56),
-              Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41))),
+              Some(UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(41))),
               Some(WhenYouReportedTheLoss.y2018to2019))
             ),
           rentARoomAllowances = Some(
             RentARoomAllowances(
-              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
+              Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(4))),
               Some(7),
               Some(2),
               Some(5),
@@ -351,28 +351,28 @@ class JourneyAnswersIntegrationSpec
           ),
           rentalsAndRaRAbout = Some(
             RentalsAndRaRAbout(
-              jointlyLetYesOrNo = true,
+              isJointlyLet = true,
               7,
-              claimPropertyIncomeAllowanceYesOrNo = false,
+              isClaimPropertyIncomeAllowance = false,
               3,
-              ClaimExpensesOrRelief(claimExpensesOrReliefYesNo = true, Some(44))
+              ClaimExpensesOrRelief(isClaimExpensesOrRelief = true, Some(44))
             )
           ),
           rentalsAndRaRAdjustments = Some(
             PropertyRentalAdjustments(
               23,
-              BalancingCharge(balancingChargeYesNo = true, Some(32)),
+              BalancingCharge(isBalancingCharge = true, Some(32)),
               None,
-              RenovationAllowanceBalancingCharge(renovationAllowanceBalancingChargeYesNo = true, Some(14)),
+              RenovationAllowanceBalancingCharge(isRenovationAllowanceBalancingCharge = true, Some(14)),
               21,
               Some(34.56),
-              UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(41)),
+              UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(41)),
               Some(y2018to2019)
             )
           ),
           rentalsAndRaRAllowances = Some(
             RentalAllowances(
-              Some(CapitalAllowancesForACar(capitalAllowancesForACarYesNo = true, Some(4))),
+              Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(4))),
               Some(1),
               Some(7),
               Some(2),
@@ -400,7 +400,7 @@ class JourneyAnswersIntegrationSpec
             RentalsAndRaRIncome(
               isNonUKLandlord = false,
               12,
-              Some(DeductingTax(taxDeductedYesNo = true, Some(11))),
+              Some(DeductingTax(isTaxDeducted = true, Some(11))),
               None,
               None,
               None,
@@ -410,7 +410,7 @@ class JourneyAnswersIntegrationSpec
           ),
           rentalsAndRaRExpenses = Some(
             PropertyRentalsExpense(
-              Some(ConsolidatedExpenses(consolidatedExpensesYesOrNo = true, Some(25))),
+              Some(ConsolidatedExpenses(isConsolidatedExpenses = true, Some(25))),
               Some(1),
               Some(2),
               Some(3),
@@ -435,12 +435,12 @@ class JourneyAnswersIntegrationSpec
       val rentARoomAdjustments = RaRAdjustments(
         Some(
           BalancingCharge(
-            balancingChargeYesNo = true,
+            isBalancingCharge = true,
             Some(12.34)
           )
         ),
         Some(34.56),
-        Some(UnusedLossesBroughtForward(unusedLossesBroughtForwardYesOrNo = true, Some(lossesBroughtForwardAmount))),
+        Some(UnusedLossesBroughtForward(isUnusedLossesBroughtForward = true, Some(lossesBroughtForwardAmount))),
         Some(whenYouReportedTheLoss)
       )
 

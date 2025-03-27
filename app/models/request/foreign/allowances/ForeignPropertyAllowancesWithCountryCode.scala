@@ -18,7 +18,7 @@ package models.request.foreign.allowances
 
 import play.api.libs.json.{Format, Json, OFormat}
 
-case class CapitalAllowancesForACar(capitalAllowancesForACarYesNo: Boolean, capitalAllowancesForACarAmount: Option[BigDecimal])
+case class CapitalAllowancesForACar(isCapitalAllowancesForACar: Boolean, capitalAllowancesForACarAmount: Option[BigDecimal])
 
 object CapitalAllowancesForACar {
   implicit val formats: OFormat[CapitalAllowancesForACar] = Json.format[CapitalAllowancesForACar]

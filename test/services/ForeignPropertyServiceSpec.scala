@@ -240,7 +240,7 @@ class ForeignPropertyServiceSpec
     val foreignPropertyTaxWithCountryCode =
       ForeignPropertyTaxWithCountryCode(
         "ESP",
-        Some(ForeignIncomeTax(foreignIncomeTaxYesNo = true, Some(BigDecimal(50)))),
+        Some(ForeignIncomeTax(isForeignIncomeTax = true, Some(BigDecimal(50)))),
         Some(false)
       )
 
@@ -299,8 +299,8 @@ class ForeignPropertyServiceSpec
       val toDate = TaxYear.endDate(taxYear.endYear)
       val periodicSubmissionId = "1"
       val countryCode = "USA"
-      val foreignIncomeTaxYesNo = true
-      val foreignTaxCreditRelief = Some(foreignIncomeTaxYesNo)
+      val isForeignIncomeTax = true
+      val foreignTaxCreditRelief = Some(isForeignIncomeTax)
       val foreignTaxPaidOrDeducted = Some(BigDecimal(56.78))
       val foreignProperty = ForeignProperty(
         countryCode = countryCode,
@@ -334,7 +334,7 @@ class ForeignPropertyServiceSpec
         countryCode = countryCode,
         foreignIncomeTax = Some(
           ForeignIncomeTax(
-            foreignIncomeTaxYesNo = foreignIncomeTaxYesNo,
+            isForeignIncomeTax = isForeignIncomeTax,
             foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
           )
         ),
@@ -446,7 +446,7 @@ class ForeignPropertyServiceSpec
 
     val foreignPropertyExpenses = ForeignPropertyExpensesWithCountryCode(
       countryCode = "BRA",
-      consolidatedExpenses = Some(ConsolidatedExpenses(consolidatedOrIndividualExpensesYesNo = false, None)),
+      consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedOrIndividualExpenses = false, None)),
       premisesRunningCosts = Some(50),
       repairsAndMaintenance = Some(60),
       financialCosts = Some(675),
@@ -946,17 +946,17 @@ class ForeignPropertyServiceSpec
     val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
       countryCode = "AUS",
       privateUseAdjustment = BigDecimal(25.25),
-      balancingCharge = BalancingCharge(balancingChargeYesNo = true, balancingChargeAmount = Some(BigDecimal(50.50))),
+      balancingCharge = BalancingCharge(isBalancingCharge = true, balancingChargeAmount = Some(BigDecimal(50.50))),
       residentialFinanceCost = Some(BigDecimal(75.75)),
       unusedResidentialFinanceCost = Some(
         ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
+          isForeignUnusedResidentialFinanceCost = true,
           foreignUnusedResidentialFinanceCostAmount = Some(BigDecimal(101.01))
         )
       ),
       propertyIncomeAllowanceClaim = None,
       unusedLossesPreviousYears = UnusedLossesPreviousYears(
-        unusedLossesPreviousYearsYesNo = true,
+        isUnusedLossesPreviousYears = true,
         unusedLossesPreviousYearsAmount = Some(BigDecimal(80.8))
       ),
       whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)

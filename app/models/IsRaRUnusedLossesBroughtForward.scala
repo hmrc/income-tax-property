@@ -18,8 +18,8 @@ package models
 
 import play.api.libs.json.{OFormat, Json}
 
-final case class RaRUnusedLossesBroughtForwardYesOrNo(raRUnusedLossesBroughtForwardYesOrNo: Boolean)
+final case class IsRaRUnusedLossesBroughtForward(isRaRUnusedLossesBroughtForward: Boolean)
 
-object RaRUnusedLossesBroughtForwardYesOrNo {
-  implicit val format: OFormat[RaRUnusedLossesBroughtForwardYesOrNo] = Json.format[RaRUnusedLossesBroughtForwardYesOrNo]
+object IsRaRUnusedLossesBroughtForward {
+  implicit val format: OFormat[IsRaRUnusedLossesBroughtForward] = Json.format[IsRaRUnusedLossesBroughtForward]
 }

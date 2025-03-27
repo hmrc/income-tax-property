@@ -346,12 +346,12 @@ class MergeService @Inject() (implicit
     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
     resultFromRepository: Option[JourneyAnswers]
   ): Option[RentalsAndRaRAbout] = {
-    val claimPropertyIncomeAllowanceYesOrNo: Option[ClaimPropertyIncomeAllowanceYesOrNo] = resultFromRepository match {
-      case Some(journeyAnswers) => Some(journeyAnswers.data.as[ClaimPropertyIncomeAllowanceYesOrNo])
+    val isClaimPropertyIncomeAllowance: Option[IsClaimPropertyIncomeAllowance] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[IsClaimPropertyIncomeAllowance])
       case None                 => None
     }
-    val claimExpensesOrRRRYesNo: Option[ClaimExpensesOrRRRYesNo] = resultFromRepository match {
-      case Some(journeyAnswers) => journeyAnswers.data.asOpt[ClaimExpensesOrRRRYesNo]
+    val isClaimExpensesOrRRR: Option[IsClaimExpensesOrRRR] = resultFromRepository match {
+      case Some(journeyAnswers) => journeyAnswers.data.asOpt[IsClaimExpensesOrRRR]
       case None                 => None
     }
 
@@ -366,7 +366,7 @@ class MergeService @Inject() (implicit
       ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
     } yield ukop
 
-    val rentalsAndRaRAboutStoreAnswers = (claimPropertyIncomeAllowanceYesOrNo, claimExpensesOrRRRYesNo)
+    val rentalsAndRaRAboutStoreAnswers = (isClaimPropertyIncomeAllowance, isClaimExpensesOrRRR)
     rentalsAndRaRAboutStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
   }
 
@@ -375,8 +375,8 @@ class MergeService @Inject() (implicit
     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
     resultFromRepository: Option[JourneyAnswers]
   ): Option[RaRAbout] = {
-    val rentARoomAllowancesStoreAnswers: Option[ClaimExpensesOrRRRYesNo] = resultFromRepository match {
-      case Some(journeyAnswers) => Some(journeyAnswers.data.as[ClaimExpensesOrRRRYesNo])
+    val rentARoomAllowancesStoreAnswers: Option[IsClaimExpensesOrRRR] = resultFromRepository match {
+      case Some(journeyAnswers) => Some(journeyAnswers.data.as[IsClaimExpensesOrRRR])
       case None                 => None
     }
     val jointlyLet = for {
