@@ -558,7 +558,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossId]] = {
     val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
     val apiVersion = "1500"
-    val url = s"${appConfig.ifBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/brought-forward-from/$taxYearStr"
+    val url = s"${appConfig.ifBaseUrl}/income-tax/brought-forward-losses/$nino/$taxYearStr"
     val body = BroughtForwardLossRequest(
       taxYearBroughtForwardFrom = taxYearStr,
       typeOfLoss = UKProperty,

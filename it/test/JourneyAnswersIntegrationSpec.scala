@@ -501,7 +501,7 @@ class JourneyAnswersIntegrationSpec
       val broughtForwardLossWithIdHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossResponseWithId).toString)
       val broughtForwardLossesHttpResponse: HttpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossesResponse).toString)
       stubPostHttpClientCall(
-        s"/individuals/losses/$nino/brought-forward-losses/tax-year/brought-forward-from/$taxYearStr",
+        s"/income-tax/brought-forward-losses/$nino/$taxYearStr",
         Json.toJson(broughtForwardLossRequest).toString,
         broughtForwardLossIdHttpResponse
       )
