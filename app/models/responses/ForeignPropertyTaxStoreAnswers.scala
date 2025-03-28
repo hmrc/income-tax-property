@@ -18,7 +18,7 @@ package models.responses
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ForeignPropertyTaxStoreAnswers(foreignIncomeTaxYesNo: Option[Boolean])
+case class ForeignPropertyTaxStoreAnswers(isForeignIncomeTax: Option[Boolean])
 
 object ForeignPropertyTaxStoreAnswers {
   implicit val format: OFormat[ForeignPropertyTaxStoreAnswers] = Json.format

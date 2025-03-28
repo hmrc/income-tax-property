@@ -44,7 +44,7 @@ class RequestHandlerSpec
                                                |            "isNonUKLandlord" : false,
                                                |            "otherIncomeFromProperty" : 25,
                                                |            "deductingTax" : {
-                                               |                "taxDeductedYesNo" : true,
+                                               |                "isTaxDeducted" : true,
                                                |                "taxDeductedAmount" : 20
                                                |            },
                                                |            "premiumsGrantLease" : {

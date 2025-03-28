@@ -486,10 +486,10 @@ class PropertyServiceSpec
     val journeyContext = journeyContextWithNino.toJourneyContext(JourneyName.RentalAdjustments)
     val propertyRentalAdjustments = PropertyRentalAdjustments(
       BigDecimal(12.34),
-      BalancingCharge(balancingChargeYesNo = true, Some(108)),
+      BalancingCharge(isBalancingCharge = true, Some(108)),
       Some(BigDecimal(34.56)),
       RenovationAllowanceBalancingCharge(
-        renovationAllowanceBalancingChargeYesNo = true,
+        isRenovationAllowanceBalancingCharge = true,
         renovationAllowanceBalancingChargeAmount = Some(92)
       ),
       BigDecimal(56.78),
@@ -907,7 +907,7 @@ class PropertyServiceSpec
       isNonUKLandlord = true,
       12.34,
       13.46,
-      Some(DeductingTax(taxDeductedYesNo = true, Some(14.51))),
+      Some(DeductingTax(isTaxDeducted = true, Some(14.51))),
       Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(14.75))),
       Some(98.78),
       Some(64.23),
@@ -1013,7 +1013,7 @@ class PropertyServiceSpec
     val rentalsAndRaRIncome = RentalsAndRaRIncome(
       isNonUKLandlord = true,
       otherIncomeFromProperty = 98.45,
-      deductingTax = Some(DeductingTax(taxDeductedYesNo = true, Some(125.50))),
+      deductingTax = Some(DeductingTax(isTaxDeducted = true, Some(125.50))),
       calculatedFigureYourself = Some(CalculatedFigureYourself(calculatedFigureYourself = true, Some(58.75))),
       yearLeaseAmount = Some(55.78),
       receivedGrantLeaseAmount = Some(65.05),
@@ -2056,10 +2056,10 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val ukRaRAbout = RaRAbout(
-      jointlyLetYesOrNo = true,
+      isJointlyLet = true,
       55.22,
       ClaimExpensesOrRelief(
-        claimExpensesOrReliefYesNo = true,
+        isClaimExpensesOrRelief = true,
         Some(22.55)
       )
     )
@@ -2122,7 +2122,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     Some(false),
-                    Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo)),
+                    Some(UkRentARoom(ukRaRAbout.isJointlyLet)),
                     None,
                     None
                   )
@@ -2202,12 +2202,12 @@ class PropertyServiceSpec
     val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
 
     val rentalsAndRaRAbout = RentalsAndRaRAbout(
-      jointlyLetYesOrNo = true,
+      isJointlyLet = true,
       55.22,
-      claimPropertyIncomeAllowanceYesOrNo = true,
+      isClaimPropertyIncomeAllowance = true,
       22.33,
       ClaimExpensesOrRelief(
-        claimExpensesOrReliefYesNo = true,
+        isClaimExpensesOrRelief = true,
         Some(22.55)
       )
     )
@@ -2270,7 +2270,7 @@ class PropertyServiceSpec
                     None,
                     None,
                     Some(false),
-                    Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo)),
+                    Some(UkRentARoom(rentalsAndRaRAbout.isJointlyLet)),
                     None,
                     None
                   )
@@ -2355,7 +2355,7 @@ class PropertyServiceSpec
     )
 
     val ukRaRAdjustments = RaRAdjustments(
-      Some(BalancingCharge(balancingChargeYesNo = true, Some(12.34))),
+      Some(BalancingCharge(isBalancingCharge = true, Some(12.34))),
       None,
       None,
       None

@@ -19,7 +19,7 @@ package models.request
 import play.api.libs.json.{Json, OFormat}
 
 case class CapitalAllowancesForACar(
-  capitalAllowancesForACarYesNo: Boolean,
+  isCapitalAllowancesForACar: Boolean,
   capitalAllowancesForACarAmount: Option[BigDecimal]
 )
 

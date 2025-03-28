@@ -39,7 +39,7 @@ class ForeignMergerSpec extends UnitTest {
   val premiumsOfLeaseGrant: Option[BigDecimal] = Some(BigDecimal(13.34))
   val otherPropertyIncome: Option[BigDecimal] = Some(BigDecimal(24.56))
   val consolidatedExpenses: Option[ConsolidatedExpenses] = Some(ConsolidatedExpenses(
-    consolidatedOrIndividualExpensesYesNo = true, Some(BigDecimal(90.05))))
+    isConsolidatedOrIndividualExpenses = true, Some(BigDecimal(90.05))))
   val premisesRunningCosts: Option[BigDecimal] = Some(BigDecimal(65.43))
   val repairsAndMaintenance: Option[BigDecimal] = Some(BigDecimal(32.21))
   val financialCosts: Option[BigDecimal] = Some(BigDecimal(54.32))
@@ -147,14 +147,14 @@ class ForeignMergerSpec extends UnitTest {
       } yield Map(countryCode -> foreignPropertyIncome)
 
       "store answers are available in the repo" in {
-        val foreignIncomeTaxYesOrNo = true
+        val isForeignIncomeTax = true
         val foreignPropertyTaxStoreAnswers: Option[Map[String, ForeignPropertyTaxStoreAnswers]] =
-          Some(Map(countryCode -> ForeignPropertyTaxStoreAnswers(Some(foreignIncomeTaxYesOrNo))))
+          Some(Map(countryCode -> ForeignPropertyTaxStoreAnswers(Some(isForeignIncomeTax))))
 
         foreignPropertyTaxStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignPropertyTax(
             foreignIncomeTax = Some(ForeignIncomeTax(
-              foreignIncomeTaxYesNo = foreignIncomeTaxYesOrNo,
+              isForeignIncomeTax = isForeignIncomeTax,
               foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
             )),
             foreignTaxCreditRelief = foreignTaxCreditRelief
@@ -167,7 +167,7 @@ class ForeignMergerSpec extends UnitTest {
         foreignPropertyTaxStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignPropertyTax(
             foreignIncomeTax = Some(ForeignIncomeTax(
-              foreignIncomeTaxYesNo = foreignTaxPaidOrDeducted.isDefined,
+              isForeignIncomeTax = foreignTaxPaidOrDeducted.isDefined,
               foreignTaxPaidOrDeducted = foreignTaxPaidOrDeducted
             )),
             foreignTaxCreditRelief = foreignTaxCreditRelief
@@ -241,10 +241,10 @@ class ForeignMergerSpec extends UnitTest {
       } yield Map(foreignProperty.countryCode -> foreignPropertyExpenses)
 
       "store answers are available in the repo" in {
-        val consolidatedExpensesYesOrNo = true
+        val isConsolidatedExpenses = true
         val foreignExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
           Some(Map(countryCode -> ForeignPropertyExpensesStoreAnswers(
-            consolidatedExpensesYesOrNo = consolidatedExpensesYesOrNo
+            isConsolidatedExpenses = isConsolidatedExpenses
           )))
         foreignExpensesStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignExpensesAnswers(
@@ -363,22 +363,22 @@ class ForeignMergerSpec extends UnitTest {
         val whenYouReportedTheLoss = Some(y2019to2020)
         val foreignAdjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] =
           Some(Map(countryCode -> ForeignAdjustmentsStoreAnswers(
-            balancingChargeYesNo = true,
-            foreignUnusedResidentialFinanceCostYesNo = Some(true),
-            unusedLossesPreviousYearsYesNo = true,
+            isBalancingCharge = true,
+            isForeignUnusedResidentialFinanceCost = Some(true),
+            isUnusedLossesPreviousYears = true,
             whenYouReportedTheLoss = whenYouReportedTheLoss,
           )))
         foreignAdjustmentsStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(
             countryCode -> ForeignAdjustmentsAnswers(
               privateUseAdjustment = privateUseAdjustment,
-              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              balancingCharge = Some(BalancingCharge(isBalancingCharge = true, balancingCharge)),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-                foreignUnusedResidentialFinanceCostYesNo = true,
+                isForeignUnusedResidentialFinanceCost = true,
                 foreignUnusedResidentialFinanceCostAmount = unusedResidentialFinanceCost
               )),
-              unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(unusedLossesPreviousYearsYesNo = true, None)),
+              unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(isUnusedLossesPreviousYears = true, None)),
               whenYouReportedTheLoss = whenYouReportedTheLoss,
               propertyIncomeAllowanceClaim = propertyAllowance
             )
@@ -392,10 +392,10 @@ class ForeignMergerSpec extends UnitTest {
           Map(
             countryCode -> ForeignAdjustmentsAnswers(
               privateUseAdjustment = privateUseAdjustment,
-              balancingCharge = Some(BalancingCharge(balancingChargeYesNo = true, balancingCharge)),
+              balancingCharge = Some(BalancingCharge(isBalancingCharge = true, balancingCharge)),
               residentialFinanceCost = residentialFinanceCost,
               unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-                foreignUnusedResidentialFinanceCostYesNo = true,
+                isForeignUnusedResidentialFinanceCost = true,
                 foreignUnusedResidentialFinanceCostAmount = unusedResidentialFinanceCost
               )),
               unusedLossesPreviousYears = None,
@@ -419,7 +419,7 @@ class ForeignMergerSpec extends UnitTest {
       }
 
       "store answers are available in the repo" in {
-        val capitalAllowancesForACarYesNo = Some(true)
+        val isCapitalAllowancesForACar = Some(true)
         val foreignAllowancesStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
           Some(
             Map(
@@ -428,7 +428,7 @@ class ForeignMergerSpec extends UnitTest {
                 None,
                 None,
                 None,
-                capitalAllowancesForACarYesNo = capitalAllowancesForACarYesNo
+                isCapitalAllowancesForACar = isCapitalAllowancesForACar
               )
             )
           )
@@ -442,7 +442,7 @@ class ForeignMergerSpec extends UnitTest {
         result.electricChargePointAllowance shouldBe electricChargePointAllowance
         result.zeroEmissionsCarAllowance shouldBe zeroEmissionsCarAllowance
         result.capitalAllowancesForACar shouldBe Some(CapitalAllowancesForACar(
-          capitalAllowancesForACarYesNo = true,
+          isCapitalAllowancesForACar = true,
           capitalAllowancesForACarAmount = otherCapitalAllowance))
       }
 

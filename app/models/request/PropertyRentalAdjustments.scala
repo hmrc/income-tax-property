@@ -36,14 +36,14 @@ object PropertyRentalAdjustments {
   implicit val format: OFormat[PropertyRentalAdjustments] = Json.format[PropertyRentalAdjustments]
 }
 
-final case class BalancingCharge(balancingChargeYesNo: Boolean, balancingChargeAmount: Option[BigDecimal])
+final case class BalancingCharge(isBalancingCharge: Boolean, balancingChargeAmount: Option[BigDecimal])
 
 object BalancingCharge {
   implicit val format: OFormat[BalancingCharge] = Json.format
 }
 
 final case class RenovationAllowanceBalancingCharge(
-  renovationAllowanceBalancingChargeYesNo: Boolean,
+  isRenovationAllowanceBalancingCharge: Boolean,
   renovationAllowanceBalancingChargeAmount: Option[BigDecimal]
 )
 
@@ -52,7 +52,7 @@ object RenovationAllowanceBalancingCharge {
 }
 
 final case class UnusedLossesBroughtForward(
-                                             unusedLossesBroughtForwardYesOrNo: Boolean,
+                                             isUnusedLossesBroughtForward: Boolean,
                                              unusedLossesBroughtForwardAmount: Option[BigDecimal]
                                            )
 

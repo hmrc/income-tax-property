@@ -124,7 +124,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |{
                    |  "countryCode": "USA",
                    |  "foreignIncomeTax": {
-                   |    "foreignIncomeTaxYesNo": true,
+                   |    "isForeignIncomeTax": true,
                    |    "foreignTaxPaidOrDeducted": 65
                    |     },
                    |  "foreignTaxCreditRelief": true
@@ -275,7 +275,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |
                    |     "countryCode" : "ESP",
                    |     "consolidatedExpenses": {
-                   |        "consolidatedOrIndividualExpensesYesNo": false
+                   |        "isConsolidatedOrIndividualExpenses": false
                    |     },
                    |      "premisesRunningCosts" : 70,
                    |      "repairsAndMaintenance" : 80,
@@ -395,16 +395,16 @@ class ForeignPropertyJourneyAnswersControllerSpec
                    |  "countryCode": "AUS",
                    |  "privateUseAdjustment": 231.45,
                    |  "balancingCharge": {
-                   |    "balancingChargeYesNo": true,
+                   |    "isBalancingCharge": true,
                    |    "balancingChargeAmount": 108
                    |  },
                    |  "residentialFinanceCost": 490.58,
                    |  "unusedResidentialFinanceCost": {
-                   |    "foreignUnusedResidentialFinanceCostYesNo": true,
+                   |    "isForeignUnusedResidentialFinanceCost": true,
                    |    "foreignUnusedResidentialFinanceCostAmount": 110.10
                    |  },
                    |  "unusedLossesPreviousYears": {
-                   |    "unusedLossesPreviousYearsYesNo": true,
+                   |    "isUnusedLossesPreviousYears": true,
                    |    "unusedLossesPreviousYearsAmount": 80.80
                    |  },
                    |  "whenYouReportedTheLoss": "y2018to2019"
@@ -433,17 +433,17 @@ class ForeignPropertyJourneyAnswersControllerSpec
         countryCode = "AUS",
         privateUseAdjustment = 231.45,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)
         ),
         residentialFinanceCost = Some(490.58),
         unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
+          isForeignUnusedResidentialFinanceCost = true,
           foreignUnusedResidentialFinanceCostAmount = Some(110.10)
         )),
         propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
-          unusedLossesPreviousYearsYesNo = true,
+          isUnusedLossesPreviousYears = true,
           unusedLossesPreviousYearsAmount = Some(80.80)
         ),
         whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)

@@ -19,7 +19,7 @@ package models.request
 import play.api.libs.json.{Format, Json}
 
 final case class ClaimExpensesOrRelief(
-                                        claimExpensesOrReliefYesNo: Boolean,
+                                        isClaimExpensesOrRelief: Boolean,
                                         rentARoomAmount: Option[BigDecimal]
                                    )
 
@@ -28,7 +28,7 @@ object ClaimExpensesOrRelief {
 }
 
 final case class RaRAbout(
-                           jointlyLetYesOrNo: Boolean,
+                           isJointlyLet: Boolean,
                            totalIncomeAmount: BigDecimal,
                            claimExpensesOrRelief: ClaimExpensesOrRelief
                          )

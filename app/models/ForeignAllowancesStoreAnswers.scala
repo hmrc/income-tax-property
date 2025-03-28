@@ -23,7 +23,7 @@ case class ForeignAllowancesStoreAnswers(
   zeroEmissionsGoodsVehicleAllowance: Option[BigDecimal],
   costOfReplacingDomesticItems: Option[BigDecimal],
   otherCapitalAllowance: Option[BigDecimal],
-  capitalAllowancesForACarYesNo: Option[Boolean]
+  isCapitalAllowancesForACar: Option[Boolean]
 )
 
 case object ForeignAllowancesStoreAnswers {

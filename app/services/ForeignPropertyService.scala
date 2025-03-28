@@ -188,7 +188,7 @@ class ForeignPropertyService @Inject() (
           persistForeignAnswers(
             journeyContext,
             ForeignPropertyExpensesStoreAnswers(
-              consolidatedExpensesYesOrNo = consolidatedExpenses.consolidatedOrIndividualExpensesYesNo
+              isConsolidatedExpenses = consolidatedExpenses.isConsolidatedOrIndividualExpenses
             ),
             foreignPropertyExpensesWithCountryCode.countryCode
           ).map(isPersistSuccess =>
@@ -225,7 +225,7 @@ class ForeignPropertyService @Inject() (
       _ <- persistForeignAnswers(
         journeyContext,
         ForeignPropertyTaxStoreAnswers(
-          foreignIncomeTaxYesNo = foreignPropertyTaxWithCountryCode.foreignIncomeTax.map(_.foreignIncomeTaxYesNo)
+          isForeignIncomeTax = foreignPropertyTaxWithCountryCode.foreignIncomeTax.map(_.isForeignIncomeTax)
         ),
         foreignPropertyTaxWithCountryCode.countryCode
       ).map(isPersistSuccess =>
@@ -469,7 +469,7 @@ class ForeignPropertyService @Inject() (
                  foreignPropertyAllowancesWithCountryCode.zeroEmissionsGoodsVehicleAllowance,
                costOfReplacingDomesticItems = foreignPropertyAllowancesWithCountryCode.costOfReplacingDomesticItems,
                otherCapitalAllowance = foreignPropertyAllowancesWithCountryCode.otherCapitalAllowance,
-               foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.capitalAllowancesForACarYesNo)
+               foreignPropertyAllowancesWithCountryCode.capitalAllowancesForACar.map(_.isCapitalAllowancesForACar)
              ),
              foreignPropertyAllowancesWithCountryCode.countryCode
            ).flatMap { isPersisted =>
@@ -538,13 +538,13 @@ class ForeignPropertyService @Inject() (
       res <- persistForeignAnswers(
         journeyContext,
         ForeignAdjustmentsStoreAnswers(
-          balancingChargeYesNo = foreignAdjustmentsWithCountryCode.balancingCharge.balancingChargeYesNo,
-          foreignUnusedResidentialFinanceCostYesNo =
+          isBalancingCharge = foreignAdjustmentsWithCountryCode.balancingCharge.isBalancingCharge,
+          isForeignUnusedResidentialFinanceCost =
             foreignAdjustmentsWithCountryCode.unusedResidentialFinanceCost.map(
-              _.foreignUnusedResidentialFinanceCostYesNo
+              _.isForeignUnusedResidentialFinanceCost
             ),
-          unusedLossesPreviousYearsYesNo =
-            foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.unusedLossesPreviousYearsYesNo,
+          isUnusedLossesPreviousYears =
+            foreignAdjustmentsWithCountryCode.unusedLossesPreviousYears.isUnusedLossesPreviousYears,
           whenYouReportedTheLoss = foreignAdjustmentsWithCountryCode.whenYouReportedTheLoss
         ),
         foreignAdjustmentsWithCountryCode.countryCode

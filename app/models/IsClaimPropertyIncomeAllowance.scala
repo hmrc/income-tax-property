@@ -18,8 +18,8 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ClaimExpensesOrRRRYesNo(claimExpensesOrRRR: Boolean)
+final case class IsClaimPropertyIncomeAllowance(isClaimPropertyIncomeAllowance: Boolean)
 
-object ClaimExpensesOrRRRYesNo {
-  implicit val format: OFormat[ClaimExpensesOrRRRYesNo] = Json.format[ClaimExpensesOrRRRYesNo]
+object IsClaimPropertyIncomeAllowance {
+  implicit val format: OFormat[IsClaimPropertyIncomeAllowance] = Json.format[IsClaimPropertyIncomeAllowance]
 }

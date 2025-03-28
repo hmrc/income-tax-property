@@ -137,7 +137,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(rentalsAndRaRAbout.jointlyLetYesOrNo))
+      Some(UkRentARoom(rentalsAndRaRAbout.isJointlyLet))
     )(amendedAnnualSubmission)
 
     ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(balancingChargeLens)
@@ -170,7 +170,7 @@ object PropertyAnnualSubmission {
     val focusFromRequestOnToUkRentARoomLens =
       ukOtherPropertyLens.andThen(ukOtherAdjustmentsLens).andThen(ukRentARoomLens)
     val resultWithUkRentARoom = focusFromRequestOnToUkRentARoomLens.replace(
-      Some(UkRentARoom(ukRaRAbout.jointlyLetYesOrNo))
+      Some(UkRentARoom(ukRaRAbout.isJointlyLet))
     )(amendedAnnualSubmission)
 
     resultWithUkRentARoom

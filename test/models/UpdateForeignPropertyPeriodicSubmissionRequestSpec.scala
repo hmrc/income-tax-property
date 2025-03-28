@@ -90,7 +90,7 @@ class UpdateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       val taxWithCountryCode = ForeignPropertyTaxWithCountryCode(
         countryCode = "FR",
         foreignTaxCreditRelief = Some(true),
-        foreignIncomeTax = Some(ForeignIncomeTax(foreignIncomeTaxYesNo = true, Some(50.0)))
+        foreignIncomeTax = Some(ForeignIncomeTax(isForeignIncomeTax = true, Some(50.0)))
       )
 
       val periodicSubmission = Some(

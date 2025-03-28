@@ -20,9 +20,9 @@ import models.request.foreign.adjustments.ForeignWhenYouReportedTheLoss
 import play.api.libs.json.{Json, OFormat}
 
 case class ForeignAdjustmentsStoreAnswers(
-                                           balancingChargeYesNo: Boolean,
-                                           foreignUnusedResidentialFinanceCostYesNo: Option[Boolean],
-                                           unusedLossesPreviousYearsYesNo: Boolean,
+                                           isBalancingCharge: Boolean,
+                                           isForeignUnusedResidentialFinanceCost: Option[Boolean],
+                                           isUnusedLossesPreviousYears: Boolean,
                                            whenYouReportedTheLoss: Option[ForeignWhenYouReportedTheLoss]
                                          )
 

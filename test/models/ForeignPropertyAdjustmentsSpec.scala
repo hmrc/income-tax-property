@@ -30,13 +30,13 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)),
         residentialFinanceCost = None,
         unusedResidentialFinanceCost = None,
         propertyIncomeAllowanceClaim = Some(12.34),
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
-          unusedLossesPreviousYearsYesNo = true,
+          isUnusedLossesPreviousYears = true,
           unusedLossesPreviousYearsAmount = Some(109.09)
         ),
         whenYouReportedTheLoss = Some(ForeignWhenYouReportedTheLoss.y2018to2019)
@@ -48,12 +48,12 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": true,
+          |    "isBalancingCharge": true,
           |    "balancingChargeAmount": 108
           |  },
           |  "propertyIncomeAllowanceClaim": 12.34,
           |  "unusedLossesPreviousYears": {
-          |    "unusedLossesPreviousYearsYesNo": true,
+          |    "isUnusedLossesPreviousYears": true,
           |    "unusedLossesPreviousYearsAmount": 109.09
           |  },
           |  "whenYouReportedTheLoss": "y2018to2019"
@@ -71,16 +71,16 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": true,
+          |    "isBalancingCharge": true,
           |    "balancingChargeAmount": 108
           |  },
           |  "residentialFinanceCost": 300,
           |  "unusedResidentialFinanceCost": {
-          |    "foreignUnusedResidentialFinanceCostYesNo": true,
+          |    "isForeignUnusedResidentialFinanceCost": true,
           |    "foreignUnusedResidentialFinanceCostAmount": 110.10
           |  },
           |  "unusedLossesPreviousYears": {
-          |    "unusedLossesPreviousYearsYesNo": true,
+          |    "isUnusedLossesPreviousYears": true,
           |    "unusedLossesPreviousYearsAmount": 109.09
           |  }
           |}
@@ -91,16 +91,16 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = true,
+          isBalancingCharge = true,
           balancingChargeAmount = Some(108)),
         residentialFinanceCost = Some(300.00),
         unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = true,
+          isForeignUnusedResidentialFinanceCost = true,
           foreignUnusedResidentialFinanceCostAmount = Some(110.10)
         )),
         propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
-          unusedLossesPreviousYearsYesNo = true,
+          isUnusedLossesPreviousYears = true,
           unusedLossesPreviousYearsAmount = Some(109.09)
         ),
         whenYouReportedTheLoss = None
@@ -129,14 +129,14 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
           |  "countryCode": "AUS",
           |  "privateUseAdjustment": 15.15,
           |  "balancingCharge": {
-          |    "balancingChargeYesNo": false
+          |    "isBalancingCharge": false
           |  },
           |  "residentialFinanceCost": 300,
           |  "unusedResidentialFinanceCost": {
-          |    "foreignUnusedResidentialFinanceCostYesNo": false
+          |    "isForeignUnusedResidentialFinanceCost": false
           |  },
           |  "unusedLossesPreviousYears": {
-          |    "unusedLossesPreviousYearsYesNo": false
+          |    "isUnusedLossesPreviousYears": false
           |  }
           |}
           |""".stripMargin
@@ -146,17 +146,17 @@ class ForeignPropertyAdjustmentsSpec extends PlaySpec {
         countryCode = "AUS",
         privateUseAdjustment = 15.15,
         balancingCharge = BalancingCharge(
-          balancingChargeYesNo = false,
+          isBalancingCharge = false,
           balancingChargeAmount = None
         ),
         residentialFinanceCost = Some(300.00),
         unusedResidentialFinanceCost = Some(ForeignUnusedResidentialFinanceCost(
-          foreignUnusedResidentialFinanceCostYesNo = false,
+          isForeignUnusedResidentialFinanceCost = false,
           foreignUnusedResidentialFinanceCostAmount = None
         )),
         propertyIncomeAllowanceClaim = None,
         unusedLossesPreviousYears = UnusedLossesPreviousYears(
-          unusedLossesPreviousYearsYesNo = false,
+          isUnusedLossesPreviousYears = false,
           unusedLossesPreviousYearsAmount = None
         ),
         whenYouReportedTheLoss = None
