@@ -17,6 +17,8 @@ Start the Income Tax Property Service: Use the Service Manager to start the serv
 
     sm2 --start INCOME_TAX_PROPERTY
 
+This service runs on port: `localhost:19160`
+
 Run the following command to start the additional required services locally:
 
     sm2 --start INCOME_TAX_SUBMISSION_ALL -r
