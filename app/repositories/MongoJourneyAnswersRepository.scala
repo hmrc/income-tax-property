@@ -23,7 +23,7 @@ import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
-import org.mongodb.scala.result.UpdateResult
+import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -78,6 +78,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
 
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
   }
+
   def foreignUpsertAnswers(ctx: JourneyContext, newData: JsValue, countryCode: String): Future[Boolean] = {
     val filter = foreignFilterJourney(ctx, countryCode)
     val bson = BsonDocument(Json.stringify(newData))
@@ -85,6 +86,25 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture().map(_ => true)
+  }
+
+  def deleteAnswers(
+    ctx: JourneyContext,
+    journeyNames: Seq[String]
+  ): Future[DeleteResult] = {
+    val credentialsFilter: Bson = Filters
+      .and(
+        Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
+        Filters.equal("taxYear", ctx.taxYear.endYear),
+        Filters.equal("mtditid", ctx.mtditid.value)
+      )
+
+    val filter: Bson = Filters.and(
+      credentialsFilter,
+      Filters.or(journeyNames.map(journeyName => Filters.equal("journey", journeyName)):_*)
+    )
+
+    collection.deleteMany(filter).toFuture()
   }
 
   def fetch(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {

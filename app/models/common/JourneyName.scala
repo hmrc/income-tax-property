@@ -70,6 +70,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   case object RentalsAndRaRESBA extends JourneyName("property-rentals-and-rent-a-room-esba")
 
+  // Foreign Property
   case object ForeignPropertySelectCountry extends JourneyName("foreign-property-select-country")
 
   case object ForeignPropertyTax extends JourneyName("foreign-property-tax")
@@ -86,5 +87,17 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
 
   //Uk and foreign property
   case object UkAndForeignPropertyAbout extends JourneyName("uk-foreign-property-about")
+
+
+  val foreignPropertyJourneyNames: Seq[JourneyName] = Seq(
+    ForeignPropertySelectCountry,
+    ForeignPropertyTax,
+    ForeignPropertyExpenses,
+    ForeignPropertyIncome,
+    ForeignPropertyAllowances,
+    ForeignPropertyAdjustments,
+    ForeignPropertySba
+  )
+
 
 }

@@ -88,8 +88,8 @@ class ForeignPropertyService @Inject() (
       .subflatMap { maybeAnnualForeignPropertySubmission =>
         maybeAnnualForeignPropertySubmission.fold[Either[ServiceError, AnnualForeignPropertySubmission]] {
           logger.error(s"[getAnnualForeignPropertySubmissionFromDownStream] For Foreign Property no Annual submission found in IF")
-        DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
-      }(_.asRight[ServiceError])
+          DataNotFoundError.asLeft[AnnualForeignPropertySubmission]
+        }(_.asRight[ServiceError])
       }
 
 
@@ -119,7 +119,7 @@ class ForeignPropertyService @Inject() (
             case Right(None) =>
               logger.error(s"[getPropertySubmissions] Foreign property submission details not found in IF")
               None.asRight[ApiError]
-            case Left(e)     =>
+            case Left(e) =>
               logger.error(s"[getPropertySubmissions] Foreign property submission details error found in IF: ${e.status}")
               e.asLeft[Option[PropertyPeriodicSubmission]]
           }
@@ -132,7 +132,7 @@ class ForeignPropertyService @Inject() (
         List[Option[PropertyPeriodicSubmission]]().asRight[ApiError]
       )((acc, a) =>
         a match {
-          case Left(e)  => e.asLeft[List[Option[PropertyPeriodicSubmission]]]
+          case Left(e) => e.asLeft[List[Option[PropertyPeriodicSubmission]]]
           case Right(r) => acc.map(l => r :: l)
         }
       )
@@ -145,16 +145,28 @@ class ForeignPropertyService @Inject() (
     EitherT(
       repository.upsertAnswers(ctx, Json.toJson(answers)).map {
         case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
+        case true => true.asRight[ServiceError]
       }
     )
+
   private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
                                                                                              writes: Writes[A]
   ): EitherT[Future, ServiceError, Boolean] =
     EitherT(
       repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
         case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
+        case true => true.asRight[ServiceError]
+      }
+    )
+
+  def deleteAnswers(ctx: JourneyContext, journeyNames: Seq[String]): EitherT[Future, ServiceError, Boolean] =
+    EitherT(
+      repository.deleteAnswers(ctx, journeyNames).map { deleteResult =>
+        if (deleteResult.wasAcknowledged()) {
+          true.asRight[ServiceError]
+        } else {
+          RepositoryError.asLeft[Boolean]
+        }
       }
     )
 
@@ -183,12 +195,10 @@ class ForeignPropertyService @Inject() (
         currentPeriodicSubmission,
         foreignPropertyExpensesWithCountryCode
       )
-      _ <- foreignPropertyExpensesWithCountryCode.consolidatedExpenses match {
-        case Some(consolidatedExpenses) =>
-          persistForeignAnswers(
+      _ <- persistForeignAnswers(
             journeyContext,
             ForeignPropertyExpensesStoreAnswers(
-              isConsolidatedExpenses = consolidatedExpenses.isConsolidatedOrIndividualExpenses
+              isConsolidatedExpenses = foreignPropertyExpensesWithCountryCode.consolidatedExpenses.exists(_.isConsolidatedOrIndividualExpenses)
             ),
             foreignPropertyExpensesWithCountryCode.countryCode
           ).map(isPersistSuccess =>
@@ -198,9 +208,6 @@ class ForeignPropertyService @Inject() (
               logger.info("Foreign Expenses persisted successfully")
             }
           )
-        case _ =>
-          ITPEnvelope.liftPure(None)
-      }
     } yield submissionResponse
 
   def saveForeignPropertyTax(
@@ -602,5 +609,15 @@ class ForeignPropertyService @Inject() (
         }
       )
     } yield isSubmissionSuccess
+  }
+
+  def deleteForeignPropertyAnswers(
+    ctx: JourneyContext,
+    deleteJourneyAnswersRequest: DeleteJourneyAnswers
+  ): EitherT[Future, ServiceError, Boolean] = {
+    deleteAnswers(
+      ctx,
+      deleteJourneyAnswersRequest.journeyNames.filter(JourneyName.foreignPropertyJourneyNames.map(_.toString).contains(_))
+    )
   }
 }

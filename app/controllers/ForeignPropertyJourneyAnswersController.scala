@@ -147,4 +147,19 @@ class ForeignPropertyJourneyAnswersController @Inject() (
         }
       }
     }
+
+  def deleteForeignPropertyAnswers(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
+    auth.async { implicit request =>
+      withJourneyContextAndEntity[DeleteJourneyAnswers](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.ForeignPropertySelectCountry,
+        request
+      ) { (ctx, deleteJourneyAnswersRequest: DeleteJourneyAnswers) =>
+        handleResponse(NO_CONTENT) {
+          foreignPropertyService.deleteForeignPropertyAnswers(ctx, deleteJourneyAnswersRequest)
+        }
+      }
+    }
 }
