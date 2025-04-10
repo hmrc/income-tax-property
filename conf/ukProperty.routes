@@ -1,0 +1,39 @@
+############### UK Property ##############
+
+POST          /:taxYear/:incomeSourceId/property-about/:nino/answers                                                      controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/property-rental-about/:nino/answers                                               controllers.JourneyAnswersController.savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/property-rental-adjustments/:nino/answers                                         controllers.JourneyAnswersController.savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/property-rental-expenses/:nino/answers                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rental-expenses")
+
+POST          /:taxYear/:incomeSourceId/property-rental-allowances/:nino/answers                                          controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/property-rental-sba/:nino/answers                                                 controllers.JourneyAnswersController.savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/esba/:nino/answers                                                                controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rental-income/:nino/answers                                                       controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rent-a-room-about/:nino/answers                                                   controllers.JourneyAnswersController.saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rent-a-room-allowances/:nino/answers                                              controllers.JourneyAnswersController.saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answers                                                controllers.JourneyAnswersController.saveRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rent-a-room-expenses")
+
+POST          /:taxYear/:incomeSourceId/rent-a-room-adjustments/:nino/answers                                             controllers.JourneyAnswersController.savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-about/:nino/answers                                       controllers.JourneyAnswersController.saveRentalsAndRaRAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-income/:nino/answers                                      controllers.JourneyAnswersController.saveRentalsAndRaRIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-expenses/:nino/answers                                    controllers.JourneyAnswersController.saveRentalsAndRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-allowances/:nino/answers                                  controllers.JourneyAnswersController.saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-sba/:nino/answers                                         controllers.JourneyAnswersController.savRentalsAndRaRSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-adjustments/:nino/answers                                 controllers.JourneyAnswersController.saveRentalsAndRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/rentals-and-rent-a-room-esba/:nino/answers                                        controllers.JourneyAnswersController.saveRentalsAndRaREsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
