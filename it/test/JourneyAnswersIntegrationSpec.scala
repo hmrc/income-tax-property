@@ -586,7 +586,7 @@ class JourneyAnswersIntegrationSpec
       val requestHeaders =
         Map("Content-Type" -> "application/json", "Authorization" -> "Bearer 123", "mtditid" -> "1234567890")
       val baseUrl =
-        s"http://localhost:$port/income-tax-property/property/2021/$incomeSourceId/rent-a-room-adjustments/$taxableEntityId/answers"
+        s"http://localhost:$port/income-tax-property/uk-property/2021/$incomeSourceId/rent-a-room-adjustments/$taxableEntityId/answers"
 
       val response =
         wsClient

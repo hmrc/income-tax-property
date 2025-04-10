@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.ukandforeignproperty
 
 import cats.implicits.catsSyntaxEitherId
 import models.common._

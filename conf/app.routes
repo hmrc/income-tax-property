@@ -1,55 +1,18 @@
+->            /uk-property                                                                      ukProperty.Routes
+
+->            /foreign-property                                                                 foreignProperty.Routes
+
+->            /uk-and-foreign-property                                                          ukAndForeignProperty.Routes
+
 # microservice specific routes
 #API-1711
-GET           /business-details/nino/:nino                                                                                         controllers.BusinessDetailsController.getBusinessDetails(nino: String)
+GET           /property/business-details/nino/:nino                                             controllers.BusinessDetailsController.getBusinessDetails(nino: String)
 
-GET           /property/:taxYear/income/:nino/:incomeSourceId                                                                      controllers.JourneyAnswersController.fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
+GET           /property/:taxYear/income/:nino/:incomeSourceId                                   controllers.PropertyController.fetchPropertyData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
 
-POST          /property/:taxYear/:incomeSourceId/property-about/:nino/answers                                                      controllers.JourneyAnswersController.savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+PUT           /property/completed-section/:incomeSourceId/:journey/:taxYear                     controllers.PropertyController.setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String)
 
-POST          /property/:taxYear/:incomeSourceId/property-rental-about/:nino/answers                                               controllers.JourneyAnswersController.savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/property-rental-adjustments/:nino/answers                                         controllers.JourneyAnswersController.savePropertyRentalAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/property-rental-expenses/:nino/answers                                            controllers.JourneyAnswersController.saveExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rental-expenses")
-
-POST          /property/:taxYear/:incomeSourceId/property-rental-allowances/:nino/answers                                          controllers.JourneyAnswersController.savePropertyRentalAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/property-rental-sba/:nino/answers                                                 controllers.JourneyAnswersController.savePropertyRentalSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/esba/:nino/answers                                                                controllers.JourneyAnswersController.saveEsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rental-income/:nino/answers                                                       controllers.JourneyAnswersController.saveIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-
-
-POST          /property/:taxYear/:incomeSourceId/rent-a-room-about/:nino/answers                                                   controllers.JourneyAnswersController.saveRentARoomAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rent-a-room-allowances/:nino/answers                                              controllers.JourneyAnswersController.saveRentARoomAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rent-a-room-expenses/:nino/answers                                                controllers.JourneyAnswersController.saveRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino, journeyName: String = "rent-a-room-expenses")
-
-POST          /property/:taxYear/:incomeSourceId/rent-a-room-adjustments/:nino/answers                                             controllers.JourneyAnswersController.savePropertyRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-about/:nino/answers                                       controllers.JourneyAnswersController.saveRentalsAndRaRAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-income/:nino/answers                                      controllers.JourneyAnswersController.saveRentalsAndRaRIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-expenses/:nino/answers                                    controllers.JourneyAnswersController.saveRentalsAndRaRExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-allowances/:nino/answers                                  controllers.JourneyAnswersController.saveRentalsAndRaRAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-PUT           /completed-section/:incomeSourceId/:journey/:taxYear                                                                 controllers.JourneyAnswersController.setStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String)
-
-PUT           /completed-section/:incomeSourceId/:journey/:taxYear/:countryCode                                                    controllers.JourneyAnswersController.setForeignStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String, countryCode: String)
-
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-sba/:nino/answers                                         controllers.JourneyAnswersController.savRentalsAndRaRSBA(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-adjustments/:nino/answers                                 controllers.JourneyAnswersController.saveRentalsAndRaRAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
-
-POST          /property/:taxYear/:incomeSourceId/rentals-and-rent-a-room-esba/:nino/answers                                        controllers.JourneyAnswersController.saveRentalsAndRaREsba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+PUT           /property/completed-section/:incomeSourceId/:journey/:taxYear/:countryCode        controllers.PropertyController.setForeignStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String, countryCode: String)
 
 # Retrieve PrePopulation Data
-GET           /property/pre-population/:nino                                                                                       controllers.PrePopulationController.get(nino: String)
+GET           /property/pre-population/:nino                                                    controllers.PrePopulationController.get(nino: String)
