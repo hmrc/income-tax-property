@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.ukandforeignproperty
 
 import actions.AuthorisedAction
+import controllers.RequestHandler
 import errorhandling.ErrorHandler
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.request.ukAndForeign.UkAndForeignAbout

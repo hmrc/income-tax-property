@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.ukproperty
 
 import cats.syntax.either._
 import models.RentalsAndRaRAbout
 import models.UKPropertySelect.PropertyRentals
-import models.common.JourneyName.{About, NoJourney, RentARoomAbout, RentARoomAdjustments}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
-import models.errors.{ApiServiceError, InvalidJsonFormatError, RepositoryError, ServiceError}
+import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.request._
 import models.request.esba.EsbaInfo
-import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
-import models.request.{WhenYouReportedTheLoss, UnusedLossesBroughtForward}
-import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.responses._
-import org.apache.pekko.util.Timeout
-import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -48,7 +43,6 @@ class JourneyAnswersControllerSpec
 
   private val underTest = new JourneyAnswersController(
     mockPropertyService,
-    journeyStatusService,
     mockAuthorisedAction,
     cc
   )
@@ -216,38 +210,7 @@ class JourneyAnswersControllerSpec
     }
   }
 
-  "Update journey status for rent-a-room" should {
 
-    val journeyStatusJs: JsValue = Json.parse("""
-                                                |{
-                                                | "status": "inProgress"
-                                                |}
-                                                |""".stripMargin)
-
-    val journeyStatusErrorJs: JsValue = Json.parse("""
-                                                     |{
-                                                     | "foo": "completed"
-                                                     |}
-                                                     |""".stripMargin)
-
-    "should return no_content for valid request body where a field named status is present in the body request" in {
-
-      mockAuthorisation()
-
-      val request = fakePostRequest.withJsonBody(journeyStatusJs)
-      val result =
-        await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
-      result.header.status shouldBe NO_CONTENT
-    }
-
-    "should return bad request when a field named status is not present in the request body" in {
-      mockAuthorisation()
-      val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
-      val result =
-        await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
-      result.header.status shouldBe BAD_REQUEST
-    }
-  }
 
   "create or update property rental adjustments section" should {
 
@@ -798,71 +761,7 @@ class JourneyAnswersControllerSpec
     }
   }
 
-  "fetch merged property data" should {
-    "return success when service returns success " in {
-      mockAuthorisation()
-      val uKPropertyData = FetchedUKPropertyData(
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        Some(
-          EsbaInfo(
-            claimEnhancedStructureBuildingAllowance = true,
-            enhancedStructureBuildingAllowanceClaims = Some(true),
-            List()
-          )
-        ),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        List(),
-        Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
-      )
-      val foreignPropertyData = FetchedForeignPropertyData(
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None
-      )
-      val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
-        None
-      )
-      val resultFromService = FetchedPropertyData(
-        ukPropertyData = uKPropertyData,
-        foreignPropertyData = foreignPropertyData,
-        ukAndForeignPropertyData = ukAndForeignPropertyData
-      )
-      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
-      val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
 
-      status(result) shouldBe 200
-
-      val timeout: Timeout = Timeout(Span(250, Millis))
-      contentAsJson(result)(timeout) shouldBe Json.toJson(resultFromService)
-    }
-    "return failure when service returns failure " in {
-      mockAuthorisation()
-      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, RepositoryError.asLeft[FetchedPropertyData])
-      val result = await(underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest))
-      result.header.status shouldBe 500
-    }
-  }
 
   "create or update property rentals and rent a room about section" should {
     val ctx: JourneyContext =

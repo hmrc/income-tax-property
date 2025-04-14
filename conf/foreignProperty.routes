@@ -1,0 +1,17 @@
+# Foreign Property specific routes #######################
+
+POST          /:taxYear/:incomeSourceId/foreign-property-select-country/:nino/answers           controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveSelectCountrySection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-tax/:nino/answers                      controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignPropertyTax(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-income/:nino/answers                   controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignIncome(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-expenses/:nino/answers                 controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignPropertyExpenses(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-allowances/:nino/answers               controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignPropertyAllowances(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-adjustments/:nino/answers              controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignPropertyAdjustments(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-sba/:nino/answers                      controllers.foreignproperty.ForeignPropertyJourneyAnswersController.saveForeignPropertySba(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
+
+POST          /:taxYear/:incomeSourceId/foreign-property-delete/:nino/answers                   controllers.foreignproperty.ForeignPropertyJourneyAnswersController.deleteForeignPropertyAnswers(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)
