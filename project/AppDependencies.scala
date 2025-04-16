@@ -18,7 +18,7 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.18.3",
-    "com.beachape"                 %% "enumeratum"                % "1.7.5",
+    "com.beachape"                 %% "enumeratum"                % "1.7.6",
     "com.beachape"                 %% "enumeratum-play-json"      % "1.8.2" excludeAll (jacksonAndPlayExclusions *),
     "dev.optics"                   %% "monocle-core"              % monocleVersion,
     "dev.optics"                   %% "monocle-macro"             % monocleVersion
