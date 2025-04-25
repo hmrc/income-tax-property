@@ -1,0 +1,3 @@
+# Foreign Incoem specific routes #######################
+
+POST          /:taxYear/:incomeSourceId/foreign-dividends/:nino/answers           controllers.foreignincome.ForeignIncomeJourneyAnswersController.saveDividendsSection(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino)

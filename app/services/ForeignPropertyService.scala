@@ -620,4 +620,13 @@ class ForeignPropertyService @Inject() (
       deleteJourneyAnswersRequest.journeyNames.filter(JourneyName.foreignPropertyJourneyNames.map(_.toString).contains(_))
     )
   }
+
+  def saveForeignIncomeDividends(
+                                  ctx: JourneyContext,
+                                  foreignDividends: ForeignDividends
+                                )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
+    persistAnswers(
+      ctx,
+      foreignDividends
+    )
 }
