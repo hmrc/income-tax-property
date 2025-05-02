@@ -703,7 +703,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a foreign property annual submission from the Integration Framework: URL: $url" +
+            s"Error creating a foreign income dividends submission from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
