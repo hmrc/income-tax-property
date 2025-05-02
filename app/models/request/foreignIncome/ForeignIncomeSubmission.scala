@@ -22,8 +22,7 @@ import monocle.macros.GenLens
 import play.api.libs.json.{OFormat, Writes, Json, JsValue}
 import play.api.libs.ws.BodyWritable
 
-case class  ForeignIncomeDividends(countryCode: String,
-                                  amountBeforeTax: Option[BigDecimal],
+case class  ForeignIncomeDividends(amountBeforeTax: Option[BigDecimal],
                                   taxTakenOff: Option[BigDecimal],
                                   specialWithholdingTax: Option[BigDecimal],
                                   foreignTaxCreditRelief: Boolean,
@@ -33,18 +32,27 @@ object ForeignIncomeDividends {
   implicit val format: OFormat[ForeignIncomeDividends] = Json.format[ForeignIncomeDividends]
 }
 
-case class ForeignIncomeDividendsOption(countryCode: String, dividends: Option[ForeignIncomeDividends])
+case class ForeignIncome(countryCode: String, dividends: Option[ForeignIncomeDividends])
 
-object ForeignIncomeDividendsOption {
-  implicit val format: OFormat[ForeignIncomeDividendsOption] = Json.format[ForeignIncomeDividendsOption]
+object ForeignIncome {
+  implicit val format: OFormat[ForeignIncome] = Json.format[ForeignIncome]
 }
 
 case class ForeignIncomeSubmissionDividends(
-  foreignIncome: Option[Seq[ForeignIncomeDividends]]
-                                           )
+       foreignIncome: Option[Seq[ForeignIncome]]
+                                                     )
 
 object ForeignIncomeSubmissionDividends {
-  implicit val format: OFormat[ForeignIncomeDividends] = Json.format[ForeignIncomeDividends]
+  implicit val format: OFormat[ForeignIncomeSubmissionDividends] =
+    Json.format[ForeignIncomeSubmissionDividends]
+}
+
+case class ForeignIncomeSubmission(
+  foreignIncome: Option[Seq[ForeignIncome]]
+                                           )
+
+object ForeignIncomeSubmission {
+  implicit val format: OFormat[ForeignIncomeSubmission] = Json.format[ForeignIncomeSubmission]
 
   implicit def jsonBodyWritable[T](implicit
                                    writes: Writes[T],
@@ -54,13 +62,14 @@ object ForeignIncomeSubmissionDividends {
   def fromForeignIncomeDividends(
     foreignIncomeDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
                                 ): ForeignIncomeSubmissionDividends = {
+
+    val countryCode = foreignIncomeDividendsWithCountryCode.countryCode
     val foreignIncomeLens = GenLens[ForeignIncomeSubmissionDividends](_.foreignIncome)
-    val foreignIncomeDividendsLens = GenLens[ForeignIncomeDividendsOption](_.dividends)
+    val foreignIncomeDividendsLens = GenLens[ForeignIncome](_.dividends)
     val firstForeignIncomeDividendsLens: Optional[ForeignIncomeSubmissionDividends, ForeignIncomeDividends] =
       foreignIncomeLens.some.index(0).andThen(foreignIncomeDividendsLens.some)
 
     val newForeignIncomeDividends = ForeignIncomeDividends(
-      countryCode = foreignIncomeDividendsWithCountryCode.countryCode,
       amountBeforeTax = foreignIncomeDividendsWithCountryCode.amountBeforeTax,
       taxTakenOff = foreignIncomeDividendsWithCountryCode.taxTakenOff,
       specialWithholdingTax = foreignIncomeDividendsWithCountryCode.specialWithholdingTax,
@@ -71,9 +80,12 @@ object ForeignIncomeSubmissionDividends {
     val emptyAllowances = ForeignIncomeSubmissionDividends(
       foreignIncome = Some(
         Seq(
-          ForeignIncomeDividends("", None, None, None, false, 0)
+          ForeignIncome(
+            countryCode = countryCode,
+            dividends = Some(ForeignIncomeDividends(None, None, None, false, 0))
         )
       )
+    )
     )
 
     val foreignIncomeSubmissionDividendsWithNewAllowances =

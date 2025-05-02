@@ -27,7 +27,7 @@ import models.common.{Nino, TaxYear, JourneyContext}
 import models.errors.{ServiceError, ApiServiceError, RepositoryError}
 import models.request.ForeignIncomeDividendsWithCountryCode
 import uk.gov.hmrc.http.HeaderCarrier
-import models.request.foreignIncome.ForeignIncomeSubmissionDividends
+import models.request.foreignIncome.{ForeignIncomeSubmissionDividends, ForeignIncomeSubmission}
 import play.api.libs.json.{Writes, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -71,7 +71,7 @@ class ForeignIncomeService  @Inject() (
                                 )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
       for {
         _ <- {
-          val foreignDividendsSubmission = ForeignIncomeSubmissionDividends.fromForeignIncomeDividends(foreignDividendsWithCountryCode)
+          val foreignDividendsSubmission = ForeignIncomeSubmission.fromForeignIncomeDividends(foreignDividendsWithCountryCode)
           createOrUpdateForeignDividendsSubmission(
             journeyContext.taxYear,
             nino,

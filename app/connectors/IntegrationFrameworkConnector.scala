@@ -696,7 +696,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .put(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .withBody(foreignDividends)
+      .withBody(Json.toJson(foreignDividends))
       .execute[PutForeignIncomeSubmissionResponse]
       .map { response: PutForeignIncomeSubmissionResponse =>
         if (response.result.isLeft) {
