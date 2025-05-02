@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.request
+package models.request.foreignIncome
 
 import play.api.libs.json.{Format, Json}
 

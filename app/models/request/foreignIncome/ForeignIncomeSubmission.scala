@@ -16,7 +16,6 @@
 
 package models.request.foreignIncome
 
-import models.request.ForeignIncomeDividendsWithCountryCode
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json.{OFormat, Writes, Json, JsValue}
@@ -82,7 +81,7 @@ object ForeignIncomeSubmission {
         Seq(
           ForeignIncome(
             countryCode = countryCode,
-            dividends = Some(ForeignIncomeDividends(None, None, None, false, 0))
+            dividends = Some(ForeignIncomeDividends(None, None, None, foreignTaxCreditRelief = false, 0))
         )
       )
     )

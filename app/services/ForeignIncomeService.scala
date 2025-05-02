@@ -25,7 +25,7 @@ import models.{ITPEnvelope, ForeignIncomeDividendsStoreAnswers}
 import models.ITPEnvelope.ITPEnvelope
 import models.common.{Nino, TaxYear, JourneyContext}
 import models.errors.{ServiceError, ApiServiceError, RepositoryError}
-import models.request.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
 import uk.gov.hmrc.http.HeaderCarrier
 import models.request.foreignIncome.{ForeignIncomeSubmissionDividends, ForeignIncomeSubmission}
 import play.api.libs.json.{Writes, Json}

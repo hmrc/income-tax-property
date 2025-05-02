@@ -19,7 +19,7 @@ package controllers.foreignincome
 import cats.syntax.either._
 import models.common._
 import models.errors.{ServiceError, InvalidJsonFormatError, ApiServiceError}
-import models.request.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{Json, JsValue}
 import play.api.test.Helpers._

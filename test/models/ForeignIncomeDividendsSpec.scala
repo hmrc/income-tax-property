@@ -16,7 +16,7 @@
 
 package models
 
-import models.request.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
