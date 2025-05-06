@@ -21,7 +21,7 @@ import cats.implicits.catsSyntaxEitherId
 import play.api.Logging
 import repositories.MongoJourneyAnswersRepository
 import connectors.IntegrationFrameworkConnector
-import models.{ITPEnvelope, ForeignIncomeDividendsStoreAnswers}
+import models.{ITPEnvelope, ForeignIncomeDividendsStoreAnswers, ForeignIncomeDividendsAnswers}
 import models.ITPEnvelope.ITPEnvelope
 import models.common.{Nino, TaxYear, JourneyContext}
 import models.errors.{ServiceError, ApiServiceError, RepositoryError}
@@ -81,12 +81,8 @@ class ForeignIncomeService  @Inject() (
         res <- persistForeignIncomeAnswers(
           journeyContext,
           ForeignIncomeDividendsStoreAnswers(
-            countryCode = foreignDividendsWithCountryCode.countryCode,
-            amountBeforeTax = foreignDividendsWithCountryCode.amountBeforeTax,
-            taxTakenOff = foreignDividendsWithCountryCode.taxTakenOff,
-            specialWithholdingTax = foreignDividendsWithCountryCode.specialWithholdingTax,
-            foreignTaxCreditRelief = foreignDividendsWithCountryCode.foreignTaxCreditRelief,
-            taxableAmount = foreignDividendsWithCountryCode.taxableAmount),
+            List(ForeignIncomeDividendsAnswers(foreignDividendsWithCountryCode.countryCode, foreignDividendsWithCountryCode.foreignTaxCreditRelief))
+          ),
           foreignDividendsWithCountryCode.countryCode
         )
       } yield res

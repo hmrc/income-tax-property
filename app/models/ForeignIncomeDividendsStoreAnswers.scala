@@ -19,14 +19,18 @@ package models
 import play.api.libs.json.{OFormat, Json}
 
 case class ForeignIncomeDividendsStoreAnswers (
-  countryCode: String,
-  amountBeforeTax: Option[BigDecimal],
-  taxTakenOff: Option[BigDecimal],
-  specialWithholdingTax: Option[BigDecimal],
-  foreignTaxCreditRelief: Boolean,
-  taxableAmount: BigDecimal
+  foreignIncomeDividendsAnswers: List[ForeignIncomeDividendsAnswers]
                                               )
 
 object ForeignIncomeDividendsStoreAnswers {
   implicit val incomeAnswersFormat: OFormat[ForeignIncomeDividendsStoreAnswers] = Json.format[ForeignIncomeDividendsStoreAnswers]
+}
+
+case class ForeignIncomeDividendsAnswers(
+  countryCode: String,
+  foreignTaxDeductedFromDividendIncome: Boolean
+                                        )
+
+object ForeignIncomeDividendsAnswers {
+  implicit val incomeAnswersFormat: OFormat[ForeignIncomeDividendsAnswers] = Json.format[ForeignIncomeDividendsAnswers]
 }
