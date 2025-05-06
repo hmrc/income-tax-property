@@ -30,6 +30,7 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "foreignProperty.Routes",
     "foreignProperty.RoutesPrefix",
     "ukAndForeignProperty.RoutesPrefix",
+    "foreignIncome.Routes"
 
   )
 
