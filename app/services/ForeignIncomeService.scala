@@ -51,8 +51,8 @@ class ForeignIncomeService  @Inject() (
       }
       .subflatMap { dividendsIncomeSubmission =>
         dividendsIncomeSubmission.fold[Either[ServiceError, ForeignIncomeSubmission]] {
-          logger.error(s"[getDividendsIncomeSubmission] Dividend income details not found in IF")
-          DataNotFoundError.asLeft[ForeignIncomeSubmission]
+          logger.error(s"[getDividendsIncomeSubmission] Dividend income details not found in IF, returning empty foreign income submission")
+          ForeignIncomeSubmission.emptyForeignIncomeSubmission.asRight[ServiceError]
         } { data =>
           logger.info(s"[getDividendsIncomeSubmission] Dividend income data found: $data")
           data.asRight[ServiceError]

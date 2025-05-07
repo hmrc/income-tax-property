@@ -19,7 +19,7 @@ package services
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import models.common._
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
+import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError, SingleErrorBody}
 import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
 import models.request.foreignincome.{ForeignDividend, ForeignIncomeDividend, ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -67,10 +67,10 @@ class ForeignIncomeServiceSpec
         Right(emptyForeignIncomeSubmission.copy(foreignDividend = Some(Seq(foreignDividend))))
     }
 
-    "return DataNotFoundError when income submissions are not present" in {
+    "return an empty foreign income submission when one is not present" in {
       mockGetForeignIncomeSubmission(taxYear, nino, Right(None))
       await(underTest.getForeignIncomeSubmission(taxYear, nino).value) shouldBe
-        DataNotFoundError.asLeft[ForeignIncomeSubmission]
+        ForeignIncomeSubmission.emptyForeignIncomeSubmission.asRight[ServiceError]
     }
 
     "return ApiError when IF call fails" in {
