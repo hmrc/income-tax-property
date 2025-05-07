@@ -88,6 +88,9 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   //Uk and foreign property
   case object UkAndForeignPropertyAbout extends JourneyName("uk-foreign-property-about")
 
+  //Foreign income
+  case object ForeignIncomeDividends extends JourneyName("foreign-dividends")
+
 
   val foreignPropertyJourneyNames: Seq[JourneyName] = Seq(
     ForeignPropertySelectCountry,

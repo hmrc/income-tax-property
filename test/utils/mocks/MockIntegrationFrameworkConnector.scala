@@ -20,7 +20,8 @@ import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, UpdateForeignPropertyPeriodicSubmissionRequest, CreateForeignPropertyPeriodicSubmissionRequest, AnnualForeignPropertySubmissionAllowances}
-import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
+import models.request.foreignIncome.ForeignIncomeSubmissionDividends
+import models.request.{WhenYouReportedTheLoss, CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler6, CallHandler4, CallHandler5}
 import org.scalamock.scalatest.MockFactory
@@ -347,6 +348,22 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       )
       )
       .expects(taxYearBroughtForwardFrom, nino, lossId, lossAmount, *)
+      .returning(Future.successful(result))
+
+  def mockCreateForeignIncomeSubmissionDividends(
+                                                            taxYear: TaxYear,
+                                                            taxableEntityId: Nino,
+                                                            result: Either[ApiError, Unit]
+                                                          ): CallHandler4[TaxYear, Nino, ForeignIncomeSubmissionDividends, HeaderCarrier, Future[Either[ApiError, Unit]]] =
+    (mockIntegrationFrameworkConnector
+      .createOrUpdateForeignDividendsSubmission(
+        _: TaxYear,
+        _: Nino,
+        _: ForeignIncomeSubmissionDividends
+      )(
+        _: HeaderCarrier
+      ))
+      .expects(taxYear, taxableEntityId, *, *)
       .returning(Future.successful(result))
 
 
