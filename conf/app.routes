@@ -4,6 +4,9 @@
 
 ->            /uk-and-foreign-property                                                          ukAndForeignProperty.Routes
 
+->            /foreign-income                                                                   foreignIncome.Routes
+
+
 # microservice specific routes
 #API-1711
 GET           /property/business-details/nino/:nino                                             controllers.BusinessDetailsController.getBusinessDetails(nino: String)
