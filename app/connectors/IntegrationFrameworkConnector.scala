@@ -684,12 +684,12 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[ForeignIncomeSubmission]]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/${asTys(taxYear)}/$nino",
         "1907"
       )
     } else {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}",
         "1609"
       )
     }
@@ -721,12 +721,12 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/${asTys(taxYear)}/$nino",
         "1906"
       )
     } else {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}",
         "1608"
       )
     }
@@ -758,12 +758,12 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
     val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/${asTys(taxYear)}/$nino",
         "1908"
       )
     } else {
       (
-        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}",
         "1610"
       )
     }

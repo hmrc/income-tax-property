@@ -16,6 +16,7 @@
 
 package connectors
 
+import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.foreign.UpdateForeignPropertyPeriodicSubmissionRequest
@@ -881,21 +882,21 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     "for TaxYear(2024) onwards GET foreign income dividends using API#1907" in {
       val httpResponse = HttpResponse(OK, Json.toJson(dividendsIncomeSubmission).toString())
       val taxYear = TaxYear(2024)
-      stubGetHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpResponse)
+      stubGetHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
       await(underTest.getForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(Some(dividendsIncomeSubmission))
     }
     "for tax years before TaxYear(2024) GET foreign income dividends using API#1609" in {
       val httpResponse = HttpResponse(OK, Json.toJson(dividendsIncomeSubmission).toString())
       val taxYear = TaxYear(2023)
-      stubGetHttpClientCall(s"/income-tax/income/dividends/$nino/$taxYear", httpResponse)
+      stubGetHttpClientCall(s"/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}", httpResponse)
       await(underTest.getForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(Some(dividendsIncomeSubmission))
     }
     "GET foreign income dividends when upstream returns NOT_FOUND" in {
       val httpResponse = HttpResponse(NOT_FOUND)
       val taxYear = TaxYear(2024)
-      stubGetHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpResponse)
+      stubGetHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
       await(underTest.getForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(None)
     }
@@ -903,7 +904,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       val errorBody: SingleErrorBody = SingleErrorBody("some-code", "internal-server-error")
       val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
       val taxYear = TaxYear(2024)
-      stubGetHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpResponse)
+      stubGetHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
       await(underTest.getForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Left(ApiError(INTERNAL_SERVER_ERROR, errorBody))
     }
@@ -926,14 +927,14 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     "for TaxYear(2024) onwards PUT foreign income dividends using API#1906" in {
       val httpResponse = HttpResponse(NO_CONTENT)
       val taxYear = TaxYear(2024)
-      stubPutHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpRequestBodyJson, httpResponse)
+      stubPutHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpRequestBodyJson, httpResponse)
       await(underTest.createOrUpdateForeignIncomeSubmission(taxYear, nino, dividendsIncomeSubmission)(hc)) shouldBe
         Right(())
     }
     "for tax years before TaxYear(2024) PUT foreign income dividends using API#1608" in {
       val httpResponse = HttpResponse(NO_CONTENT)
       val taxYear = TaxYear(2023)
-      stubPutHttpClientCall(s"/income-tax/income/dividends/$nino/$taxYear", httpRequestBodyJson, httpResponse)
+      stubPutHttpClientCall(s"/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}", httpRequestBodyJson, httpResponse)
       await(underTest.createOrUpdateForeignIncomeSubmission(taxYear, nino, dividendsIncomeSubmission)(hc)) shouldBe
         Right(())
     }
@@ -941,7 +942,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       val errorBody: SingleErrorBody = SingleErrorBody("some-code", "internal-server-error")
       val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
       val taxYear = TaxYear(2024)
-      stubPutHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpRequestBodyJson, httpResponse)
+      stubPutHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpRequestBodyJson, httpResponse)
       await(underTest.createOrUpdateForeignIncomeSubmission(taxYear, nino, dividendsIncomeSubmission)(hc)) shouldBe
         Left(ApiError(INTERNAL_SERVER_ERROR, errorBody))
     }
@@ -951,14 +952,14 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     "for TaxYear(2024) onwards DELETE foreign income dividends using API#1908" in {
       val httpResponse = HttpResponse(NO_CONTENT)
       val taxYear = TaxYear(2024)
-      stubDeleteHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpResponse)
+      stubDeleteHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
       await(underTest.deleteForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(())
     }
     "for tax years before TaxYear(2024) DELETE foreign income dividends using API#1610" in {
       val httpResponse = HttpResponse(NO_CONTENT)
       val taxYear = TaxYear(2023)
-      stubDeleteHttpClientCall(s"/income-tax/income/dividends/$nino/$taxYear", httpResponse)
+      stubDeleteHttpClientCall(s"/income-tax/income/dividends/$nino/${asTyBefore24(taxYear)}", httpResponse)
       await(underTest.deleteForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(())
     }
@@ -966,7 +967,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       val errorBody: SingleErrorBody = SingleErrorBody("some-code", "internal-server-error")
       val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
       val taxYear = TaxYear(2024)
-      stubDeleteHttpClientCall(s"/income-tax/income/dividends/$taxYear/$nino", httpResponse)
+      stubDeleteHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
       await(underTest.deleteForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Left(ApiError(INTERNAL_SERVER_ERROR, errorBody))
     }
