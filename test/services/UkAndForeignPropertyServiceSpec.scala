@@ -19,7 +19,7 @@ package services
 import config.AppConfig
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, Mtditid, TaxYear}
 import models.errors.RepositoryError
-import models.request.ukAndForeign._
+import models.request.ukandforeign._
 import org.mockito.Mockito.{doReturn, spy}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Seconds, Span}

@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package models.request.foreignIncome
+package models.request.ukandforeign
 
-import play.api.libs.json.{Format, Json}
+import models.request.foreign.WithName
+import models.Enumerable
 
-case class ForeignIncomeDividendsWithCountryCode(
-  countryCode: String,
-  amountBeforeTax: Option[BigDecimal],
-  taxTakenOff: Option[BigDecimal],
-  specialWithholdingTax: Option[BigDecimal],
-  foreignTaxCreditRelief: Boolean,
-  taxableAmount: BigDecimal
+
+sealed trait TotalPropertyIncome
+
+object TotalPropertyIncome extends Enumerable.Implicits {
+
+  final case object LessThan extends WithName("lessThan") with TotalPropertyIncome
+  final case object Maximum extends WithName("maximum") with TotalPropertyIncome
+
+  val values: Seq[TotalPropertyIncome] = Seq(
+    LessThan, Maximum
   )
 
-object ForeignIncomeDividendsWithCountryCode {
-  implicit val format: Format[ForeignIncomeDividendsWithCountryCode] = Json.format[ForeignIncomeDividendsWithCountryCode]
+  implicit val enumerable: Enumerable[TotalPropertyIncome] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }
 

@@ -20,7 +20,7 @@ import actions.AuthorisedAction
 import controllers.RequestHandler
 import errorhandling.ErrorHandler
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
-import models.request.ukAndForeign.UkAndForeignAbout
+import models.request.ukandforeign.UkAndForeignAbout
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.UkAndForeignPropertyService

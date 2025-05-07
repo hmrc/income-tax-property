@@ -17,37 +17,24 @@
 package services
 
 import cats.data.EitherT
-import cats.implicits.catsSyntaxEitherId
 import models.common.JourneyContext
-import models.errors.{RepositoryError, ServiceError}
-import models.request.ukAndForeign.UkAndForeignAbout
+import models.errors.ServiceError
+import models.request.ukandforeign.UkAndForeignAbout
 import play.api.Logging
-import play.api.libs.json.{Json, Writes}
-import repositories.MongoJourneyAnswersRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class UkAndForeignPropertyService @Inject() (
-    repository: MongoJourneyAnswersRepository
+    mongoService: MongoJourneyAnswersService
   )(implicit ec: ExecutionContext)
   extends Logging {
 
-  private def ukAndForeignPersistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-                                                                             writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
-      }
-    )
-
   def saveUkAndForeignPropertyAbout(
-                                        ctx: JourneyContext,
-                                        ukAndForeignAbout: UkAndForeignAbout
-                                      ): EitherT[Future, ServiceError, Boolean] =
-    ukAndForeignPersistAnswers(
+    ctx: JourneyContext,
+    ukAndForeignAbout: UkAndForeignAbout
+  ): EitherT[Future, ServiceError, Boolean] =
+    mongoService.persistAnswers(
       ctx,
       ukAndForeignAbout
     )

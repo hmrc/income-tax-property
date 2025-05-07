@@ -19,7 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
-import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignincome.ForeignIncomeDividendsWithCountryCode
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import services.ForeignIncomeService

@@ -20,17 +20,17 @@ import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
 import connectors.response._
 import models.LossType.UKProperty
-import models.common.TaxYear.{asTys, asTyBefore24}
+import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.foreign._
 import models.request._
-import models.request.foreignIncome.ForeignIncomeSubmissionDividends
+import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{StringContextOps, HeaderCarrier, HeaderNames}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -678,37 +678,115 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       }
   }
 
-  def createOrUpdateForeignDividendsSubmission(
-                                                     taxYear: TaxYear,
-                                                     nino: Nino,
-                                                     foreignDividends: ForeignIncomeSubmissionDividends
-                                                   )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
-    val (url, apiVersion) =
+  def getForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Option[ForeignIncomeSubmission]]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
       (
-        s"""${appConfig.ifBaseUrl}/income-tax/income/dividends/${asTys(taxYear)}/$nino""",
-        "1804"
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        "1907"
       )
-    logger.debug(
-      s"Calling createOrUpdateForeignDividendsSubmission with url: $url, body: ${Json.toJson(foreignDividends)}"
-    )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        "1609"
+      )
+    }
+
+    logger.info(s"Getting dividends income from the Integration Framework: URL: $url")
 
     http
-      .put(url"$url")(hcWithCorrelationId(hc))
+      .get(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
-      .withBody(Json.toJson(foreignDividends))
-      .execute[PutForeignIncomeSubmissionResponse]
-      .map { response: PutForeignIncomeSubmissionResponse =>
+      .execute[GetForeignIncomeSubmissionResponse]
+      .map { response =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"Error creating a foreign income dividends submission from the Integration Framework: URL: $url" +
+            s"Error getting dividends income from the Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
         response.result
       }
+  }
+
+  def createOrUpdateForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino,
+    body: ForeignIncomeSubmission
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        "1906"
+      )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        "1608"
+      )
+    }
+
+    logger.info(s"createOrUpdateDividendsIncomeSubmission with url: $url, body: ${Json.toJson(body)}")
+
+    http
+      .put(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(Json.toJson(body))
+      .execute[PutForeignIncomeSubmissionResponse]
+      .map { response =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error creating/updating dividends income from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  def deleteForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
+    val (url, apiVersion) = if (taxYear.isAfter24) {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$taxYear/$nino",
+        "1908"
+      )
+    } else {
+      (
+        s"${appConfig.ifBaseUrl}/income-tax/income/dividends/$nino/$taxYear",
+        "1610"
+      )
+    }
+
+    logger.info(s"Deleting dividends income submission from the Integration Framework: URL: $url")
+
+    http
+      .delete(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.ifEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .execute[DeleteForeignIncomeSubmissionResponse]
+      .map { response =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"Error deleting a dividends income submission from the Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+
   }
 
 }

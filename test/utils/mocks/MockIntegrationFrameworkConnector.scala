@@ -20,7 +20,7 @@ import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
 import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, UpdateForeignPropertyPeriodicSubmissionRequest, CreateForeignPropertyPeriodicSubmissionRequest, AnnualForeignPropertySubmissionAllowances}
-import models.request.foreignIncome.ForeignIncomeSubmissionDividends
+import models.request.foreignincome.ForeignIncomeSubmissionDividends
 import models.request.{WhenYouReportedTheLoss, CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest}
 import models.responses._
 import org.scalamock.handlers.{CallHandler6, CallHandler4, CallHandler5}

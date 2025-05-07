@@ -34,8 +34,6 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import play.api.Logging
-import play.api.libs.json.{Json, Writes}
-import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -44,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
-  repository: MongoJourneyAnswersRepository
+  mongoService: MongoJourneyAnswersService
 )(implicit ec: ExecutionContext)
     extends Logging {
 
@@ -167,7 +165,7 @@ class PropertyService @Inject() (
     } else {
 
       ITPEnvelope.liftFuture {
-        repository.fetchAllJourneys(ctx).map { journeys =>
+        mongoService.fetchAllJourneys(ctx).map { journeys =>
           getValidJourneysPerJourneyName(journeys.toList) match {
             case Right((ukJourneyMap, foreignJourneyMap)) =>
               logger.debug(
@@ -411,7 +409,7 @@ class PropertyService @Inject() (
                               currentPeriodicSubmission,
                               propertyRentalsIncome
                             )
-      _ <- persistAnswers(journeyContext, StoredIncome.fromRentalsIncome(propertyRentalsIncome)).map(isPersistSuccess =>
+      _ <- mongoService.persistAnswers(journeyContext, StoredIncome.fromRentalsIncome(propertyRentalsIncome)).map(isPersistSuccess =>
              if (!isPersistSuccess) {
                logger.error("[saveIncome] Could not persist")
              } else {
@@ -435,7 +433,7 @@ class PropertyService @Inject() (
                               currentPeriodicSubmission,
                               rentalsAndRaRIncome
                             )
-      _ <- persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome)).map(
+      _ <- mongoService.persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome)).map(
              isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveRentalsAndRaRIncome] Could not persist")
@@ -467,8 +465,7 @@ class PropertyService @Inject() (
           )
         } yield r
       }
-      _ <- this
-             .persistAnswers(ctx, esbaInfo.extractToSavePart())
+      _ <- mongoService.persistAnswers(ctx, esbaInfo.extractToSavePart())
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveEsbas] Could not persist")
@@ -497,8 +494,7 @@ class PropertyService @Inject() (
             )
           } yield result
         }
-      _ <- this
-             .persistAnswers(ctx, sbaInfo.toSbaToSave)
+      _ <- mongoService.persistAnswers(ctx, sbaInfo.toSbaToSave)
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveSBA] Could not persist")
@@ -527,12 +523,21 @@ class PropertyService @Inject() (
              nino,
              annualSubmissionRequest
            )
-      res <- persistAnswers(
+      res <- mongoService.persistAnswers(
                ctx,
                IsClaimExpensesOrRRR(rarAbout.claimExpensesOrRelief.isClaimExpensesOrRelief)
              )
 
     } yield res
+
+  def savePropertyAbout(ctx: JourneyContext, propertyAbout: PropertyAbout)(implicit
+    hc: HeaderCarrier
+  ): ITPEnvelope[Boolean] = mongoService.persistAnswers(ctx, propertyAbout)
+
+
+  def savePropertyRentalAbout(ctx: JourneyContext, propertyRentalsAbout: PropertyRentalsAbout)(implicit
+    hc: HeaderCarrier
+  ): ITPEnvelope[Boolean] = mongoService.persistAnswers(ctx, propertyRentalsAbout)
 
   def saveRentalsAndRaRAbout(ctx: JourneyContext, nino: Nino, rentalsAndRaRAbout: RentalsAndRaRAbout)(implicit
     hc: HeaderCarrier
@@ -555,11 +560,11 @@ class PropertyService @Inject() (
              nino,
              annualSubmissionRequest
            )
-      _ <- persistAnswers(
+      _ <- mongoService.persistAnswers(
              ctx,
              IsClaimExpensesOrRRR(rentalsAndRaRAbout.claimExpensesOrRelief.isClaimExpensesOrRelief)
            )
-      res <- persistAnswers(
+      res <- mongoService.persistAnswers(
                ctx,
                IsClaimPropertyIncomeAllowance(rentalsAndRaRAbout.isClaimPropertyIncomeAllowance)
              )
@@ -598,7 +603,7 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-      _ <- persistAnswers(
+      _ <- mongoService.persistAnswers(
         ctx,
         ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
       )
@@ -638,7 +643,7 @@ class PropertyService @Inject() (
                                   InternalError("No submission id fetched").asLeft[Option[PeriodicSubmissionId]]
                                 )
                             }
-      _ <- persistAnswers(
+      _ <- mongoService.persistAnswers(
         ctx,
         RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
       )
@@ -704,16 +709,6 @@ class PropertyService @Inject() (
   ): Either[ServiceError, PropertyPeriodicSubmissionResponse] =
     Right(PropertyPeriodicSubmissionResponse(submissions))
 
-  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-    writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true  => true.asRight[ServiceError]
-      }
-    )
-
   def savePropertyRentalAdjustments(
     context: JourneyContext,
     nino: Nino,
@@ -743,7 +738,7 @@ class PropertyService @Inject() (
              PropertyAnnualSubmission
                .fromPropertyRentalAdjustments(propertyRentalAdjustment, propertyAnnualSubmissionFromDownstream)
            )
-      res <- persistAnswers(context, adjustmentStoreAnswers)
+      res <- mongoService.persistAnswers(context, adjustmentStoreAnswers)
       lbfSubmissionSuccess <- {
         (propertyRentalAdjustment.unusedLossesBroughtForward, propertyRentalAdjustment.whenYouReportedTheLoss) match {
           case (UnusedLossesBroughtForward(_, Some(lossAmount)), Some(taxYearBroughtForwardFrom)) =>
@@ -830,7 +825,7 @@ class PropertyService @Inject() (
       res <- {
         raRAdjustments.balancingCharge match {
           case Some(BalancingCharge(isRaRbalancingCharge, _)) =>
-            persistAnswers(ctx, IsRaRBalancingCharge(isRaRbalancingCharge))
+            mongoService.persistAnswers(ctx, IsRaRBalancingCharge(isRaRbalancingCharge))
           case _ => ITPEnvelope.liftPure(true)
         }
       }
@@ -883,7 +878,7 @@ class PropertyService @Inject() (
                )
              } yield ()
            }
-      res <- persistAnswers(ctx, rentalAllowancesStoreAnswers)
+      res <- mongoService.persistAnswers(ctx, rentalAllowancesStoreAnswers)
     } yield res
   }
 
@@ -919,7 +914,7 @@ class PropertyService @Inject() (
           )
         } yield ()
       }
-      res <- persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
+      res <- mongoService.persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
     } yield res
   }
 

@@ -18,7 +18,7 @@ package services
 
 import config.AppConfig
 import models.common._
-import models.request.foreignIncome.{ForeignIncomeSubmission, ForeignIncomeDividends, ForeignIncome, ForeignIncomeDividendsWithCountryCode}
+import models.request.foreignincome.{ForeignIncomeSubmission, ForeignIncomeDividends, ForeignIncome, ForeignIncomeDividendsWithCountryCode}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport

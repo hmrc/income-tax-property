@@ -16,7 +16,7 @@
 
 package models.domain
 
-import models.request.ukAndForeign.UkAndForeignAbout
+import models.request.ukandforeign.UkAndForeignAbout
 import play.api.libs.json.{Json, OFormat}
 
 

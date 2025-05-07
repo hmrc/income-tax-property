@@ -28,10 +28,8 @@ import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignPrope
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses._
-import models.{ForeignAdjustmentsStoreAnswers, ForeignAllowancesStoreAnswers, ForeignPropertyExpensesStoreAnswers, ITPEnvelope, PropertyPeriodicSubmissionResponse}
+import models._
 import play.api.Logging
-import play.api.libs.json.{Json, Writes}
-import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -39,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignPropertyService @Inject() (
                                          connector: IntegrationFrameworkConnector,
-                                         repository: MongoJourneyAnswersRepository
+                                         mongoService: MongoJourneyAnswersService
                                        )(implicit ec: ExecutionContext)
   extends Logging {
 
@@ -139,42 +137,11 @@ class ForeignPropertyService @Inject() (
     }).bimap(l => ApiServiceError(l.status), _.flatten)
   }
 
-  def persistAnswers[A](ctx: JourneyContext, answers: A)(implicit
-                                                         writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.upsertAnswers(ctx, Json.toJson(answers)).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true => true.asRight[ServiceError]
-      }
-    )
-
-  private def persistForeignAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
-                                                                                             writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true => true.asRight[ServiceError]
-      }
-    )
-
-  def deleteAnswers(ctx: JourneyContext, journeyNames: Seq[String]): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.deleteAnswers(ctx, journeyNames).map { deleteResult =>
-        if (deleteResult.wasAcknowledged()) {
-          true.asRight[ServiceError]
-        } else {
-          RepositoryError.asLeft[Boolean]
-        }
-      }
-    )
-
   def saveForeignPropertySelectCountry(
                                         ctx: JourneyContext,
                                         foreignPropertySelectCountry: ForeignPropertySelectCountry
                                       )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] =
-    persistAnswers(
+    mongoService.persistAnswers(
       ctx,
       foreignPropertySelectCountry
     )
@@ -195,7 +162,7 @@ class ForeignPropertyService @Inject() (
         currentPeriodicSubmission,
         foreignPropertyExpensesWithCountryCode
       )
-      _ <- persistForeignAnswers(
+      _ <- mongoService.persistForeignAnswers(
             journeyContext,
             ForeignPropertyExpensesStoreAnswers(
               isConsolidatedExpenses = foreignPropertyExpensesWithCountryCode.consolidatedExpenses.exists(_.isConsolidatedOrIndividualExpenses)
@@ -229,7 +196,7 @@ class ForeignPropertyService @Inject() (
         currentPeriodicSubmission,
         foreignPropertyTaxWithCountryCode
       )
-      _ <- persistForeignAnswers(
+      _ <- mongoService.persistForeignAnswers(
         journeyContext,
         ForeignPropertyTaxStoreAnswers(
           isForeignIncomeTax = foreignPropertyTaxWithCountryCode.foreignIncomeTax.map(_.isForeignIncomeTax)
@@ -357,7 +324,7 @@ class ForeignPropertyService @Inject() (
         currentPeriodicSubmission,
         foreignIncome
       )
-      _ <- persistForeignAnswers(
+      _ <- mongoService.persistForeignAnswers(
         journeyContext,
         ForeignIncomeStoreAnswers(
           premiumsGrantLeaseReceived = foreignIncome.premiumsGrantLeaseReceived,
@@ -468,7 +435,7 @@ class ForeignPropertyService @Inject() (
             } yield result
         }
       }
-      _ <- persistForeignAnswers(
+      _ <- mongoService.persistForeignAnswers(
              journeyContext,
              ForeignAllowancesStoreAnswers(
                zeroEmissionsCarAllowance = foreignPropertyAllowancesWithCountryCode.zeroEmissionsCarAllowance,
@@ -542,7 +509,7 @@ class ForeignPropertyService @Inject() (
         }
 
       }
-      res <- persistForeignAnswers(
+      res <- mongoService.persistForeignAnswers(
         journeyContext,
         ForeignAdjustmentsStoreAnswers(
           isBalancingCharge = foreignAdjustmentsWithCountryCode.balancingCharge.isBalancingCharge,
@@ -592,7 +559,7 @@ class ForeignPropertyService @Inject() (
           } yield submissionResult
         }
       }
-      _ <- persistForeignAnswers(
+      _ <- mongoService.persistForeignAnswers(
         journeyContext,
         ForeignPropertySbaStoreAnswers(
           claimStructureBuildingAllowance =
@@ -615,7 +582,7 @@ class ForeignPropertyService @Inject() (
     ctx: JourneyContext,
     deleteJourneyAnswersRequest: DeleteJourneyAnswers
   ): EitherT[Future, ServiceError, Boolean] = {
-    deleteAnswers(
+    mongoService.deleteAnswers(
       ctx,
       deleteJourneyAnswersRequest.journeyNames.filter(JourneyName.foreignPropertyJourneyNames.map(_.toString).contains(_))
     )

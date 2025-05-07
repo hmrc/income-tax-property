@@ -30,7 +30,7 @@ import models.request.ukrentaroom.RaRAdjustments
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.PropertyService
+import services.{MongoJourneyAnswersService, PropertyService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
 
@@ -45,40 +45,34 @@ class JourneyAnswersController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
 
-
-
   def savePropertyAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] = auth.async {
     implicit request =>
-      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-        .toJourneyContext(JourneyName.About)
-      val requestBody = parseBody[PropertyAbout](request)
-
-      requestBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      withJourneyContextAndEntity[PropertyAbout](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.About,
+        request
+      ) { (ctx, about) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.savePropertyAbout(ctx, about)
+        }
       }
   }
 
   // Rentals
   def savePropertyRentalAbout(taxYear: TaxYear, incomeSourceId: IncomeSourceId, nino: Nino): Action[AnyContent] =
     auth.async { implicit request =>
-      val ctx = JourneyContextWithNino(taxYear, incomeSourceId, request.user.getMtditid, nino)
-        .toJourneyContext(JourneyName.RentalAbout)
-      val requestBody = parseBody[PropertyRentalsAbout](request)
-
-      requestBody match {
-        case Success(validatedRes) =>
-          validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
-            case JsSuccess(value, _) =>
-              propertyService.persistAnswers(ctx, value).value.map(_ => NoContent)
-            case JsError(err) => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
-          }
-        case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+      withJourneyContextAndEntity[PropertyRentalsAbout](
+        taxYear,
+        incomeSourceId,
+        nino,
+        JourneyName.RentalAbout,
+        request
+      ) { (ctx, about) =>
+        handleResponse(NO_CONTENT) {
+          propertyService.savePropertyRentalAbout(ctx, about)
+        }
       }
     }
 

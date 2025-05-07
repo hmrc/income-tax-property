@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package models.request.ukAndForeign
+package models.request.ukandforeign
 
-import models.Enumerable
-import models.request.foreign.WithName
+import play.api.libs.json.{Format, Json}
 
-sealed trait ReportIncome
+final case class UkAndForeignAbout(
+                                    totalPropertyIncome: TotalPropertyIncome,
+                                    reportIncome: Option[ReportIncome]
+                                  )
 
-object ReportIncome extends Enumerable.Implicits {
-
-  case object WantToReport extends WithName("wantToReport") with ReportIncome
-  case object DoNoWantToReport extends WithName("doNotWantToReport") with ReportIncome
-
-  val values: Seq[ReportIncome] = Seq(
-    WantToReport, DoNoWantToReport
-  )
-
-  implicit val enumerable: Enumerable[ReportIncome] =
-    Enumerable(values.map(v => v.toString -> v): _*)
+object UkAndForeignAbout {
+  implicit val format: Format[UkAndForeignAbout] = Json.format
 }
