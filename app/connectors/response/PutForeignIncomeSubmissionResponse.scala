@@ -26,7 +26,7 @@ case class PutForeignIncomeSubmissionResponse(httpResponse: HttpResponse, result
 
 object PutForeignIncomeSubmissionResponse extends Logging {
 
-  implicit val putForeignIncomeSubmission: HttpReads[PutForeignIncomeSubmissionResponse] = new HttpReads[PutForeignIncomeSubmissionResponse] with Parser {
+  implicit val putForeignIncomeSubmissionDataReads: HttpReads[PutForeignIncomeSubmissionResponse] = new HttpReads[PutForeignIncomeSubmissionResponse] with Parser {
 
     override protected[connectors] val parserName: String = this.getClass.getSimpleName
 

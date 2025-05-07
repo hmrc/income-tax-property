@@ -29,7 +29,7 @@ case class GetForeignIncomeSubmissionResponse(
 
 object GetForeignIncomeSubmissionResponse {
 
-  implicit val getDividendsIncomeDataReads: HttpReads[GetForeignIncomeSubmissionResponse] =
+  implicit val getForeignIncomeSubmissionDataReads: HttpReads[GetForeignIncomeSubmissionResponse] =
     new HttpReads[GetForeignIncomeSubmissionResponse] with Parser {
 
       override protected[connectors] val parserName: String = this.getClass.getSimpleName

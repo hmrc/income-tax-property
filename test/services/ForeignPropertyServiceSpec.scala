@@ -60,7 +60,7 @@ class ForeignPropertyServiceSpec
   )
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, repository)
+  private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, journeyAnswersService)
 
   val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
     CreateForeignPropertyPeriodicSubmissionRequest(

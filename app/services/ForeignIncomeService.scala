@@ -75,6 +75,14 @@ class ForeignIncomeService  @Inject() (
           .leftMap(e => ApiServiceError(e.status))
     }
 
+  def deleteForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino
+  )(implicit hc: HeaderCarrier
+  ): ITPEnvelope[Unit] =
+    EitherT(connector.deleteForeignIncomeSubmission(taxYear, nino))
+      .leftMap(e => ApiServiceError(e.status))
+
     def saveForeignIncomeDividends(
       ctx: JourneyContext,
       nino: Nino,

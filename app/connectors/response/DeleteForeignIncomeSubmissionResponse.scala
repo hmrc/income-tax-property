@@ -28,7 +28,7 @@ case class DeleteForeignIncomeSubmissionResponse(
 
 object DeleteForeignIncomeSubmissionResponse {
 
-  implicit val deleteDividendsIncomeDataReads: HttpReads[DeleteForeignIncomeSubmissionResponse] =
+  implicit val deleteForeignIncomeSubmissionDataReads: HttpReads[DeleteForeignIncomeSubmissionResponse] =
     new HttpReads[DeleteForeignIncomeSubmissionResponse] with Parser {
 
       override protected[connectors] val parserName: String = this.getClass.getSimpleName

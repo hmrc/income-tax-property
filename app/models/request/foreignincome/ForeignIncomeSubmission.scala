@@ -54,6 +54,8 @@ object GrossAmountWithReference {
 object ForeignIncomeSubmission {
   implicit val format: OFormat[ForeignIncomeSubmission] = Json.format[ForeignIncomeSubmission]
 
+  val emptyForeignIncomeSubmission: ForeignIncomeSubmission = ForeignIncomeSubmission(None, None, None, None, None, None)
+
   implicit def jsonBodyWritable[T](implicit
     writes: Writes[T],
     jsValueBodyWritable: BodyWritable[JsValue]

@@ -17,17 +17,19 @@
 package controllers.ukproperty
 
 import cats.syntax.either._
-import models.RentalsAndRaRAbout
+import models.{RentalsAndRaRAbout, UKPropertySelect}
 import models.UKPropertySelect.PropertyRentals
-import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments, RentalAbout}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.WhenYouReportedTheLoss.y2018to2019
 import models.request._
 import models.request.esba.EsbaInfo
+import models.request.foreign.TotalIncome
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
+import org.mockito.Mockito.when
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
@@ -63,16 +65,24 @@ class JourneyAnswersControllerSpec
                                                  |""".stripMargin)
     val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
 
-    "should return no_content for valid request body" in {
+    "return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockPersistAnswers(ctx, PropertyAbout("over", Some(Seq(PropertyRentals)), Some(true)))
+      mockSavePropertyAbout(
+        ctx,
+        PropertyAbout(
+          totalIncome = TotalIncome.Over.toString,
+          ukProperty = Some(Seq(UKPropertySelect.PropertyRentals)),
+          reportPropertyIncome = None
+        ),
+        true.asRight[ServiceError]
+      )
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
-    "should return bad request error when request body is empty" in {
+    "return bad request error when request body is empty" in {
       mockAuthorisation()
       val result = underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
@@ -189,14 +199,15 @@ class JourneyAnswersControllerSpec
                                                  |   "isClaimPropertyIncomeAllowance": true
                                                  |}
                                                  |""".stripMargin)
-    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(About)
+    val ctx: JourneyContext = JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentalAbout)
 
     "should return no_content for valid request body" in {
 
       mockAuthorisation()
-      mockPersistAnswers(
+      mockSavePropertyRentalAbout(
         ctx,
-        PropertyRentalsAbout(isClaimPropertyIncomeAllowance = true)
+        PropertyRentalsAbout(isClaimPropertyIncomeAllowance = true),
+        true.asRight[ServiceError]
       )
       val request = fakePostRequest.withJsonBody(validRequestBody)
       val result = await(underTest.savePropertyRentalAbout(taxYear, incomeSourceId, nino)(request))
