@@ -22,7 +22,7 @@ import org.scalatest.OptionValues
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import repositories.MongoJourneyAnswersRepository
 import services.MongoJourneyAnswersService
-import services.journeyAnswers.JourneyStatusService
+import services.JourneyStatusService
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 import utils.AppConfigStub
 
