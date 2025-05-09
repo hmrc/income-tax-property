@@ -21,7 +21,8 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import repositories.MongoJourneyAnswersRepository
-import services.journeyAnswers.JourneyStatusService
+import services.MongoJourneyAnswersService
+import services.JourneyStatusService
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 import utils.AppConfigStub
 
@@ -38,4 +39,5 @@ trait MockMongoJourneyAnswersRepository
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
   protected val repository = new MongoJourneyAnswersRepository(mongoComponent, stubAppConfig, stubClock)
   protected val journeyStatusService: JourneyStatusService = new JourneyStatusService(repository)
+  protected val journeyAnswersService: MongoJourneyAnswersService = new MongoJourneyAnswersService(repository)
 }

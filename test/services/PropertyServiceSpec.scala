@@ -58,7 +58,7 @@ class PropertyServiceSpec
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, repository)
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"

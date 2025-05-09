@@ -18,13 +18,13 @@ package controllers.foreignincome
 
 import cats.syntax.either._
 import models.common._
-import models.errors.{ServiceError, InvalidJsonFormatError, ApiServiceError}
-import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
+import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.request.foreignincome.{ForeignIncomeDividend, ForeignIncomeDividendsWithCountryCode}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{Json, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockForeignIncomeService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
+import utils.mocks.{MockAuthorisedAction, MockForeignIncomeService, MockMongoJourneyAnswersRepository}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,16 +47,21 @@ class ForeignIncomeJourneyAnswersControllerSpec
 
   "save foreign income dividends section" should {
     val validForeignIncomeDividends: JsValue =
-      Json.parse("""
-                   |{
-                   |  "countryCode": "AUS",
-                   |  "amountBeforeTax": 231.45,
-                   |  "taxTakenOff": 321.54,
-                   |  "specialWithholdingTax": 490.58,
-                   |  "foreignTaxCreditRelief": true,
-                   |  "taxableAmount": 80.80
-                   |}
-                   |""".stripMargin)
+      Json.parse(
+        """
+          {
+          | "foreignIncomeDividends": [
+          |   {
+          |     "countryCode": "AUS",
+          |     "incomeBeforeForeignTaxDeducted": 231.45,
+          |     "foreignTaxDeductedFromDividendIncome": true,
+          |     "howMuchForeignTaxDeductedFromDividendIncome": 321.54,
+          |     "claimForeignTaxCreditRelief": true
+          |   }
+          | ]
+          |}
+          |""".stripMargin
+      )
 
     val ctx: JourneyContext =
       JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(
@@ -77,12 +82,15 @@ class ForeignIncomeJourneyAnswersControllerSpec
       val result = await(underTest.saveForeignIncomeDividends(taxYear, incomeSourceId, nino)(request))
 
       foreignIncomeDividends shouldBe ForeignIncomeDividendsWithCountryCode(
-        countryCode = "AUS",
-        amountBeforeTax = Some(231.45),
-        taxTakenOff = Some(321.54),
-        specialWithholdingTax = Some(490.58),
-        foreignTaxCreditRelief = true,
-        taxableAmount = 80.80
+        Seq(
+          ForeignIncomeDividend(
+            countryCode = "AUS",
+            incomeBeforeForeignTaxDeducted = 231.45,
+            foreignTaxDeductedFromDividendIncome = true,
+            howMuchForeignTaxDeductedFromDividendIncome = Some(321.54),
+            claimForeignTaxCreditRelief = Some(true)
+          )
+        )
       )
       result.header.status shouldBe NO_CONTENT
     }

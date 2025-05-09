@@ -19,7 +19,7 @@ package models
 import play.api.libs.json.{OFormat, Json}
 
 case class ForeignIncomeDividendsStoreAnswers (
-  foreignIncomeDividendsAnswers: List[ForeignIncomeDividendsAnswers]
+  foreignIncomeDividendsAnswers: Seq[ForeignIncomeDividendsAnswers]
                                               )
 
 object ForeignIncomeDividendsStoreAnswers {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.prePopulation
+package models.prepopulation
 
 import models.BusinessDetailsResponse
 import play.api.libs.json.{Json, Writes}

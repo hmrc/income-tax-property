@@ -19,7 +19,6 @@ package services
 import models._
 import models.common._
 import models.domain._
-import models.repository.ForeignMerger.ForeignPropertyTaxMerger
 import models.repository.Merger._
 import models.repository.ForeignMerger._
 import models.request._
@@ -27,7 +26,7 @@ import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.foreign._
 import models.request.foreign.allowances.ForeignAllowancesAnswers
 import models.request.sba.{SbaInfo, SbaInfoToSave}
-import models.request.ukAndForeign.UkAndForeignAbout
+import models.request.ukandforeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 

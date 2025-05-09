@@ -20,7 +20,7 @@ import actions.AuthorisedAction
 import controllers.RequestHandler
 import errorhandling.ErrorHandler
 import models.common.{Nino, TaxYear, JourneyName, IncomeSourceId}
-import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignincome.ForeignIncomeDividendsWithCountryCode
 import play.api.Logging
 import play.api.mvc.{Action, ControllerComponents, AnyContent}
 import services.ForeignIncomeService

@@ -18,72 +18,93 @@ package services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import play.api.Logging
-import repositories.MongoJourneyAnswersRepository
 import connectors.IntegrationFrameworkConnector
-import models.{ITPEnvelope, ForeignIncomeDividendsStoreAnswers, ForeignIncomeDividendsAnswers}
 import models.ITPEnvelope.ITPEnvelope
-import models.common.{Nino, TaxYear, JourneyContext}
-import models.errors.{ServiceError, ApiServiceError, RepositoryError}
-import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
+import models.common.{JourneyContext, Nino, TaxYear}
+import models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
+import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
+import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers, ITPEnvelope}
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import models.request.foreignIncome.{ForeignIncomeSubmissionDividends, ForeignIncomeSubmission}
-import play.api.libs.json.{Writes, Json}
 
-import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignIncomeService  @Inject() (
                                         connector: IntegrationFrameworkConnector,
-                                        repository: MongoJourneyAnswersRepository
+                                        mongoService: MongoJourneyAnswersService
                                       )(implicit ec: ExecutionContext)
   extends Logging {
 
-  private def persistForeignIncomeAnswers[A](ctx: JourneyContext, answers: A, countryCode: String)(implicit
-                                                                                             writes: Writes[A]
-  ): EitherT[Future, ServiceError, Boolean] =
-    EitherT(
-      repository.foreignUpsertAnswers(ctx, Json.toJson(answers), countryCode).map {
-        case false => RepositoryError.asLeft[Boolean]
-        case true => true.asRight[ServiceError]
+  def getForeignIncomeSubmission(
+      taxYear: TaxYear,
+      nino: Nino
+    )(implicit hc: HeaderCarrier): ITPEnvelope[ForeignIncomeSubmission] = {
+    EitherT(connector.getForeignIncomeSubmission(taxYear, nino))
+      .map { dis =>
+        logger.debug(s"[getDividendsIncomeSubmission] Dividend income details from IF: $dis")
+        dis
       }
-    )
+      .leftMap { error =>
+        logger.error(s"[getDividendsIncomeSubmission] Dividend income details error")
+        ApiServiceError(error.status)
+      }
+      .subflatMap { dividendsIncomeSubmission =>
+        dividendsIncomeSubmission.fold[Either[ServiceError, ForeignIncomeSubmission]] {
+          logger.error(s"[getDividendsIncomeSubmission] Dividend income details not found in IF, returning empty foreign income submission")
+          ForeignIncomeSubmission.emptyForeignIncomeSubmission.asRight[ServiceError]
+        } { data =>
+          logger.info(s"[getDividendsIncomeSubmission] Dividend income data found: $data")
+          data.asRight[ServiceError]
+        }
+      }
+  }
 
-  def createOrUpdateForeignDividendsSubmission(
-                                                taxYear: TaxYear,
-                                                nino: Nino,
-                                                body: ForeignIncomeSubmissionDividends
-                                              )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
+  def createOrUpdateForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino,
+    body: ForeignIncomeSubmission
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Boolean] =
     body match {
-      case ForeignIncomeSubmissionDividends(None) =>
+      case ForeignIncomeSubmission(None, None, None, None, None, None) =>
         ITPEnvelope.liftPure(false)
       case _ =>
         EitherT(
-          connector.createOrUpdateForeignDividendsSubmission(taxYear, nino, body)
+          connector.createOrUpdateForeignIncomeSubmission(taxYear, nino, body)
         ).map(_ => true)
           .leftMap(e => ApiServiceError(e.status))
     }
 
+  def deleteForeignIncomeSubmission(
+    taxYear: TaxYear,
+    nino: Nino
+  )(implicit hc: HeaderCarrier
+  ): ITPEnvelope[Unit] =
+    EitherT(connector.deleteForeignIncomeSubmission(taxYear, nino))
+      .leftMap(e => ApiServiceError(e.status))
+
     def saveForeignIncomeDividends(
-                                  journeyContext: JourneyContext,
-                                  nino: Nino,
-                                  foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
-                                )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+      ctx: JourneyContext,
+      nino: Nino,
+      foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
+    )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
       for {
-        _ <- {
-          val foreignDividendsSubmission = ForeignIncomeSubmission.fromForeignIncomeDividends(foreignDividendsWithCountryCode)
-          createOrUpdateForeignDividendsSubmission(
-            journeyContext.taxYear,
-            nino,
-            foreignDividendsSubmission
-          )
-        }
-        res <- persistForeignIncomeAnswers(
-          journeyContext,
+        foreignIncomeSubmission <- getForeignIncomeSubmission(ctx.taxYear, nino)
+        _ <- createOrUpdateForeignIncomeSubmission(
+          ctx.taxYear,
+          nino,
+          ForeignIncomeSubmission.fromForeignIncomeDividends(foreignIncomeSubmission, foreignDividendsWithCountryCode)
+        )
+        res <- mongoService.persistAnswers(
+          ctx,
           ForeignIncomeDividendsStoreAnswers(
-            List(ForeignIncomeDividendsAnswers(foreignDividendsWithCountryCode.countryCode, foreignDividendsWithCountryCode.foreignTaxCreditRelief))
-          ),
-          foreignDividendsWithCountryCode.countryCode
+            foreignDividendsWithCountryCode.foreignIncomeDividends.map { foreignIncomeDividend =>
+              ForeignIncomeDividendsAnswers(
+                countryCode = foreignIncomeDividend.countryCode,
+                foreignTaxDeductedFromDividendIncome = foreignIncomeDividend.foreignTaxDeductedFromDividendIncome
+              )
+            }
+          )
         )
       } yield res
     }

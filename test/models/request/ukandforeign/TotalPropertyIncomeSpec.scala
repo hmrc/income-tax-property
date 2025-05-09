@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.request.ukAndForeign
+package models.request.ukandforeign
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

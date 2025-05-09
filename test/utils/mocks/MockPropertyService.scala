@@ -99,6 +99,32 @@ trait MockPropertyService extends MockFactory {
       .expects(taxableEntityId, incomeSourceId, taxYear, *, *)
       .returning(EitherT.fromEither(result))
 
+  def mockSavePropertyAbout(
+    ctx: JourneyContext,
+    propertyAbout: PropertyAbout,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler3[JourneyContext, PropertyAbout, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+    (mockPropertyService
+      .savePropertyAbout(
+        _: JourneyContext,
+        _: PropertyAbout,
+    )(_: HeaderCarrier))
+      .expects(ctx, propertyAbout, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSavePropertyRentalAbout(
+    ctx: JourneyContext,
+    propertyRentalsAbout: PropertyRentalsAbout,
+    result: Either[ServiceError, Boolean]
+  ): CallHandler3[JourneyContext, PropertyRentalsAbout, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+    (mockPropertyService
+      .savePropertyRentalAbout(
+        _: JourneyContext,
+        _: PropertyRentalsAbout,
+      )(_: HeaderCarrier))
+      .expects(ctx, propertyRentalsAbout, *)
+      .returning(EitherT.fromEither(result))
+
   def mockSaveExpenses(
     ctx: JourneyContext,
     nino: Nino,
@@ -262,15 +288,6 @@ trait MockPropertyService extends MockFactory {
       .expects(ctx, *, incomeSourceId, *)
       .returning(ITPEnvelope.liftEither(result))
   }
-
-  def mockPersistAnswers[A](
-    ctx: JourneyContext,
-    answers: A
-  ): CallHandler3[JourneyContext, A, Writes[A], EitherT[Future, ServiceError, Boolean]] =
-    (mockPropertyService
-      .persistAnswers(_: JourneyContext, _: A)(_: Writes[A]))
-      .expects(*, *, *)
-      .returning(EitherT.pure(true))
 
   def mockSavePropertyRentalAllowances[A](
     ctx: JourneyContext,

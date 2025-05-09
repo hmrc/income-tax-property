@@ -19,7 +19,7 @@ package controllers.ukandforeignproperty
 import cats.implicits.catsSyntaxEitherId
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
-import models.request.ukAndForeign.UkAndForeignAbout
+import models.request.ukandforeign.UkAndForeignAbout
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.{BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, NO_CONTENT}
 import play.api.libs.json.{JsValue, Json}

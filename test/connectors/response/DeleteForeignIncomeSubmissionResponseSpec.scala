@@ -16,69 +16,33 @@
 
 package connectors.response
 
-import connectors.response.PutForeignIncomeSubmissionResponse.putForeignIncomeSubmissionDataReads
+import connectors.response.DeleteForeignIncomeSubmissionResponse.deleteForeignIncomeSubmissionDataReads
 import models.errors.{ApiError, SingleErrorBody}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
-
-class PutForeignIncomeSubmissionResponseSpec extends UnitTest{
-
+class DeleteForeignIncomeSubmissionResponseSpec extends UnitTest {
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
-  private val anyMethod: String = "PUT"
-  private val anyUrl = "/income-tax/income/dividends/"
+  private val anyMethod: String = "DELETE"
+  private val anyUrl = "/individuals/losses/"
 
-  private val underTest = putForeignIncomeSubmissionDataReads
+  private val underTest = deleteForeignIncomeSubmissionDataReads
 
-  "putForeignIncomeSubmissionDataReads" should {
-
-    "convert JsValue to PutForeignIncomeSubmissionResponse" when {
-
-      "status is NO_CONTENT and valid jsValue" in {
-
-        val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
+  "deleteForeignIncomeSubmission" should {
+    "delete dividends income submissions" when {
+      "status is NO_CONTENT" in {
+        val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT)
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe DeleteForeignIncomeSubmissionResponse(
           httpResponse,
-          Right((): Unit)
+          Right(())
         )
       }
-
-      "status is OK and invalid jsValue" in {
-        val jsValue: JsValue = Json.parse(
-          """
-            |{
-            |   "ForeignIncomeSubmission": {"value": []}
-            |}
-            |""".stripMargin)
-
-        val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
-          httpResponse,
-          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
-        )
-      }
-
-      "status is NOT_FOUND and any jsValue" in {
-        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
-
-        val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
-          httpResponse,
-          Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "some-reason")))
-        )
-      }
-
       "status is INTERNAL_SERVER_ERROR and jsValue for error" in {
         val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
-
         val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe DeleteForeignIncomeSubmissionResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )
@@ -86,10 +50,8 @@ class PutForeignIncomeSubmissionResponseSpec extends UnitTest{
 
       "status is SERVICE_UNAVAILABLE and jsValue for error" in {
         val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
-
         val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe DeleteForeignIncomeSubmissionResponse(
           httpResponse,
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
         )
@@ -97,10 +59,8 @@ class PutForeignIncomeSubmissionResponseSpec extends UnitTest{
 
       "status is BAD_REQUEST and jsValue for error" in {
         val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
-
         val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe DeleteForeignIncomeSubmissionResponse(
           httpResponse,
           Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
         )
@@ -108,10 +68,8 @@ class PutForeignIncomeSubmissionResponseSpec extends UnitTest{
 
       "status is OTHER and jsValue for error" in {
         val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
-
         val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutForeignIncomeSubmissionResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe DeleteForeignIncomeSubmissionResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )

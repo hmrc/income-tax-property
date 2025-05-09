@@ -18,7 +18,7 @@ package controllers
 
 import actions.AuthorisedAction
 import models.errors.DataNotFoundError
-import models.prePopulation.PrePopulationResponse
+import models.prepopulation.PrePopulationResponse
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.BusinessDetailsService

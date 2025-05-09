@@ -16,7 +16,7 @@
 
 package models
 
-import models.request.foreignIncome.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignincome.{ForeignIncomeDividend, ForeignIncomeDividendsWithCountryCode}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
@@ -25,52 +25,64 @@ class ForeignIncomeDividendsSpec extends PlaySpec {
   "ForeignIncomeDividends" should {
 
     "serialize to JSON correctly" in {
-      val dividends = ForeignIncomeDividendsWithCountryCode(
+      val dividends = ForeignIncomeDividend(
         countryCode = "AUS",
-        amountBeforeTax = Some(231.45),
-        taxTakenOff = Some(321.54),
-        specialWithholdingTax = Some(490.58),
-        foreignTaxCreditRelief = true,
-        taxableAmount = 80.80
+        incomeBeforeForeignTaxDeducted = 231.45,
+        foreignTaxDeductedFromDividendIncome = true,
+        howMuchForeignTaxDeductedFromDividendIncome = Some(321.54),
+        claimForeignTaxCreditRelief = Some(true)
+      )
+
+      val foreignIncomeDividendsWithCountryCode = ForeignIncomeDividendsWithCountryCode(
+        foreignIncomeDividends = Seq(dividends)
       )
 
       val expectedJson = Json.parse(
         """
           {
-          |  "countryCode": "AUS",
-          |  "amountBeforeTax": 231.45,
-          |  "taxTakenOff": 321.54,
-          |  "specialWithholdingTax": 490.58,
-          |  "foreignTaxCreditRelief": true,
-          |  "taxableAmount": 80.80
+          | "foreignIncomeDividends": [
+          |   {
+          |     "countryCode": "AUS",
+          |     "incomeBeforeForeignTaxDeducted": 231.45,
+          |     "foreignTaxDeductedFromDividendIncome": true,
+          |     "howMuchForeignTaxDeductedFromDividendIncome": 321.54,
+          |     "claimForeignTaxCreditRelief": true
+          |   }
+          | ]
           |}
           |""".stripMargin
       )
 
-      Json.toJson(dividends) mustEqual expectedJson
+      Json.toJson(foreignIncomeDividendsWithCountryCode) mustEqual expectedJson
     }
 
     "deserialize from JSON correctly" in {
       val json = Json.parse(
         """
          {
-          |  "countryCode": "AUS",
-          |  "amountBeforeTax": 231.45,
-          |  "taxTakenOff": 321.54,
-          |  "specialWithholdingTax": 490.58,
-          |  "foreignTaxCreditRelief": true,
-          |  "taxableAmount": 80.80
+          | "foreignIncomeDividends": [
+          |   {
+          |     "countryCode": "AUS",
+          |     "incomeBeforeForeignTaxDeducted": 231.45,
+          |     "foreignTaxDeductedFromDividendIncome": true,
+          |     "howMuchForeignTaxDeductedFromDividendIncome": 321.54,
+          |     "claimForeignTaxCreditRelief": true
+          |   }
+          | ]
           |}
           |""".stripMargin
       )
 
       val expectedDividends = ForeignIncomeDividendsWithCountryCode(
-        countryCode = "AUS",
-        amountBeforeTax = Some(231.45),
-        taxTakenOff = Some(321.54),
-        specialWithholdingTax = Some(490.58),
-        foreignTaxCreditRelief = true,
-        taxableAmount = 80.80
+        foreignIncomeDividends = Seq(
+          ForeignIncomeDividend(
+            countryCode = "AUS",
+            incomeBeforeForeignTaxDeducted = 231.45,
+            foreignTaxDeductedFromDividendIncome = true,
+            howMuchForeignTaxDeductedFromDividendIncome = Some(321.54),
+            claimForeignTaxCreditRelief = Some(true)
+          )
+        )
       )
 
       json.validate[ForeignIncomeDividendsWithCountryCode] mustEqual JsSuccess(expectedDividends)
@@ -93,20 +105,25 @@ class ForeignIncomeDividendsSpec extends PlaySpec {
       val jsonWithMissingFields = Json.parse(
         """
           |{
-          |  "countryCode": "AUS",
-          |  "foreignTaxCreditRelief": true,
-          |  "taxableAmount": 80.80
+          | "foreignIncomeDividends": [
+          |   {
+          |    "countryCode": "AUS",
+          |    "foreignTaxDeductedFromDividendIncome": true,
+          |    "incomeBeforeForeignTaxDeducted": 80.80
+          |  }
+          | ]
           |}
           |""".stripMargin
       )
 
       val expectedDividends = ForeignIncomeDividendsWithCountryCode(
-        countryCode = "AUS",
-        amountBeforeTax = None,
-        taxTakenOff = None,
-        specialWithholdingTax = None,
-        foreignTaxCreditRelief = true,
-        taxableAmount = 80.80
+        foreignIncomeDividends = Seq(ForeignIncomeDividend(
+          countryCode = "AUS",
+          foreignTaxDeductedFromDividendIncome = true,
+          incomeBeforeForeignTaxDeducted = 80.80,
+          howMuchForeignTaxDeductedFromDividendIncome = None,
+          claimForeignTaxCreditRelief = None
+        ))
       )
 
       jsonWithMissingFields.validate[ForeignIncomeDividendsWithCountryCode] mustEqual JsSuccess(expectedDividends)

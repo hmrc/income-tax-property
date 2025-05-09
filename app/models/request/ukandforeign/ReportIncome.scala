@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package models.request.ukAndForeign
+package models.request.ukandforeign
 
-import models.request.foreign.WithName
 import models.Enumerable
+import models.request.foreign.WithName
 
+sealed trait ReportIncome
 
-sealed trait TotalPropertyIncome
+object ReportIncome extends Enumerable.Implicits {
 
-object TotalPropertyIncome extends Enumerable.Implicits {
+  case object WantToReport extends WithName("wantToReport") with ReportIncome
+  case object DoNoWantToReport extends WithName("doNotWantToReport") with ReportIncome
 
-  final case object LessThan extends WithName("lessThan") with TotalPropertyIncome
-  final case object Maximum extends WithName("maximum") with TotalPropertyIncome
-
-  val values: Seq[TotalPropertyIncome] = Seq(
-    LessThan, Maximum
+  val values: Seq[ReportIncome] = Seq(
+    WantToReport, DoNoWantToReport
   )
 
-  implicit val enumerable: Enumerable[TotalPropertyIncome] =
+  implicit val enumerable: Enumerable[ReportIncome] =
     Enumerable(values.map(v => v.toString -> v): _*)
 }
-

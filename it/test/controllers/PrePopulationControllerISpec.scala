@@ -16,7 +16,7 @@
 
 package controllers
 
-import models.prePopulation.PrePopulationResponse
+import models.prepopulation.PrePopulationResponse
 import play.api.http.Status.{FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}

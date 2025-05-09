@@ -19,7 +19,7 @@ package services
 import config.AppConfig
 import models.common.{IncomeSourceId, JourneyContext, JourneyName, Mtditid, TaxYear}
 import models.errors.RepositoryError
-import models.request.ukAndForeign._
+import models.request.ukandforeign._
 import org.mockito.Mockito.{doReturn, spy}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -41,7 +41,7 @@ class UkAndForeignPropertyServiceSpec
   private val taxYear: TaxYear = TaxYear(2025)
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new UkAndForeignPropertyService(repository)
+  private val underTest = new UkAndForeignPropertyService(journeyAnswersService)
 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
@@ -70,10 +70,11 @@ class UkAndForeignPropertyServiceSpec
   "return an error when repository fails to persist the answers" in {
 
     val spyRepository = spy(repository)
+    val spyJourneyAnswersService = new MongoJourneyAnswersService(spyRepository)
 
     doReturn(Future.successful(false)).when(spyRepository).upsertAnswers(ctx, Json.toJson(ukAndForeignAbout))
 
-    val result = new UkAndForeignPropertyService(spyRepository).saveUkAndForeignPropertyAbout(ctx, ukAndForeignAbout)
+    val result = new UkAndForeignPropertyService(spyJourneyAnswersService).saveUkAndForeignPropertyAbout(ctx, ukAndForeignAbout)
 
     whenReady(result.value, Timeout(Span(1500, Millis))) { response =>
       response shouldBe Left(RepositoryError)
