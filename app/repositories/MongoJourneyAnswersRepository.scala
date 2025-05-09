@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.common.{JourneyContext, JourneyStatus}
+import models.common.{JourneyContext, JourneyStatus, Mtditid, TaxYear}
 import models.domain.JourneyAnswers
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
@@ -119,6 +119,16 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     collection.find(filter).toFuture()
   }
 
+  def fetchAllJourneysUserTaxYear(taxYear: Int, mtditid: String): Future[Seq[JourneyAnswers]] = {
+    val filter: Bson = Filters
+      .and(
+        Filters.equal("taxYear", taxYear),
+        Filters.equal("mtditid", mtditid)
+      )
+
+    collection.find(filter).toFuture()
+  }
+
   def fetchAllJourneys(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {
     val filter: Bson = Filters
       .and(
@@ -168,7 +178,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     val now = Instant.now(clock)
     Updates.combine(
       Updates.set("status", status.entryName),
-      Updates.set("updatedAt", now)
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("createdAt", now)
     )
   }
 
