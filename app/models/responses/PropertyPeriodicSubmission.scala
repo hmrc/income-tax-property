@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,33 @@ case class PropertyPeriodicSubmission(
   fromDate: LocalDate,
   toDate: LocalDate,
   foreignProperty: Option[Seq[ForeignProperty]],
-  ukOtherProperty: Option[UkOtherProperty]
+  ukOtherProperty: Option[UkOtherProperty],
+  foreignIncome: Option[Seq[ForeignIncome]]
 )
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
+}
+
+case class ForeignIncome(
+  countryCode: String,
+  dividends: Option[ForeignIncomeFromDividends]
+                        )
+
+object ForeignIncome {
+  implicit val format: OFormat[ForeignIncome] = Json.format[ForeignIncome]
+}
+
+case class ForeignIncomeFromDividends(
+                                   amountBeforeTax: Option[BigDecimal],
+                                   taxTakenOff: Option[BigDecimal],
+                                   specialWithholdingTax: Option[BigDecimal],
+                                   foreignTaxCreditRelief: Option[Boolean],
+                                   taxableAmount: Option[BigDecimal]
+                                 )
+
+object ForeignIncomeFromDividends {
+  implicit val format: OFormat[ForeignIncomeFromDividends] = Json.format[ForeignIncomeFromDividends]
 }
 
 case class ForeignProperty(
