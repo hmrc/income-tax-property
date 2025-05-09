@@ -41,7 +41,7 @@ class ForeignIncomeSubmissionSpec extends UnitTest {
         foreignTaxCreditRelief = Some(false),
         taxableAmount = germanyTaxableAmount
       )
-      val updatedGermanDividendsFromUserAnswers = ForeignIncomeDividend(
+      val updatedGermanyDividendsFromUserAnswers = ForeignIncomeDividend(
         countryCode = "DEU",
         incomeBeforeForeignTaxDeducted = 100.00,
         howMuchForeignTaxDeductedFromDividendIncome = Some(1.20),
@@ -61,16 +61,16 @@ class ForeignIncomeSubmissionSpec extends UnitTest {
       val userAnswers = ForeignIncomeDividendsWithCountryCode(
         foreignIncomeDividends = Seq(
           usaDividendsFromUserAnswers,
-          updatedGermanDividendsFromUserAnswers
+          updatedGermanyDividendsFromUserAnswers
         )
       )
       val result = ForeignIncomeSubmission.fromForeignIncomeDividends(submissionFromDownstream, userAnswers)
       val resultForeignDividends: Option[Seq[ForeignDividend]] = result.foreignDividend
-      resultForeignDividends.flatMap(_.find(_.countryCode == "ESP")) shouldBe Some(spainDividends)
+      resultForeignDividends.flatMap(_.find(_.countryCode == "ESP")) shouldBe None
       resultForeignDividends.flatMap(_.find(_.countryCode == "USA")) shouldBe
         Some(usaDividendsFromUserAnswers.toForeignDividend)
       resultForeignDividends.flatMap(_.find(_.countryCode == "DEU")) shouldBe
-        Some(updatedGermanDividendsFromUserAnswers.toForeignDividend
+        Some(updatedGermanyDividendsFromUserAnswers.toForeignDividend
           .copy(specialWithholdingTax = germanySpecialWithholdingTax, taxableAmount = germanyTaxableAmount))
     }
   }

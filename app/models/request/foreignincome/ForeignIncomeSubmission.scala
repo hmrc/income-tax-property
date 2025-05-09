@@ -90,16 +90,13 @@ object ForeignIncomeSubmission {
         taxableAmount = downstreamDividend.taxableAmount
       )
     }
-    val dividendsExclusiveToDownstream: Seq[ForeignDividend] = downstreamForeignIncomeDividends.filterNot(
-      downstreamDividend => requestForeignIncomeDividends.map(_.countryCode).contains(downstreamDividend.countryCode)
-    )
 
     val dividendsExclusiveToRequest = requestForeignIncomeDividends.collect {
       case requestDividend if !downstreamForeignIncomeDividends.map(_.countryCode).contains(requestDividend.countryCode) =>
         requestDividend.toForeignDividend
     }
 
-    val newForeignIncomeDividends: Seq[ForeignDividend] = updatedForeignIncomeDividends ++ dividendsExclusiveToDownstream ++ dividendsExclusiveToRequest
+    val newForeignIncomeDividends: Seq[ForeignDividend] = updatedForeignIncomeDividends ++ dividendsExclusiveToRequest
     val result = foreignDividendLens.replace(newForeignIncomeDividends)(foreignIncomeSubmission)
     result
   }
