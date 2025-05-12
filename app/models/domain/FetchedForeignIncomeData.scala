@@ -16,7 +16,7 @@
 
 package models.domain
 
-import models.request.foreignIncome._
+import models.request.foreignincome._
 import play.api.libs.json.{OFormat, Json}
 
 final case class FetchedForeignIncomeData(

@@ -17,7 +17,7 @@
 package models.repository
 
 import models.ForeignIncomeDividendsStoreAnswers
-import models.request.foreignIncome.ForeignDividendsAnswers
+import models.request.foreignincome.ForeignDividendsAnswers
 import models.responses._
 
 // T: to return (merge into)

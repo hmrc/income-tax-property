@@ -85,6 +85,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
                 _,
                 _,
                 Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _,
                 _
               )
             ) =>
@@ -143,6 +144,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
                 _,
                 _,
                 Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _,
                 _
               )
             ) =>
@@ -226,6 +228,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
                 _,
                 _,
                 Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _,
                 _
               )
             ) =>
@@ -287,6 +290,7 @@ object CreateForeignPropertyPeriodicSubmissionRequest {
         _,
         _,
         Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+        _,
         _
         )
         ) =>
