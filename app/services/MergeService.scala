@@ -19,12 +19,14 @@ package services
 import models._
 import models.common._
 import models.domain._
+import models.repository.ForeignIncomeMerger._
 import models.repository.Merger._
 import models.repository.ForeignMerger._
 import models.request._
-import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
+import models.request.esba.{EsbaInUpstream, EsbaInfoToSave, EsbaInfo}
 import models.request.foreign._
 import models.request.foreign.allowances.ForeignAllowancesAnswers
+import models.request.foreignincome.ForeignDividendsAnswers
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukandforeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
@@ -41,7 +43,8 @@ class MergeService @Inject() (implicit
     resultFromAnnualDownstream: PropertyAnnualSubmission,
     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
     resultFromRepository: Map[String, JourneyAnswers],
-    foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]
+    foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
+    foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
   ): FetchedPropertyData = {
     val esbaInfoMaybe =
       mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
@@ -182,6 +185,12 @@ class MergeService @Inject() (implicit
       resultFromPeriodicDownstreamMaybe,
       foreignResultFromRepository.get(JourneyName.ForeignPropertyAdjustments.entryName))
 
+    val foreignIncomeDividendsMaybe = mergeForeignIncomeDividends(
+      resultFromPeriodicDownstreamMaybe,
+      foreignIncomeResultFromRepository.get(JourneyName.ForeignIncomeDividends.entryName))
+
+    val foreignIncomeJourneyStatuses = mergeForeignStatuses(foreignIncomeResultFromRepository)
+
     val fetchedUKPropertyData = FetchedUKPropertyData(
       None,
       propertyAboutMaybe,
@@ -221,10 +230,16 @@ class MergeService @Inject() (implicit
       ukAndForeignAbout = ukAndForeignPropertyAboutMaybe
     )
 
+    val foreignIncomeData = FetchedForeignIncomeData(
+      foreignIncomeDividends = foreignIncomeDividendsMaybe,
+      foreignJourneyStatuses = foreignIncomeJourneyStatuses
+    )
+
     FetchedPropertyData(
       ukPropertyData = fetchedUKPropertyData,
       foreignPropertyData = fetchedForeignPropertyData,
-      ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+      ukAndForeignPropertyData = fetchedUkAndForeignPropertyData,
+      foreignIncomeData = foreignIncomeData
     )
   }
 
@@ -636,5 +651,43 @@ class MergeService @Inject() (implicit
 
     Option.when(foreignJourneyStatusMap.nonEmpty)(foreignJourneyStatusMap)
   }
+
+  def mergeForeignIncomeDividends(
+                                    resultFromDownstream: Option[PropertyPeriodicSubmission],
+                                    foreignIncomeResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                  ): Option[Map[String, ForeignDividendsAnswers]] = {
+    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] =
+      foreignIncomeResultFromRepository.map { journeyAnswers =>
+        journeyAnswers.map { case (countryCode, storeAnswers) =>
+          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsStoreAnswers]
+        }
+      }
+
+    val foreignIncomeDividends: Option[Map[String, ForeignIncomeFromDividends]] = for {
+      rfd <- resultFromDownstream
+      fi  <- rfd.foreignIncome
+    } yield Map(fi.flatMap(fi => fi.dividends.map(fiDividends => fi.countryCode -> fiDividends)): _*)
+
+    foreignIncomeDividendsStoreAnswers.merge(foreignIncomeDividends)
+  }
+
+//  def mergeForeignPropertyExpenses(
+//                                    resultFromDownstream: Option[PropertyPeriodicSubmission],
+//                                    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+//                                  ): Option[Map[String, ForeignExpensesAnswers]] = {
+//    val foreignPropertyExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
+//      foreignResultFromRepository.map { journeyAnswers =>
+//        journeyAnswers.map { case (countryCode, storeAnswers) =>
+//          countryCode -> storeAnswers.data.as[ForeignPropertyExpensesStoreAnswers]
+//        }
+//      }
+//
+//    val foreignPropertiesExpenses: Option[Map[String, ForeignPropertyExpenses]] = for {
+//      rfd <- resultFromDownstream
+//      fp  <- rfd.foreignProperty
+//    } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)): _*)
+//
+//    foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
+//  }
 
 }

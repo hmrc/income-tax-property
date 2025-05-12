@@ -21,7 +21,8 @@ import play.api.libs.json.{Json, OFormat}
 final case class FetchedPropertyData(
   ukPropertyData: FetchedUKPropertyData,
   foreignPropertyData: FetchedForeignPropertyData,
-  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData
+  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData,
+  foreignIncomeData: FetchedForeignIncomeData
 )
 
 object FetchedPropertyData {

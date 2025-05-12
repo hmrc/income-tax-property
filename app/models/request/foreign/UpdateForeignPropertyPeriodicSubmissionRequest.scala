@@ -88,6 +88,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
                 _,
                 _,
                 Some(Seq(ForeignProperty(_, Some(income), Some(expenses)))),
+                _,
                 _
               )
             ) =>
@@ -235,6 +236,7 @@ object UpdateForeignPropertyPeriodicSubmissionRequest {
                 _,
                 _,
                 Some(foreignProperties),
+                _,
                 _
               )
             ) =>
