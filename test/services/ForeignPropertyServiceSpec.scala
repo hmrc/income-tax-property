@@ -48,6 +48,7 @@ class ForeignPropertyServiceSpec
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   private val taxYear: TaxYear = TaxYear(2024)
   private val foreignPropertyIncome = ForeignPropertyIncome(None, Some(true), None, None, Some(456.75), Some(678.95))
+  private val foreignIncomeDividends = ForeignIncomeFromDividends(Some(12.34), Some(56.78), Some(90.12), Some(true), Some(34.56))
 
   val foreignProperty: Option[Seq[ForeignProperty]] = Some(
     Seq(
@@ -55,6 +56,15 @@ class ForeignPropertyServiceSpec
         "AUS",
         Some(foreignPropertyIncome),
         None
+      )
+    )
+  )
+
+  val foreignIncome: Option[Seq[ForeignIncome]] = Some(
+    Seq(
+      ForeignIncome(
+        "AUS",
+        Some(foreignIncomeDividends)
       )
     )
   )
@@ -80,7 +90,8 @@ class ForeignPropertyServiceSpec
         Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
         None
       )
-    )
+    ),
+    foreignIncome
   )
 
   "For Foreign Property Periodic Submissions getAllPropertyPeriodicSubmissions" should {
@@ -95,6 +106,7 @@ class ForeignPropertyServiceSpec
         submittedOn = Some(LocalDateTime.now),
         fromDate = LocalDate.now.minusDays(1),
         toDate = LocalDate.now,
+        None,
         None,
         None
       )
@@ -265,6 +277,7 @@ class ForeignPropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
+          None,
           None
         )
 
@@ -347,6 +360,7 @@ class ForeignPropertyServiceSpec
         fromDate = fromDate,
         toDate = toDate,
         foreignProperty = Some(Seq(foreignProperty)),
+        None,
         None
       )
 
@@ -404,6 +418,7 @@ class ForeignPropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
           None,
           None
         )
@@ -466,6 +481,7 @@ class ForeignPropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
+          None,
           None
         )
 
@@ -513,6 +529,7 @@ class ForeignPropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
           None,
           None
         )
@@ -586,6 +603,7 @@ class ForeignPropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
+          None,
           None
         )
 
@@ -653,8 +671,16 @@ class ForeignPropertyServiceSpec
               Some(UkOtherPropertyIncome(Some(200.0), Some(200.0), Some(200.0), Some(200.0), Some(200.0), None)),
               None
             )
-          )
-        )
+          ),
+          foreignIncome = Some(
+            Seq(
+              ForeignIncome(
+              countryCode = "AUS",
+              dividends = Some(ForeignIncomeFromDividends(Some(200.0), Some(200.0), Some(200.0), Some(true), Some(200.0)))
+            )
+           )
+         )
+       )
 
       val Right(requestForUpdate: UpdateForeignPropertyPeriodicSubmissionRequest) =
         UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(
@@ -725,6 +751,7 @@ class ForeignPropertyServiceSpec
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
           None,
+          None,
           None
         )
 
@@ -769,6 +796,7 @@ class ForeignPropertyServiceSpec
           None,
           LocalDate.parse(TaxYear.startDate(taxYear)),
           LocalDate.parse(TaxYear.endDate(taxYear)),
+          None,
           None,
           None
         )
@@ -1006,7 +1034,8 @@ class ForeignPropertyServiceSpec
             Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
             None
           )
-        )
+        ),
+        foreignIncome
       )
 
       "return no content for valid request" in {

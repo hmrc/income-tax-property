@@ -18,7 +18,7 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData}
+import models.domain.{FetchedForeignPropertyData, FetchedPropertyData, FetchedUKPropertyData, FetchedUkAndForeignPropertyData, FetchedForeignIncomeData}
 import models.errors.{RepositoryError, ServiceError}
 import models.request.esba.EsbaInfo
 import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
@@ -131,10 +131,15 @@ class PropertyControllerSpec
       val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
         None
       )
+      val foreignIncomeData = FetchedForeignIncomeData(
+        None,
+        None
+      )
       val resultFromService = FetchedPropertyData(
         ukPropertyData = uKPropertyData,
         foreignPropertyData = foreignPropertyData,
-        ukAndForeignPropertyData = ukAndForeignPropertyData
+        ukAndForeignPropertyData = ukAndForeignPropertyData,
+        foreignIncomeData = foreignIncomeData
       )
       mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
       val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)

@@ -48,7 +48,8 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
     fromDate = LocalDate.now(),
     toDate = LocalDate.now(),
     foreignProperty = None,
-    ukOtherProperty = Some(otherUkProperty)
+    ukOtherProperty = Some(otherUkProperty),
+    foreignIncome = None
   )
 
   val mergeService = new MergeService()
@@ -267,7 +268,8 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         fromDate = LocalDate.now,
         toDate = LocalDate.now,
         foreignProperty = Some(Seq(ForeignProperty(countryCode, None, Some(foreignPropertyExpenses)))),
-        ukOtherProperty = None
+        ukOtherProperty = None,
+        foreignIncome = None
       )
 
       val isBalancingCharge = true

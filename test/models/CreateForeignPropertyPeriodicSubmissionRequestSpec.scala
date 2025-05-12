@@ -81,7 +81,8 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
         fromDate = LocalDate.parse("2023-04-06"),
         toDate = LocalDate.parse("2024-04-05"),
         foreignProperty = Some(Seq(ForeignProperty("GB", Some(foreignPropertyIncome), Some(foreignPropertyExpenses)))),
-        ukOtherProperty = None
+        ukOtherProperty = None,
+        foreignIncome = None
       )
 
       val foreignPropertyTaxWithCountryCode = ForeignPropertyTaxWithCountryCode(
@@ -150,7 +151,8 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
         fromDate = LocalDate.parse("2023-04-06"),
         toDate = LocalDate.parse("2024-04-05"),
         foreignProperty = Some(Seq(ForeignProperty("GB", None, None))),
-        ukOtherProperty = None
+        ukOtherProperty = None,
+        foreignIncome = None
       )
 
       val result = CreateForeignPropertyPeriodicSubmissionRequest.fromForeignPropertyTax(
