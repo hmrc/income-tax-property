@@ -64,7 +64,8 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
         Some(ukOtherPropertyIncome),
         Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
       )
-    )
+    ),
+    None
   )
   val createUKPropertyPeriodicSubmissionRequest: CreateUKPropertyPeriodicSubmissionRequest =
     CreateUKPropertyPeriodicSubmissionRequest(
@@ -182,7 +183,19 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
           )
         )
       )
-    )
+    ),
+    foreignIncome = Some(
+      Seq(ForeignIncome(
+        "UK",
+        Some(ForeignIncomeFromDividends(
+          Some(12.34),
+          Some(56.78),
+          Some(90.12),
+          Some(true),
+          Some(34.56)
+        ))
+      )
+    ))
   )
 
   private def generateUpdateRequestWithSameValues(
@@ -244,7 +257,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
       CreateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
           TaxYear(2024),
-          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
+          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None, None)),
           RentalsAndRaRAbout(
             false,
             12.34,
@@ -301,7 +314,7 @@ class PropertyPeriodicSubmissionSpec extends UnitTest {
 
       UpdateUKPropertyPeriodicSubmissionRequest
         .fromEntity(
-          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None)),
+          Some(PropertyPeriodicSubmission(None, None, fakeDate, fakeDate, None, None, None)),
           RentalsAndRaRAbout(
             false,
             12.34,

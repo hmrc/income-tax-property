@@ -29,9 +29,10 @@ trait MockMergeService extends MockFactory {
       .mergeAll(_: PropertyAnnualSubmission,
         _: Option[PropertyPeriodicSubmission],
         _: Map[String, JourneyAnswers],
+        _: Map[String, Map[String, JourneyAnswers]],
         _: Map[String, Map[String, JourneyAnswers]]
       ))
-      .expects(*, *, *, *)
+      .expects(*, *, *, *, *)
       .returning(
         returnValue
       )

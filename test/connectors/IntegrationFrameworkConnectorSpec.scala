@@ -174,6 +174,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       fromDate = LocalDate.now.minusDays(1),
       toDate = LocalDate.now,
       None,
+      None,
       None
     )
 

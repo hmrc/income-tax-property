@@ -88,7 +88,8 @@ class ForeignMergerSpec extends UnitTest {
         ))
       )
     )),
-    ukOtherProperty = None
+    ukOtherProperty = None,
+    foreignIncome = None
   )
 
   val aPropertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
