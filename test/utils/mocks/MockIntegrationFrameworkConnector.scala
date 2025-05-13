@@ -312,6 +312,20 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .expects(taxYear, incomeSourceId, taxableEntityId, *, *)
       .returning(Future.successful(result))
 
+  def mockGetPropertyBroughtForwardLoss(
+    nino: Nino,
+    lossId: String,
+    result: Either[ApiError, BroughtForwardLossResponse]
+  ): CallHandler3[Nino, String, HeaderCarrier, Future[Either[ApiError, BroughtForwardLossResponse]]] = (
+    mockIntegrationFrameworkConnector.getBroughtForwardLoss(
+      _: Nino,
+      _: String
+    )(
+      _: HeaderCarrier
+    )
+  ).expects(nino, lossId, *)
+    .returning(Future.successful(result))
+
   def mockGetBroughtForwardLosses(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,

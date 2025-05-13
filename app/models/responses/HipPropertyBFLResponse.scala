@@ -14,9 +14,26 @@
  * limitations under the License.
  */
 
-package utils
+package models.responses
 
-case class FeatureSwitchConfig(
-  hipApi1500: Boolean = false,
-  hipApi1502: Boolean = false
+import models.IncomeSourceType
+import play.api.libs.json.{Format, Json}
+
+import java.time.LocalDate
+
+case class HipPropertyBFLResponse(
+  incomeSourceId: String,
+  incomeSourceType: IncomeSourceType,
+  broughtForwardLossAmount: BigDecimal,
+  taxYearBroughtForwardFrom: Int,
+  lossId: String,
+  submissionDate: LocalDate
 )
+
+object HipPropertyBFLResponse {
+  implicit val format: Format[HipPropertyBFLResponse] = Json.format[HipPropertyBFLResponse]
+}
+
+
+
+

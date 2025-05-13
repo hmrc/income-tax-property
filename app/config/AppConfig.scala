@@ -33,6 +33,7 @@ trait AppConfig {
   def authorisationTokenFor(apiVersion: String): String
   def hipAuthTokenKey: String
   def hipAuthTokenFor(apiVersion: String): String
+  def hipMigration1502Enabled: Boolean
   def hipBaseUrl: String
   def hipEnvironment: String
   def baseUrl(serviceName: String): String
@@ -70,7 +71,6 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
   override def hipAuthTokenFor(apiVersion: String): String =
     config.get[String](hipAuthTokenKey + s".$apiVersion")
 
-
   override def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
     val host = getConfString(s"$serviceName.host", throwConfigNotFoundError(s"$serviceName.host"))
@@ -85,18 +85,20 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
       .getOptional[String](s"$rootServices.protocol")
       .getOrElse("http")
 
-  override def getConfString(confKey: String, defString: => String) =
+  override def getConfString(confKey: String, defString: => String): String =
     config
       .getOptional[String](s"$rootServices.$confKey")
       .getOrElse(defString)
 
-  override def getConfInt(confKey: String, defInt: => Int) =
+  override def getConfInt(confKey: String, defInt: => Int): Int =
     config
       .getOptional[Int](s"$rootServices.$confKey")
       .getOrElse(defInt)
 
-  override def throwConfigNotFoundError(key: String) =
+  override def throwConfigNotFoundError(key: String): RuntimeException =
     throw new RuntimeException(s"Could not find config key '$key'")
+
+  override def hipMigration1502Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1502-enabled")
 
   override lazy val hipMigration1500Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1500-enabled")
 

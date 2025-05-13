@@ -22,19 +22,23 @@ import models.IncomeSourceType.UKPropertyFHL
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.{ApiError, SingleErrorBody}
+import models.request.WhenYouReportedTheLoss
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
-import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
+import models.request.HipPropertyBFLRequest
 import models.responses.BroughtForwardLossId
+import models.responses.HipPropertyBFLResponse
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
   private val nino = Nino("test-nino")
+  private val lossId = "test-loss-id"
   private val incomeSourceId = IncomeSourceId("test-income-source-id")
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)
@@ -149,12 +153,95 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
     }
   }
 
+  ".getPropertyBroughtForwardLoss" should {
+    "return a Brought Forward Loss response" when {
+      "the loss ID is found" in {
+
+        val httpResponse = HttpResponse(OK, Json.toJson(Responses.hipPropertyBFLResponse).toString())
+
+        stubGetHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          httpResponse
+        )
+
+        await(
+          underTest.getPropertyBroughtForwardLoss(
+            nino,
+            lossId
+          )(hc)
+        ) shouldBe Right(Responses.hipPropertyBFLResponse)
+      }
+    }
+
+    "return an API error from upstream" when {
+      "a NOT_FOUND' error is returned from the API" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(apiError).toString())
+        stubGetHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          httpResponse
+        )
+        val expectedResult = Left(ApiError(NOT_FOUND, apiError))
+        await(
+          underTest.getPropertyBroughtForwardLoss(
+            nino,
+            lossId
+          )(hc)
+        ) shouldBe expectedResult
+      }
+      "a Service Error is returned from the API" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val apiServiceErrors = Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+
+        apiServiceErrors.foreach { apiErrorCode =>
+          val httpResponse = HttpResponse(apiErrorCode, Json.toJson(apiError).toString())
+          stubGetHttpClientCall(
+            s"/income-sources/brought-forward-losses/$nino/$lossId",
+            httpResponse
+          )
+          val expectedResult = Left(ApiError(apiErrorCode, apiError))
+          await(
+            underTest.getPropertyBroughtForwardLoss(
+              nino,
+              lossId
+            )(hc)
+          ) shouldBe expectedResult
+        }
+      }
+      "another unexpected error is returned from the API" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val httpResponse = HttpResponse(INSUFFICIENT_STORAGE, Json.toJson(apiError).toString())
+        stubGetHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          httpResponse
+        )
+        val expectedResult = Left(ApiError(INTERNAL_SERVER_ERROR, apiError))
+        await(
+          underTest.getPropertyBroughtForwardLoss(
+            nino,
+            lossId
+          )(hc)
+        ) shouldBe expectedResult
+      }
+    }
+  }
+
   object Requests {
     val validCreateBFLRequest: HipPropertyBFLRequest = HipPropertyBFLRequest(
       incomeSourceId = incomeSourceId,
       incomeSourceType = incomeSourceType,
       broughtForwardLossAmount = lossAmount,
       taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear
+    )
+  }
+  object Responses {
+    val hipPropertyBFLResponse: HipPropertyBFLResponse = HipPropertyBFLResponse(
+      incomeSourceId = incomeSourceId.toString,
+      incomeSourceType = incomeSourceType,
+      broughtForwardLossAmount = lossAmount,
+      taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear,
+      lossId = lossId,
+      submissionDate = LocalDate.now()
     )
   }
 }
