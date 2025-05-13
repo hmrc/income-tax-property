@@ -30,6 +30,10 @@ trait AppConfig {
   def ifEnvironment: String
   def authorisationTokenKey: String
   def authorisationTokenFor(apiVersion: String): String
+  def hipAuthTokenKey: String
+  def hipAuthTokenFor(apiVersion: String): String
+  def hipBaseUrl: String
+  def hipEnvironment: String
   def baseUrl(serviceName: String): String
   protected def rootServices: String
   protected def defaultProtocol: String
@@ -51,6 +55,17 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
   override def authorisationTokenFor(apiVersion: String): String =
     config.get[String](authorisationTokenKey + s".$apiVersion")
+
+
+  override lazy val hipBaseUrl: String = baseUrl(serviceName = "hip-integration-framework")
+
+  override def hipEnvironment: String = config.get[String]("microservice.services.hip-integration-framework.environment")
+
+  override lazy val hipAuthTokenKey: String = "microservice.services.hip-integration-framework.authorisation-token"
+
+  override def hipAuthTokenFor(apiVersion: String): String =
+    config.get[String](hipAuthTokenKey + s".$apiVersion")
+
 
   override def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
