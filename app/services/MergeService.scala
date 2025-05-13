@@ -26,7 +26,7 @@ import models.request._
 import models.request.esba.{EsbaInUpstream, EsbaInfoToSave, EsbaInfo}
 import models.request.foreign._
 import models.request.foreign.allowances.ForeignAllowancesAnswers
-import models.request.foreignincome.ForeignDividendsAnswers
+import models.request.foreignincome.{ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukandforeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
@@ -40,12 +40,13 @@ class MergeService @Inject() (implicit
 ) {
 
   def mergeAll(
-    resultFromAnnualDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Map[String, JourneyAnswers],
-    foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
-    foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
-  ): FetchedPropertyData = {
+                resultFromAnnualDownstream: PropertyAnnualSubmission,
+                resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                resultFromRepository: Map[String, JourneyAnswers],
+                resultFromForeignIncomeDownstreamMaybe: Option[ForeignIncomeSubmission],
+                foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
+                foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
+              ): FetchedPropertyData = {
     val esbaInfoMaybe =
       mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
 
@@ -178,7 +179,7 @@ class MergeService @Inject() (implicit
 
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
-    val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream,foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
+    val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream, foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
 
     val foreignPropertyAdjustmentsMaybe = mergeForeignPropertyAdjustments(
       resultFromAnnualDownstream,
@@ -186,7 +187,7 @@ class MergeService @Inject() (implicit
       foreignResultFromRepository.get(JourneyName.ForeignPropertyAdjustments.entryName))
 
     val foreignIncomeDividendsMaybe = mergeForeignIncomeDividends(
-      resultFromPeriodicDownstreamMaybe,
+      resultFromForeignIncomeDownstreamMaybe,
       foreignIncomeResultFromRepository.get(JourneyName.ForeignIncomeDividends.entryName))
 
     val foreignIncomeJourneyStatuses = mergeForeignStatuses(foreignIncomeResultFromRepository)
@@ -244,12 +245,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRentalsIncome(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[PropertyRentalsIncome] = {
+                          resultFromDownstream: Option[PropertyPeriodicSubmission],
+                          resultFromRepository: Option[JourneyAnswers]
+                        ): Option[PropertyRentalsIncome] = {
     val rentalsIncomeStoreAnswers: Option[StoredIncome] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[StoredIncome])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyIncome: Option[UkOtherPropertyIncome] =
       resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.income))
@@ -260,12 +261,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRentalsAndRaRIncome(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RentalsAndRaRIncome] = {
+                                resultFromDownstream: Option[PropertyPeriodicSubmission],
+                                resultFromRepository: Option[JourneyAnswers]
+                              ): Option[RentalsAndRaRIncome] = {
     val rentalsIncomeStoreAnswers: Option[StoredIncome] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[StoredIncome])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyIncome: Option[UkOtherPropertyIncome] =
       resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.income))
@@ -276,12 +277,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRentalsExpenses(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[PropertyRentalsExpense] = {
+                            resultFromDownstream: Option[PropertyPeriodicSubmission],
+                            resultFromRepository: Option[JourneyAnswers]
+                          ): Option[PropertyRentalsExpense] = {
     val rentalsExpensesStoreAnswers: Option[ExpensesStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[ExpensesStoreAnswers])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyExpenses: Option[UkOtherPropertyExpenses] =
       resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.expenses))
@@ -290,12 +291,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRaRExpenses(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RentARoomExpenses] = {
+                        resultFromDownstream: Option[PropertyPeriodicSubmission],
+                        resultFromRepository: Option[JourneyAnswers]
+                      ): Option[RentARoomExpenses] = {
     val raRExpensesStoreAnswers: Option[RentARoomExpensesStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[RentARoomExpensesStoreAnswers])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyExpenses: Option[UkOtherPropertyExpenses] =
       resultFromDownstream.flatMap(_.ukOtherProperty.flatMap(_.expenses))
@@ -304,12 +305,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeAllowances(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RentalAllowances] = {
+                       resultFromDownstream: PropertyAnnualSubmission,
+                       resultFromRepository: Option[JourneyAnswers]
+                     ): Option[RentalAllowances] = {
     val allowancesStoreAnswers: Option[RentalAllowancesStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[RentalAllowancesStoreAnswers])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances] =
       resultFromDownstream.ukOtherProperty.flatMap(_.ukOtherPropertyAnnualAllowances)
@@ -317,12 +318,12 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRaRAllowances(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RentARoomAllowances] = {
+                          resultFromDownstream: PropertyAnnualSubmission,
+                          resultFromRepository: Option[JourneyAnswers]
+                        ): Option[RentARoomAllowances] = {
     val rentARoomAllowancesStoreAnswers: Option[RentARoomAllowancesStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[RentARoomAllowancesStoreAnswers])
-      case None                 => None
+      case None => None
     }
     val ukOtherPropertyAnnualAllowances: Option[UkOtherAllowances] =
       resultFromDownstream.ukOtherProperty.flatMap(_.ukOtherPropertyAnnualAllowances)
@@ -332,52 +333,52 @@ class MergeService @Inject() (implicit
   def mergePropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyAbout])
-      case None                 => None
+      case None => None
     }
 
   def mergeUkAndForeignPropertyAbout(resultFromRepository: Option[JourneyAnswers]): Option[UkAndForeignAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[UkAndForeignAbout])
-      case None                 => None
+      case None => None
     }
 
   def mergeForeignPropertySelectCountry(
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[ForeignPropertySelectCountry] =
+                                         resultFromRepository: Option[JourneyAnswers]
+                                       ): Option[ForeignPropertySelectCountry] =
     resultFromRepository match {
       case Some(journeyAnswers: JourneyAnswers) => Some(journeyAnswers.data.as[ForeignPropertySelectCountry])
-      case None                                 => None
+      case None => None
     }
 
   def mergePropertyRentalsAbout(resultFromRepository: Option[JourneyAnswers]): Option[PropertyRentalsAbout] =
     resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[PropertyRentalsAbout])
-      case None                 => None
+      case None => None
     }
 
   def mergeRentalsAndRaRAbout(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RentalsAndRaRAbout] = {
+                               resultFromDownstream: PropertyAnnualSubmission,
+                               resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                               resultFromRepository: Option[JourneyAnswers]
+                             ): Option[RentalsAndRaRAbout] = {
     val isClaimPropertyIncomeAllowance: Option[IsClaimPropertyIncomeAllowance] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[IsClaimPropertyIncomeAllowance])
-      case None                 => None
+      case None => None
     }
     val isClaimExpensesOrRRR: Option[IsClaimExpensesOrRRR] = resultFromRepository match {
       case Some(journeyAnswers) => journeyAnswers.data.asOpt[IsClaimExpensesOrRRR]
-      case None                 => None
+      case None => None
     }
 
     val jointlyLet = for {
-      uop    <- resultFromDownstream.ukOtherProperty
+      uop <- resultFromDownstream.ukOtherProperty
       ukopaa <- uop.ukOtherPropertyAnnualAdjustments
       ukorar <- ukopaa.ukOtherRentARoom.orElse(ukopaa.rentARoom)
     } yield ukorar.jointlyLet
 
     val uKOtherPropertyMaybe: Option[UkOtherProperty] = for {
       resultFromPeriodicDownstream <- resultFromPeriodicDownstreamMaybe
-      ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
+      ukop <- resultFromPeriodicDownstream.ukOtherProperty
     } yield ukop
 
     val rentalsAndRaRAboutStoreAnswers = (isClaimPropertyIncomeAllowance, isClaimExpensesOrRRR)
@@ -385,23 +386,23 @@ class MergeService @Inject() (implicit
   }
 
   def mergeRaRAbout(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RaRAbout] = {
+                     resultFromDownstream: PropertyAnnualSubmission,
+                     resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                     resultFromRepository: Option[JourneyAnswers]
+                   ): Option[RaRAbout] = {
     val rentARoomAllowancesStoreAnswers: Option[IsClaimExpensesOrRRR] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[IsClaimExpensesOrRRR])
-      case None                 => None
+      case None => None
     }
     val jointlyLet = for {
-      uop    <- resultFromDownstream.ukOtherProperty
+      uop <- resultFromDownstream.ukOtherProperty
       ukopaa <- uop.ukOtherPropertyAnnualAdjustments
       ukorar <- ukopaa.ukOtherRentARoom.orElse(ukopaa.rentARoom)
     } yield ukorar.jointlyLet
 
     val uKOtherPropertyMaybe: Option[UkOtherProperty] = for {
       resultFromPeriodicDownstream <- resultFromPeriodicDownstreamMaybe
-      ukop                         <- resultFromPeriodicDownstream.ukOtherProperty
+      ukop <- resultFromPeriodicDownstream.ukOtherProperty
     } yield ukop
 
     rentARoomAllowancesStoreAnswers.merge((jointlyLet, uKOtherPropertyMaybe))
@@ -415,57 +416,57 @@ class MergeService @Inject() (implicit
     )
 
   def mergeAdjustments(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[PropertyRentalAdjustments] = {
+                        resultFromDownstream: PropertyAnnualSubmission,
+                        resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                        resultFromRepository: Option[JourneyAnswers]
+                      ): Option[PropertyRentalAdjustments] = {
 
     val adjustmentsAndPeriodicExpenses: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)] = for {
-      uopAnnual                    <- resultFromDownstream.ukOtherProperty
+      uopAnnual <- resultFromDownstream.ukOtherProperty
       resultFromDownstreamPeriodic <- resultFromPeriodicDownstreamMaybe // revisit. None Periodic what to do
-      uopPeriodic                  <- resultFromDownstreamPeriodic.ukOtherProperty
-      expensesPeriodic             <- uopPeriodic.expenses
-      uopaa                        <- uopAnnual.ukOtherPropertyAnnualAdjustments
+      uopPeriodic <- resultFromDownstreamPeriodic.ukOtherProperty
+      expensesPeriodic <- uopPeriodic.expenses
+      uopaa <- uopAnnual.ukOtherPropertyAnnualAdjustments
     } yield (uopaa, expensesPeriodic)
 
     val adjustmentStoreAnswers: Option[AdjustmentStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[AdjustmentStoreAnswers])
-      case None                 => None
+      case None => None
     }
 
     adjustmentStoreAnswers.merge(adjustmentsAndPeriodicExpenses)
   }
 
   def mergeRaRAdjustments(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[RaRAdjustments] = {
+                           resultFromDownstream: PropertyAnnualSubmission,
+                           resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                           resultFromRepository: Option[JourneyAnswers]
+                         ): Option[RaRAdjustments] = {
 
     val raRAdjustments: Option[(UkOtherAdjustments, UkOtherPropertyExpenses)] = for {
-      uopAnnual                    <- resultFromDownstream.ukOtherProperty
-      uopaa                        <- uopAnnual.ukOtherPropertyAnnualAdjustments
+      uopAnnual <- resultFromDownstream.ukOtherProperty
+      uopaa <- uopAnnual.ukOtherPropertyAnnualAdjustments
       resultFromPeriodicDownstream <- resultFromPeriodicDownstreamMaybe
-      ukOtherProperty              <- resultFromPeriodicDownstream.ukOtherProperty
-      ukOtherPropertyExpenses      <- ukOtherProperty.expenses
+      ukOtherProperty <- resultFromPeriodicDownstream.ukOtherProperty
+      ukOtherPropertyExpenses <- ukOtherProperty.expenses
     } yield (uopaa, ukOtherPropertyExpenses)
 
     val raRAdjustmentStoreAnswers: Option[RentARoomAdjustmentsStoreAnswers] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[RentARoomAdjustmentsStoreAnswers])
-      case None                 => None
+      case None => None
     }
 
     raRAdjustmentStoreAnswers.merge(raRAdjustments)
   }
 
   def mergeEsbaInfo(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[EsbaInfo] = {
+                     resultFromDownstream: PropertyAnnualSubmission,
+                     resultFromRepository: Option[JourneyAnswers]
+                   ): Option[EsbaInfo] = {
     val esbasMaybe: Option[List[Esba]] = for {
-      ukop   <- resultFromDownstream.ukOtherProperty
+      ukop <- resultFromDownstream.ukOtherProperty
       ukopaa <- ukop.ukOtherPropertyAnnualAllowances
-      esba   <- ukopaa.enhancedStructuredBuildingAllowance
+      esba <- ukopaa.enhancedStructuredBuildingAllowance
     } yield esba.toList
 
     val esbasInRequestMaybe: Option[List[EsbaInUpstream]] = esbasMaybe.flatMap(
@@ -474,34 +475,34 @@ class MergeService @Inject() (implicit
 
     val esbaInfoSavedInRepositoryMaybe: Option[EsbaInfoToSave] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[EsbaInfoToSave])
-      case None                 => None
+      case None => None
     }
 
     esbaInfoSavedInRepositoryMaybe.merge(esbasInRequestMaybe)
   }
 
   def mergeSbaInfo(
-    resultFromDownstream: PropertyAnnualSubmission,
-    resultFromRepository: Option[JourneyAnswers]
-  ): Option[SbaInfo] = {
+                    resultFromDownstream: PropertyAnnualSubmission,
+                    resultFromRepository: Option[JourneyAnswers]
+                  ): Option[SbaInfo] = {
     val sbasMaybe: Option[List[StructuredBuildingAllowance]] = for {
-      ukop   <- resultFromDownstream.ukOtherProperty
+      ukop <- resultFromDownstream.ukOtherProperty
       ukopaa <- ukop.ukOtherPropertyAnnualAllowances
-      sba    <- ukopaa.structuredBuildingAllowance
+      sba <- ukopaa.structuredBuildingAllowance
     } yield sba.toList
 
     val sbaInfoSavedInRepositoryMaybe: Option[SbaInfoToSave] = resultFromRepository match {
       case Some(journeyAnswers) => Some(journeyAnswers.data.as[SbaInfoToSave])
-      case None                 => None
+      case None => None
     }
 
     sbaInfoSavedInRepositoryMaybe.merge(sbasMaybe)
   }
 
   def mergeForeignPropertyTax(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignPropertyTax]] = {
+                               resultFromDownstream: Option[PropertyPeriodicSubmission],
+                               foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+                             ): Option[Map[String, ForeignPropertyTax]] = {
     val foreignPropertyTaxStoreAnswers: Option[Map[String, ForeignPropertyTaxStoreAnswers]] =
       foreignResultFromRepository match {
         case Some(journeyAnswers) =>
@@ -513,35 +514,35 @@ class MergeService @Inject() (implicit
 
     val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
       rfd <- resultFromDownstream
-      fp  <- rfd.foreignProperty
+      fp <- rfd.foreignProperty
     } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)): _*)
 
     foreignPropertyTaxStoreAnswers.merge(foreignPropertiesIncome)
   }
 
-   def mergeForeignPropertyAllowances(
-    resultFromDownstream: PropertyAnnualSubmission,
-    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignAllowancesAnswers]] = {
-     val foreignPropertyAllowanceStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
-       foreignResultFromRepository match {
-         case Some(journeyAnswers) =>
-           Some(journeyAnswers.map { case (countryCode, storeAnswers) =>
-             countryCode -> storeAnswers.data.as[ForeignAllowancesStoreAnswers]
-           })
-         case _ => None
+  def mergeForeignPropertyAllowances(
+                                      resultFromDownstream: PropertyAnnualSubmission,
+                                      foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                    ): Option[Map[String, ForeignAllowancesAnswers]] = {
+    val foreignPropertyAllowanceStoreAnswers: Option[Map[String, ForeignAllowancesStoreAnswers]] =
+      foreignResultFromRepository match {
+        case Some(journeyAnswers) =>
+          Some(journeyAnswers.map { case (countryCode, storeAnswers) =>
+            countryCode -> storeAnswers.data.as[ForeignAllowancesStoreAnswers]
+          })
+        case _ => None
       }
-     val foreignAllowances: Option[Map[String, ForeignPropertyAllowances]] = for {
-       fp <- resultFromDownstream.foreignProperty
-     } yield Map(fp.flatMap(fp => fp.allowances.map(fpAllowances => fp.countryCode -> fpAllowances)): _*)
+    val foreignAllowances: Option[Map[String, ForeignPropertyAllowances]] = for {
+      fp <- resultFromDownstream.foreignProperty
+    } yield Map(fp.flatMap(fp => fp.allowances.map(fpAllowances => fp.countryCode -> fpAllowances)): _*)
 
-     foreignPropertyAllowanceStoreAnswers.merge(foreignAllowances)
-   }
+    foreignPropertyAllowanceStoreAnswers.merge(foreignAllowances)
+  }
 
   def mergeForeignPropertyIncome(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignIncomeAnswers]] = {
+                                  resultFromDownstream: Option[PropertyPeriodicSubmission],
+                                  foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                ): Option[Map[String, ForeignIncomeAnswers]] = {
     val foreignPropertyIncomeStoreAnswers: Option[Map[String, ForeignIncomeStoreAnswers]] =
       foreignResultFromRepository match {
         case Some(journeyAnswers) =>
@@ -553,16 +554,16 @@ class MergeService @Inject() (implicit
 
     val foreignPropertiesIncome: Option[Map[String, ForeignPropertyIncome]] = for {
       rfd <- resultFromDownstream
-      fp  <- rfd.foreignProperty
+      fp <- rfd.foreignProperty
     } yield Map(fp.flatMap(fp => fp.income.map(fpIncome => fp.countryCode -> fpIncome)): _*)
 
     foreignPropertyIncomeStoreAnswers.merge(foreignPropertiesIncome)
   }
 
   def mergeForeignPropertyExpenses(
-    resultFromDownstream: Option[PropertyPeriodicSubmission],
-    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignExpensesAnswers]] = {
+                                    resultFromDownstream: Option[PropertyPeriodicSubmission],
+                                    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                  ): Option[Map[String, ForeignExpensesAnswers]] = {
     val foreignPropertyExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
       foreignResultFromRepository.map { journeyAnswers =>
         journeyAnswers.map { case (countryCode, storeAnswers) =>
@@ -572,16 +573,16 @@ class MergeService @Inject() (implicit
 
     val foreignPropertiesExpenses: Option[Map[String, ForeignPropertyExpenses]] = for {
       rfd <- resultFromDownstream
-      fp  <- rfd.foreignProperty
+      fp <- rfd.foreignProperty
     } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)): _*)
 
     foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
   }
 
   def mergeForeignPropertySba(
-    resultFromDownStream: PropertyAnnualSubmission,
-    fromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignSbaInfo]] = {
+                               resultFromDownStream: PropertyAnnualSubmission,
+                               fromRepository: Option[Map[String, JourneyAnswers]]
+                             ): Option[Map[String, ForeignSbaInfo]] = {
     val sbaStoreAnswers: Option[Map[String, ForeignPropertySbaStoreAnswers]] = fromRepository.map { ja =>
       ja.map { case (countryCode, answers) =>
         countryCode -> answers.data.as[ForeignPropertySbaStoreAnswers]
@@ -603,10 +604,10 @@ class MergeService @Inject() (implicit
   }
 
   def mergeForeignPropertyAdjustments(
-    resultFromAnnualDownstream: PropertyAnnualSubmission,
-    resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
-    fromRepository: Option[Map[String, JourneyAnswers]]
-  ): Option[Map[String, ForeignAdjustmentsAnswers]] = {
+                                       resultFromAnnualDownstream: PropertyAnnualSubmission,
+                                       resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
+                                       fromRepository: Option[Map[String, JourneyAnswers]]
+                                     ): Option[Map[String, ForeignAdjustmentsAnswers]] = {
     val adjustmentsStoreAnswers: Option[Map[String, ForeignAdjustmentsStoreAnswers]] = fromRepository.map { ja =>
       ja.map { case (countryCode, answers) =>
         countryCode -> answers.data.as[ForeignAdjustmentsStoreAnswers]
@@ -615,24 +616,25 @@ class MergeService @Inject() (implicit
 
     val adjustmentsPIAAndPeriodicExpenses: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]] =
       resultFromAnnualDownstream.foreignProperty.map { annualForeignProperties =>
-        annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty => for {
+        annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+          for {
             adjustments <- annualForeignProperty.adjustments
             periodicForeignProperties <- resultFromPeriodicDownstreamMaybe.flatMap(_.foreignProperty)
             periodicForeignProperty <- periodicForeignProperties.find(_.countryCode == annualForeignProperty.countryCode)
             expenses <- periodicForeignProperty.expenses
           } yield annualForeignProperty.countryCode -> (
-          adjustments,
-          annualForeignProperty.allowances.flatMap(_.propertyAllowance),
-          expenses
-        )
+            adjustments,
+            annualForeignProperty.allowances.flatMap(_.propertyAllowance),
+            expenses
+          )
         }.toMap
       }
     adjustmentsStoreAnswers.merge(adjustmentsPIAAndPeriodicExpenses)
   }
 
   def mergeForeignStatuses(
-    foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]
-  ): Option[Map[String, List[JourneyWithStatus]]] = {
+                            foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]
+                          ): Option[Map[String, List[JourneyWithStatus]]] = {
     val foreignJourneyStatusList: Seq[(String, JourneyWithStatus)] = foreignResultFromRepository.toList.flatMap {
       case (journeyName: String, foreignJourneyAnswers: Map[String, JourneyAnswers]) =>
         foreignJourneyAnswers.collect { case (countryCode, answers) =>
@@ -644,7 +646,7 @@ class MergeService @Inject() (implicit
       foreignJourneyStatusList.foldLeft(Map[String, List[JourneyWithStatus]]()) {
         case (acc, (countryCode: String, journey: JourneyWithStatus)) =>
           acc.get(countryCode) match {
-            case None           => acc + (countryCode -> List(journey))
+            case None => acc + (countryCode -> List(journey))
             case Some(journeys) => acc + (countryCode -> (journeys :+ journey))
           }
       }
@@ -653,41 +655,22 @@ class MergeService @Inject() (implicit
   }
 
   def mergeForeignIncomeDividends(
-                                    resultFromDownstream: Option[PropertyPeriodicSubmission],
-                                    foreignIncomeResultFromRepository: Option[Map[String, JourneyAnswers]]
-                                  ): Option[Map[String, ForeignDividendsAnswers]] = {
-    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] =
+                                   resultFromDownstream: Option[ForeignIncomeSubmission],
+                                   foreignIncomeResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                 ): Option[Map[String, ForeignDividendsAnswers]] = {
+    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsAnswers]] = {
       foreignIncomeResultFromRepository.map { journeyAnswers =>
         journeyAnswers.map { case (countryCode, storeAnswers) =>
-          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsStoreAnswers]
+          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsAnswers]
         }
       }
+      }
 
-    val foreignIncomeDividends: Option[Map[String, ForeignIncomeFromDividends]] = for {
+    val foreignIncomeDividends: Option[Map[String, ForeignDividend]] = for {
       rfd <- resultFromDownstream
-      fi  <- rfd.foreignIncome
-    } yield Map(fi.flatMap(fi => fi.dividends.map(fiDividends => fi.countryCode -> fiDividends)): _*)
+      fd <- rfd.foreignDividend
+    } yield fd.map(fd => fd.countryCode -> fd).toMap
 
-    foreignIncomeDividendsStoreAnswers.merge(foreignIncomeDividends)
+      foreignIncomeDividendsStoreAnswers.merge(foreignIncomeDividends)
   }
-
-//  def mergeForeignPropertyExpenses(
-//                                    resultFromDownstream: Option[PropertyPeriodicSubmission],
-//                                    foreignResultFromRepository: Option[Map[String, JourneyAnswers]]
-//                                  ): Option[Map[String, ForeignExpensesAnswers]] = {
-//    val foreignPropertyExpensesStoreAnswers: Option[Map[String, ForeignPropertyExpensesStoreAnswers]] =
-//      foreignResultFromRepository.map { journeyAnswers =>
-//        journeyAnswers.map { case (countryCode, storeAnswers) =>
-//          countryCode -> storeAnswers.data.as[ForeignPropertyExpensesStoreAnswers]
-//        }
-//      }
-//
-//    val foreignPropertiesExpenses: Option[Map[String, ForeignPropertyExpenses]] = for {
-//      rfd <- resultFromDownstream
-//      fp  <- rfd.foreignProperty
-//    } yield Map(fp.flatMap(fp => fp.expenses.map(fpExpenses => fp.countryCode -> fpExpenses)): _*)
-//
-//    foreignPropertyExpensesStoreAnswers.merge(foreignPropertiesExpenses)
-//  }
-
 }
