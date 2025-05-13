@@ -229,7 +229,8 @@ class JourneyAnswersIntegrationSpec
               )
             )
           )
-        )
+        ),
+        None
       )
       val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
 
@@ -425,6 +426,10 @@ class JourneyAnswersIntegrationSpec
         ),
         ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
           ukAndForeignAbout = None
+        ),
+        foreignIncomeData = FetchedForeignIncomeData(
+          foreignIncomeDividends = None,
+          foreignJourneyStatuses = None
         )
       )
 
@@ -573,7 +578,8 @@ class JourneyAnswersIntegrationSpec
               )
             )
           )
-        )
+        ),
+        None
       )
       val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
 
