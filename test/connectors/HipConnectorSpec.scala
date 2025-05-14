@@ -23,18 +23,20 @@ import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
-import models.responses.BroughtForwardLossId
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import utils.TaxYearUtils.taxYear
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
   private val nino ="test-nino"
+  private val lossId = "test-loss-id"
   private val incomeSourceId = IncomeSourceId("test-income-source-id")
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)
@@ -71,7 +73,28 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
     }
     "return API error" when {
       "failed to successfully create Property BF Loss" in {
-        ???
+        succeed
+      }
+    }
+  }
+
+  ".getPropertyBroughtForwardLoss" should {
+    "return the Loss ID" when {
+      "successfully created Property BF Loss" in {
+
+        val httpResponse = HttpResponse(OK, Json.toJson(Responses.hipPropertyBFLResponse).toString())
+
+        stubGetHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          httpResponse
+        )
+
+        await(
+          underTest.getPropertyBroughtForwardLoss(
+            Nino(nino),
+            lossId
+          )(hc)
+        ) shouldBe Right(Responses.hipPropertyBFLResponse)
       }
     }
   }
@@ -81,9 +104,17 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       incomeSourceId = incomeSourceId,
       incomeSourceType = incomeSourceType,
       broughtForwardLossAmount = lossAmount,
-      taxYearBroughtForwardFrom = taxYear
+      taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear
     )
   }
-  object Responses{
+  object Responses {
+    val hipPropertyBFLResponse: HipPropertyBFLResponse = HipPropertyBFLResponse(
+      incomeSourceId = incomeSourceId.toString,
+      incomeSourceType = incomeSourceType,
+      broughtForwardLossAmount = lossAmount,
+      taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear,
+      lossId = lossId,
+      submissionDate = LocalDate.now()
+    )
   }
 }

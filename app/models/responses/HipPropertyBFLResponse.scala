@@ -16,14 +16,14 @@
 
 package models.responses
 
-import models.HipLossType
+import models.IncomeSourceType
 import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
 case class HipPropertyBFLResponse(
   incomeSourceId: String,
-  incomeSourceType: HipLossType,
+  incomeSourceType: IncomeSourceType,
   broughtForwardLossAmount: BigDecimal,
   taxYearBroughtForwardFrom: Int,
   lossId: String,
