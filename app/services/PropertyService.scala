@@ -18,7 +18,8 @@ package services
 
 import cats.data.EitherT
 import cats.syntax.either._
-import connectors.IntegrationFrameworkConnector
+import config.AppConfig
+import connectors.{HipConnector, IntegrationFrameworkConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
@@ -41,8 +42,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PropertyService @Inject() (
   mergeService: MergeService,
-  connector: IntegrationFrameworkConnector,
-  mongoService: MongoJourneyAnswersService
+  integrationFrameworkConnector: IntegrationFrameworkConnector,
+  hipConnector: HipConnector,
+  mongoService: MongoJourneyAnswersService,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends Logging {
 
@@ -52,7 +55,7 @@ class PropertyService @Inject() (
 
     val result: ITPEnvelope[List[PropertyPeriodicSubmission]] =
       for {
-        periodicSubmissionIds <- EitherT(connector.getAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId))
+        periodicSubmissionIds <- EitherT(integrationFrameworkConnector.getAllPeriodicSubmissionIds(taxYear, nino, incomeSourceId))
                                    .leftMap(error => ApiServiceError(error.status))
         currentPeriodicSubmissions <-
           getCurrentPeriodicSubmissionsForIds(taxYear, nino, incomeSourceId, periodicSubmissionIds)
@@ -81,7 +84,7 @@ class PropertyService @Inject() (
           .equals(TaxYear.endDate(taxYear.endYear))
       )
       .map { submissionId =>
-        connector
+        integrationFrameworkConnector
           .getPropertyPeriodicSubmission(taxYear, taxableEntityId, incomeSourceId, submissionId.submissionId)
           .map {
             case Right(Some(submission)) =>
@@ -131,7 +134,7 @@ class PropertyService @Inject() (
   def getPropertyAnnualSubmission(taxYear: TaxYear, taxableEntityId: Nino, incomeSourceId: IncomeSourceId)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[PropertyAnnualSubmission] =
-    EitherT(connector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
+    EitherT(integrationFrameworkConnector.getPropertyAnnualSubmission(taxYear, taxableEntityId, incomeSourceId))
       .map { pas =>
         logger.debug(s"[getPropertyAnnualSubmission] Annual submission details from IF: $pas")
         pas
@@ -329,7 +332,7 @@ class PropertyService @Inject() (
     incomeSourceId: IncomeSourceId,
     lossAmount: BigDecimal
   )(implicit hc: HeaderCarrier): ITPEnvelope[String] = {
-    EitherT(connector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount))
+    EitherT(integrationFrameworkConnector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount))
       .map(_.lossId)
       .leftMap { error =>
         logger.error(s"[createBroughtForwardLoss]: Error creating loss brought forward")
@@ -337,12 +340,37 @@ class PropertyService @Inject() (
       }
   }
 
+  private def getBroughtForwardLoss(
+    nino: Nino,
+    lossId: String
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+    if(appConfig.hipMigration1502Enabled) {
+      EitherT(hipConnector.getPropertyBroughtForwardLoss(nino, lossId))
+        .map(hipPropertyBFLResponse => BroughtForwardLossResponse(
+          businessId = hipPropertyBFLResponse.incomeSourceId,
+          typeOfLoss = UKProperty,
+          lossAmount = hipPropertyBFLResponse.broughtForwardLossAmount,
+          taxYearBroughtForwardFrom = hipPropertyBFLResponse.taxYearBroughtForwardFrom.toString,
+          lastModified = hipPropertyBFLResponse.submissionDate.toString
+        )).leftMap { error =>
+          logger.error(s"[getBroughtForwardLoss]: Error retrieving loss brought forward from Hybrid Integration Platform")
+          ApiServiceError(error.status)
+        }
+    } else {
+      EitherT(integrationFrameworkConnector.getBroughtForwardLoss(nino, lossId))
+        .leftMap { error =>
+          logger.error(s"[getBroughtForwardLoss]: Error retrieving loss brought forward from Integration Framework")
+          ApiServiceError(error.status)
+        }
+    }
+  }
+
   private def getBroughtForwardLosses(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     incomeSourceId: IncomeSourceId
   )(implicit hc: HeaderCarrier): ITPEnvelope[Seq[BroughtForwardLossResponseWithId]] = {
-    EitherT(connector.getBroughtForwardLosses(taxYearBroughtForwardFrom, nino, incomeSourceId))
+    EitherT(integrationFrameworkConnector.getBroughtForwardLosses(taxYearBroughtForwardFrom, nino, incomeSourceId))
       .map(_.losses)
       .leftMap {error =>
         logger.error(s"[getBroughtForwardLosses]: Error retrieving losses brought forward")
@@ -356,7 +384,7 @@ class PropertyService @Inject() (
     lossId: String,
     lossAmount: BigDecimal
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
-    EitherT(connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
+    EitherT(integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
       .leftMap {error =>
         logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
         ApiServiceError(error.status)
@@ -652,7 +680,7 @@ class PropertyService @Inject() (
   def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Unit] =
-    EitherT(connector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear))
+    EitherT(integrationFrameworkConnector.deletePropertyAnnualSubmission(incomeSourceId, taxableEntityId, taxYear))
       .bimap(error => ApiServiceError(error.status), result => result)
 
   def createPeriodicSubmission(
@@ -661,7 +689,7 @@ class PropertyService @Inject() (
     taxYear: TaxYear,
     body: CreateUKPropertyPeriodicSubmissionRequest
   )(implicit hc: HeaderCarrier): ITPEnvelope[Option[PeriodicSubmissionId]] =
-    EitherT(connector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap { e =>
+    EitherT(integrationFrameworkConnector.createPeriodicSubmission(taxYear, nino, incomeSourceId, body)).leftMap { e =>
       logger.error(s"[createPeriodicSubmission] Error when creating Periodic Submission $e")
       ApiServiceError(e.status)
     }
@@ -676,7 +704,7 @@ class PropertyService @Inject() (
     hc: HeaderCarrier
   ): ITPEnvelope[String] =
     EitherT(
-      connector
+      integrationFrameworkConnector
         .updatePeriodicSubmission(nino, incomeSourceId, taxYear, submissionId, updatePropertyPeriodicSubmissionRequest)
     )
       .bimap(
@@ -700,7 +728,7 @@ class PropertyService @Inject() (
         ITPEnvelope.liftPure(())
       case _ =>
         EitherT(
-          connector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
+          integrationFrameworkConnector.createOrUpdateAnnualSubmission(taxYear, incomeSourceId, nino, body)
         ).leftMap(e => ApiServiceError(e.status))
     }
 

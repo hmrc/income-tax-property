@@ -18,14 +18,14 @@ package connectors
 
 import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
-import connectors.response.PostBroughtForwardLossResponse
+import connectors.response.{GetHipPropertyBFLResponse, PostBroughtForwardLossResponse}
 import models.IncomeSourceType
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
-import models.responses.BroughtForwardLossId
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
@@ -40,38 +40,28 @@ class HipConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  def createPropertyBroughtForwardLoss(
-    nino: String,
-    incomeSourceId: IncomeSourceId,
-    incomeSourceType: IncomeSourceType,
-    lossAmount: BigDecimal,
-    taxYearBroughtForwardFrom: WhenYouReportedTheLoss
-  )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossId]] = {
-    val hipApiVersion: String = "1500"
-    val taxYear: String = asTys(toTaxYear(taxYearBroughtForwardFrom)) // Format: yy-yy
-    val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino?taxYear=$taxYear"
-
-    val requestBody: HipPropertyBFLRequest = HipPropertyBFLRequest(
-      incomeSourceId = incomeSourceId,
-      incomeSourceType = incomeSourceType,
-      broughtForwardLossAmount = lossAmount,
-      taxYearBroughtForwardFrom = toTaxYear(taxYearBroughtForwardFrom).endYear
+  // HIP API#1502
+  def getPropertyBroughtForwardLoss(
+     nino: Nino,
+     lossId: String
+   )(implicit hc: HeaderCarrier): Future[Either[ApiError, HipPropertyBFLResponse]] = {
+    val apiVersion = "1502"
+    val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino/$lossId"
+    logger.debug(
+      s"[HipConnector] Calling getPropertyBroughtForwardLoss with url: $url"
     )
 
-    logger.debug(s"[HipConnector] Calling createPropertyBroughtForwardLoss with url: $url, body: ${Json.toJson(requestBody)}")
-
     http
-      .post(url"$url")(hcWithCorrelationId(hc))
+      .get(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.hipEnvironment)
-      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}") // TODO - Needed??
-      .withBody[HipPropertyBFLRequest](requestBody)
-      .execute[PostBroughtForwardLossResponse]
-      .map { response: PostBroughtForwardLossResponse =>
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiVersion)}")
+      .execute[GetHipPropertyBFLResponse]
+      .map { response: GetHipPropertyBFLResponse =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
-            s"[HipConnector] Error creating a brought forward loss from the HIP Integration Framework: URL: $url" +
+            s"[HipConnector] Error retrieving a brought forward loss from the HIP Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }

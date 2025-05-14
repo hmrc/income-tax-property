@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@
 package utils.mocks
 
 import connectors.HipConnector
-import models.IncomeSourceType
-import models.common.{IncomeSourceId, Nino}
+import models.common.Nino
 import models.errors.ApiError
-import models.request.WhenYouReportedTheLoss
-import models.responses.BroughtForwardLossId
-import org.scalamock.handlers.CallHandler6
+import models.responses._
+import org.scalamock.handlers.CallHandler3
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -32,26 +30,15 @@ trait MockHipConnector extends MockFactory {
 
   protected val mockHipConnector: HipConnector = mock[HipConnector]
 
-  def mockCreatePropertyBroughtForwardLossSubmission(
-    nino: String,
-    incomeSourceId: IncomeSourceId,
-    incomeSourceType: IncomeSourceType,
-    lossAmount: BigDecimal,
-    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
-    result: Either[ApiError, BroughtForwardLossId]
-  ): CallHandler6[String, IncomeSourceId, IncomeSourceType, BigDecimal, WhenYouReportedTheLoss, HeaderCarrier, Future[
-    Either[ApiError, BroughtForwardLossId]
-  ]] = (
-    mockHipConnector
-      .createPropertyBroughtForwardLoss(
-        _: String,
-        _: IncomeSourceId,
-        _: IncomeSourceType,
-        _: BigDecimal,
-        _: WhenYouReportedTheLoss
-      )(
-        _: HeaderCarrier
-      ))
-      .expects(nino, incomeSourceId, incomeSourceType, lossAmount, taxYearBroughtForwardFrom, *)
+  def mockGetPropertyBroughtForwardLoss(
+    nino: Nino,
+    lossId: String,
+    result: Either[ApiError, HipPropertyBFLResponse]
+  ): CallHandler3[Nino, String, HeaderCarrier, Future[
+    Either[ApiError, HipPropertyBFLResponse]
+  ]] =
+    (mockHipConnector
+      .getPropertyBroughtForwardLoss(_: Nino, _: String)(_: HeaderCarrier))
+      .expects(nino, lossId, *)
       .returning(Future.successful(result))
 }

@@ -32,33 +32,33 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout, LossType}
+import models.{LossType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, BAD_REQUEST}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockMergeService, MockMongoJourneyAnswersRepository, MockIntegrationFrameworkConnector}
+import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
-import java.time.{LocalDateTime, Clock, LocalDate}
+import java.time.{Clock, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
     extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
-    with HttpClientSupport with ScalaCheckPropertyChecks {
+    with MockHipConnector with HttpClientSupport with ScalaCheckPropertyChecks {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 
-  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService)
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, mockHipConnector, journeyAnswersService, appConfigStub)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"

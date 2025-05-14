@@ -33,6 +33,7 @@ trait AppConfig {
   def authorisationTokenFor(apiVersion: String): String
   def hipAuthTokenKey: String
   def hipAuthTokenFor(apiVersion: String): String
+  def hipMigration1502Enabled: Boolean
   def hipBaseUrl: String
   def hipEnvironment: String
   def baseUrl(serviceName: String): String
@@ -69,6 +70,7 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
   override def hipAuthTokenFor(apiVersion: String): String =
     config.get[String](hipAuthTokenKey + s".$apiVersion")
 
+  override def hipMigration1502Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1502-enabled")
 
   override def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
