@@ -18,17 +18,23 @@ package models.request
 
 import models.IncomeSourceType
 import models.common.{IncomeSourceId, TaxYear}
-import play.api.libs.json.{Format, Json}
+import models.request.foreign.CreateForeignPropertyPeriodicSubmissionRequest
+import play.api.libs.json.{Format, JsValue, Json, OWrites, Writes}
+import play.api.libs.ws.BodyWritable
 
-case class HipPropertyBFLRequest (
-                                   incomeSourceId: IncomeSourceId,
-                                   incomeSourceType: IncomeSourceType,
-                                   broughtForwardLossAmount: BigDecimal,
-                                   taxYearBroughtForwardFrom: Int
-                                 )
+case class HipPropertyBFLRequest(
+  incomeSourceId: IncomeSourceId,
+  incomeSourceType: IncomeSourceType,
+  broughtForwardLossAmount: BigDecimal,
+  taxYearBroughtForwardFrom: Int
+)
 
 object HipPropertyBFLRequest {
-  implicit val format: Format[HipPropertyBFLRequest] = Json.format[HipPropertyBFLRequest]
+  implicit val writes: OWrites[HipPropertyBFLRequest] =
+    Json.writes[HipPropertyBFLRequest]
+
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 }
-
-
