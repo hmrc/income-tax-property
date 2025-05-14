@@ -25,7 +25,7 @@ import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
 import models.responses.BroughtForwardLossId
 import org.scalamock.scalatest.MockFactory
-import play.api.http.Status.OK
+import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import utils.TaxYearUtils.taxYear
@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
-  private val nino = Nino("test-nino")
+  private val nino ="test-nino"
   private val incomeSourceId = IncomeSourceId("test-income-source-id")
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)
@@ -50,11 +50,10 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val requestBody = Json.toJson(Requests.validCreateBFLRequest).toString()
         val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
 
-        val response = BroughtForwardLossId(lossId="test-loss-id")
-        val httpResponse: HttpResponse = HttpResponse(OK, Json.toJson(response).toString())
+        val httpResponse = HttpResponse(OK, Json.toJson(BroughtForwardLossId("test-loss-id")).toString())
 
         stubPostHttpClientCall(
-          s"${appConfigStub.hipBaseUrl}/income-sources/brought-forward-losses/$nino?taxYear=$taxYear",
+          s"/income-sources/brought-forward-losses/$nino\\?taxYear=$taxYear",
           requestBody,
           httpResponse
         )
@@ -67,7 +66,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
             lossAmount,
             broughtForwardLossTaxYear
           )(hc)
-        ) shouldBe Right()
+        ) shouldBe Right(BroughtForwardLossId("test-loss-id"))
       }
     }
     "return API error" when {

@@ -17,6 +17,7 @@
 package connectors
 
 import config.AppConfig
+import connectors.Connector.hcWithCorrelationId
 import connectors.response.PostBroughtForwardLossResponse
 import models.IncomeSourceType
 import models.common.TaxYear.asTys
@@ -40,7 +41,7 @@ class HipConnector @Inject() (
     extends Logging {
 
   def createPropertyBroughtForwardLoss(
-    nino: Nino,
+    nino: String,
     incomeSourceId: IncomeSourceId,
     incomeSourceType: IncomeSourceType,
     lossAmount: BigDecimal,
@@ -60,10 +61,10 @@ class HipConnector @Inject() (
     logger.debug(s"[HipConnector] Calling createPropertyBroughtForwardLoss with url: $url, body: ${Json.toJson(requestBody)}")
 
     http
-      .post(url"$url")
+      .post(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.hipEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}") // TODO - Needed??
-      .withBody(Json.toJson(requestBody))
+      .withBody[HipPropertyBFLRequest](requestBody)
       .execute[PostBroughtForwardLossResponse]
       .map { response: PostBroughtForwardLossResponse =>
         if (response.result.isLeft) {
