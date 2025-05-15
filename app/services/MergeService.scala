@@ -19,7 +19,6 @@ package services
 import models._
 import models.common._
 import models.domain._
-import models.repository.ForeignIncomeMerger._
 import models.repository.Merger._
 import models.repository.ForeignMerger._
 import models.request._
@@ -31,6 +30,7 @@ import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukandforeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
+import models.repository.ForeignIncomeMerger._
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -40,11 +40,11 @@ class MergeService @Inject() (implicit
 ) {
 
   def mergeAll(
-                resultFromAnnualDownstream: PropertyAnnualSubmission,
+                resultFromAnnualDownstream: Option[PropertyAnnualSubmission],
                 resultFromPeriodicDownstreamMaybe: Option[PropertyPeriodicSubmission],
                 resultFromRepository: Map[String, JourneyAnswers],
-                resultFromForeignIncomeDownstreamMaybe: Option[ForeignIncomeSubmission],
                 foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
+                resultFromForeignIncomeDownstreamMaybe: Option[ForeignIncomeSubmission],
                 foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
               ): FetchedPropertyData = {
     val esbaInfoMaybe =
@@ -658,17 +658,16 @@ class MergeService @Inject() (implicit
                                    resultFromDownstream: Option[ForeignIncomeSubmission],
                                    foreignIncomeResultFromRepository: Option[Map[String, JourneyAnswers]]
                                  ): Option[Map[String, ForeignDividendsAnswers]] = {
-    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsAnswers]] = {
+    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] = {
       foreignIncomeResultFromRepository.map { journeyAnswers =>
         journeyAnswers.map { case (countryCode, storeAnswers) =>
-          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsAnswers]
+          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsStoreAnswers]
         }
       }
-      }
+    }
 
     val foreignIncomeDividends: Option[Map[String, ForeignDividend]] = for {
-      rfd <- resultFromDownstream
-      fd <- rfd.foreignDividend
+      fd <- resultFromDownstream.flatMap(_.foreignDividend)
     } yield fd.map(fd => fd.countryCode -> fd).toMap
 
       foreignIncomeDividendsStoreAnswers.merge(foreignIncomeDividends)

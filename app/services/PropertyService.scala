@@ -150,7 +150,7 @@ class PropertyService @Inject() (
         }
       }
 
-  private def fetchAllJourneyDataFromRepository(
+  def fetchAllJourneyDataFromRepository(
     ctx: JourneyContext
   ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, Map[String, JourneyAnswers]])] =
     if (ctx.journey == JourneyName.NoJourney) {
@@ -200,10 +200,11 @@ class PropertyService @Inject() (
       (ukResultFromRepository, foreignResultFromRepository, foreignIncomeResultFromRepository) = resultFromRepository
     } yield {
       val mergedData = mergeService.mergeAll(
-        resultFromDownstreamAnnual,
+        Some(resultFromDownstreamAnnual),
         resultFromDownstreamPeriodicMaybe,
         ukResultFromRepository,
         foreignResultFromRepository,
+        None,
         foreignIncomeResultFromRepository
       )
       logger.debug(s"[getFetchedPropertyDataMerged] Annual, Periodic and Repository merged data is: $mergedData")

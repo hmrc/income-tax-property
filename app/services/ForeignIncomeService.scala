@@ -20,19 +20,23 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
-import models.common.{JourneyContext, Nino, TaxYear}
-import models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
+import models.common.{JourneyContext, IncomeSourceId, TaxYear, Nino, JourneyName}
+import models.domain.{FetchedForeignIncomeData, FetchedPropertyData, JourneyAnswers}
+import models.errors.{ServiceError, ApiServiceError, DataNotFoundError, InternalError}
 import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
-import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers, ITPEnvelope}
+import models.{ITPEnvelope, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
+import services.PropertyService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ForeignIncomeService  @Inject() (
                                         connector: IntegrationFrameworkConnector,
-                                        mongoService: MongoJourneyAnswersService
+                                        mongoService: MongoJourneyAnswersService,
+                                        mergeService: MergeService,
+                                        propertyService: PropertyService
                                       )(implicit ec: ExecutionContext)
   extends Logging {
 
@@ -108,5 +112,33 @@ class ForeignIncomeService  @Inject() (
         )
       } yield res
     }
+
+  def getFetchedIncomeDataMerged(
+                                    ctx: JourneyContext,
+                                    nino: Nino
+                                  )(implicit
+                                    hc: HeaderCarrier
+                                  ): EitherT[Future, ServiceError, FetchedForeignIncomeData] = {
+
+    val resultForeignIncome = getForeignIncomeSubmission(ctx.taxYear, nino)
+
+    for {
+      resultFromDownstreamForeignIncome        <- resultForeignIncome
+      resultFromRepository                     <- propertyService.fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
+      (ukResultFromRepository, foreignResultFromRepository, foreignIncomeResultFromRepository) = resultFromRepository
+    } yield {
+      val mergedData = mergeService.mergeAll(
+        None,
+        None,
+        ukResultFromRepository,
+        foreignResultFromRepository,
+        Some(resultFromDownstreamForeignIncome),
+        foreignIncomeResultFromRepository
+      )
+      logger.debug(s"[getFetchedIncomeDataMerged] Income merged data is: $mergedData")
+      mergedData
+    }
+
+  }
 
 }

@@ -17,7 +17,7 @@
 package models.repository
 
 import models.ForeignIncomeDividendsStoreAnswers
-import models.request.foreignincome.ForeignDividendsAnswers
+import models.request.foreignincome.{ForeignDividendsAnswers, ForeignDividend}
 import models.responses._
 
 // T: to return (merge into)
@@ -28,11 +28,11 @@ object ForeignIncomeMerger {
 
   implicit object ForeignDividendsAnswersMerger
       extends Merger[Option[Map[String, ForeignDividendsAnswers]], Option[Map[String, ForeignIncomeDividendsStoreAnswers]
-      ], Option[Map[String, ForeignIncomeFromDividends]]] {
+      ], Option[Map[String, ForeignDividend]]] {
 
     override def merge(
       extractedMaybe: Option[Map[String, ForeignIncomeDividendsStoreAnswers]],
-      fromDownstreamMaybe: Option[Map[String, ForeignIncomeFromDividends]]
+      fromDownstreamMaybe: Option[Map[String, ForeignDividend]]
     ): Option[Map[String, ForeignDividendsAnswers]] =
       (extractedMaybe, fromDownstreamMaybe) match {
         case (_, Some(fromDownstreamMap)) =>
@@ -43,7 +43,7 @@ object ForeignIncomeMerger {
                 taxTakenOff = dividends.taxTakenOff,
                 specialWithholdingTax = dividends.specialWithholdingTax,
                 foreignTaxCreditRelief = dividends.foreignTaxCreditRelief,
-                taxableAmount = dividends.taxableAmount
+                taxableAmount = Some(dividends.taxableAmount)
               )
           }
           Option.when(result.nonEmpty)(result)
