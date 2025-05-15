@@ -1767,11 +1767,13 @@ class PropertyServiceSpec
         val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None, None, None)
         val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)
         val foreignIncomeData = FetchedForeignIncomeData(None, None)
-        FetchedPropertyData(
-          ukPropertyData = ukPropertyData,
-          foreignPropertyData = foreignPropertyData,
-          ukAndForeignPropertyData = fetchedUkAndForeignPropertyData,
-          foreignIncomeData = foreignIncomeData
+        FetchedData(
+          propertyData = FetchedPropertyData(
+            ukPropertyData = ukPropertyData,
+            foreignPropertyData = foreignPropertyData,
+            ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+          ),
+          incomeData = foreignIncomeData
         )
       }
 
@@ -1807,7 +1809,7 @@ class PropertyServiceSpec
             "1",
             Some(propertyPeriodicSubmission).asRight[ApiError]
           )
-          val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+          val result: EitherT[Future, ServiceError, FetchedData] = for {
             _ <- if (isJourneyPresentInDb) {
                    EitherT(
                      repository
@@ -1894,7 +1896,7 @@ class PropertyServiceSpec
         "1",
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
                testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
                  .map(_.asRight[ServiceError])
@@ -1945,7 +1947,7 @@ class PropertyServiceSpec
         "1",
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
                repository
                  .upsertAnswers(
@@ -2030,7 +2032,7 @@ class PropertyServiceSpec
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
 
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
                testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
              )
