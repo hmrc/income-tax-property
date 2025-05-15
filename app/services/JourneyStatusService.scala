@@ -35,4 +35,8 @@ class JourneyStatusService @Inject()(repository: MongoJourneyAnswersRepository)(
   def setForeignStatus(ctx: JourneyContext, status: JourneyStatusData, countryCode: String): ITPEnvelope[Unit] = {
     ITPEnvelope.liftFuture(repository.setForeignStatus(ctx, status.status, countryCode).map(_ => ().asRight[ServiceError]))
   }
+
+  def setForeignIncomeStatus(ctx: JourneyContext, status: JourneyStatusData, countryCode: String): ITPEnvelope[Unit] = {
+    ITPEnvelope.liftFuture(repository.setForeignIncomeStatus(ctx, status.status, countryCode).map(_ => ().asRight[ServiceError]))
+  }
 }

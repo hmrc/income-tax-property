@@ -22,3 +22,6 @@ GET           /:taxYear/tasks/:nino                                             
 
 # Retrieve PrePopulation Data
 GET           /property/pre-population/:nino                                                    controllers.PrePopulationController.get(nino: String)
+
+#API????
+GET ??? controllers.IncomeController.fetchIncomeData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
