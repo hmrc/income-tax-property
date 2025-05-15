@@ -23,7 +23,7 @@ import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
 import models.common._
-import models.domain.{FetchedPropertyData, JourneyAnswers}
+import models.domain.{JourneyAnswers, FetchedData}
 import models.errors._
 import models.repository.Extractor.GeneralExtractor
 import models.request._
@@ -187,7 +187,7 @@ class PropertyService @Inject() (
     incomeSourceId: IncomeSourceId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ServiceError, FetchedPropertyData] = {
+  ): EitherT[Future, ServiceError, FetchedData] = {
 
     val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear, nino, incomeSourceId)
 

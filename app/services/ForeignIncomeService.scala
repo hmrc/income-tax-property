@@ -20,14 +20,13 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
-import models.common.{JourneyContext, IncomeSourceId, TaxYear, Nino, JourneyName}
-import models.domain.{FetchedForeignIncomeData, FetchedPropertyData, JourneyAnswers}
-import models.errors.{ServiceError, ApiServiceError, DataNotFoundError, InternalError}
+import models.common.{Nino, TaxYear, JourneyContext}
+import models.domain.FetchedData
+import models.errors.{ServiceError, ApiServiceError}
 import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
 import models.{ITPEnvelope, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import services.PropertyService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -118,7 +117,7 @@ class ForeignIncomeService  @Inject() (
                                     nino: Nino
                                   )(implicit
                                     hc: HeaderCarrier
-                                  ): EitherT[Future, ServiceError, FetchedForeignIncomeData] = {
+                                  ): EitherT[Future, ServiceError, FetchedData] = {
 
     val resultForeignIncome = getForeignIncomeSubmission(ctx.taxYear, nino)
 

@@ -46,18 +46,18 @@ class MergeService @Inject() (implicit
                 foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
                 resultFromForeignIncomeDownstreamMaybe: Option[ForeignIncomeSubmission],
                 foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
-              ): FetchedPropertyData = {
+              ): FetchedData = {
     val esbaInfoMaybe =
-      mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalESBA.entryName))
+      mergeEsbaInfo(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalESBA.entryName))
 
     val esbaInfoRentalsAndRaRMaybe =
-      mergeEsbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalsAndRaRESBA.entryName))
+      mergeEsbaInfo(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalsAndRaRESBA.entryName))
 
     val sbaInfoMaybe =
-      mergeSbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalSBA.entryName))
+      mergeSbaInfo(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalSBA.entryName))
 
     val sbaInfoAndRaRMaybe =
-      mergeSbaInfo(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalsAndRaRSBA.entryName))
+      mergeSbaInfo(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalsAndRaRSBA.entryName))
 
     val propertyAboutMaybe = mergePropertyAbout(resultFromRepository.get(JourneyName.About.entryName))
 
@@ -74,14 +74,14 @@ class MergeService @Inject() (implicit
     )
 
     val rentalsAndRaRAboutMaybe = mergeRentalsAndRaRAbout(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       resultFromPeriodicDownstreamMaybe,
       resultFromRepository.get(JourneyName.RentalsAndRaRAbout.entryName)
     )
 
     val rentalsAdjustmentsMaybe =
       mergeAdjustments(
-        resultFromAnnualDownstream,
+        resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
         resultFromPeriodicDownstreamMaybe,
         resultFromRepository.get(JourneyName.RentalAdjustments.entryName)
       )
@@ -95,17 +95,17 @@ class MergeService @Inject() (implicit
     )
     val adjustmentsRentalsAndRaRMaybe =
       mergeAdjustments(
-        resultFromAnnualDownstream,
+        resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
         resultFromPeriodicDownstreamMaybe,
         resultFromRepository.get(JourneyName.RentalsAndRaRAdjustments.entryName)
       )
 
     val allowancesMaybe =
-      mergeAllowances(resultFromAnnualDownstream, resultFromRepository.get(JourneyName.RentalAllowances.entryName))
+      mergeAllowances(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalAllowances.entryName))
 
     val allowancesRentalsAndRaRMaybe =
       mergeAllowances(
-        resultFromAnnualDownstream,
+        resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
         resultFromRepository.get(JourneyName.RentalsAndRaRAllowances.entryName)
       )
 
@@ -139,18 +139,18 @@ class MergeService @Inject() (implicit
     )
 
     val raRAdjustmentsMaybe = mergeRaRAdjustments(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       resultFromPeriodicDownstreamMaybe,
       resultFromRepository.get(JourneyName.RentARoomAdjustments.entryName)
     )
 
     val rentARoomAllowancesMaybe = mergeRaRAllowances(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       resultFromRepository.get(JourneyName.RentARoomAllowances.entryName)
     )
 
     val raRAboutMaybe = mergeRaRAbout(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       resultFromPeriodicDownstreamMaybe,
       resultFromRepository.get(JourneyName.RentARoomAbout.entryName)
     )
@@ -173,16 +173,16 @@ class MergeService @Inject() (implicit
     )
 
     val foreignPropertyAllowancesMaybe = mergeForeignPropertyAllowances(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       foreignResultFromRepository.get(JourneyName.ForeignPropertyAllowances.entryName)
     )
 
     val foreignJourneyStatuses = mergeForeignStatuses(foreignResultFromRepository)
 
-    val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream, foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
+    val foreignPropertySbaMaybe = mergeForeignPropertySba(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), foreignResultFromRepository.get(JourneyName.ForeignPropertySba.entryName))
 
     val foreignPropertyAdjustmentsMaybe = mergeForeignPropertyAdjustments(
-      resultFromAnnualDownstream,
+      resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)),
       resultFromPeriodicDownstreamMaybe,
       foreignResultFromRepository.get(JourneyName.ForeignPropertyAdjustments.entryName))
 
@@ -231,16 +231,18 @@ class MergeService @Inject() (implicit
       ukAndForeignAbout = ukAndForeignPropertyAboutMaybe
     )
 
-    val foreignIncomeData = FetchedForeignIncomeData(
+    val fetchedForeignIncomeData = FetchedForeignIncomeData(
       foreignIncomeDividends = foreignIncomeDividendsMaybe,
       foreignJourneyStatuses = foreignIncomeJourneyStatuses
     )
 
-    FetchedPropertyData(
-      ukPropertyData = fetchedUKPropertyData,
-      foreignPropertyData = fetchedForeignPropertyData,
-      ukAndForeignPropertyData = fetchedUkAndForeignPropertyData,
-      foreignIncomeData = foreignIncomeData
+    FetchedData(
+      propertyData = FetchedPropertyData(
+        ukPropertyData = fetchedUKPropertyData,
+        foreignPropertyData = fetchedForeignPropertyData,
+        ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+      ),
+      incomeData = fetchedForeignIncomeData
     )
   }
 
