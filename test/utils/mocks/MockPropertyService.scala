@@ -19,7 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
-import models.domain.FetchedPropertyData
+import models.domain.{FetchedPropertyData, FetchedData}
 import models.errors.ServiceError
 import models.request._
 import models.request.esba.EsbaInfo
@@ -276,11 +276,11 @@ trait MockPropertyService extends MockFactory {
     taxYear: TaxYear,
     incomeSourceId: IncomeSourceId,
     mtdItId: Mtditid,
-    result: Either[ServiceError, FetchedPropertyData]
+    result: Either[ServiceError, FetchedData]
   ): CallHandler4[JourneyContext, Nino, IncomeSourceId, HeaderCarrier, EitherT[
     Future,
     ServiceError,
-    FetchedPropertyData
+    FetchedData
   ]] = {
     val ctx = JourneyContext(taxYear, incomeSourceId, mtdItId, JourneyName.AllJourneys)
     (mockPropertyService
