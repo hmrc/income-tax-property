@@ -17,11 +17,10 @@ PUT           /property/completed-section/:incomeSourceId/:journey/:taxYear     
 
 PUT           /property/completed-section/:incomeSourceId/:journey/:taxYear/:countryCode        controllers.PropertyController.setForeignStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journey: String, countryCode: String)
 
+GET           /income/:taxYear/dividends/:nino/:incomeSourceId                                  controllers.IncomeController.fetchIncomeData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
+
 # Retrieve Tasklist
 GET           /:taxYear/tasks/:nino                                                             controllers.CommonTaskListController.getCommonTaskList(taxYear: Int, nino: String)
 
 # Retrieve PrePopulation Data
 GET           /property/pre-population/:nino                                                    controllers.PrePopulationController.get(nino: String)
-
-#API????
-GET ??? controllers.IncomeController.fetchIncomeData(taxYear: TaxYear, nino: Nino, incomeSourceId: IncomeSourceId)
