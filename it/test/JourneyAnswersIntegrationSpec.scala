@@ -250,9 +250,11 @@ class JourneyAnswersIntegrationSpec
           .get()
           .futureValue
 
-      val fetchedPropertyData = response.json.as[FetchedPropertyData]
+      val fetchedPropertyData = response.json.as[FetchedData]
       response.status shouldBe 200
-      fetchedPropertyData shouldBe FetchedPropertyData(
+      fetchedPropertyData shouldBe
+        FetchedData(
+          propertyData = FetchedPropertyData(
         foreignPropertyData = FetchedForeignPropertyData(None, None, None, None,None,None, None),
         ukPropertyData = FetchedUKPropertyData(
           capitalAllowancesForACar = None,
@@ -426,12 +428,10 @@ class JourneyAnswersIntegrationSpec
         ),
         ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
           ukAndForeignAbout = None
-        ),
-        foreignIncomeData = FetchedForeignIncomeData(
-          foreignIncomeDividends = None,
-          foreignJourneyStatuses = None
         )
-      )
+      ),
+          incomeData = FetchedForeignIncomeData(None, None)
+        )
 
     }
     "the downstream receives the expected payload when upload happens" in {
