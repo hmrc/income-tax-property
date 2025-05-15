@@ -51,7 +51,7 @@ class HipConnector @Inject() (
     val taxYear: String = asTys(toTaxYear(taxYearBroughtForwardFrom)) // Format: yy-yy
     val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino?taxYear=$taxYear"
 
-    val requestBody: HipPropertyBFLRequest = HipPropertyBFLRequest(
+    val requestBody = HipPropertyBFLRequest(
       incomeSourceId = incomeSourceId,
       incomeSourceType = incomeSourceType,
       broughtForwardLossAmount = lossAmount,

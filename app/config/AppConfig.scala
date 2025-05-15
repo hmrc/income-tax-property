@@ -40,6 +40,7 @@ trait AppConfig {
   def getConfString(confKey: String, defString: => String): String
   def getConfInt(confKey: String, defInt: => Int): Int
   def throwConfigNotFoundError(key: String): RuntimeException
+  def hipMigration1500Enabled: Boolean
 }
 
 @Singleton
@@ -93,5 +94,7 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
   override def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
+
+  override lazy val hipMigration1500Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1500-enabled")
 
 }

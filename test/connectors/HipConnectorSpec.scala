@@ -20,7 +20,8 @@ package connectors
 import models.IncomeSourceType
 import models.IncomeSourceType.UKPropertyFHL
 import models.common.TaxYear.asTys
-import models.common.{IncomeSourceId, Nino}
+import models.common.IncomeSourceId
+import models.errors.{ApiError, SingleErrorBody}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
 import models.responses.BroughtForwardLossId
@@ -28,7 +29,6 @@ import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
-import utils.TaxYearUtils.taxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -49,7 +49,6 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       "successfully created Property BF Loss" in {
         val requestBody = Json.toJson(Requests.validCreateBFLRequest).toString()
         val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
-
         val httpResponse = HttpResponse(OK, Json.toJson(BroughtForwardLossId("test-loss-id")).toString())
 
         stubPostHttpClientCall(
@@ -57,6 +56,8 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
           requestBody,
           httpResponse
         )
+
+        val expectedResult = Right(BroughtForwardLossId("test-loss-id"))
 
         await(
           underTest.createPropertyBroughtForwardLoss(
@@ -66,12 +67,84 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
             lossAmount,
             broughtForwardLossTaxYear
           )(hc)
-        ) shouldBe Right(BroughtForwardLossId("test-loss-id"))
+        ) shouldBe expectedResult
       }
     }
-    "return API error" when {
-      "failed to successfully create Property BF Loss" in {
-        ???
+    "return a API error from upstream" when {
+      "a NOT_FOUND' error is returned from the API" in {
+        val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
+        val requestBody = Json.toJson(Requests.validCreateBFLRequest).toString()
+        val apiError = SingleErrorBody("code", "reason")
+        val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(apiError).toString())
+
+        stubPostHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino\\?taxYear=$taxYear",
+          requestBody,
+          httpResponse
+        )
+
+        val expectedResult = Left(ApiError(NOT_FOUND, apiError))
+
+        await(
+          underTest.createPropertyBroughtForwardLoss(
+            nino,
+            incomeSourceId,
+            incomeSourceType,
+            lossAmount,
+            broughtForwardLossTaxYear
+          )(hc)
+        ) shouldBe expectedResult
+      }
+      "a Service Error is returned from the API" in {
+        val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
+        val requestBody = Json.toJson(Requests.validCreateBFLRequest).toString()
+        val apiError = SingleErrorBody("code", "reason")
+        val apiServiceErrors = Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+
+        apiServiceErrors.foreach { apiErrorCode =>
+          val httpResponse = HttpResponse(apiErrorCode, Json.toJson(apiError).toString())
+
+          stubPostHttpClientCall(
+            s"/income-sources/brought-forward-losses/$nino\\?taxYear=$taxYear",
+            requestBody,
+            httpResponse
+          )
+
+          val expectedResult = Left(ApiError(apiErrorCode, apiError))
+
+          await(
+            underTest.createPropertyBroughtForwardLoss(
+              nino,
+              incomeSourceId,
+              incomeSourceType,
+              lossAmount,
+              broughtForwardLossTaxYear
+            )(hc)
+          ) shouldBe expectedResult
+        }
+      }
+      "another unexpected error is returned from the API" in {
+        val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
+        val requestBody = Json.toJson(Requests.validCreateBFLRequest).toString()
+        val apiError = SingleErrorBody("code", "reason")
+        val httpResponse = HttpResponse(INSUFFICIENT_STORAGE, Json.toJson(apiError).toString())
+
+        stubPostHttpClientCall(
+          s"/income-sources/brought-forward-losses/$nino\\?taxYear=$taxYear",
+          requestBody,
+          httpResponse
+        )
+        val expectedResult = Left(ApiError(INTERNAL_SERVER_ERROR, apiError))
+        await(
+          underTest.createPropertyBroughtForwardLoss(
+            nino,
+            incomeSourceId,
+            incomeSourceType,
+            lossAmount,
+            broughtForwardLossTaxYear
+          )(hc)
+        ) shouldBe expectedResult
+
       }
     }
   }
@@ -81,9 +154,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       incomeSourceId = incomeSourceId,
       incomeSourceType = incomeSourceType,
       broughtForwardLossAmount = lossAmount,
-      taxYearBroughtForwardFrom = taxYear
+      taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear
     )
-  }
-  object Responses{
   }
 }
