@@ -20,7 +20,7 @@ package connectors
 import models.IncomeSourceType
 import models.IncomeSourceType.UKPropertyFHL
 import models.common.TaxYear.asTys
-import models.common.IncomeSourceId
+import models.common.{IncomeSourceId, Nino}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
-  private val nino ="test-nino"
+  private val nino = Nino("test-nino")
   private val incomeSourceId = IncomeSourceId("test-income-source-id")
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)

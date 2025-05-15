@@ -33,18 +33,18 @@ trait MockHipConnector extends MockFactory {
   protected val mockHipConnector: HipConnector = mock[HipConnector]
 
   def mockCreatePropertyBroughtForwardLossSubmission(
-    nino: String,
+    nino: Nino,
     incomeSourceId: IncomeSourceId,
     incomeSourceType: IncomeSourceType,
     lossAmount: BigDecimal,
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     result: Either[ApiError, BroughtForwardLossId]
-  ): CallHandler6[String, IncomeSourceId, IncomeSourceType, BigDecimal, WhenYouReportedTheLoss, HeaderCarrier, Future[
+  ): CallHandler6[Nino, IncomeSourceId, IncomeSourceType, BigDecimal, WhenYouReportedTheLoss, HeaderCarrier, Future[
     Either[ApiError, BroughtForwardLossId]
   ]] = (
     mockHipConnector
       .createPropertyBroughtForwardLoss(
-        _: String,
+        _: Nino,
         _: IncomeSourceId,
         _: IncomeSourceType,
         _: BigDecimal,

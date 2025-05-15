@@ -24,7 +24,7 @@ import scala.concurrent.duration.Duration
 
 class AppConfigStub extends MockFactory {
 
-  def config(environment: String = "test"): AppConfig = new AppConfigImpl(mock[Configuration]) {
+  def config(environment: String = "test", featureSwitchConfig: Option[FeatureSwitchConfig] = None): AppConfig = new AppConfigImpl(mock[Configuration]) {
     private val wireMockPort = 11111
 
     private lazy val authorisationToken: String = "secret"
@@ -41,5 +41,12 @@ class AppConfigStub extends MockFactory {
 
     override def authorisationTokenFor(apiVersion: String): String = authorisationToken + s".$apiVersion"
     override def hipAuthTokenFor(apiVersion: String): String = authorisationToken + s".$apiVersion"
+
+
+
+    lazy val featureSwitches: FeatureSwitchConfig = featureSwitchConfig.getOrElse(FeatureSwitchConfig())
+
+    override lazy val hipMigration1500Enabled: Boolean = featureSwitches.hipApi1500
+
   }
 }

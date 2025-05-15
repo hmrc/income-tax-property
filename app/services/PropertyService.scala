@@ -18,7 +18,8 @@ package services
 
 import cats.data.EitherT
 import cats.syntax.either._
-import connectors.IntegrationFrameworkConnector
+import config.AppConfig
+import connectors.{HipConnector, IntegrationFrameworkConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
@@ -42,7 +43,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
-  mongoService: MongoJourneyAnswersService
+  mongoService: MongoJourneyAnswersService,
+  appConfig: AppConfig,
+  hipConnector: HipConnector
 )(implicit ec: ExecutionContext)
     extends Logging {
 
@@ -327,48 +330,53 @@ class PropertyService @Inject() (
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     incomeSourceId: IncomeSourceId,
-    lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[String] = {
-    EitherT(connector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount))
+    lossAmount: BigDecimal,
+    incomeSourceType: IncomeSourceType = IncomeSourceType.UKPropertyOther // TODO-TBG TODO-LAN
+  )(implicit hc: HeaderCarrier): ITPEnvelope[String] =
+    EitherT {
+      if (appConfig.hipMigration1500Enabled) {
+        hipConnector.createPropertyBroughtForwardLoss(nino, incomeSourceId, incomeSourceType , lossAmount, taxYearBroughtForwardFrom)
+      } else {
+        connector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount)
+      }
+    }
       .map(_.lossId)
       .leftMap { error =>
         logger.error(s"[createBroughtForwardLoss]: Error creating loss brought forward")
         ApiServiceError(error.status)
       }
-  }
+
 
   private def getBroughtForwardLosses(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     incomeSourceId: IncomeSourceId
-  )(implicit hc: HeaderCarrier): ITPEnvelope[Seq[BroughtForwardLossResponseWithId]] = {
+  )(implicit hc: HeaderCarrier): ITPEnvelope[Seq[BroughtForwardLossResponseWithId]] =
     EitherT(connector.getBroughtForwardLosses(taxYearBroughtForwardFrom, nino, incomeSourceId))
       .map(_.losses)
-      .leftMap {error =>
+      .leftMap { error =>
         logger.error(s"[getBroughtForwardLosses]: Error retrieving losses brought forward")
         ApiServiceError(error.status)
       }
-  }
 
   private def updateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     lossId: String,
     lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] =
     EitherT(connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
-      .leftMap {error =>
+      .leftMap { error =>
         logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
         ApiServiceError(error.status)
       }
-  }
 
   private def createOrUpdateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     ctx: JourneyContext,
     lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[String] = {
+  )(implicit hc: HeaderCarrier): ITPEnvelope[String] =
     for {
       broughtForwardLosses <- getBroughtForwardLosses(
                                 taxYearBroughtForwardFrom,
@@ -376,23 +384,22 @@ class PropertyService @Inject() (
                                 incomeSourceId = ctx.incomeSourceId
                               ).orElse(ITPEnvelope.liftPure(Seq.empty[BroughtForwardLossResponseWithId]))
       broughtForwardLossId <- broughtForwardLosses.find(bfl => bfl.typeOfLoss == UKProperty) match {
-                                  case Some(bfl) =>
-                                    updateBroughtForwardLoss(
-                                      taxYearBroughtForwardFrom,
-                                      nino,
-                                      bfl.lossId,
-                                      lossAmount
-                                    ).map(_ => bfl.lossId)
-                                  case _ =>
-                                    createBroughtForwardLoss(
-                                      taxYearBroughtForwardFrom,
-                                      nino,
-                                      ctx.incomeSourceId,
-                                      lossAmount
-                                    )
-                                }
+                                case Some(bfl) =>
+                                  updateBroughtForwardLoss(
+                                    taxYearBroughtForwardFrom,
+                                    nino,
+                                    bfl.lossId,
+                                    lossAmount
+                                  ).map(_ => bfl.lossId)
+                                case _ =>
+                                  createBroughtForwardLoss(
+                                    taxYearBroughtForwardFrom,
+                                    nino,
+                                    ctx.incomeSourceId,
+                                    lossAmount
+                                  )
+                              }
     } yield broughtForwardLossId
-  }
 
   def saveIncome(journeyContext: JourneyContext, nino: Nino, propertyRentalsIncome: PropertyRentalsIncome)(implicit
     hc: HeaderCarrier
@@ -409,13 +416,15 @@ class PropertyService @Inject() (
                               currentPeriodicSubmission,
                               propertyRentalsIncome
                             )
-      _ <- mongoService.persistAnswers(journeyContext, StoredIncome.fromRentalsIncome(propertyRentalsIncome)).map(isPersistSuccess =>
-             if (!isPersistSuccess) {
-               logger.error("[saveIncome] Could not persist")
-             } else {
-               logger.info("[saveIncome] Persist successful")
-             }
-           )
+      _ <- mongoService
+             .persistAnswers(journeyContext, StoredIncome.fromRentalsIncome(propertyRentalsIncome))
+             .map(isPersistSuccess =>
+               if (!isPersistSuccess) {
+                 logger.error("[saveIncome] Could not persist")
+               } else {
+                 logger.info("[saveIncome] Persist successful")
+               }
+             )
     } yield submissionResponse
 
   def saveRentalsAndRaRIncome(journeyContext: JourneyContext, nino: Nino, rentalsAndRaRIncome: RentalsAndRaRIncome)(
@@ -433,14 +442,15 @@ class PropertyService @Inject() (
                               currentPeriodicSubmission,
                               rentalsAndRaRIncome
                             )
-      _ <- mongoService.persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome)).map(
-             isPersistSuccess =>
+      _ <- mongoService
+             .persistAnswers(journeyContext, StoredIncome.fromRentalsAndRaRIncome(rentalsAndRaRIncome))
+             .map(isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveRentalsAndRaRIncome] Could not persist")
                } else {
                  logger.info("[saveRentalsAndRaRIncome] Persist successful")
                }
-           )
+             )
     } yield submissionResponse
 
   def saveEsbas(
@@ -449,23 +459,24 @@ class PropertyService @Inject() (
     esbaInfo: EsbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      submissionSuccess <- if(
-          !esbaInfo.claimEnhancedStructureBuildingAllowance ||
-            esbaInfo.enhancedStructureBuildingAllowances.isEmpty
-      ){
-        ITPEnvelope.liftPure(())
-      } else {
-        for {
-          annualSubmission <- getAnnualSubmission(ctx, nino)
-          r <- this.createOrUpdateAnnualSubmission(
-            ctx.taxYear,
-            ctx.incomeSourceId,
-            nino,
-            PropertyAnnualSubmission.fromEsbas(annualSubmission, esbaInfo.toEsba)
-          )
-        } yield r
-      }
-      _ <- mongoService.persistAnswers(ctx, esbaInfo.extractToSavePart())
+      submissionSuccess <- if (
+                             !esbaInfo.claimEnhancedStructureBuildingAllowance ||
+                             esbaInfo.enhancedStructureBuildingAllowances.isEmpty
+                           ) {
+                             ITPEnvelope.liftPure(())
+                           } else {
+                             for {
+                               annualSubmission <- getAnnualSubmission(ctx, nino)
+                               r <- this.createOrUpdateAnnualSubmission(
+                                      ctx.taxYear,
+                                      ctx.incomeSourceId,
+                                      nino,
+                                      PropertyAnnualSubmission.fromEsbas(annualSubmission, esbaInfo.toEsba)
+                                    )
+                             } yield r
+                           }
+      _ <- mongoService
+             .persistAnswers(ctx, esbaInfo.extractToSavePart())
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveEsbas] Could not persist")
@@ -481,20 +492,21 @@ class PropertyService @Inject() (
     sbaInfo: SbaInfo
   )(implicit hc: HeaderCarrier): ITPEnvelope[Unit] =
     for {
-      submissionSuccess <- if(!sbaInfo.claimStructureBuildingAllowance || sbaInfo.structureBuildingFormGroup.isEmpty) {
-          ITPEnvelope.liftPure(())
-        } else {
-          for {
-            annualSubmission <- getAnnualSubmission(ctx, nino)
-            result <- this.createOrUpdateAnnualSubmission(
-              ctx.taxYear,
-              ctx.incomeSourceId,
-              nino,
-              PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba)
-            )
-          } yield result
-        }
-      _ <- mongoService.persistAnswers(ctx, sbaInfo.toSbaToSave)
+      submissionSuccess <- if (!sbaInfo.claimStructureBuildingAllowance || sbaInfo.structureBuildingFormGroup.isEmpty) {
+                             ITPEnvelope.liftPure(())
+                           } else {
+                             for {
+                               annualSubmission <- getAnnualSubmission(ctx, nino)
+                               result <- this.createOrUpdateAnnualSubmission(
+                                           ctx.taxYear,
+                                           ctx.incomeSourceId,
+                                           nino,
+                                           PropertyAnnualSubmission.fromSbas(annualSubmission, sbaInfo.toSba)
+                                         )
+                             } yield result
+                           }
+      _ <- mongoService
+             .persistAnswers(ctx, sbaInfo.toSbaToSave)
              .map(isPersistSuccess =>
                if (!isPersistSuccess) {
                  logger.error("[saveSBA] Could not persist")
@@ -533,7 +545,6 @@ class PropertyService @Inject() (
   def savePropertyAbout(ctx: JourneyContext, propertyAbout: PropertyAbout)(implicit
     hc: HeaderCarrier
   ): ITPEnvelope[Boolean] = mongoService.persistAnswers(ctx, propertyAbout)
-
 
   def savePropertyRentalAbout(ctx: JourneyContext, propertyRentalsAbout: PropertyRentalsAbout)(implicit
     hc: HeaderCarrier
@@ -604,9 +615,9 @@ class PropertyService @Inject() (
                                 )
                             }
       _ <- mongoService.persistAnswers(
-        ctx,
-        ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
-      )
+             ctx,
+             ExpensesStoreAnswers(expenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
+           )
     } yield submissionResponse
 
   def saveRaRExpenses(ctx: JourneyContext, nino: Nino, raRExpenses: RentARoomExpenses)(implicit
@@ -644,9 +655,9 @@ class PropertyService @Inject() (
                                 )
                             }
       _ <- mongoService.persistAnswers(
-        ctx,
-        RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
-      )
+             ctx,
+             RentARoomExpensesStoreAnswers(raRExpenses.consolidatedExpenses.exists(_.isConsolidatedExpenses))
+           )
     } yield submissionResponse
 
   def deletePropertyAnnualSubmission(incomeSourceId: IncomeSourceId, taxableEntityId: Nino, taxYear: TaxYear)(implicit
@@ -718,7 +729,8 @@ class PropertyService @Inject() (
     val adjustmentStoreAnswers = AdjustmentStoreAnswers(
       propertyRentalAdjustment.balancingCharge.isBalancingCharge,
       propertyRentalAdjustment.renovationAllowanceBalancingCharge.isRenovationAllowanceBalancingCharge,
-      propertyRentalAdjustment.unusedLossesBroughtForward.isUnusedLossesBroughtForward)
+      propertyRentalAdjustment.unusedLossesBroughtForward.isUnusedLossesBroughtForward
+    )
     for {
       maybePeriodicSubmission <- getPeriodicSubmission(
                                    context.taxYear,
@@ -850,33 +862,36 @@ class PropertyService @Inject() (
     rentalAllowances: RentalAllowances
   )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
 
-    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers(rentalAllowances.capitalAllowancesForACar.exists(_.isCapitalAllowancesForACar))
+    val rentalAllowancesStoreAnswers = RentalAllowancesStoreAnswers(
+      rentalAllowances.capitalAllowancesForACar.exists(_.isCapitalAllowancesForACar)
+    )
 
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)
 
     for {
       _ <- rentalAllowances.capitalAllowancesForACar match {
              case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(())
-             case _ => for {
-               propertyAnnualSubmissionFromDownstream <-
-                 this
-                   .getPropertyAnnualSubmission(
-                     ctx.taxYear,
-                     nino,
-                     ctx.incomeSourceId
-                   )
-                   .leftFlatMap {
-                     case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-                     case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-                   }
-               _ <- createOrUpdateAnnualSubmission(
-                 ctx.taxYear,
-                 ctx.incomeSourceId,
-                 nino,
-                 PropertyAnnualSubmission
-                   .fromRentalAllowances(propertyAnnualSubmissionFromDownstream, rentalAllowances)
-               )
-             } yield ()
+             case _ =>
+               for {
+                 propertyAnnualSubmissionFromDownstream <-
+                   this
+                     .getPropertyAnnualSubmission(
+                       ctx.taxYear,
+                       nino,
+                       ctx.incomeSourceId
+                     )
+                     .leftFlatMap {
+                       case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+                       case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+                     }
+                 _ <- createOrUpdateAnnualSubmission(
+                        ctx.taxYear,
+                        ctx.incomeSourceId,
+                        nino,
+                        PropertyAnnualSubmission
+                          .fromRentalAllowances(propertyAnnualSubmissionFromDownstream, rentalAllowances)
+                      )
+               } yield ()
            }
       res <- mongoService.persistAnswers(ctx, rentalAllowancesStoreAnswers)
     } yield res
@@ -892,29 +907,33 @@ class PropertyService @Inject() (
 
     for {
       _ <- rentARoomAllowances.capitalAllowancesForACar match {
-        case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(())
-        case _ => for {
-          propertyAnnualSubmissionFromDownstream <-
-            this
-              .getPropertyAnnualSubmission(
-                ctx.taxYear,
-                ctx.nino,
-                ctx.incomeSourceId
-              )
-              .leftFlatMap {
-                case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
-                case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
-              }
-          _ <- createOrUpdateAnnualSubmission(
-            ctx.taxYear,
-            ctx.incomeSourceId,
-            ctx.nino,
-            PropertyAnnualSubmission
-              .fromRaRAllowances(propertyAnnualSubmissionFromDownstream, rentARoomAllowances)
-          )
-        } yield ()
-      }
-      res <- mongoService.persistAnswers(ctx.toJourneyContext(JourneyName.RentARoomAllowances), rentARoomAllowancesStoreAnswers)
+             case Some(CapitalAllowancesForACar(false, _)) => ITPEnvelope.liftPure(())
+             case _ =>
+               for {
+                 propertyAnnualSubmissionFromDownstream <-
+                   this
+                     .getPropertyAnnualSubmission(
+                       ctx.taxYear,
+                       ctx.nino,
+                       ctx.incomeSourceId
+                     )
+                     .leftFlatMap {
+                       case DataNotFoundError => ITPEnvelope.liftPure(emptyPropertyAnnualSubmission)
+                       case e                 => ITPEnvelope.liftEither(e.asLeft[PropertyAnnualSubmission])
+                     }
+                 _ <- createOrUpdateAnnualSubmission(
+                        ctx.taxYear,
+                        ctx.incomeSourceId,
+                        ctx.nino,
+                        PropertyAnnualSubmission
+                          .fromRaRAllowances(propertyAnnualSubmissionFromDownstream, rentARoomAllowances)
+                      )
+               } yield ()
+           }
+      res <- mongoService.persistAnswers(
+               ctx.toJourneyContext(JourneyName.RentARoomAllowances),
+               rentARoomAllowancesStoreAnswers
+             )
     } yield res
   }
 

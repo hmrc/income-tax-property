@@ -32,33 +32,35 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout, LossType}
+import models.{LossType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, BAD_REQUEST}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockMergeService, MockMongoJourneyAnswersRepository, MockIntegrationFrameworkConnector}
-import utils.{AppConfigStub, UnitTest}
+import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.providers.AppConfigStubProvider
+import utils.{AppConfigStub, FeatureSwitchConfig, UnitTest}
 
-import java.time.{LocalDateTime, Clock, LocalDate}
+import java.time.{Clock, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PropertyServiceSpec
-    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
-    with HttpClientSupport with ScalaCheckPropertyChecks {
+    extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService with MockHipConnector
+    with HttpClientSupport with ScalaCheckPropertyChecks with AppConfigStubProvider {
+
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-
-  lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-
-  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService)
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
+  private val hipApisEnabledFSConfig = FeatureSwitchConfig(hipApi1500 = true)
+  private val appConfigWithHipApisEnabled: AppConfig = new AppConfigStub().config(featureSwitchConfig = Some(hipApisEnabledFSConfig))
+  private val underTestWithHipApisEnabled = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigWithHipApisEnabled, mockHipConnector)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"
@@ -2454,6 +2456,19 @@ class PropertyServiceSpec
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "create brought forward loss" when {
+    "feature switch for hip api 1500 is disabled" should {
+//      TODO-TBG TODO-LAN - look into verify() method to check which connector has been called
+      "use the IF API#1500 and return the created BFL loss Id for valid request" in {}
+      "return ApiError for invalid request" in {}
+    }
+    "feature switch for hip api 1500 is enabled" should {
+      "use the HIP API#1500 and return the created BFL loss Id for valid request" in {}
+      "return ApiError for invalid request" in {
+      }
     }
   }
 

@@ -41,7 +41,7 @@ class HipConnector @Inject() (
     extends Logging {
 
   def createPropertyBroughtForwardLoss(
-    nino: String,
+    nino: Nino,
     incomeSourceId: IncomeSourceId,
     incomeSourceType: IncomeSourceType,
     lossAmount: BigDecimal,
