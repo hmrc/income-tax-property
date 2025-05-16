@@ -19,12 +19,11 @@ package models.taskList
 import models.taskList.TaskTitle._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.{JsPath, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsPath, JsString, JsSuccess, Json}
 
 class TaskTitleSpec extends AnyFreeSpec with Matchers {
 
   "TaskTitle" - {
-
     "must contain the correct values" in {
       TaskTitle.values mustEqual Seq[TaskTitle](
         UkProperty,
@@ -33,39 +32,20 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
       )
     }
 
-    "must parse each element to jsValue successfully" in {
-      val underTest: Seq[JsValue] = TaskTitle.values.map(x => Json.toJson(x))
-      underTest.isInstanceOf[Seq[JsValue]] mustBe true
-    }
-  }
+    "must parse each element as JSON successfully" - {
 
-  "UkProperty" - {
+      TaskTitle.values.foreach { taskTitle =>
+        s"for ${taskTitle.toString}" - {
 
-    "must parse to and from json" in {
-      val underTest = Json.toJson(UkProperty)
+          "serialize to JSON" in {
+            Json.toJson(taskTitle) mustBe JsString(taskTitle.toString)
+          }
 
-      underTest.toString() mustBe s"\"$UkProperty\""
-      underTest.validate[TaskTitle] mustBe JsSuccess(UkProperty, JsPath())
-    }
-  }
-
-  "ForeignProperty" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(ForeignProperty)
-
-      underTest.toString() mustBe s"\"$ForeignProperty\""
-      underTest.validate[TaskTitle] mustBe JsSuccess(ForeignProperty, JsPath())
-    }
-  }
-
-  "UkForeignProperty" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(UkForeignProperty)
-
-      underTest.toString() mustBe s"\"$UkForeignProperty\""
-      underTest.validate[TaskTitle] mustBe JsSuccess(UkForeignProperty, JsPath())
+          "deserialize from JSON" in {
+            JsString(taskTitle.toString).validate[TaskTitle] mustBe JsSuccess(taskTitle, JsPath())
+          }
+        }
+      }
     }
   }
 }

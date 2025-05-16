@@ -19,58 +19,35 @@ package models.common
 import models.common.JourneyStatus._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsPath, JsString, JsSuccess, Json}
 
 class JourneyStatusSpec extends AnyFreeSpec with Matchers {
 
-  "Completed" - {
+  "JourneyStatus" - {
+    "must contain the correct values" in {
+      JourneyStatus.values mustEqual IndexedSeq[JourneyStatus](
+        NotStarted,
+        InProgress,
+        Completed,
+        CheckNow,
+        UnderMaintenance
+      )
+    }
 
-    "must parse to and from json" in {
-      val underTest = Json.toJson(Completed)
+    "must parse each element as JSON successfully" - {
 
-      underTest.toString() mustBe s"\"$Completed\""
-      underTest.validate[JourneyStatus] mustBe JsSuccess(Completed, JsPath())
+      JourneyStatus.values.foreach { journeyStatus =>
+        s"for ${journeyStatus.toString}" - {
+
+          "serialize to JSON" in {
+            Json.toJson(journeyStatus) mustBe JsString(journeyStatus.toString)
+          }
+
+          "deserialize from JSON" in {
+            JsString(journeyStatus.toString).validate[JourneyStatus] mustBe JsSuccess(journeyStatus, JsPath())
+          }
+        }
+      }
     }
   }
-
-  "InProgress" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(InProgress)
-
-      underTest.toString() mustBe s"\"$InProgress\""
-      underTest.validate[JourneyStatus] mustBe JsSuccess(InProgress, JsPath())
-    }
-  }
-
-  "CheckNow" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(CheckNow)
-
-      underTest.toString() mustBe s"\"$CheckNow\""
-      underTest.validate[JourneyStatus] mustBe JsSuccess(CheckNow, JsPath())
-    }
-  }
-
-  "NotStarted" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(NotStarted)
-
-      underTest.toString() mustBe s"\"$NotStarted\""
-      underTest.validate[JourneyStatus] mustBe JsSuccess(NotStarted, JsPath())
-    }
-  }
-
-  "UnderMaintenance" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(UnderMaintenance)
-
-      underTest.toString() mustBe s"\"$UnderMaintenance\""
-      underTest.validate[JourneyStatus] mustBe JsSuccess(UnderMaintenance, JsPath())
-    }
-  }
-
 }

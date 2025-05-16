@@ -97,7 +97,7 @@ class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorise
       |""".stripMargin
   )
 
-  def mockStateBenefitsService(taskListSection: Seq[TaskListSection]): CallHandler5[Int, String, String, ExecutionContext, HeaderCarrier, Future[Seq[TaskListSection]]] = {
+  def mockPropertyService(taskListSection: Seq[TaskListSection]): CallHandler5[Int, String, String, ExecutionContext, HeaderCarrier, Future[Seq[TaskListSection]]] = {
     (commonTaskListService.get(_: Int, _: String, _: String)(_: ExecutionContext, _: HeaderCarrier))
       .expects(*, *, *, *, *)
       .returning(Future.successful(taskListSection))
@@ -107,7 +107,7 @@ class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorise
     "return a task list section model for None returns" in {
       val result = {
         mockAuthorisation()
-        mockStateBenefitsService(Seq(
+        mockPropertyService(Seq(
           taskListSection(SectionTitle.UkPropertyTitle, None),
           taskListSection(SectionTitle.ForeignPropertyTitle, None),
           taskListSection(SectionTitle.UkForeignPropertyTitle, None)
@@ -122,7 +122,7 @@ class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorise
     "return a task list section model for Some() returns" in {
       val result = {
         mockAuthorisation()
-        mockStateBenefitsService(Seq(
+        mockPropertyService(Seq(
           taskListSection(SectionTitle.UkPropertyTitle, ukItem),
           taskListSection(SectionTitle.ForeignPropertyTitle, foreignItem),
           taskListSection(SectionTitle.UkForeignPropertyTitle, ukForeignItem)

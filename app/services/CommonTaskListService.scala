@@ -20,7 +20,7 @@ import config.AppConfig
 import models.common.{JourneyName, JourneyStatus}
 import models.domain.JourneyAnswers
 import models.errors.DataNotFoundError
-import models.prePopulation.PrePopulationResponse
+import models.prepopulation.PrePopulationResponse
 import models.taskList._
 import play.api.Logging
 import repositories.MongoJourneyAnswersRepository
@@ -35,58 +35,55 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
 
   def get(taxYear: Int, nino: String, mtdItId: String)
          (implicit ec: ExecutionContext,hc: HeaderCarrier): Future[Seq[TaskListSection]] = {
+    for {
+      allBusinessDataOpt <- service.getBusinessDetails(nino).map {
+        case Right(businessDetails)  => PrePopulationResponse.fromData(businessDetails)
+        case Left(DataNotFoundError) => PrePopulationResponse.noPrePop
+        case Left(err)               =>
+          logger.warn(s"[CommonTaskListService][result] - An error occurred while checking the user's Property data for pre-pop $err")
+          PrePopulationResponse.noPrePop
+      }
+      allJourneys <- repository.fetchAllJourneysUserTaxYear(taxYear, mtdItId)
+      ukJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.About)
+      foreignJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.ForeignPropertySelectCountry)
+      ukAndForeignJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.UkAndForeignPropertyAbout)
+      taskList = toTaskList(allBusinessDataOpt, ukJourneyAnswersOpt, foreignJourneyAnswersOpt, ukAndForeignJourneyAnswersOpt, taxYear)
+    } yield taskList
+  }
+
+  private def toTaskList(prePopulationResponse: PrePopulationResponse,
+                 ukPropertyJourneyAnswersOpt: Option[JourneyAnswers],
+                 foreignPropertyJourneyAnswersOpt: Option[JourneyAnswers],
+                 ukAndForeignPropertyJourneyAnswersOpt: Option[JourneyAnswers],
+                 taxYear: Int): Seq[TaskListSection] = {
 
     val ukPropertyUrl: String = s"${appConfig.propertyFrontendUrl}/$taxYear/uk-property/about/start"
     val foreignPropertyUrl: String = s"${appConfig.propertyFrontendUrl}/$taxYear/foreign-property/about/start"
     val ukForeignPropertyUrl: String = s"${appConfig.propertyFrontendUrl}/$taxYear/uk-foreign-property/about/start"
 
-    def result(): Future[Seq[TaskListSection]] = {
-      for {
-        allBusinessDataOpt <- service.getBusinessDetails(nino).map {
-          case Right(businessDetails)  => PrePopulationResponse.fromData(businessDetails)
-          case Left(DataNotFoundError) => PrePopulationResponse.noPrePop
-          case Left(err)               =>
-            logger.warn(s"[CommonTaskListService][result] - An error occurred while checking the user's Property data for pre-pop $err")
-            PrePopulationResponse.noPrePop
-        }
-        allJourneys <- repository.fetchAllJourneysUserTaxYear(taxYear, mtdItId)
-        ukJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.About)
-        foreignJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.ForeignPropertySelectCountry)
-        ukAndForeignJourneyAnswersOpt = allJourneys.find(_.journey == JourneyName.UkAndForeignPropertyAbout)
-        taskList = toTaskList(allBusinessDataOpt, ukJourneyAnswersOpt, foreignJourneyAnswersOpt, ukAndForeignJourneyAnswersOpt)
-      } yield taskList
-    }
-
-    def toTaskList(prePopulationResponse: PrePopulationResponse,
-                   ukPropertyJourneyAnswersOpt: Option[JourneyAnswers],
-                   foreignPropertyJourneyAnswersOpt: Option[JourneyAnswers],
-                   ukAndForeignPropertyJourneyAnswersOpt: Option[JourneyAnswers]): Seq[TaskListSection] = {
-      val ukPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
-        ifPropertyExists = prePopulationResponse.hasUkPropertyPrePop,
-        taskTitle = TaskTitle.UkProperty,
-        url = ukPropertyUrl,
-        journeyAnswers = ukPropertyJourneyAnswersOpt
-      )
-      val foreignPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
-        ifPropertyExists = prePopulationResponse.hasForeignPropertyPrePop,
-        taskTitle = TaskTitle.ForeignProperty,
-        url = foreignPropertyUrl,
-        journeyAnswers = foreignPropertyJourneyAnswersOpt
-      )
-      val ukForeignPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
-        ifPropertyExists = prePopulationResponse.hasUkPropertyPrePop && prePopulationResponse.hasForeignPropertyPrePop,
-        taskTitle = TaskTitle.UkForeignProperty,
-        url = ukForeignPropertyUrl,
-        journeyAnswers = ukAndForeignPropertyJourneyAnswersOpt
-      )
-      Seq(
-        TaskListSection(SectionTitle.UkPropertyTitle, ukPropertyTask),
-        TaskListSection(SectionTitle.ForeignPropertyTitle, foreignPropertyTask),
-        TaskListSection(SectionTitle.UkForeignPropertyTitle, ukForeignPropertyTask)
-      )
-    }
-
-    result()
+    val ukPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
+      ifPropertyExists = prePopulationResponse.hasUkPropertyPrePop,
+      taskTitle = TaskTitle.UkProperty,
+      url = ukPropertyUrl,
+      journeyAnswers = ukPropertyJourneyAnswersOpt
+    )
+    val foreignPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
+      ifPropertyExists = prePopulationResponse.hasForeignPropertyPrePop,
+      taskTitle = TaskTitle.ForeignProperty,
+      url = foreignPropertyUrl,
+      journeyAnswers = foreignPropertyJourneyAnswersOpt
+    )
+    val ukForeignPropertyTask: Option[Seq[TaskListSectionItem]] = getPropertyTasks(
+      ifPropertyExists = prePopulationResponse.hasUkPropertyPrePop && prePopulationResponse.hasForeignPropertyPrePop,
+      taskTitle = TaskTitle.UkForeignProperty,
+      url = ukForeignPropertyUrl,
+      journeyAnswers = ukAndForeignPropertyJourneyAnswersOpt
+    )
+    Seq(
+      TaskListSection(SectionTitle.UkPropertyTitle, ukPropertyTask),
+      TaskListSection(SectionTitle.ForeignPropertyTitle, foreignPropertyTask),
+      TaskListSection(SectionTitle.UkForeignPropertyTitle, ukForeignPropertyTask)
+    )
   }
 
   private def getPropertyTasks(ifPropertyExists: Boolean,
@@ -95,7 +92,7 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
                                    journeyAnswers: Option[JourneyAnswers]): Option[Seq[TaskListSectionItem]] = {
     val loggingTitle = taskTitle.entryName.replace("Title","")
     (ifPropertyExists, journeyAnswers) match {
-      case (_, Some(journeyAnswers)) =>
+      case (true, Some(journeyAnswers)) =>
         logger.info(s"[CommonTaskListService][getPropertyTasks] - $loggingTitle - User has journey answers, setting status to: ${journeyAnswers.status}")
         Some(Seq(TaskListSectionItem(taskTitle, journeyAnswers.status, Some(url))))
       case (true, _) =>

@@ -200,7 +200,7 @@ class CommonTaskListServiceSpec extends UnitTest
   )
 
   "CommonTaskListService" when {
-    "an error occurs while retrieving benefits data from IF" should {
+    "an error occurs while retrieving property data from IF" should {
       "return an empty task list when IF returns an API error" in new Test {
         await(removeAll(repository.collection))
         mockGetBusinessDetails(nino, Left(ApiServiceError(500)))
@@ -219,17 +219,6 @@ class CommonTaskListServiceSpec extends UnitTest
         val underTest: Future[Seq[TaskListSection]] = service.get(taxYear, nino, mtdItId)
 
         assertThrows[RuntimeException](await(underTest))
-      }
-    }
-
-    "the call to IF for benefits data returns a successful, but empty, response" should {
-      "return an empty task list if journeyAnswers also empty" in new Test {
-        await(removeAll(repository.collection))
-        mockGetBusinessDetails(nino, Left(DataNotFoundError))
-
-        val underTest: Future[Seq[TaskListSection]] = service.get(taxYear, nino, mtdItId)
-
-        await(underTest) shouldBe emptyTaskSections
       }
     }
 
@@ -285,7 +274,7 @@ class CommonTaskListServiceSpec extends UnitTest
         await(underTest) shouldBe taskSections(JourneyStatus.Completed)
       }
 
-      "use Journey Answers when no HMRC held data in IF" in new Test {
+      "return none when no HMRC held data in IF, and journey data exists" in new Test {
         await(removeAll(repository.collection))
         mockGetBusinessDetails(nino, Left(DataNotFoundError))
 
@@ -295,7 +284,7 @@ class CommonTaskListServiceSpec extends UnitTest
 
         val underTest: Future[Seq[TaskListSection]] = service.get(taxYear, nino, mtdItId)
 
-        await(underTest) shouldBe taskSections(JourneyStatus.Completed)
+        await(underTest) shouldBe emptyTaskSections
       }
     }
 
@@ -330,14 +319,14 @@ class CommonTaskListServiceSpec extends UnitTest
 
         val underTest: Future[Seq[TaskListSection]] = service.get(taxYear, nino, mtdItId)
 
-        await(underTest) shouldBe ukTaskSections(JourneyStatus.Completed)
+        await(underTest) shouldBe emptyTaskSections
       }
     }
 
     "Multiple users have data in journey answers" should {
       "return Journey Answers of user with the matching mtditid" in new Test{
         await(removeAll(repository.collection))
-        mockGetBusinessDetails(nino, Left(DataNotFoundError))
+        mockGetBusinessDetails(nino, Right(BusinessDetailsResponse(someUkProperty)))
 
         val otherUser: Future[Unit] = testOnlyAdd(journeyResponse(IncomeSourceId("123456"), JourneyName.About, JourneyStatus.Completed, mtditid = "12346"))
         val currentUser: Future[Unit] = testOnlyAdd(journeyResponse(IncomeSourceId("123456"), JourneyName.About, JourneyStatus.InProgress))
@@ -354,7 +343,7 @@ class CommonTaskListServiceSpec extends UnitTest
     "Same user has multiple entries for the same journey" should {
       "return Journey Answers of Journey with the matching taxYear" in new Test{
         await(removeAll(repository.collection))
-        mockGetBusinessDetails(nino, Left(DataNotFoundError))
+        mockGetBusinessDetails(nino, Right(BusinessDetailsResponse(someUkProperty)))
 
         val otherUser: Future[Unit] = testOnlyAdd(journeyResponse(IncomeSourceId("123456"), JourneyName.About, JourneyStatus.Completed, taxyear = 2023))
         val currentUser: Future[Unit] = testOnlyAdd(journeyResponse(IncomeSourceId("123456"), JourneyName.About, JourneyStatus.InProgress))

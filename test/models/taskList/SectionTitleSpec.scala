@@ -19,37 +19,33 @@ package models.taskList
 import models.taskList.SectionTitle._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsPath, JsString, JsSuccess, Json}
 
 class SectionTitleSpec extends AnyFreeSpec with Matchers {
 
-  "UkPropertyTitle" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(UkPropertyTitle)
-
-      underTest.toString() mustBe s"\"$UkPropertyTitle\""
-      underTest.validate[SectionTitle] mustBe JsSuccess(UkPropertyTitle, JsPath())
+  "SectionTitle" - {
+    "must contain the correct values" in {
+      SectionTitle.values mustEqual Seq[SectionTitle](
+        UkPropertyTitle,
+        ForeignPropertyTitle,
+        UkForeignPropertyTitle
+      )
     }
-  }
 
-  "ForeignPropertyTitle" - {
+    "must parse each element as JSON successfully" - {
 
-    "must parse to and from json" in {
-      val underTest = Json.toJson(ForeignPropertyTitle)
+      SectionTitle.values.foreach { sectionTitle =>
+        s"for ${sectionTitle.toString}" - {
 
-      underTest.toString() mustBe s"\"$ForeignPropertyTitle\""
-      underTest.validate[SectionTitle] mustBe JsSuccess(ForeignPropertyTitle, JsPath())
-    }
-  }
+          "serialize to JSON" in {
+            Json.toJson(sectionTitle) mustBe JsString(sectionTitle.toString)
+          }
 
-  "UkForeignPropertyTitle" - {
-
-    "must parse to and from json" in {
-      val underTest = Json.toJson(UkForeignPropertyTitle)
-
-      underTest.toString() mustBe s"\"$UkForeignPropertyTitle\""
-      underTest.validate[SectionTitle] mustBe JsSuccess(UkForeignPropertyTitle, JsPath())
+          "deserialize from JSON" in {
+            JsString(sectionTitle.toString).validate[SectionTitle] mustBe JsSuccess(sectionTitle, JsPath())
+          }
+        }
+      }
     }
   }
 }
