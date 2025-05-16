@@ -18,8 +18,9 @@ package utils.mocks
 
 import cats.data.EitherT
 import models.common._
+import models.domain.FetchedData
 import models.errors.ServiceError
-import models.request.foreignincome.ForeignIncomeDividendsWithCountryCode
+import models.request.foreignincome.{ForeignIncomeSubmission, ForeignIncomeDividendsWithCountryCode}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import services.ForeignIncomeService
@@ -32,20 +33,75 @@ trait MockForeignIncomeService extends MockFactory {
 
   protected val mockForeignIncomeService: ForeignIncomeService = mock[ForeignIncomeService]
 
-  def mockSaveForeignIncomeDividendsSection(
-                                                 journeyContext: JourneyContext,
-                                                 nino: Nino,
-                                                 foreignIncomeDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode,
-                                                 result: Either[ServiceError, Boolean]
-                                               ):
-  CallHandler4[JourneyContext, Nino, ForeignIncomeDividendsWithCountryCode, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
+  def mockGetForeignIncomeSubmission(
+    taxYear: TaxYear,
+    taxableEntityId: Nino,
+    result: Either[ServiceError, ForeignIncomeSubmission]
+  ): CallHandler3[TaxYear, Nino, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    ForeignIncomeSubmission
+  ]] =
     (mockForeignIncomeService
-      .saveForeignIncomeDividends(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignIncomeDividendsWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignIncomeDividendsWithCountryCode, *)
+      .getForeignIncomeSubmission(_: TaxYear, _: Nino)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, *)
       .returning(EitherT.fromEither(result))
 
+  def mockCreateOrUpdateForeignIncomeSubmission(
+                                      taxYear: TaxYear,
+                                      taxableEntityId: Nino,
+                                      body: ForeignIncomeSubmission,
+                                      result: Either[ServiceError, Boolean]
+                                    ): CallHandler4[TaxYear, Nino, ForeignIncomeSubmission, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockForeignIncomeService
+      .createOrUpdateForeignIncomeSubmission(_: TaxYear, _: Nino, _: ForeignIncomeSubmission)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, body, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockDeleteForeignIncomeSubmission(
+                                      taxYear: TaxYear,
+                                      taxableEntityId: Nino,
+                                      result: Either[ServiceError, Unit]
+                                    ): CallHandler3[TaxYear, Nino, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Unit
+  ]] =
+    (mockForeignIncomeService
+      .deleteForeignIncomeSubmission(_: TaxYear, _: Nino)(_: HeaderCarrier))
+      .expects(taxYear, taxableEntityId, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveForeignIncomeDividends(
+                                      ctx: JourneyContext,
+                                      taxableEntityId: Nino,
+                                      foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode,
+                                      result: Either[ServiceError, Boolean]
+                                    ): CallHandler4[JourneyContext, Nino, ForeignIncomeDividendsWithCountryCode, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] =
+    (mockForeignIncomeService
+      .saveForeignIncomeDividends(_: JourneyContext, _: Nino, _: ForeignIncomeDividendsWithCountryCode)(_: HeaderCarrier))
+      .expects(ctx, taxableEntityId, foreignDividendsWithCountryCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetFetchedIncomeDataMerged(
+                                      ctx: JourneyContext,
+                                      taxableEntityId: Nino,
+                                      result: Either[ServiceError, FetchedData]
+                                    ): CallHandler3[JourneyContext, Nino, HeaderCarrier, EitherT[
+    Future,
+    ServiceError,
+    FetchedData
+  ]] =
+    (mockForeignIncomeService
+      .getFetchedIncomeDataMerged(_: JourneyContext, _: Nino)(_: HeaderCarrier))
+      .expects(ctx, taxableEntityId, *)
+      .returning(EitherT.fromEither(result))
 }

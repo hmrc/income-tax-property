@@ -229,8 +229,7 @@ class JourneyAnswersIntegrationSpec
               )
             )
           )
-        ),
-        None
+        )
       )
       val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
 
@@ -578,8 +577,7 @@ class JourneyAnswersIntegrationSpec
               )
             )
           )
-        ),
-        None
+        )
       )
       val httpResponsePeriodicSubmission = HttpResponse(OK, Json.toJson(aPropertyPeriodicSubmission).toString())
 

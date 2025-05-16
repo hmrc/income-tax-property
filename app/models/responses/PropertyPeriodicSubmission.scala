@@ -26,33 +26,11 @@ case class PropertyPeriodicSubmission(
   fromDate: LocalDate,
   toDate: LocalDate,
   foreignProperty: Option[Seq[ForeignProperty]],
-  ukOtherProperty: Option[UkOtherProperty],
-  foreignIncome: Option[Seq[ForeignIncome]]
+  ukOtherProperty: Option[UkOtherProperty]
 )
 
 object PropertyPeriodicSubmission {
   implicit val format: OFormat[PropertyPeriodicSubmission] = Json.format[PropertyPeriodicSubmission]
-}
-
-case class ForeignIncome(
-  countryCode: String,
-  dividends: Option[ForeignIncomeFromDividends]
-                        )
-
-object ForeignIncome {
-  implicit val format: OFormat[ForeignIncome] = Json.format[ForeignIncome]
-}
-
-case class ForeignIncomeFromDividends(
-                                   amountBeforeTax: Option[BigDecimal],
-                                   taxTakenOff: Option[BigDecimal],
-                                   specialWithholdingTax: Option[BigDecimal],
-                                   foreignTaxCreditRelief: Option[Boolean],
-                                   taxableAmount: Option[BigDecimal]
-                                 )
-
-object ForeignIncomeFromDividends {
-  implicit val format: OFormat[ForeignIncomeFromDividends] = Json.format[ForeignIncomeFromDividends]
 }
 
 case class ForeignProperty(
