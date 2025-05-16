@@ -67,8 +67,7 @@ class MergerSpec extends UnitTest {
             )
           )
         )
-      ),
-      None
+      )
     )
     val aPropertyAnnualSubmission = PropertyAnnualSubmission(
       submittedOn = Some(LocalDateTime.now),

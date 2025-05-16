@@ -236,7 +236,7 @@ class ForeignPropertyService @Inject() (
             contextWithNino.taxYear,
             createPeriodicSubmissionRequest
           )
-        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _, _)) =>
+        case Some(PropertyPeriodicSubmission(Some(submissionId), _, _, _, _, _)) =>
           updateForeignPeriodicSubmission(
             contextWithNino.nino,
             contextWithNino.incomeSourceId,

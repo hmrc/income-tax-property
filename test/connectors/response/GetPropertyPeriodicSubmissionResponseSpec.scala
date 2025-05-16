@@ -45,7 +45,6 @@ class GetPropertyPeriodicSubmissionResponseSpec extends UnitTest {
           fromDate = LocalDate.now.minusDays(1),
           toDate = LocalDate.now,
           None,
-          None,
           None
         )
 

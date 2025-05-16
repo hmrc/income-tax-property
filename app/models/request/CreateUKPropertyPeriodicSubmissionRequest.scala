@@ -234,7 +234,7 @@ object CreateUKPropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)), _)) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
           (Some(pps), Some(income))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -281,7 +281,7 @@ object CreateUKPropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyIncome)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyIncome]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)), _)) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(Some(income), _)))) =>
           (Some(pps), Some(income))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -328,7 +328,7 @@ object CreateUKPropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))), _)) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
           (Some(pps), Some(expenses))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
@@ -368,7 +368,7 @@ object CreateUKPropertyPeriodicSubmissionRequest {
     val (periodicSubmission, ukOtherPropertyExpenses)
       : (Option[PropertyPeriodicSubmission], Option[UkOtherPropertyExpenses]) =
       periodicSubmissionMaybe match {
-        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))), _)) =>
+        case Some(pps @ PropertyPeriodicSubmission(_, _, _, _, _, Some(UkOtherProperty(_, Some(expenses))))) =>
           (Some(pps), Some(expenses))
         case Some(pps) => (Some(pps), None)
         case _         => (None, None)
