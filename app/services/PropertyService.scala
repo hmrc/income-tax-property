@@ -326,7 +326,7 @@ class PropertyService @Inject() (
     }
   }
 
-  private def createBroughtForwardLoss(
+  def createBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     incomeSourceId: IncomeSourceId,

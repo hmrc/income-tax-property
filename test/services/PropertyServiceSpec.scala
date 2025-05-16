@@ -19,6 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
+import models.IncomeSourceType.UKPropertyFHL
 import models.LossType.UKProperty
 import models.common._
 import models.domain._
@@ -32,7 +33,7 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{LossType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
+import models.{IncomeSourceType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -51,6 +52,7 @@ import utils.{AppConfigStub, FeatureSwitchConfig, UnitTest}
 import java.time.{Clock, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 
 class PropertyServiceSpec
     extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService with MockHipConnector
@@ -2461,8 +2463,23 @@ class PropertyServiceSpec
 
   "create brought forward loss" when {
     "feature switch for hip api 1500 is disabled" should {
-//      TODO-TBG TODO-LAN - look into verify() method to check which connector has been called
-      "use the IF API#1500 and return the created BFL loss Id for valid request" in {}
+      "use the IF API#1500 and return the created BFL loss Id for valid request" in {
+        val incomeSourceType: IncomeSourceType = UKPropertyFHL
+        val createPropertyBFLResult = Right(BroughtForwardLossId(lossId))
+
+        mockCreatePropertyBroughtForwardLoss(whenYouReportedTheLoss, nino, incomeSourceId, lossAmount, createPropertyBFLResult)
+
+        val result = await(
+          underTest.createBroughtForwardLoss(
+            whenYouReportedTheLoss,
+            nino,
+            incomeSourceId,
+            lossAmount,
+            incomeSourceType
+          ).value
+        )
+        result shouldBe Right(lossId)
+      }
       "return ApiError for invalid request" in {}
     }
     "feature switch for hip api 1500 is enabled" should {
