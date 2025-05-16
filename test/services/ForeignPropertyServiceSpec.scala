@@ -654,7 +654,7 @@ class ForeignPropertyServiceSpec
               None
             )
           )
-        )
+       )
 
       val Right(requestForUpdate: UpdateForeignPropertyPeriodicSubmissionRequest) =
         UpdateForeignPropertyPeriodicSubmissionRequest.fromForeignIncome(

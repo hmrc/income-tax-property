@@ -44,7 +44,8 @@ class GetPropertyPeriodicSubmissionResponseSpec extends UnitTest {
           submittedOn = Some(LocalDateTime.now),
           fromDate = LocalDate.now.minusDays(1),
           toDate = LocalDate.now,
-          None, None
+          None,
+          None
         )
 
         val httpResponse: HttpResponse = HttpResponse.apply(OK, Json.toJson(propertyPeriodicSubmission).toString, anyHeaders)

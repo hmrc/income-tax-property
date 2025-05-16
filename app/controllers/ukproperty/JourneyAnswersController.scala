@@ -30,7 +30,7 @@ import models.request.ukrentaroom.RaRAdjustments
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.{MongoJourneyAnswersService, PropertyService}
+import services.PropertyService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonSupport._
 

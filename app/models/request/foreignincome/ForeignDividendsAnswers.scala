@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.request.foreignincome
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-final case class FetchedPropertyData(
-  ukPropertyData: FetchedUKPropertyData,
-  foreignPropertyData: FetchedForeignPropertyData,
-  ukAndForeignPropertyData: FetchedUkAndForeignPropertyData
+case class ForeignDividendsAnswers(
+                                    amountBeforeTax: Option[BigDecimal],
+                                    taxTakenOff: Option[BigDecimal],
+                                    specialWithholdingTax: Option[BigDecimal],
+                                    foreignTaxCreditRelief: Option[Boolean],
+                                    taxableAmount: Option[BigDecimal]
 )
 
-object FetchedPropertyData {
-  implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+object ForeignDividendsAnswers {
+  implicit val format: Format[ForeignDividendsAnswers] = Json.format[ForeignDividendsAnswers]
 }
