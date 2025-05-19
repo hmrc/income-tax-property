@@ -32,7 +32,7 @@ trait MockHipConnector extends MockFactory {
 
   protected val mockHipConnector: HipConnector = mock[HipConnector]
 
-  def mockCreatePropertyBroughtForwardLossSubmission(
+  def mockHipCreatePropertyBroughtForwardLossSubmission(
     nino: Nino,
     incomeSourceId: IncomeSourceId,
     incomeSourceType: IncomeSourceType,
