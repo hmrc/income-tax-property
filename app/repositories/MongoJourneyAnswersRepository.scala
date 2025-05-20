@@ -216,11 +216,4 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     // TODO return a more descriptive data type
     result.map(_ => ())
   }
-
-  def setForeignIncomeStatus(journeyContext: JourneyContext, status: JourneyStatus, countryCode: String): Future[Unit] = {
-    logger.info(s"Repository: journeyContext=${journeyContext.toString} persisting new foreign income status=$status")
-    val result = updateForeignStatus(journeyContext, status, countryCode)
-    // TODO return a more descriptive data type
-    result.map(_ => ())
-  }
 }
