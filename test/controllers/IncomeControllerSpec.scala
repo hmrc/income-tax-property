@@ -75,7 +75,7 @@ class IncomeControllerSpec
 
       val request = fakePostRequest.withJsonBody(journeyStatusJs)
       val result =
-        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName, countryCode)(request))
+        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -83,7 +83,7 @@ class IncomeControllerSpec
       mockAuthorisation()
       val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
       val result =
-        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName, countryCode)(request))
+        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName)(request))
       result.header.status shouldBe BAD_REQUEST
     }
   }

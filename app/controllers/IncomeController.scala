@@ -38,7 +38,7 @@ class IncomeController @Inject()(
 )(implicit ec: ExecutionContext)
   extends BackendController(cc) with ErrorHandler with Logging with RequestHandler {
 
-  def setForeignIncomeStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String, countryCode: String): Action[AnyContent] =
+  def setForeignIncomeStatus(taxYear: TaxYear, incomeSourceId: IncomeSourceId, journeyName: String): Action[AnyContent] =
     auth.async { implicit request =>
       val ctx =
         JourneyContext(taxYear, incomeSourceId, request.user.getMtditid, JourneyName.withNameInsensitive(journeyName))
@@ -48,7 +48,7 @@ class IncomeController @Inject()(
         case Success(validatedRes) =>
           validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
             case JsSuccess(value, _) =>
-              journeyStatusService.setForeignIncomeStatus(ctx, value, countryCode).value.map(_ => NoContent)
+              journeyStatusService.setStatus(ctx, value).value.map(_ => NoContent)
             case JsError(err) =>
               Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
           }
