@@ -64,7 +64,7 @@ class HipConnector @Inject() (
     http
       .post(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.hipEnvironment)
-      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}") // TODO - Needed??
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}")
       .withBody[HipPropertyBFLRequest](requestBody)
       .execute[PostBroughtForwardLossResponse]
       .map { response: PostBroughtForwardLossResponse =>

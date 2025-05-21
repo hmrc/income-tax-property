@@ -43,7 +43,6 @@ class AppConfigStub extends MockFactory {
     override def hipAuthTokenFor(apiVersion: String): String = authorisationToken + s".$apiVersion"
 
 
-
     lazy val featureSwitches: FeatureSwitchConfig = featureSwitchConfig.getOrElse(FeatureSwitchConfig())
 
     override lazy val hipMigration1500Enabled: Boolean = featureSwitches.hipApi1500

@@ -330,12 +330,11 @@ class PropertyService @Inject() (
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     incomeSourceId: IncomeSourceId,
-    lossAmount: BigDecimal,
-    incomeSourceType: IncomeSourceType = IncomeSourceType.UKPropertyOther // TODO-TBG TODO-LAN
+    lossAmount: BigDecimal
   )(implicit hc: HeaderCarrier): ITPEnvelope[String] =
     EitherT {
       if (appConfig.hipMigration1500Enabled) {
-        hipConnector.createPropertyBroughtForwardLoss(nino, incomeSourceId, incomeSourceType , lossAmount, taxYearBroughtForwardFrom)
+        hipConnector.createPropertyBroughtForwardLoss(nino, incomeSourceId, IncomeSourceType.UKPropertyOther , lossAmount, taxYearBroughtForwardFrom)
       } else {
         connector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount)
       }

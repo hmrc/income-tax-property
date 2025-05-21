@@ -17,15 +17,12 @@
 package utils.mocks
 
 import connectors.IntegrationFrameworkConnector
-import models.IncomeSourceType
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign._
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.when
 import org.scalamock.handlers.{CallHandler3, CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier

@@ -19,7 +19,6 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import models.IncomeSourceType.UKPropertyFHL
 import models.LossType.UKProperty
 import models.common._
 import models.domain._
@@ -40,10 +39,10 @@ import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.providers.AppConfigStubProvider
@@ -2465,7 +2464,6 @@ class PropertyServiceSpec
   "create brought forward loss" when {
     "feature switch for hip api 1500 is disabled" should {
       "use the IF API#1500 and return the created BFL loss Id for valid request" in {
-        val incomeSourceType: IncomeSourceType = UKPropertyFHL
         val createPropertyBFLResult = Right(BroughtForwardLossId(lossId))
 
         mockCreatePropertyBroughtForwardLoss(whenYouReportedTheLoss, nino, incomeSourceId, lossAmount, createPropertyBFLResult)
@@ -2475,14 +2473,12 @@ class PropertyServiceSpec
             whenYouReportedTheLoss,
             nino,
             incomeSourceId,
-            lossAmount,
-            incomeSourceType
+            lossAmount
           ).value
         )
         result shouldBe Right(lossId)
       }
       "return ApiError for invalid request" in {
-        val incomeSourceType: IncomeSourceType = UKPropertyFHL
         val apiError = SingleErrorBody("code", "reason")
         val apiErrorCodes = Seq(NOT_FOUND, BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
@@ -2495,8 +2491,7 @@ class PropertyServiceSpec
               whenYouReportedTheLoss,
               nino,
               incomeSourceId,
-              lossAmount,
-              incomeSourceType
+              lossAmount
             ).value
           )
           result shouldBe Left(ApiServiceError(apiErrorCode))
@@ -2507,7 +2502,7 @@ class PropertyServiceSpec
   }
   "feature switch for hip api 1500 is enabled" should {
     "use the HIP API#1500 and return the created BFL loss Id for valid request" in {
-      val incomeSourceType: IncomeSourceType = UKPropertyFHL
+      val incomeSourceType: IncomeSourceType = IncomeSourceType.UKPropertyOther
       val createPropertyBFLResult = Right(BroughtForwardLossId(lossId))
 
       mockHipCreatePropertyBroughtForwardLossSubmission(nino, incomeSourceId, incomeSourceType, lossAmount, whenYouReportedTheLoss, createPropertyBFLResult)
@@ -2517,14 +2512,13 @@ class PropertyServiceSpec
           whenYouReportedTheLoss,
           nino,
           incomeSourceId,
-          lossAmount,
-          incomeSourceType
+          lossAmount
         ).value
       )
       result shouldBe Right(lossId)
     }
     "return ApiError for invalid request" in {
-      val incomeSourceType: IncomeSourceType = UKPropertyFHL
+      val incomeSourceType: IncomeSourceType = IncomeSourceType.UKPropertyOther
       val apiError = SingleErrorBody("code", "reason")
       val apiErrorCodes = Seq(NOT_FOUND, BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
@@ -2537,8 +2531,7 @@ class PropertyServiceSpec
             whenYouReportedTheLoss,
             nino,
             incomeSourceId,
-            lossAmount,
-            incomeSourceType
+            lossAmount
           ).value
         )
         result shouldBe Left(ApiServiceError(apiErrorCode))
