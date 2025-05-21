@@ -36,4 +36,11 @@ trait MockBusinessDetailsService extends MockFactory {
       .expects(nino, *)
       .returning(Future.successful(result))
   }
+
+  def mockGetBusinessDetailsException(nino: String,
+                                   result: Throwable
+                                  ): CallHandler2[String, HeaderCarrier, Future[Either[ServiceError, BusinessDetailsResponse]]] =
+    (mockIntegrationFrameworkService.getBusinessDetails(_: String)(_: HeaderCarrier))
+      .expects(nino, *)
+      .returning(Future.failed(result))
 }

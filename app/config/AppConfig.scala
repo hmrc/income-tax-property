@@ -28,6 +28,7 @@ trait AppConfig {
   def ifBaseUrl: String
   def timeToLive: Int
   def ifEnvironment: String
+  def propertyFrontendUrl: String
   def authorisationTokenKey: String
   def authorisationTokenFor(apiVersion: String): String
   def hipAuthTokenKey: String
@@ -49,6 +50,8 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
   override lazy val appName: String = config.get[String]("appName")
   override lazy val ifBaseUrl: String = baseUrl(serviceName = "integration-framework")
   override lazy val timeToLive: Int = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
+  override lazy val propertyFrontendUrl: String =
+    s"${config.get[String]("microservice.services.income-tax-property-frontend.url")}/update-and-submit-income-tax-return/property"
 
   override def ifEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 

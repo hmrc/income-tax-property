@@ -36,6 +36,8 @@ class AppConfigStub extends MockFactory {
     override lazy val ifBaseUrl: String = s"http://localhost:$wireMockPort"
     override lazy val ifEnvironment: String = environment
 
+    override lazy val propertyFrontendUrl = s"http://localhost:TEST/update-and-submit-income-tax-return/property"
+
     override lazy val hipBaseUrl: String = s"http://localhost:$wireMockPort"
     override lazy val hipEnvironment: String = environment
 
