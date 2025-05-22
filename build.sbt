@@ -62,7 +62,6 @@ lazy val microservice = Project("income-tax-property", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
   .settings(
-    resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
       "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
