@@ -16,7 +16,8 @@
 
 package models.repository
 
-import models.ForeignIncomeDividendsStoreAnswers
+import models.request.foreignincome
+import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import models.request.foreignincome.{ForeignDividendsAnswers, ForeignDividend}
 
 // T: to return (merge into)
@@ -26,27 +27,45 @@ import models.request.foreignincome.{ForeignDividendsAnswers, ForeignDividend}
 object ForeignIncomeMerger {
 
   implicit object ForeignDividendsAnswersMerger
-      extends Merger[Option[Map[String, ForeignDividendsAnswers]], Option[Map[String, ForeignIncomeDividendsStoreAnswers]
+      extends Merger[(Option[Map[String, ForeignIncomeDividendsAnswers]], Option[Map[String, ForeignDividendsAnswers]]), Option[Map[String, ForeignIncomeDividendsStoreAnswers]
       ], Option[Map[String, ForeignDividend]]] {
 
     override def merge(
-      extractedMaybe: Option[Map[String, ForeignIncomeDividendsStoreAnswers]],
+      extractedMaybe: Option[ForeignIncomeDividendsStoreAnswers],
       fromDownstreamMaybe: Option[Map[String, ForeignDividend]]
-    ): Option[Map[String, ForeignDividendsAnswers]] =
+    ): (Option[Map[String, ForeignIncomeDividendsAnswers]], Option[Map[String, ForeignDividendsAnswers]]) =
       (extractedMaybe, fromDownstreamMaybe) match {
-        case (_, Some(fromDownstreamMap)) =>
-          val result: Map[String, ForeignDividendsAnswers] = fromDownstreamMap.map {
+        case (Some(extracted), Some(fromDownstreamMap)) =>
+          val result: (Map[String, ForeignIncomeDividendsAnswers], Map[String, ForeignDividendsAnswers]) = fromDownstreamMap.map {
             case (countryCode, dividends) =>
-              countryCode -> ForeignDividendsAnswers(
-                amountBeforeTax = dividends.amountBeforeTax,
-                taxTakenOff = dividends.taxTakenOff,
-                specialWithholdingTax = dividends.specialWithholdingTax,
-                foreignTaxCreditRelief = dividends.foreignTaxCreditRelief,
-                taxableAmount = Some(dividends.taxableAmount)
+              (for (answers <- extracted.foreignIncomeDividendsAnswers)
+              //val extractedMap = extracted.foreignIncomeDividendsAnswers.map(a => a.foreignTaxDeductedFromDividendIncome)
+              countryCode -> ForeignIncomeDividendsAnswers(
+                answers.countryCode,
+                answers.foreignTaxDeductedFromDividendIncome),
+            ForeignDividendsAnswers(
+              amountBeforeTax = dividends.amountBeforeTax,
+              taxTakenOff = dividends.taxTakenOff,
+              specialWithholdingTax = dividends.specialWithholdingTax,
+              foreignTaxCreditRelief = dividends.foreignTaxCreditRelief,
+               taxableAmount = Some(dividends.taxableAmount)
+            )
               )
           }
-          Option.when(result.nonEmpty)(result)
-        case _ => None
+          Option.when(result._1.nonEmpty && result._2.nonEmpty)(result)
+          case(_, Some(fromDownstreamMap)) =>
+            val result: Map[String, ForeignDividendsAnswers] = fromDownstreamMap.map {
+              case (countryCode, dividends) =>
+                countryCode -> ForeignDividendsAnswers(
+                  amountBeforeTax = dividends.amountBeforeTax,
+                  taxTakenOff = dividends.taxTakenOff,
+                  specialWithholdingTax = dividends.specialWithholdingTax,
+                  foreignTaxCreditRelief = dividends.foreignTaxCreditRelief,
+                  taxableAmount = Some(dividends.taxableAmount)
+                )
+            }
+            Option.when(result.nonEmpty)(result)
+        case _ => (None, None)
       }
   }
   
