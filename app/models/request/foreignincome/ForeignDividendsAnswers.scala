@@ -23,7 +23,8 @@ case class ForeignDividendsAnswers(
                                     taxTakenOff: Option[BigDecimal],
                                     specialWithholdingTax: Option[BigDecimal],
                                     foreignTaxCreditRelief: Option[Boolean],
-                                    taxableAmount: Option[BigDecimal]
+                                    taxableAmount: Option[BigDecimal],
+                                    foreignTaxDeductedFromDividendIncome: Option[Boolean]
 )
 
 object ForeignDividendsAnswers {
