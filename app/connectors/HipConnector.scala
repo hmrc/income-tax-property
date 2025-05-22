@@ -26,10 +26,10 @@ import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
 import models.responses.BroughtForwardLossId
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
-import utils.Logging
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,8 +37,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class HipConnector @Inject() (
   http: HttpClientV2,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext)
-    extends Logging {
+)(implicit ec: ExecutionContext) {
+  lazy val logger: Logger = LoggerFactory.getLogger("hip-connector")
 
   // HIP API#1500
   def createPropertyBroughtForwardLoss(

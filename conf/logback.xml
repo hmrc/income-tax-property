@@ -35,6 +35,11 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
+    <logger name="hip-connector" level="TRACE">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+
     <logger name="services.PropertyService" level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </logger>
