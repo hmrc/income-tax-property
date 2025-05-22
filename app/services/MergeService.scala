@@ -188,7 +188,7 @@ class MergeService @Inject() (implicit
 
     val foreignIncomeDividendsMaybe = mergeForeignIncomeDividends(
       resultFromForeignIncomeDownstreamMaybe,
-      foreignIncomeResultFromRepository.get(JourneyName.ForeignIncomeDividends.entryName))
+      resultFromRepository.get(JourneyName.ForeignIncomeDividends.entryName))
 
     val foreignIncomeJourneyStatuses = mergeForeignStatuses(foreignIncomeResultFromRepository)
 
@@ -658,15 +658,13 @@ class MergeService @Inject() (implicit
 
   def mergeForeignIncomeDividends(
                                    resultFromDownstream: Option[ForeignIncomeSubmission],
-                                   foreignIncomeResultFromRepository: Option[Map[String, JourneyAnswers]]
+                                   foreignIncomeResultFromRepository: Option[JourneyAnswers]
                                  ): Option[Map[String, ForeignDividendsAnswers]] = {
-    val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] = {
+    val foreignIncomeDividendsStoreAnswers: Option[Map[String, Boolean]] =
       foreignIncomeResultFromRepository.map { journeyAnswers =>
-        journeyAnswers.map { case (countryCode, storeAnswers) =>
-          countryCode -> storeAnswers.data.as[ForeignIncomeDividendsStoreAnswers]
-        }
+        val foreignIncomeDividendsStoreAnswers = journeyAnswers.data.as[ForeignIncomeDividendsStoreAnswers]
+        foreignIncomeDividendsStoreAnswers.foreignIncomeDividendsAnswers.map(fida => fida.countryCode -> fida.foreignTaxDeductedFromDividendIncome).toMap
       }
-    }
 
     val foreignIncomeDividends: Option[Map[String, ForeignDividend]] = for {
       fd <- resultFromDownstream.flatMap(_.foreignDividend)
