@@ -19,7 +19,7 @@ package utils.mocks
 import connectors.IntegrationFrameworkConnector
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.foreign._
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
@@ -330,6 +330,27 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .expects(taxYearBroughtForwardFrom, nino, incomeSourceId, *)
       .returning(Future.successful(result))
 
+  def mockCreatePropertyBroughtForwardLoss(
+                                            taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+                                            nino: Nino,
+                                            incomeSourceId: IncomeSourceId,
+                                            lossAmount: BigDecimal,
+                                            result: Either[ApiError, BroughtForwardLossId]
+                                          ): CallHandler5[WhenYouReportedTheLoss, Nino, IncomeSourceId, BigDecimal, HeaderCarrier, Future[Either[ApiError, BroughtForwardLossId]
+  ]] = (
+    mockIntegrationFrameworkConnector
+      .createBroughtForwardLoss(
+        _: WhenYouReportedTheLoss,
+        _: Nino,
+        _: IncomeSourceId,
+        _: BigDecimal
+      )(
+        _: HeaderCarrier
+      ))
+    .expects(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount, *)
+    .returning(Future.successful(result))
+
+
   def mockUpdateBroughtForwardLoss(
                                    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
                                    nino: Nino,
@@ -396,4 +417,6 @@ trait MockIntegrationFrameworkConnector extends MockFactory {
       .expects(taxYear, nino, *)
       .returning(Future.successful(result))
   }
+
+
 }

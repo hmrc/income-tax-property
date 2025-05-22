@@ -31,12 +31,17 @@ trait AppConfig {
   def propertyFrontendUrl: String
   def authorisationTokenKey: String
   def authorisationTokenFor(apiVersion: String): String
+  def hipAuthTokenKey: String
+  def hipAuthTokenFor(apiVersion: String): String
+  def hipBaseUrl: String
+  def hipEnvironment: String
   def baseUrl(serviceName: String): String
   protected def rootServices: String
   protected def defaultProtocol: String
   def getConfString(confKey: String, defString: => String): String
   def getConfInt(confKey: String, defInt: => Int): Int
   def throwConfigNotFoundError(key: String): RuntimeException
+  def hipMigration1500Enabled: Boolean
 }
 
 @Singleton
@@ -54,6 +59,17 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
   override def authorisationTokenFor(apiVersion: String): String =
     config.get[String](authorisationTokenKey + s".$apiVersion")
+
+
+  override lazy val hipBaseUrl: String = baseUrl(serviceName = "hip-integration-framework")
+
+  override def hipEnvironment: String = config.get[String]("microservice.services.hip-integration-framework.environment")
+
+  override lazy val hipAuthTokenKey: String = "microservice.services.hip-integration-framework.authorisation-token"
+
+  override def hipAuthTokenFor(apiVersion: String): String =
+    config.get[String](hipAuthTokenKey + s".$apiVersion")
+
 
   override def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
@@ -81,5 +97,7 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
 
   override def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
+
+  override lazy val hipMigration1500Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1500-enabled")
 
 }
