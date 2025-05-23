@@ -136,7 +136,8 @@ class IncomeControllerSpec
               taxTakenOff = Some(BigDecimal(12.34)),
               specialWithholdingTax = Some(BigDecimal(12.34)),
               foreignTaxCreditRelief = Some(true),
-              taxableAmount = Some(BigDecimal(12.34))
+              taxableAmount = Some(BigDecimal(12.34)),
+              foreignTaxDeductedFromDividendIncome = Some(true)
             )
           )),
         foreignJourneyStatuses = None)

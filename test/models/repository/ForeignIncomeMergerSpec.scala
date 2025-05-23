@@ -19,7 +19,7 @@ package models.repository
 import models.repository.ForeignIncomeMerger.ForeignDividendsAnswersMerger
 import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import models.repository.Merger._
-import models.request.foreignincome.{GrossAmountWithReference, ForeignDividend, ForeignIncomeSubmission, ForeignDividendsAnswers}
+import models.request.foreignincome.{GrossAmountWithReference, ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
 import utils.UnitTest
 
 class ForeignIncomeMergerSpec extends UnitTest {
@@ -30,6 +30,7 @@ class ForeignIncomeMergerSpec extends UnitTest {
   val specialWithholdingTax = BigDecimal(90.12)
   val foreignTaxCreditRelief = true
   val taxableAmount = BigDecimal(34.56)
+  val foreignTaxDeductedFromDividendIncome = true
   val customerReference = "REFERENCE"
   val grossAmount = BigDecimal(78.90)
   val aForeignIncomeSubmission: ForeignIncomeSubmission = ForeignIncomeSubmission(
@@ -92,8 +93,11 @@ class ForeignIncomeMergerSpec extends UnitTest {
 
       "store answers are available in the repo" in {
         val foreignIncomeDividendsAnswers = ForeignIncomeDividendsAnswers(countryCode, foreignTaxDeductedFromDividendIncome = true)
-        val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] =
-          Some(Map(countryCode -> ForeignIncomeDividendsStoreAnswers(Seq(foreignIncomeDividendsAnswers))))
+        val foreignIncomeDividendsStoreAnswers: Option[Map[String, Boolean]] = {
+          val test =
+          ForeignIncomeDividendsStoreAnswers(Seq(foreignIncomeDividendsAnswers))
+          Some(test.foreignIncomeDividendsAnswers.map(fida => fida.countryCode -> fida.foreignTaxDeductedFromDividendIncome).toMap)
+        }
 
         foreignIncomeDividendsStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignDividendsAnswers(
@@ -101,20 +105,22 @@ class ForeignIncomeMergerSpec extends UnitTest {
             taxTakenOff = Some(taxTakenOff),
             specialWithholdingTax = Some(specialWithholdingTax),
             foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
-            taxableAmount = Some(taxableAmount)
+            taxableAmount = Some(taxableAmount),
+            foreignTaxDeductedFromDividendIncome = Some(foreignTaxDeductedFromDividendIncome)
           ))
         )
       }
 
       "store answers are not available in the repo" in {
-        val foreignIncomeDividendsStoreAnswers: Option[Map[String, ForeignIncomeDividendsStoreAnswers]] = None
+        val foreignIncomeDividendsStoreAnswers: Option[Map[String, Boolean]] = None
         foreignIncomeDividendsStoreAnswers.merge(fromDownstreamMaybe) shouldBe Some(
           Map(countryCode -> ForeignDividendsAnswers(
             amountBeforeTax = Some(amountBeforeTax),
             taxTakenOff = Some(taxTakenOff),
             specialWithholdingTax = Some(specialWithholdingTax),
             foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
-            taxableAmount = Some(taxableAmount)
+            taxableAmount = Some(taxableAmount),
+            foreignTaxDeductedFromDividendIncome = None
           ))
         )
       }
