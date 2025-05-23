@@ -19,10 +19,13 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
+import models.IncomeSourceType.UKPropertyOther
 import models.LossType.UKProperty
+import models.common.TaxYear.asTyBefore24
 import models.common._
 import models.domain._
 import models.errors._
+import models.request.WhenYouReportedTheLoss.toTaxYear
 import models.request._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba.EsbaInfoExtensions.EsbaExtensions
@@ -32,33 +35,36 @@ import models.request.sba.SbaInfoExtensions.SbaExtensions
 import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout, LossType}
+import models.{LossType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, BAD_REQUEST}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockMergeService, MockMongoJourneyAnswersRepository, MockIntegrationFrameworkConnector}
+import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
+import utils.providers.AppConfigStubProvider
 
-import java.time.{LocalDateTime, Clock, LocalDate}
+import java.time.{Clock, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import utils.FeatureSwitchConfig
 
 class PropertyServiceSpec
     extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
-    with HttpClientSupport with ScalaCheckPropertyChecks {
+    with MockHipConnector with HttpClientSupport with ScalaCheckPropertyChecks with AppConfigStubProvider {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-
-  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService)
+  private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
+  private val hipApisEnabledFSConfig = FeatureSwitchConfig(hipApi1502 = true)
+  private val appConfigWithHipApisEnabled: AppConfig = new AppConfigStub().config(featureSwitchConfig = Some(hipApisEnabledFSConfig))
+  private val underTestWithHipApisEnabled = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigWithHipApisEnabled, mockHipConnector)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"
@@ -2457,4 +2463,57 @@ class PropertyServiceSpec
     }
   }
 
+  "get brought forward loss" when {
+    val lossAmount = 100.00
+    val lossId = "some-loss-id"
+    val hipPropertyBFLResponse = HipPropertyBFLResponse(
+      incomeSourceId.toString,
+      incomeSourceType = UKPropertyOther,
+      broughtForwardLossAmount = lossAmount,
+      taxYearBroughtForwardFrom = toTaxYear(whenYouReportedTheLoss).endYear,
+      lossId = lossId,
+      submissionDate = LocalDate.now
+    )
+    val getPropertyBFLResult = BroughtForwardLossResponse(
+      businessId = incomeSourceId.toString,
+      typeOfLoss = UKProperty,
+      lossAmount = lossAmount,
+      taxYearBroughtForwardFrom = asTyBefore24(toTaxYear(whenYouReportedTheLoss)),
+      lastModified = LocalDate.now.toString
+    )
+    "feature switch for hip api 1502 is disabled" should {
+      "use the IF API#1502 and return the retrieved BFL for valid request" in {
+        mockGetPropertyBroughtForwardLoss(nino, lossId, getPropertyBFLResult.asRight[ApiError])
+        val result = await(underTest.getBroughtForwardLoss(nino, lossId).value)
+        result shouldBe getPropertyBFLResult.asRight[ApiError]
+      }
+      "return ApiError for invalid request" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val apiErrorCodes = Seq(NOT_FOUND, BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+        apiErrorCodes.foreach { apiErrorCode =>
+          val getPropertyBFLErrorResult = Left(ApiError(apiErrorCode, apiError))
+          mockGetPropertyBroughtForwardLoss(nino, lossId, getPropertyBFLErrorResult)
+          val result = await(underTest.getBroughtForwardLoss(nino, lossId).value)
+          result shouldBe Left(ApiServiceError(apiErrorCode))
+        }
+      }
+    }
+    "feature switch for hip api 1502 is enabled" should {
+      "use the HIP API#1502 and return the retrieved BFL for valid request" in {
+        mockHipGetPropertyBroughtForwardLossSubmission(nino, lossId, hipPropertyBFLResponse.asRight[ApiError])
+        val result = await(underTestWithHipApisEnabled.getBroughtForwardLoss(nino, lossId).value)
+        result shouldBe getPropertyBFLResult.asRight[ApiError]
+      }
+      "return ApiError for invalid request" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val apiErrorCodes = Seq(NOT_FOUND, BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+        apiErrorCodes.foreach { apiErrorCode =>
+          val getPropertyBFLErrorResult = Left(ApiError(apiErrorCode, apiError))
+          mockHipGetPropertyBroughtForwardLossSubmission(nino, lossId, getPropertyBFLErrorResult)
+          val result = await(underTestWithHipApisEnabled.getBroughtForwardLoss(nino, lossId).value)
+          result shouldBe Left(ApiServiceError(apiErrorCode))
+        }
+      }
+    }
+  }
 }
