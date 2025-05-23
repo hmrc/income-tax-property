@@ -30,7 +30,7 @@ trait MockHipConnector extends MockFactory {
 
   protected val mockHipConnector: HipConnector = mock[HipConnector]
 
-  def mockGetPropertyBroughtForwardLoss(
+  def mockHipGetPropertyBroughtForwardLossSubmission(
     nino: Nino,
     lossId: String,
     result: Either[ApiError, HipPropertyBFLResponse]

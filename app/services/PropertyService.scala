@@ -23,6 +23,7 @@ import connectors.{HipConnector, IntegrationFrameworkConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
+import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common._
 import models.domain.{FetchedPropertyData, JourneyAnswers}
 import models.errors._
@@ -43,9 +44,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject() (
   mergeService: MergeService,
   integrationFrameworkConnector: IntegrationFrameworkConnector,
-  hipConnector: HipConnector,
   mongoService: MongoJourneyAnswersService,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  hipConnector: HipConnector
 )(implicit ec: ExecutionContext)
     extends Logging {
 
@@ -340,7 +341,7 @@ class PropertyService @Inject() (
       }
   }
 
-  private def getBroughtForwardLoss(
+  def getBroughtForwardLoss(
     nino: Nino,
     lossId: String
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
@@ -350,7 +351,7 @@ class PropertyService @Inject() (
           businessId = hipPropertyBFLResponse.incomeSourceId,
           typeOfLoss = UKProperty,
           lossAmount = hipPropertyBFLResponse.broughtForwardLossAmount,
-          taxYearBroughtForwardFrom = hipPropertyBFLResponse.taxYearBroughtForwardFrom.toString,
+          taxYearBroughtForwardFrom = asTyBefore24(TaxYear(hipPropertyBFLResponse.taxYearBroughtForwardFrom)),
           lastModified = hipPropertyBFLResponse.submissionDate.toString
         )).leftMap { error =>
           logger.error(s"[getBroughtForwardLoss]: Error retrieving loss brought forward from Hybrid Integration Platform")
