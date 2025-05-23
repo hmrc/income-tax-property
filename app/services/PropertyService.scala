@@ -152,7 +152,7 @@ class PropertyService @Inject() (
 
   def fetchAllJourneyDataFromRepository(
     ctx: JourneyContext
-  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, Map[String, JourneyAnswers]])] =
+  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, JourneyAnswers])] =
     if (ctx.journey == JourneyName.NoJourney) {
       logger.error(
         s"[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}"
@@ -297,9 +297,34 @@ class PropertyService @Inject() (
     }
   }
 
+  private def getForeignIncomeJourneysPerJourneyName(
+                                                journeyAnswers: List[JourneyAnswers]
+                                              ): Either[ServiceError, Map[String, JourneyAnswers]] = {
+    val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
+    journeyAnswersGrouped.foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (acc, kv) =>
+      acc match {
+                case Right(ja) =>
+                  val (k, v) = kv
+                  val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.nonEmpty) {
+                    logger.debug(s"[getValidForeignIncomeJourneysPerJourneyName] Got the journey answers from the repository. JA: $ja")
+                    ja.asRight[ServiceError]
+                  } else {
+                    logger.error(s"[getValidForeignIncomeJourneysPerJourneyName] Could not find Foreign Income Journey Answers from the repository")
+                    RepositoryError.asLeft[Map[String, JourneyAnswers]]
+                  }
+                  r
+                case left =>
+                  logger.error(
+                    s"[getValidForeignIncomeJourneysPerJourneyName] Error in getting Foreign Income Journey Answers from the repository. Error $left"
+                  )
+                  left
+      }
+    }
+  }
+
   private def getValidJourneysPerJourneyName(
     journeyAnswers: List[JourneyAnswers]
-  ): Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, Map[String, JourneyAnswers]])] =
+  ): Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, JourneyAnswers])] =
     for {
       ukJourneyMap <- {
         logger.debug("[getValidJourneysPerJourneyName] Getting UK Property journey map")
@@ -311,7 +336,7 @@ class PropertyService @Inject() (
       }
       foreignIncomeJourneyMap <- {
         logger.debug("[getValidJourneysPerJourneyName] Getting Foreign Income journey map")
-        getForeignJourneysPerJourneyName(journeyAnswers)
+        getForeignIncomeJourneysPerJourneyName(journeyAnswers)
       }
     } yield (ukJourneyMap, foreignJourneyMap, foreignIncomeJourneyMap)
 

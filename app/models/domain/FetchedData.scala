@@ -40,7 +40,7 @@ object FetchedPropertyData {
 
 final case class FetchedForeignIncomeData(
   foreignIncomeDividends: Option[Map[String, ForeignDividendsAnswers]],
-  foreignJourneyStatuses: Option[Map[String, List[JourneyWithStatus]]]
+  foreignIncomeJourneyStatuses: List[JourneyWithStatus]
 )
 
 object FetchedForeignIncomeData {

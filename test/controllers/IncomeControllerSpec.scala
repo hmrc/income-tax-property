@@ -140,7 +140,7 @@ class IncomeControllerSpec
               foreignTaxDeductedFromDividendIncome = Some(true)
             )
           )),
-        foreignJourneyStatuses = None)
+        foreignIncomeJourneyStatuses = List())
       val resultFromService = FetchedData(
         propertyData = FetchedPropertyData(
           ukPropertyData = uKPropertyData,

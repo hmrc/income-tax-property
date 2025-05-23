@@ -1753,7 +1753,7 @@ class PropertyServiceSpec
         )
         val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None, None, None)
         val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)
-        val foreignIncomeData = FetchedForeignIncomeData(None, None)
+        val foreignIncomeData = FetchedForeignIncomeData(None, List())
         FetchedData(
           propertyData = FetchedPropertyData(
             ukPropertyData = ukPropertyData,
