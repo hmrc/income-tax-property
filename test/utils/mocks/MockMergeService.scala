@@ -32,7 +32,7 @@ trait MockMergeService extends MockFactory {
         _: Map[String, JourneyAnswers],
         _: Map[String, Map[String, JourneyAnswers]],
         _: Option[ForeignIncomeSubmission],
-        _: Map[String, Map[String, JourneyAnswers]]
+        _: Map[String, JourneyAnswers]
       ))
       .expects(*, *, *, *, *, *)
       .returning(

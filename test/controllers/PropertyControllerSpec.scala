@@ -131,7 +131,7 @@ class PropertyControllerSpec
       val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
         None
       )
-      val foreignIncomeData = FetchedForeignIncomeData(None, None)
+      val foreignIncomeData = FetchedForeignIncomeData(None, List())
       val resultFromService = FetchedData(
         propertyData = FetchedPropertyData(
           ukPropertyData = uKPropertyData,

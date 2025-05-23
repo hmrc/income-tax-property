@@ -45,7 +45,7 @@ class MergeService @Inject() (implicit
                 resultFromRepository: Map[String, JourneyAnswers],
                 foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]],
                 resultFromForeignIncomeDownstreamMaybe: Option[ForeignIncomeSubmission],
-                foreignIncomeResultFromRepository: Map[String, Map[String, JourneyAnswers]]
+                foreignIncomeResultFromRepository: Map[String, JourneyAnswers]
               ): FetchedData = {
     val esbaInfoMaybe =
       mergeEsbaInfo(resultFromAnnualDownstream.getOrElse(PropertyAnnualSubmission(None, None, None)), resultFromRepository.get(JourneyName.RentalESBA.entryName))
@@ -190,7 +190,7 @@ class MergeService @Inject() (implicit
       resultFromForeignIncomeDownstreamMaybe,
       resultFromRepository.get(JourneyName.ForeignIncomeDividends.entryName))
 
-    val foreignIncomeJourneyStatuses = mergeForeignStatuses(foreignIncomeResultFromRepository)
+    val foreignIncomeJourneyStatuses = mergeForeignIncomeStatuses(foreignIncomeResultFromRepository)
 
     val fetchedUKPropertyData = FetchedUKPropertyData(
       None,
@@ -233,7 +233,7 @@ class MergeService @Inject() (implicit
 
     val fetchedForeignIncomeData = FetchedForeignIncomeData(
       foreignIncomeDividends = foreignIncomeDividendsMaybe,
-      foreignJourneyStatuses = foreignIncomeJourneyStatuses
+      foreignIncomeJourneyStatuses = foreignIncomeJourneyStatuses
     )
 
     FetchedData(
@@ -633,6 +633,13 @@ class MergeService @Inject() (implicit
       }
     adjustmentsStoreAnswers.merge(adjustmentsPIAAndPeriodicExpenses)
   }
+
+  def mergeForeignIncomeStatuses(foreignIncomeResultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
+    JourneyName.values.toList.flatMap(journeyName =>
+      foreignIncomeResultFromRepository
+        .get(journeyName.entryName)
+        .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
+    )
 
   def mergeForeignStatuses(
                             foreignResultFromRepository: Map[String, Map[String, JourneyAnswers]]
