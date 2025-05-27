@@ -16,13 +16,15 @@
 
 package connectors
 
+import models.LossType.UKProperty
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.foreign.UpdateForeignPropertyPeriodicSubmissionRequest
+import models.request.WhenYouReportedTheLoss.y2021to2022
+import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
 import models.request.foreignincome.{ForeignDividend, ForeignIncomeSubmission}
 import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
-import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
+import models.request.{BroughtForwardLossAmount, BroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
@@ -50,6 +52,29 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           Some(UkOtherPropertyIncome(Some(200.00), Some(200.00), Some(200.00), Some(200.00), Some(200.00), None)),
           None
         )
+      )
+    )
+
+  val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
+    CreateForeignPropertyPeriodicSubmissionRequest(
+      LocalDate.now(),
+      LocalDate.now(),
+      Some(
+        Seq(
+          ForeignProperty(
+            countryCode = "ESP",
+            income = Some(ForeignPropertyIncome(
+              rentIncome = None,
+              foreignTaxCreditRelief = Some(false),
+              premiumsOfLeaseGrant = Some(11.22),
+              otherPropertyIncome = None,
+              foreignTaxPaidOrDeducted = None,
+              specialWithholdingTaxOrUkTaxPaid = None
+            )),
+            expenses = None
+          )
+        )
+
       )
     )
   val validUpdateUKPropertyPeriodicSubmissionRequest: UpdateUKPropertyPeriodicSubmissionRequest =
@@ -692,6 +717,63 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
       }
     }
+
+    "create foreign periodic submission" should {
+      val requestBody = Json.toJson(validCreateForeignPropertyPeriodicSubmissionRequest).toString()
+      "create submissions data for the APIs used before TaxYear(2024)" in {
+        val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
+        val taxYear = TaxYear(2021)
+
+        stubPostHttpClientCall(
+          s"/income-tax/business/property/periodic\\?taxableEntityId=$taxableEntityId&taxYear=2020-21&incomeSourceId=$incomeSourceId",
+          requestBody,
+          httpResponse
+        )
+
+        await(
+          underTest.createForeignPeriodicSubmission(
+            taxYear,
+            taxableEntityId,
+            incomeSourceId,
+            validCreateForeignPropertyPeriodicSubmissionRequest
+          )(hc)
+        ) shouldBe Right(Some(aPeriodicSubmissionModel))
+      }
+
+      "create submissions data for TaxYear(2024) onwards" in {
+        val httpResponse = HttpResponse(CREATED, Json.toJson(aPeriodicSubmissionModel).toString())
+        val taxYear = TaxYear(2024)
+
+        stubPostHttpClientCall(
+          s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
+          requestBody,
+          httpResponse
+        )
+
+        await(
+          underTest
+            .createForeignPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateForeignPropertyPeriodicSubmissionRequest)(hc)
+        ) shouldBe Right(Some(aPeriodicSubmissionModel))
+      }
+
+      "return Service Unavailable Error from Upstream" in {
+        val httpResponse =
+          HttpResponse(SERVICE_UNAVAILABLE, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+        val taxYear = TaxYear(2024)
+
+        stubPostHttpClientCall(
+          s"/income-tax/business/property/periodic/23-24\\?taxableEntityId=$nino&incomeSourceId=$incomeSourceId",
+          requestBody,
+          httpResponse
+        )
+
+        await(
+          underTest
+            .createForeignPeriodicSubmission(taxYear, nino, incomeSourceId, validCreateForeignPropertyPeriodicSubmissionRequest)(hc)
+        ) shouldBe
+          Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
   }
 
   "Given a need to update Periodic Submission Data" when {
@@ -863,6 +945,119 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
           )(hc)
         ) shouldBe Right(None)
       }
+    }
+  }
+
+  ".createBroughtForwardLoss" should {
+    val lossAmount = 100.00
+    val taxYearBroughtForwardFrom = y2021to2022
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val body = BroughtForwardLossRequest(
+      taxYearBroughtForwardFrom = taxYearStr,
+      typeOfLoss = UKProperty,
+      businessId = incomeSourceId.toString,
+      lossAmount = lossAmount
+    )
+    val lossIdResponse = BroughtForwardLossId("some-loss-id")
+    val httpRequestBodyJson = Json.toJson(body).toString()
+    "POST a brought forward loss using API 1500" in {
+      val httpResponse = HttpResponse(OK, Json.toJson(lossIdResponse).toString)
+      stubPostHttpClientCall(s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr",
+        httpRequestBodyJson,
+        httpResponse
+      )
+      await(underTest.createBroughtForwardLoss(
+        taxYearBroughtForwardFrom,
+        nino = nino,
+        incomeSourceId = incomeSourceId,
+        lossAmount = lossAmount
+      )(hc)) shouldBe Right(lossIdResponse)
+    }
+  }
+
+  ".getBroughtForwardLoss" should {
+    val lossAmount = 100.00
+    val lossId = "some-loss-id"
+    val taxYearBroughtForwardFrom = y2021to2022
+    val broughtForwardLossResponse = BroughtForwardLossResponse(
+      businessId = incomeSourceId.toString,
+      typeOfLoss = UKProperty,
+      lossAmount = lossAmount,
+      taxYearBroughtForwardFrom = WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom).toString,
+      lastModified = LocalDate.now.toString
+    )
+    "GET a brought forward loss using API 1502" in {
+      val httpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossResponse).toString)
+      stubGetHttpClientCall(s"/individuals/losses/$nino/brought-forward-losses/$lossId",
+        httpResponse
+      )
+      await(underTest.getBroughtForwardLoss(
+        nino,
+        lossId
+      )(hc)) shouldBe Right(broughtForwardLossResponse)
+    }
+  }
+
+  ".getBroughtForwardLosses" should {
+    val taxYearBroughtForwardFrom = y2021to2022
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val lossId = "some-loss-id"
+    val lossAmount = 100.00
+
+    val broughtForwardLossesResponse: BroughtForwardLosses = BroughtForwardLosses(
+      losses = Seq(
+        BroughtForwardLossResponseWithId(
+          lossId = lossId,
+          businessId = incomeSourceId.toString,
+          typeOfLoss = UKProperty,
+          lossAmount = lossAmount,
+          taxYearBroughtForwardFrom = WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom).toString,
+          lastModified = LocalDate.now.toString
+        )
+      )
+    )
+
+    "GET brought forward losses using API 1870" in {
+      val httpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossesResponse).toString)
+      stubGetHttpClientCall(s"/individuals/losses/$nino/brought-forward-losses/tax-year/$taxYearStr" +
+        s"\\?businessId=$incomeSourceId&typeOfLoss=$UKProperty",
+        httpResponse
+      )
+      await(underTest.getBroughtForwardLosses(
+        taxYearBroughtForwardFrom,
+        nino,
+        incomeSourceId
+      )(hc)) shouldBe Right(broughtForwardLossesResponse)
+    }
+  }
+
+  ".updateBroughtForwardLoss" should {
+    val taxYearBroughtForwardFrom = y2021to2022
+    val taxYearStr = asTyBefore24(WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom))
+    val lossId = "some-loss-id"
+    val lossAmount = 100.00
+    val broughtForwardLossAmount = BroughtForwardLossAmount(lossAmount)
+    val broughtForwardLossResponse = BroughtForwardLossResponse(
+      businessId = incomeSourceId.toString,
+      typeOfLoss = UKProperty,
+      lossAmount = lossAmount,
+      taxYearBroughtForwardFrom = WhenYouReportedTheLoss.toTaxYear(taxYearBroughtForwardFrom).toString,
+      lastModified = LocalDate.now.toString
+    )
+    val body = Json.toJson(broughtForwardLossAmount).toString()
+    "PUT a brought forward loss using API 1501" in {
+      val httpResponse = HttpResponse(OK, Json.toJson(broughtForwardLossResponse).toString)
+      stubPutHttpClientCall(s"/individuals/losses/$nino/brought-forward-losses/$lossId/tax-year/$taxYearStr/change-loss-amount",
+        body,
+        httpResponse
+      )
+      await(
+        underTest.updateBroughtForwardLoss(
+          taxYearBroughtForwardFrom,
+          nino,
+          lossId,
+          lossAmount
+        )(hc)) shouldBe Right(broughtForwardLossResponse)
     }
   }
 

@@ -86,6 +86,41 @@ class PropertyControllerSpec
     }
   }
 
+  "Update journey status for foreign property" should {
+    val countryCode = "ESP"
+    val journeyStatusJs: JsValue = Json.parse(
+      """
+        |{
+        | "status": "inProgress"
+        |}
+        |""".stripMargin)
+
+    val journeyStatusErrorJs: JsValue = Json.parse(
+      """
+        |{
+        | "foo": "completed"
+        |}
+        |""".stripMargin)
+
+    "should return no_content for valid request body where a field named status is present in the body request" in {
+
+      mockAuthorisation()
+
+      val request = fakePostRequest.withJsonBody(journeyStatusJs)
+      val result =
+        await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request when a field named status is not present in the request body" in {
+      mockAuthorisation()
+      val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
+      val result =
+        await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
+      result.header.status shouldBe BAD_REQUEST
+    }
+  }
+
   "fetch merged property data" should {
     "return success when service returns success " in {
       mockAuthorisation()

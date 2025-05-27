@@ -664,6 +664,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .put(url"$url")
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
+      .withBody(Json.toJson(body))
       .execute[PutBroughtForwardLossResponse]
       .map { response: PutBroughtForwardLossResponse =>
         if (response.result.isLeft) {
