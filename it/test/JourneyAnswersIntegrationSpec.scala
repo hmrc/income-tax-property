@@ -429,7 +429,7 @@ class JourneyAnswersIntegrationSpec
           ukAndForeignAbout = None
         )
       ),
-          incomeData = FetchedForeignIncomeData(None, None)
+          incomeData = FetchedForeignIncomeData(None, List())
         )
 
     }
