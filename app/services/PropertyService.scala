@@ -307,7 +307,7 @@ class PropertyService @Inject() (
                   val (k, v) = kv
                   val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.nonEmpty) {
                     logger.debug(s"[getValidForeignIncomeJourneysPerJourneyName] Got the journey answers from the repository. JA: $ja")
-                    ja.asRight[ServiceError]
+                    (ja + (k -> v.head)).asRight[ServiceError]
                   } else {
                     logger.error(s"[getValidForeignIncomeJourneysPerJourneyName] Could not find Foreign Income Journey Answers from the repository")
                     RepositoryError.asLeft[Map[String, JourneyAnswers]]
