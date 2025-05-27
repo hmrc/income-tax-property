@@ -411,7 +411,7 @@ class MergeService @Inject() (implicit
   }
 
   def mergeStatuses(resultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
-    JourneyName.values.toList.flatMap(journeyName =>
+    JourneyName.ukPropertyJourneyNames.toList.flatMap(journeyName =>
       resultFromRepository
         .get(journeyName.entryName)
         .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
@@ -635,7 +635,7 @@ class MergeService @Inject() (implicit
   }
 
   def mergeForeignIncomeStatuses(foreignIncomeResultFromRepository: Map[String, JourneyAnswers]): List[JourneyWithStatus] =
-    JourneyName.values.toList.flatMap(journeyName =>
+    JourneyName.foreignIncomeJourneyNames.toList.flatMap(journeyName =>
       foreignIncomeResultFromRepository
         .get(journeyName.entryName)
         .map(journeyAnswers => JourneyWithStatus(journeyName.entryName, journeyAnswers.status.entryName))
