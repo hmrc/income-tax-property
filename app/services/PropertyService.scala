@@ -415,17 +415,18 @@ class PropertyService @Inject() (
       }
   }
 
-  private def updateBroughtForwardLoss(
+  def updateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     lossId: String,
     lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] =
-    EitherT(integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
-      .leftMap { error =>
-        logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
-        ApiServiceError(error.status)
-      }
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
+    if (appConfig.hipMigration1501Enabled) {
+      hipConnector.updatePropertyBroughtForwardLoss()
+    } else {
+      connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
+    }
+  }
 
   private def createOrUpdateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
