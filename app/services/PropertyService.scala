@@ -18,6 +18,7 @@ package services
 
 import cats.data.EitherT
 import cats.syntax.either._
+import config.AppConfig
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
@@ -42,7 +43,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class PropertyService @Inject() (
   mergeService: MergeService,
   connector: IntegrationFrameworkConnector,
-  mongoService: MongoJourneyAnswersService
+  mongoService: MongoJourneyAnswersService,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends Logging {
 
@@ -350,17 +352,17 @@ class PropertyService @Inject() (
       }
   }
 
-  private def updateBroughtForwardLoss(
+  def updateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     lossId: String,
     lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
-    EitherT(connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
-      .leftMap {error =>
-        logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
-        ApiServiceError(error.status)
-      }
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
+    if (appConfig.hipMigration1501Enabled) {
+      hipConnector.updatePropertyBroughtForwardLoss()
+    } else {
+      connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
+    }
   }
 
   private def createOrUpdateBroughtForwardLoss(
