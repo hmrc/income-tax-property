@@ -133,8 +133,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     val filter: Bson = Filters
       .and(
         Filters.equal("taxYear", ctx.taxYear.endYear),
-        Filters.equal("mtditid", ctx.mtditid.value),
-        Filters.equal("incomeSourceId", ctx.incomeSourceId.value)
+        Filters.equal("mtditid", ctx.mtditid.value)
       )
     logger.debug(s"[fetchAllJourneys] Getting all journeys: ${collection.find(filter)} ")
     collection.find(filter).toFuture()
