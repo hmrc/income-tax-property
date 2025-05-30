@@ -50,6 +50,10 @@ class ForeignIncomeServiceSpec
     taxableAmount = 80.80
   )
 
+  override val mergeService = new MergeService
+  val propertyService = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService)
+
+
   val foreignDividends: Option[Seq[ForeignDividend]] = Some(Seq(foreignDividend))
 
   val foreignIncomeSubmission: ForeignIncomeSubmission = emptyForeignIncomeSubmission.copy(
@@ -57,7 +61,7 @@ class ForeignIncomeServiceSpec
   )
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new ForeignIncomeService(mockIntegrationFrameworkConnector, journeyAnswersService)
+  private val underTest = new ForeignIncomeService(mockIntegrationFrameworkConnector, journeyAnswersService, mergeService, propertyService)
   val internalServerError: ApiError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))
 
   "getForeignIncomeSubmission" should {

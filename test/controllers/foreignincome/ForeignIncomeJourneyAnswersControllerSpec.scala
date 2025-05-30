@@ -71,7 +71,7 @@ class ForeignIncomeJourneyAnswersControllerSpec
     "return a header status with NO_CONTENT for a valid request" in {
       val foreignIncomeDividends = validForeignIncomeDividends.as[ForeignIncomeDividendsWithCountryCode]
       mockAuthorisation()
-      mockSaveForeignIncomeDividendsSection(
+      mockSaveForeignIncomeDividends(
         ctx,
         nino,
         foreignIncomeDividends,
@@ -107,7 +107,7 @@ class ForeignIncomeJourneyAnswersControllerSpec
         val foreignIncomeDividends = validForeignIncomeDividends.as[ForeignIncomeDividendsWithCountryCode]
 
         mockAuthorisation()
-        mockSaveForeignIncomeDividendsSection(
+        mockSaveForeignIncomeDividends(
           ctx,
           nino,
           foreignIncomeDividends,
