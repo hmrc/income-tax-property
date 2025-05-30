@@ -26,14 +26,14 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
 import utils.{AppConfigStub, UnitTest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ForeignIncomeServiceSpec
   extends UnitTest with MockIntegrationFrameworkConnector with MockMongoJourneyAnswersRepository with MockMergeService
-    with HttpClientSupport with ScalaCheckPropertyChecks {
+    with HttpClientSupport with ScalaCheckPropertyChecks with MockHipConnector{
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
@@ -50,6 +50,10 @@ class ForeignIncomeServiceSpec
     taxableAmount = 80.80
   )
 
+  override val mergeService = new MergeService
+  val propertyService = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
+
+
   val foreignDividends: Option[Seq[ForeignDividend]] = Some(Seq(foreignDividend))
 
   val foreignIncomeSubmission: ForeignIncomeSubmission = emptyForeignIncomeSubmission.copy(
@@ -57,7 +61,7 @@ class ForeignIncomeServiceSpec
   )
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
-  private val underTest = new ForeignIncomeService(mockIntegrationFrameworkConnector, journeyAnswersService)
+  private val underTest = new ForeignIncomeService(mockIntegrationFrameworkConnector, journeyAnswersService, mergeService, propertyService)
   val internalServerError: ApiError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("code", "error"))
 
   "getForeignIncomeSubmission" should {

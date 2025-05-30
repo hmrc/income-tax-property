@@ -33,6 +33,7 @@ import models.request.sba.{Sba, SbaInfo}
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 import models.{IncomeSourceType, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
+import models.{PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -765,9 +766,9 @@ class PropertyServiceSpec
   }
 
   def createAnnualSubmission(
-                              sbasMaybe: Option[List[StructuredBuildingAllowance]],
-                              esbasMaybe: Option[List[Esba]]
-                            ): PropertyAnnualSubmission =
+    sbasMaybe: Option[List[StructuredBuildingAllowance]],
+    esbasMaybe: Option[List[Esba]]
+  ): PropertyAnnualSubmission =
     PropertyAnnualSubmission(
       None,
       None,
@@ -1756,10 +1757,14 @@ class PropertyServiceSpec
         )
         val foreignPropertyData = FetchedForeignPropertyData(None, None, None, None, None, None, None)
         val fetchedUkAndForeignPropertyData = FetchedUkAndForeignPropertyData(None)
-        FetchedPropertyData(
-          ukPropertyData = ukPropertyData,
-          foreignPropertyData = foreignPropertyData,
-          ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+        val foreignIncomeData = FetchedForeignIncomeData(None, List())
+        FetchedData(
+          propertyData = FetchedPropertyData(
+            ukPropertyData = ukPropertyData,
+            foreignPropertyData = foreignPropertyData,
+            ukAndForeignPropertyData = fetchedUkAndForeignPropertyData
+          ),
+          incomeData = foreignIncomeData
         )
       }
 
@@ -1795,7 +1800,7 @@ class PropertyServiceSpec
             "1",
             Some(propertyPeriodicSubmission).asRight[ApiError]
           )
-          val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+          val result: EitherT[Future, ServiceError, FetchedData] = for {
             _ <- if (isJourneyPresentInDb) {
               EitherT(
                 repository
@@ -1830,9 +1835,9 @@ class PropertyServiceSpec
       }
 
       def testOnlyRemove(
-                          mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-                          ctx: JourneyContext
-                        ): Future[Unit] = {
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext
+      ): Future[Unit] = {
         val filter: Bson = Filters
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
@@ -1845,9 +1850,9 @@ class PropertyServiceSpec
 
     "return Repo Error for wrong Journey Type" in {
       def testOnlyRemove(
-                          mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
-                          ctx: JourneyContext
-                        ): Future[Unit] = {
+        mongoJourneyAnswersRepository: MongoJourneyAnswersRepository,
+        ctx: JourneyContext
+      ): Future[Unit] = {
         val filter: Bson = Filters
           .and(
             Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
@@ -1883,7 +1888,7 @@ class PropertyServiceSpec
         "1",
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
           testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys))
             .map(_.asRight[ServiceError])
@@ -1934,7 +1939,7 @@ class PropertyServiceSpec
         "1",
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
           repository
             .upsertAnswers(
@@ -2019,7 +2024,7 @@ class PropertyServiceSpec
         Some(propertyPeriodicSubmission).asRight[ApiError]
       )
 
-      val result: EitherT[Future, ServiceError, FetchedPropertyData] = for {
+      val result: EitherT[Future, ServiceError, FetchedData] = for {
         _ <- EitherT(
           testOnlyRemove(repository, ctx.toJourneyContext(JourneyName.AllJourneys)).map(_.asRight[ServiceError])
         )

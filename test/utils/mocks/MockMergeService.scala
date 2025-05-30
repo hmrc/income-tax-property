@@ -16,7 +16,8 @@
 
 package utils.mocks
 
-import models.domain.{FetchedPropertyData, JourneyAnswers}
+import models.domain.{JourneyAnswers, FetchedData}
+import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import services.MergeService
@@ -24,14 +25,16 @@ import services.MergeService
 trait MockMergeService extends MockFactory {
   protected val mergeService: MergeService = mock[MergeService]
 
-  def mockMergeServiceMergeAll(returnValue: FetchedPropertyData) =
+  def mockMergeServiceMergeAll(returnValue: FetchedData) =
     (mergeService
-      .mergeAll(_: PropertyAnnualSubmission,
+      .mergeAll(_: Option[PropertyAnnualSubmission],
         _: Option[PropertyPeriodicSubmission],
         _: Map[String, JourneyAnswers],
-        _: Map[String, Map[String, JourneyAnswers]]
+        _: Map[String, Map[String, JourneyAnswers]],
+        _: Option[ForeignIncomeSubmission],
+        _: Map[String, JourneyAnswers]
       ))
-      .expects(*, *, *, *)
+      .expects(*, *, *, *, *, *)
       .returning(
         returnValue
       )

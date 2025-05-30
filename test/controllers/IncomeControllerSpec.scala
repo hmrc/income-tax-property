@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,27 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{FetchedUKPropertyData, FetchedPropertyData, FetchedForeignIncomeData, FetchedForeignPropertyData, FetchedData, FetchedUkAndForeignPropertyData}
+import models.domain._
 import models.errors.{ServiceError, RepositoryError}
-import models.request.esba.EsbaInfo
-import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
+import models.request.foreignincome.ForeignDividendsAnswers
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{Json, JsValue}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
+import utils.mocks.{MockForeignIncomeService, MockPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class PropertyControllerSpec
-  extends ControllerUnitTest with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction
+class IncomeControllerSpec
+  extends ControllerUnitTest with MockForeignIncomeService with MockPropertyService with MockMongoJourneyAnswersRepository with MockAuthorisedAction
     with FakeRequestProvider with ScalaCheckPropertyChecks {
 
-  private val underTest = new PropertyController(
-    mockPropertyService,
+  private val underTest = new IncomeController(
+    mockForeignIncomeService,
     journeyStatusService,
     mockAuthorisedAction,
     cc
@@ -50,8 +49,11 @@ class PropertyControllerSpec
   val incomeSubmissionId: SubmissionId = SubmissionId("submissionId")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
+  val countryCode = "USA"
+  val journeyName = "foreign-income-dividends"
+  val ctx: JourneyContext = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.AllJourneys)
 
-  "Update journey status for rent-a-room" should {
+    "Update journey status for dividends" should {
 
     val journeyStatusJs: JsValue = Json.parse(
       """
@@ -73,7 +75,7 @@ class PropertyControllerSpec
 
       val request = fakePostRequest.withJsonBody(journeyStatusJs)
       val result =
-        await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
+        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName)(request))
       result.header.status shouldBe NO_CONTENT
     }
 
@@ -81,47 +83,12 @@ class PropertyControllerSpec
       mockAuthorisation()
       val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
       val result =
-        await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
+        await(underTest.setForeignIncomeStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), journeyName)(request))
       result.header.status shouldBe BAD_REQUEST
     }
   }
 
-  "Update journey status for foreign property" should {
-    val countryCode = "ESP"
-    val journeyStatusJs: JsValue = Json.parse(
-      """
-        |{
-        | "status": "inProgress"
-        |}
-        |""".stripMargin)
-
-    val journeyStatusErrorJs: JsValue = Json.parse(
-      """
-        |{
-        | "foo": "completed"
-        |}
-        |""".stripMargin)
-
-    "should return no_content for valid request body where a field named status is present in the body request" in {
-
-      mockAuthorisation()
-
-      val request = fakePostRequest.withJsonBody(journeyStatusJs)
-      val result =
-        await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
-      result.header.status shouldBe NO_CONTENT
-    }
-
-    "should return bad request when a field named status is not present in the request body" in {
-      mockAuthorisation()
-      val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
-      val result =
-        await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
-      result.header.status shouldBe BAD_REQUEST
-    }
-  }
-
-  "fetch merged property data" should {
+  "fetch merged income data" should {
     "return success when service returns success " in {
       mockAuthorisation()
       val uKPropertyData = FetchedUKPropertyData(
@@ -133,13 +100,7 @@ class PropertyControllerSpec
         None,
         None,
         None,
-        Some(
-          EsbaInfo(
-            claimEnhancedStructureBuildingAllowance = true,
-            enhancedStructureBuildingAllowanceClaims = Some(true),
-            List()
-          )
-        ),
+        None,
         None,
         None,
         None,
@@ -152,7 +113,7 @@ class PropertyControllerSpec
         None,
         None,
         List(),
-        Some(ForeignPropertySelectCountry(TotalIncome.Under, Some(false), None, None, None))
+        None
       )
       val foreignPropertyData = FetchedForeignPropertyData(
         None,
@@ -166,7 +127,20 @@ class PropertyControllerSpec
       val ukAndForeignPropertyData = FetchedUkAndForeignPropertyData(
         None
       )
-      val foreignIncomeData = FetchedForeignIncomeData(None, List())
+      val foreignIncomeData = FetchedForeignIncomeData(
+        foreignIncomeDividends = Some(
+          Map(
+            countryCode ->
+            ForeignDividendsAnswers(
+              amountBeforeTax = Some(BigDecimal(12.34)),
+              taxTakenOff = Some(BigDecimal(12.34)),
+              specialWithholdingTax = Some(BigDecimal(12.34)),
+              foreignTaxCreditRelief = Some(true),
+              taxableAmount = Some(BigDecimal(12.34)),
+              foreignTaxDeductedFromDividendIncome = Some(true)
+            )
+          )),
+        foreignIncomeJourneyStatuses = List())
       val resultFromService = FetchedData(
         propertyData = FetchedPropertyData(
           ukPropertyData = uKPropertyData,
@@ -175,8 +149,8 @@ class PropertyControllerSpec
         ),
         incomeData = foreignIncomeData
       )
-      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, resultFromService.asRight[ServiceError])
-      val result = underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest)
+      mockGetFetchedIncomeDataMerged(ctx, nino, resultFromService.asRight[ServiceError])
+      val result = underTest.fetchIncomeData(taxYear, nino, incomeSourceId)(fakeGetRequest)
 
       status(result) shouldBe 200
 
@@ -185,8 +159,8 @@ class PropertyControllerSpec
     }
     "return failure when service returns failure " in {
       mockAuthorisation()
-      mockGetFetchedPropertyDataMerged(taxYear, incomeSourceId, mtditid, RepositoryError.asLeft[FetchedData])
-      val result = await(underTest.fetchPropertyData(taxYear, nino, incomeSourceId)(fakeGetRequest))
+      mockGetFetchedIncomeDataMerged(ctx, nino, RepositoryError.asLeft[FetchedData])
+      val result = await(underTest.fetchIncomeData(taxYear, nino, incomeSourceId)(fakeGetRequest))
       result.header.status shouldBe 500
     }
   }

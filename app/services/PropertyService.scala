@@ -24,7 +24,7 @@ import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
 import models.common._
-import models.domain.{FetchedPropertyData, JourneyAnswers}
+import models.domain.{JourneyAnswers, FetchedData}
 import models.errors._
 import models.repository.Extractor.GeneralExtractor
 import models.request._
@@ -153,9 +153,9 @@ class PropertyService @Inject() (
         }
       }
 
-  private def fetchAllJourneyDataFromRepository(
+  def fetchAllJourneyDataFromRepository(
     ctx: JourneyContext
-  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] =
+  ): ITPEnvelope[(Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, JourneyAnswers])] =
     if (ctx.journey == JourneyName.NoJourney) {
       logger.error(
         s"[fetchAllJourneyDataFromRepository] Journey Repo could not be accessed, journey name: ${ctx.journey.entryName}"
@@ -170,11 +170,11 @@ class PropertyService @Inject() (
       ITPEnvelope.liftFuture {
         mongoService.fetchAllJourneys(ctx).map { journeys =>
           getValidJourneysPerJourneyName(journeys.toList) match {
-            case Right((ukJourneyMap, foreignJourneyMap)) =>
+            case Right((ukJourneyMap, foreignJourneyMap, foreignIncomeJourneyMap)) =>
               logger.debug(
-                s"[fetchAllJourneyDataFromRepository] Successfully retrieved journeys. UK: $ukJourneyMap, Foreign: $foreignJourneyMap"
+                s"[fetchAllJourneyDataFromRepository] Successfully retrieved journeys. UK: $ukJourneyMap, Foreign Property: $foreignJourneyMap, Foreign Income: $foreignIncomeJourneyMap"
               )
-              Right((ukJourneyMap, foreignJourneyMap))
+              Right((ukJourneyMap, foreignJourneyMap, foreignIncomeJourneyMap))
 
             case Left(error) =>
               logger.error(s"[fetchAllJourneyDataFromRepository] Error fetching valid journeys: ${error.message}")
@@ -190,7 +190,7 @@ class PropertyService @Inject() (
     incomeSourceId: IncomeSourceId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ServiceError, FetchedPropertyData] = {
+  ): EitherT[Future, ServiceError, FetchedData] = {
 
     val resultAnnual = getPropertyAnnualSubmission(ctx.taxYear, nino, incomeSourceId)
 
@@ -200,13 +200,15 @@ class PropertyService @Inject() (
       resultFromDownstreamAnnual        <- resultAnnual
       resultFromDownstreamPeriodicMaybe <- resultPeriodic
       resultFromRepository              <- fetchAllJourneyDataFromRepository(ctx) // ToDo, make a proper repo error?
-      (ukResultFromRepository, foreignResultFromRepository) = resultFromRepository
+      (ukResultFromRepository, foreignResultFromRepository, foreignIncomeResultFromRepository) = resultFromRepository
     } yield {
       val mergedData = mergeService.mergeAll(
-        resultFromDownstreamAnnual,
+        Some(resultFromDownstreamAnnual),
         resultFromDownstreamPeriodicMaybe,
         ukResultFromRepository,
-        foreignResultFromRepository
+        foreignResultFromRepository,
+        None,
+        foreignIncomeResultFromRepository
       )
       logger.debug(s"[getFetchedPropertyDataMerged] Annual, Periodic and Repository merged data is: $mergedData")
       mergedData
@@ -298,9 +300,34 @@ class PropertyService @Inject() (
     }
   }
 
+  private def getForeignIncomeJourneysPerJourneyName(
+                                                journeyAnswers: List[JourneyAnswers]
+                                              ): Either[ServiceError, Map[String, JourneyAnswers]] = {
+    val journeyAnswersGrouped = journeyAnswers.groupBy(j => j.journey.entryName)
+    journeyAnswersGrouped.foldLeft(Map[String, JourneyAnswers]().asRight[ServiceError]) { (acc, kv) =>
+      acc match {
+                case Right(ja) =>
+                  val (k, v) = kv
+                  val r: Either[ServiceError, Map[String, JourneyAnswers]] = if (v.nonEmpty) {
+                    logger.debug(s"[getValidForeignIncomeJourneysPerJourneyName] Got the journey answers from the repository. JA: $ja")
+                    (ja + (k -> v.head)).asRight[ServiceError]
+                  } else {
+                    logger.error(s"[getValidForeignIncomeJourneysPerJourneyName] Could not find Foreign Income Journey Answers from the repository")
+                    RepositoryError.asLeft[Map[String, JourneyAnswers]]
+                  }
+                  r
+                case left =>
+                  logger.error(
+                    s"[getValidForeignIncomeJourneysPerJourneyName] Error in getting Foreign Income Journey Answers from the repository. Error $left"
+                  )
+                  left
+      }
+    }
+  }
+
   private def getValidJourneysPerJourneyName(
     journeyAnswers: List[JourneyAnswers]
-  ): Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]])] =
+  ): Either[ServiceError, (Map[String, JourneyAnswers], Map[String, Map[String, JourneyAnswers]], Map[String, JourneyAnswers])] =
     for {
       ukJourneyMap <- {
         logger.debug("[getValidJourneysPerJourneyName] Getting UK Property journey map")
@@ -310,7 +337,11 @@ class PropertyService @Inject() (
         logger.debug("[getValidJourneysPerJourneyName] Getting Foreign Property journey map")
         getForeignJourneysPerJourneyName(journeyAnswers)
       }
-    } yield (ukJourneyMap, foreignJourneyMap)
+      foreignIncomeJourneyMap <- {
+        logger.debug("[getValidJourneysPerJourneyName] Getting Foreign Income journey map")
+        getForeignIncomeJourneysPerJourneyName(journeyAnswers)
+      }
+    } yield (ukJourneyMap, foreignJourneyMap, foreignIncomeJourneyMap)
 
   private def getAnnualSubmission(ctx: JourneyContext, nino: Nino)(implicit hc: HeaderCarrier) = {
     val emptyPropertyAnnualSubmission = PropertyAnnualSubmission(None, None, None)

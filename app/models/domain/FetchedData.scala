@@ -16,7 +16,17 @@
 
 package models.domain
 
-import play.api.libs.json.{Json, OFormat}
+import models.request.foreignincome.ForeignDividendsAnswers
+import play.api.libs.json.{OFormat, Json}
+
+case class FetchedData(
+  propertyData: FetchedPropertyData,
+  incomeData: FetchedForeignIncomeData
+                      )
+
+object FetchedData {
+  implicit val format: OFormat[FetchedData] = Json.format[FetchedData]
+}
 
 final case class FetchedPropertyData(
   ukPropertyData: FetchedUKPropertyData,
@@ -26,4 +36,13 @@ final case class FetchedPropertyData(
 
 object FetchedPropertyData {
   implicit val format: OFormat[FetchedPropertyData] = Json.format[FetchedPropertyData]
+}
+
+final case class FetchedForeignIncomeData(
+  foreignIncomeDividends: Option[Map[String, ForeignDividendsAnswers]],
+  foreignIncomeJourneyStatuses: List[JourneyWithStatus]
+)
+
+object FetchedForeignIncomeData {
+  implicit val format: OFormat[FetchedForeignIncomeData] = Json.format[FetchedForeignIncomeData]
 }
