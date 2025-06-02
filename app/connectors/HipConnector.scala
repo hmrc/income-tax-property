@@ -18,14 +18,14 @@ package connectors
 
 import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
-import connectors.response.PostBroughtForwardLossResponse
+import connectors.response.{GetHipPropertyBFLResponse, PostBroughtForwardLossResponse}
 import models.IncomeSourceType
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
 import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
-import models.responses.BroughtForwardLossId
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -73,6 +73,35 @@ class HipConnector @Inject() (
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
             s"[HipConnector] Error creating a brought forward loss from the HIP Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  // HIP API#1502
+  def getPropertyBroughtForwardLoss(
+    nino: Nino,
+    lossId: String
+  )(implicit hc: HeaderCarrier): Future[Either[ApiError, HipPropertyBFLResponse]] = {
+    val apiVersion = "1502"
+    val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino/$lossId"
+    logger.debug(
+      s"[HipConnector] Calling getPropertyBroughtForwardLoss with url: $url"
+    )
+
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.hipEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiVersion)}")
+      .execute[GetHipPropertyBFLResponse]
+      .map { response: GetHipPropertyBFLResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"[HipConnector] Error retrieving a brought forward loss from the HIP Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }

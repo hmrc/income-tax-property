@@ -17,11 +17,15 @@
 package connectors
 
 import models.LossType.UKProperty
+import models.LossType
+import models.LossType.UKProperty
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.WhenYouReportedTheLoss.y2021to2022
 import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
+import models.request.WhenYouReportedTheLoss.y2021to2022
+import models.request.foreign.UpdateForeignPropertyPeriodicSubmissionRequest
 import models.request.foreignincome.{ForeignDividend, ForeignIncomeSubmission}
 import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
 import models.request.{BroughtForwardLossAmount, BroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
@@ -1061,7 +1065,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     }
   }
 
-  "getForeignIncomeSubmission" should {
+  ".getForeignIncomeSubmission" should {
     val dividendsIncomeSubmission: ForeignIncomeSubmission = emptyForeignIncomeSubmission.copy(
       foreignDividend = Some(Seq(
         ForeignDividend(
@@ -1088,7 +1092,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
       await(underTest.getForeignIncomeSubmission(taxYear, nino)(hc)) shouldBe
         Right(Some(dividendsIncomeSubmission))
     }
-    "GET foreign income dividends when upstream returns NOT_FOUND" in {
+    "return None when upstream returns NOT_FOUND" in {
       val httpResponse = HttpResponse(NOT_FOUND)
       val taxYear = TaxYear(2024)
       stubGetHttpClientCall(s"/income-tax/income/dividends/${asTys(taxYear)}/$nino", httpResponse)
@@ -1105,7 +1109,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     }
   }
 
-  "createOrUpdateForeignIncomeSubmission" should {
+  ".createOrUpdateForeignIncomeSubmission" should {
     val dividendsIncomeSubmission: ForeignIncomeSubmission = emptyForeignIncomeSubmission.copy(
       foreignDividend = Some(Seq(
         ForeignDividend(
@@ -1143,7 +1147,7 @@ class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with Mo
     }
   }
 
-  "deleteForeignIncomeSubmission" should {
+  ".deleteForeignIncomeSubmission" should {
     "for TaxYear(2024) onwards DELETE foreign income dividends using API#1908" in {
       val httpResponse = HttpResponse(NO_CONTENT)
       val taxYear = TaxYear(2024)

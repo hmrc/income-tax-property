@@ -21,8 +21,8 @@ import models.IncomeSourceType
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss
-import models.responses.BroughtForwardLossId
-import org.scalamock.handlers.CallHandler6
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
+import org.scalamock.handlers.{CallHandler3, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -53,5 +53,17 @@ trait MockHipConnector extends MockFactory {
         _: HeaderCarrier
       ))
       .expects(nino, incomeSourceId, incomeSourceType, lossAmount, taxYearBroughtForwardFrom, *)
+      .returning(Future.successful(result))
+
+  def mockHipGetPropertyBroughtForwardLossSubmission(
+    nino: Nino,
+    lossId: String,
+    result: Either[ApiError, HipPropertyBFLResponse]
+  ): CallHandler3[Nino, String, HeaderCarrier, Future[
+    Either[ApiError, HipPropertyBFLResponse]
+  ]] =
+    (mockHipConnector
+      .getPropertyBroughtForwardLoss(_: Nino, _: String)(_: HeaderCarrier))
+      .expects(nino, lossId, *)
       .returning(Future.successful(result))
 }

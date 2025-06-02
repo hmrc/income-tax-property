@@ -33,7 +33,6 @@ lazy val coverageSettings: Seq[Setting[?]] = {
     "ukAndForeignProperty.RoutesPrefix",
     "foreignIncome.Routes",
     "foreignIncome.RoutesPrefix"
-
   )
 
   Seq(
@@ -63,7 +62,6 @@ lazy val microservice = Project("income-tax-property", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
   .settings(
-    resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
       "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
