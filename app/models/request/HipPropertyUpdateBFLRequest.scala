@@ -16,18 +16,11 @@
 
 package models.request
 
-import models.IncomeSourceType
-import models.common.IncomeSourceId
 import play.api.libs.json.{Writes, OWrites, JsValue, Json}
 import play.api.libs.ws.BodyWritable
 
 case class HipPropertyUpdateBFLRequest(
-                                  incomeSourceId: IncomeSourceId,
-                                  incomeSourceType: IncomeSourceType,
-                                  broughtForwardLossAmount: BigDecimal,
-                                  taxYearBroughtForwardFrom: Int,
-                                  lossID: String,
-                                  submissionDate: String
+                                  updatedBroughtForwardLossAmount: BigDecimal
                                 )
 
 object HipPropertyUpdateBFLRequest {

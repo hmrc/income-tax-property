@@ -38,7 +38,6 @@ import models.responses._
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -424,7 +423,7 @@ class PropertyService @Inject() (
     incomeSourceId: IncomeSourceId
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
     if (appConfig.hipMigration1501Enabled) {
-      hipConnector.updatePropertyBroughtForwardLoss(nino, incomeSourceId, IncomeSourceType.UKPropertyOther, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId), LocalDate.now())
+      hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId))
     } else {
       connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
     }

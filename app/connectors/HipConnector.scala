@@ -31,7 +31,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{StringContextOps, HeaderCarrier, HeaderNames}
 
-import java.time.LocalDate
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -84,24 +83,16 @@ class HipConnector @Inject() (
   // HIP API#1501
   def updatePropertyBroughtForwardLoss(
                                         nino: Nino,
-                                        incomeSourceId: IncomeSourceId,
-                                        incomeSourceType: IncomeSourceType,
                                         broughtForwardLossAmount: BigDecimal,
                                         taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
-                                        lossID: BroughtForwardLossId,
-                                        submissionDate: LocalDate
+                                        lossID: BroughtForwardLossId
                                       )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossResponse]] = {
     val hipApiVersion: String = "1501"
     val taxYear: String = asTys(toTaxYear(taxYearBroughtForwardFrom)) // Format: yy-yy
     val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino/$lossID?taxYear=$taxYear"
 
     val requestBody = HipPropertyUpdateBFLRequest(
-      incomeSourceId = incomeSourceId,
-      incomeSourceType = incomeSourceType,
-      broughtForwardLossAmount = broughtForwardLossAmount,
-      taxYearBroughtForwardFrom = toTaxYear(taxYearBroughtForwardFrom).endYear,
-      lossID = lossID.toString,
-      submissionDate = submissionDate.toString
+      updatedBroughtForwardLossAmount = broughtForwardLossAmount
     )
 
     logger.debug(s"[HipConnector] Calling updatePropertyBroughtForwardLoss with url: $url, body: ${Json.toJson(requestBody)}")

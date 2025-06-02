@@ -16,10 +16,6 @@
 
 package models.request
 
-import models.IncomeSourceType
-import models.IncomeSourceType.UKPropertyOther
-import models.common.IncomeSourceId
-import models.responses.BroughtForwardLossId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -27,31 +23,16 @@ import play.api.libs.json.Json
 import java.time.LocalDate
 
 class HipPropertyUpdateBFLRequestSpec extends AnyWordSpec with Matchers {
-  private val incomeSourceId: IncomeSourceId = IncomeSourceId("test-income-source-id")
-  private val incomeSourceType: IncomeSourceType = UKPropertyOther
   private val lossAmount: BigDecimal = BigDecimal(123.45)
-  private val taxYear: Int = 2024
-  private val lossID: BroughtForwardLossId = BroughtForwardLossId("AT0000000000001")
-  private val submissionDate: LocalDate = LocalDate.now
 
   "HipPropertyUpdateBFLRequest" should {
     "serialize correctly to JSON" in {
       val request = HipPropertyUpdateBFLRequest(
-        incomeSourceId = incomeSourceId,
-        incomeSourceType = incomeSourceType,
-        broughtForwardLossAmount = lossAmount,
-        taxYearBroughtForwardFrom = taxYear,
-        lossID = lossID.toString,
-        submissionDate = submissionDate.toString
+        updatedBroughtForwardLossAmount = lossAmount
       )
 
       val expectedJson = Json.obj(
-        "incomeSourceId"            -> "test-income-source-id",
-        "incomeSourceType"          -> "02",
-        "broughtForwardLossAmount"  -> 123.45,
-        "taxYearBroughtForwardFrom" -> 2024,
-        "lossID"                    -> "AT0000000000001",
-        "submissionDate"            -> LocalDate.now.toString
+        "updatedBroughtForwardLossAmount"  -> 123.45
       )
 
       Json.toJson(request) shouldBe expectedJson

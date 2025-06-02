@@ -234,25 +234,21 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       "successfully updated Property BF Loss" in {
         val requestBody = Json.toJson(Requests.validUpdateBFLRequest).toString()
         val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
-        val httpResponse = HttpResponse(OK, Json.toJson(BroughtForwardLossResponse(businessId, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified)).toString())
-
+        val httpResponse = HttpResponse(OK, Json.toJson(BroughtForwardLossResponse(incomeSourceId.toString, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified)).toString())
         stubPutHttpClientCall(
           s"/income-sources/brought-forward-losses/$nino/$lossID\\?taxYear=$taxYear",
           requestBody,
           httpResponse
         )
 
-        val expectedResult = Right(BroughtForwardLossResponse(businessId, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified))
+        val expectedResult = Right(BroughtForwardLossResponse(incomeSourceId.toString, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified))
 
         await(
           underTest.updatePropertyBroughtForwardLoss(
             nino,
-            incomeSourceId,
-            incomeSourceType,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID,
-            submissionDate
+            lossID
           )(hc)
         ) shouldBe expectedResult
       }
@@ -275,12 +271,9 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         await(
           underTest.updatePropertyBroughtForwardLoss(
             nino,
-            incomeSourceId,
-            incomeSourceType,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID,
-            submissionDate
+            lossID
           )(hc)
         ) shouldBe expectedResult
       }
@@ -304,12 +297,9 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
           await(
             underTest.updatePropertyBroughtForwardLoss(
               nino,
-              incomeSourceId,
-              incomeSourceType,
               lossAmount,
               broughtForwardLossTaxYear,
-              lossID,
-              submissionDate
+              lossID
             )(hc)
           ) shouldBe expectedResult
         }
@@ -329,12 +319,9 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         await(
           underTest.updatePropertyBroughtForwardLoss(
             nino,
-            incomeSourceId,
-            incomeSourceType,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID,
-            submissionDate
+            lossID
           )(hc)
         ) shouldBe expectedResult
 
@@ -351,12 +338,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
     )
 
     val validUpdateBFLRequest: HipPropertyUpdateBFLRequest = HipPropertyUpdateBFLRequest(
-      incomeSourceId = incomeSourceId,
-      incomeSourceType = incomeSourceType,
-      broughtForwardLossAmount = lossAmount,
-      taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear,
-      lossID = lossID.toString,
-      submissionDate = submissionDate.toString
+      updatedBroughtForwardLossAmount = lossAmount
     )
   }
   object Responses {
