@@ -19,7 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import connectors.{HipConnector, IntegrationFrameworkConnector}
+import connectors.{IntegrationFrameworkConnector, HipConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
@@ -38,6 +38,7 @@ import models.responses._
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -419,14 +420,19 @@ class PropertyService @Inject() (
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     lossId: String,
-    lossAmount: BigDecimal
+    lossAmount: BigDecimal,
+    incomeSourceId: IncomeSourceId
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
     if (appConfig.hipMigration1501Enabled) {
-      hipConnector.updatePropertyBroughtForwardLoss()
+      hipConnector.updatePropertyBroughtForwardLoss(nino, incomeSourceId, IncomeSourceType.UKPropertyOther, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId), LocalDate.now())
     } else {
       connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
     }
   }
+    .leftMap { error =>
+      logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
+      ApiServiceError(error.status)
+    }
 
   private def createOrUpdateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
@@ -446,7 +452,8 @@ class PropertyService @Inject() (
                                     taxYearBroughtForwardFrom,
                                     nino,
                                     bfl.lossId,
-                                    lossAmount
+                                    lossAmount,
+                                    ctx.incomeSourceId
                                   ).map(_ => bfl.lossId)
                                 case _ =>
                                   createBroughtForwardLoss(

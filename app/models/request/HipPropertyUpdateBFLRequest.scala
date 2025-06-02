@@ -17,10 +17,8 @@
 package models.request
 
 import models.IncomeSourceType
-import models.common.{IncomeSourceId, TaxYear}
-import models.request.foreign.CreateForeignPropertyPeriodicSubmissionRequest
-import models.responses.BroughtForwardLossId
-import play.api.libs.json.{Format, Writes, OWrites, JsValue, Json}
+import models.common.IncomeSourceId
+import play.api.libs.json.{Writes, OWrites, JsValue, Json}
 import play.api.libs.ws.BodyWritable
 
 case class HipPropertyUpdateBFLRequest(
@@ -28,7 +26,7 @@ case class HipPropertyUpdateBFLRequest(
                                   incomeSourceType: IncomeSourceType,
                                   broughtForwardLossAmount: BigDecimal,
                                   taxYearBroughtForwardFrom: Int,
-                                  lossID: BroughtForwardLossId,
+                                  lossID: String,
                                   submissionDate: String
                                 )
 

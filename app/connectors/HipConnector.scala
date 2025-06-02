@@ -18,19 +18,20 @@ package connectors
 
 import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
-import connectors.response.{GetHipPropertyBFLResponse, PostBroughtForwardLossResponse}
+import connectors.response.{PutBroughtForwardLossResponse, GetHipPropertyBFLResponse, PostBroughtForwardLossResponse}
 import models.IncomeSourceType
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
-import models.request.{HipPropertyBFLRequest, WhenYouReportedTheLoss}
-import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
+import models.request.{WhenYouReportedTheLoss, HipPropertyUpdateBFLRequest, HipPropertyBFLRequest}
+import models.responses.{BroughtForwardLossResponse, BroughtForwardLossId, HipPropertyBFLResponse}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
+import uk.gov.hmrc.http.{StringContextOps, HeaderCarrier, HeaderNames}
 
+import java.time.LocalDate
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -73,6 +74,50 @@ class HipConnector @Inject() (
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
           logger.error(
             s"[HipConnector] Error creating a brought forward loss from the HIP Integration Framework: URL: $url" +
+              s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
+          )
+        }
+        response.result
+      }
+  }
+
+  // HIP API#1501
+  def updatePropertyBroughtForwardLoss(
+                                        nino: Nino,
+                                        incomeSourceId: IncomeSourceId,
+                                        incomeSourceType: IncomeSourceType,
+                                        broughtForwardLossAmount: BigDecimal,
+                                        taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+                                        lossID: BroughtForwardLossId,
+                                        submissionDate: LocalDate
+                                      )(implicit hc: HeaderCarrier): Future[Either[ApiError, BroughtForwardLossResponse]] = {
+    val hipApiVersion: String = "1501"
+    val taxYear: String = asTys(toTaxYear(taxYearBroughtForwardFrom)) // Format: yy-yy
+    val url = s"${appConfig.hipBaseUrl}/income-sources/brought-forward-losses/$nino/$lossID?taxYear=$taxYear"
+
+    val requestBody = HipPropertyUpdateBFLRequest(
+      incomeSourceId = incomeSourceId,
+      incomeSourceType = incomeSourceType,
+      broughtForwardLossAmount = broughtForwardLossAmount,
+      taxYearBroughtForwardFrom = toTaxYear(taxYearBroughtForwardFrom).endYear,
+      lossID = lossID.toString,
+      submissionDate = submissionDate.toString
+    )
+
+    logger.debug(s"[HipConnector] Calling updatePropertyBroughtForwardLoss with url: $url, body: ${Json.toJson(requestBody)}")
+
+    http
+      .post(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.hipEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}")
+      .withBody[HipPropertyUpdateBFLRequest](requestBody)
+      .execute[PutBroughtForwardLossResponse]
+      .map { response: PutBroughtForwardLossResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+          logger.error(
+            s"[HipConnector] Error updating a brought forward loss from the HIP Integration Framework: URL: $url" +
               s" correlationId: $correlationId; status: ${response.httpResponse.status}; Body:${response.httpResponse.body}"
           )
         }
