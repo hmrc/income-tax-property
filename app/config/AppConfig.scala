@@ -95,7 +95,7 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
       .getOptional[Int](s"$rootServices.$confKey")
       .getOrElse(defInt)
 
-  override def throwConfigNotFoundError(key: String): RuntimeException =
+  override def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
 
   override def hipMigration1502Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1502-enabled")
