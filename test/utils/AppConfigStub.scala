@@ -51,5 +51,7 @@ class AppConfigStub extends MockFactory {
     override lazy val hipMigration1502Enabled: Boolean = featureSwitches.hipApi1502
 
 
+    override lazy val hipMigration1501Enabled: Boolean = featureSwitches.hipApi1501
+
   }
 }
