@@ -422,11 +422,20 @@ class PropertyService @Inject() (
     lossAmount: BigDecimal,
     incomeSourceId: IncomeSourceId
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
-    if (appConfig.hipMigration1501Enabled) {
-      hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId))
-    } else {
-      connector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
+      integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
+  }
+    .leftMap { error =>
+      logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
+      ApiServiceError(error.status)
     }
+
+  def updateBroughtForwardLossHiP(
+                                   taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+                                   nino: Nino,
+                                   lossId: String,
+                                   lossAmount: BigDecimal
+                                 )(implicit hc: HeaderCarrier): ITPEnvelope[HipPropertyBFLResponse] = EitherT {
+      hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId))
   }
     .leftMap { error =>
       logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
@@ -446,6 +455,13 @@ class PropertyService @Inject() (
                                 incomeSourceId = ctx.incomeSourceId
                               ).orElse(ITPEnvelope.liftPure(Seq.empty[BroughtForwardLossResponseWithId]))
       broughtForwardLossId <- broughtForwardLosses.find(bfl => bfl.typeOfLoss == UKProperty) match {
+                                case Some(bfl) if appConfig.hipMigration1501Enabled =>
+                                  updateBroughtForwardLossHiP(
+                                    taxYearBroughtForwardFrom,
+                                    nino,
+                                    bfl.lossId,
+                                    lossAmount
+                                  ).map(_ => bfl.lossId)
                                 case Some(bfl) =>
                                   updateBroughtForwardLoss(
                                     taxYearBroughtForwardFrom,

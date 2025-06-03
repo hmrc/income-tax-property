@@ -2489,7 +2489,7 @@ class PropertyServiceSpec
             incomeSourceId
           ).value
         )
-        result shouldBe Right(businessId, typeOfLoss, lossAmount, taxYearBroughtForwardFrom, lastModified)
+        result shouldBe Right(BroughtForwardLossResponse(businessId, typeOfLoss, lossAmount, taxYearBroughtForwardFrom, lastModified))
       }
       "return ApiError for invalid request" in {
         val apiError = SingleErrorBody("code", "reason")
@@ -2529,7 +2529,7 @@ class PropertyServiceSpec
             incomeSourceId
           ).value
         )
-        result shouldBe Right(businessId, typeOfLoss, lossAmount, taxYearBroughtForwardFrom, lastModified)
+        result shouldBe Right(BroughtForwardLossResponse(businessId, typeOfLoss, lossAmount, taxYearBroughtForwardFrom, lastModified))
       }
       "return ApiError for invalid request" in {
         val apiError = SingleErrorBody("code", "reason")

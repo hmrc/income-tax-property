@@ -17,9 +17,8 @@
 package models.request
 
 import models.IncomeSourceType
-import models.common.{IncomeSourceId, TaxYear}
-import models.request.foreign.CreateForeignPropertyPeriodicSubmissionRequest
-import play.api.libs.json.{Format, JsValue, Json, OWrites, Writes}
+import models.common.IncomeSourceId
+import play.api.libs.json.{JsValue, Json, OWrites, Writes}
 import play.api.libs.ws.BodyWritable
 
 case class HipPropertyBFLRequest(

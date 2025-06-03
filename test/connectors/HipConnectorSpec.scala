@@ -25,7 +25,7 @@ import models.common.{IncomeSourceId, Nino}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.{WhenYouReportedTheLoss, HipPropertyUpdateBFLRequest, HipPropertyBFLRequest}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
-import models.responses.{BroughtForwardLossResponse, BroughtForwardLossId, HipPropertyBFLResponse}
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
 
   private val nino = Nino("test-nino")
-  private val lossId = "test-loss-id"
+  private val lossId = BroughtForwardLossId("test-loss-id")
   private val incomeSourceId = IncomeSourceId("test-income-source-id")
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)
@@ -163,14 +163,14 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val httpResponse = HttpResponse(OK, Json.toJson(Responses.hipPropertyBFLResponse).toString())
 
         stubGetHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}",
           httpResponse
         )
 
         await(
           underTest.getPropertyBroughtForwardLoss(
             nino,
-            lossId
+            lossId.lossId
           )(hc)
         ) shouldBe Right(Responses.hipPropertyBFLResponse)
       }
@@ -181,14 +181,14 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val apiError = SingleErrorBody("code", "reason")
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(apiError).toString())
         stubGetHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}",
           httpResponse
         )
         val expectedResult = Left(ApiError(NOT_FOUND, apiError))
         await(
           underTest.getPropertyBroughtForwardLoss(
             nino,
-            lossId
+            lossId.lossId
           )(hc)
         ) shouldBe expectedResult
       }
@@ -199,14 +199,14 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         apiServiceErrors.foreach { apiErrorCode =>
           val httpResponse = HttpResponse(apiErrorCode, Json.toJson(apiError).toString())
           stubGetHttpClientCall(
-            s"/income-sources/brought-forward-losses/$nino/$lossId",
+            s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}",
             httpResponse
           )
           val expectedResult = Left(ApiError(apiErrorCode, apiError))
           await(
             underTest.getPropertyBroughtForwardLoss(
               nino,
-              lossId
+              lossId.lossId
             )(hc)
           ) shouldBe expectedResult
         }
@@ -215,14 +215,14 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val apiError = SingleErrorBody("code", "reason")
         val httpResponse = HttpResponse(INSUFFICIENT_STORAGE, Json.toJson(apiError).toString())
         stubGetHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossId",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}",
           httpResponse
         )
         val expectedResult = Left(ApiError(INTERNAL_SERVER_ERROR, apiError))
         await(
           underTest.getPropertyBroughtForwardLoss(
             nino,
-            lossId
+            lossId.lossId
           )(hc)
         ) shouldBe expectedResult
       }
@@ -234,21 +234,21 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       "successfully updated Property BF Loss" in {
         val requestBody = Json.toJson(Requests.validUpdateBFLRequest).toString()
         val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
-        val httpResponse = HttpResponse(OK, Json.toJson(BroughtForwardLossResponse(incomeSourceId.toString, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified)).toString())
+        val httpResponse = HttpResponse(OK, Json.toJson(Responses.hipPropertyBFLResponse).toString())
         stubPutHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossID\\?taxYear=$taxYear",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}\\?taxYear=$taxYear",
           requestBody,
           httpResponse
         )
 
-        val expectedResult = Right(BroughtForwardLossResponse(incomeSourceId.toString, lossType, lossAmount, broughtForwardLossTaxYear.toString, lastModified))
+        val expectedResult = Right(Responses.hipPropertyBFLResponse)
 
         await(
           underTest.updatePropertyBroughtForwardLoss(
             nino,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID
+            lossId
           )(hc)
         ) shouldBe expectedResult
       }
@@ -261,7 +261,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val httpResponse = HttpResponse(NOT_FOUND, Json.toJson(apiError).toString())
 
         stubPutHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossID\\?taxYear=$taxYear",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}\\?taxYear=$taxYear",
           requestBody,
           httpResponse
         )
@@ -273,7 +273,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
             nino,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID
+            lossId
           )(hc)
         ) shouldBe expectedResult
       }
@@ -281,13 +281,13 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val taxYear: String = asTys(toTaxYear(broughtForwardLossTaxYear))
         val requestBody = Json.toJson(Requests.validUpdateBFLRequest).toString()
         val apiError = SingleErrorBody("code", "reason")
-        val apiServiceErrors = Seq(BAD_REQUEST, NOT_FOUND, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+        val apiServiceErrors = Seq(BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, NOT_IMPLEMENTED, BAD_GATEWAY, SERVICE_UNAVAILABLE)
 
         apiServiceErrors.foreach { apiErrorCode =>
           val httpResponse = HttpResponse(apiErrorCode, Json.toJson(apiError).toString())
 
           stubPutHttpClientCall(
-            s"/income-sources/brought-forward-losses/$nino/$lossID\\?taxYear=$taxYear",
+            s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}\\?taxYear=$taxYear",
             requestBody,
             httpResponse
           )
@@ -299,7 +299,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
               nino,
               lossAmount,
               broughtForwardLossTaxYear,
-              lossID
+              lossId
             )(hc)
           ) shouldBe expectedResult
         }
@@ -311,7 +311,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
         val httpResponse = HttpResponse(INSUFFICIENT_STORAGE, Json.toJson(apiError).toString())
 
         stubPutHttpClientCall(
-          s"/income-sources/brought-forward-losses/$nino/$lossID\\?taxYear=$taxYear",
+          s"/income-sources/brought-forward-losses/$nino/${lossId.lossId}\\?taxYear=$taxYear",
           requestBody,
           httpResponse
         )
@@ -321,7 +321,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
             nino,
             lossAmount,
             broughtForwardLossTaxYear,
-            lossID
+            lossId
           )(hc)
         ) shouldBe expectedResult
 
@@ -347,7 +347,7 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
       incomeSourceType = incomeSourceType,
       broughtForwardLossAmount = lossAmount,
       taxYearBroughtForwardFrom = toTaxYear(broughtForwardLossTaxYear).endYear,
-      lossId = lossId,
+      lossId = lossId.lossId,
       submissionDate = LocalDate.now()
     )
   }

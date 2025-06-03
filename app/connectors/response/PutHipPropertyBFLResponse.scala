@@ -22,19 +22,19 @@ import models.responses.HipPropertyBFLResponse
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-case class GetHipPropertyBFLResponse(httpResponse: HttpResponse, result: Either[ApiError, HipPropertyBFLResponse])
+case class PutHipPropertyBFLResponse(httpResponse: HttpResponse, result: Either[ApiError, HipPropertyBFLResponse])
 
-object GetHipPropertyBFLResponse {
-  implicit val getHipPropertyBroughtForwardLoss: HttpReads[GetHipPropertyBFLResponse] = new HttpReads[GetHipPropertyBFLResponse] with Parser {
+object PutHipPropertyBFLResponse {
+  implicit val putHipPropertyBroughtForwardLoss: HttpReads[PutHipPropertyBFLResponse] = new HttpReads[PutHipPropertyBFLResponse] with Parser {
 
     override protected val parserName: String = this.getClass.getSimpleName
 
-    override def read(method: String, url: String, response: HttpResponse): GetHipPropertyBFLResponse = response.status match {
-      case OK => GetHipPropertyBFLResponse(response, extractResult(response))
-      case NOT_FOUND => GetHipPropertyBFLResponse(response, handleError(response, NOT_FOUND))
-      case BAD_REQUEST | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
-        GetHipPropertyBFLResponse(response, handleError(response, response.status))
-      case _ => GetHipPropertyBFLResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
+    override def read(method: String, url: String, response: HttpResponse): PutHipPropertyBFLResponse = response.status match {
+      case OK => PutHipPropertyBFLResponse(response, extractResult(response))
+      case NOT_FOUND => PutHipPropertyBFLResponse(response, handleError(response, NOT_FOUND))
+      case BAD_REQUEST | UNAUTHORIZED | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | NOT_IMPLEMENTED | BAD_GATEWAY | SERVICE_UNAVAILABLE =>
+        PutHipPropertyBFLResponse(response, handleError(response, response.status))
+      case _ => PutHipPropertyBFLResponse(response, handleError(response, INTERNAL_SERVER_ERROR))
     }
 
     private def extractResult(response: HttpResponse): Either[ApiError, HipPropertyBFLResponse] = {
