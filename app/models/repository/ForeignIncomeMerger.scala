@@ -53,7 +53,7 @@ object ForeignIncomeMerger {
                 specialWithholdingTax = dividends.specialWithholdingTax,
                 foreignTaxCreditRelief = dividends.foreignTaxCreditRelief,
                 taxableAmount = Some(dividends.taxableAmount),
-                foreignTaxDeductedFromDividendIncome = None
+                foreignTaxDeductedFromDividendIncome = Some(dividends.taxTakenOff.nonEmpty)
               )
           }
           Option.when(result.nonEmpty)(result)

@@ -120,7 +120,7 @@ class ForeignIncomeMergerSpec extends UnitTest {
             specialWithholdingTax = Some(specialWithholdingTax),
             foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
             taxableAmount = Some(taxableAmount),
-            foreignTaxDeductedFromDividendIncome = None
+            foreignTaxDeductedFromDividendIncome = Some(true)
           ))
         )
       }

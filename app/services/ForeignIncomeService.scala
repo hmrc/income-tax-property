@@ -20,11 +20,12 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
-import models.common.{Nino, TaxYear, JourneyContext}
+import models.common.{JourneyContext, Nino, TaxYear}
 import models.domain.FetchedData
-import models.errors.{ServiceError, ApiServiceError}
+import models.errors.{ApiServiceError, DataNotFoundError, ServiceError}
+import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
 import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
-import models.{ITPEnvelope, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
+import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers, ITPEnvelope}
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -54,13 +55,26 @@ class ForeignIncomeService  @Inject() (
       }
       .subflatMap { dividendsIncomeSubmission =>
         dividendsIncomeSubmission.fold[Either[ServiceError, ForeignIncomeSubmission]] {
-          logger.error(s"[getDividendsIncomeSubmission] Dividend income details not found in IF, returning empty foreign income submission")
-          ForeignIncomeSubmission.emptyForeignIncomeSubmission.asRight[ServiceError]
+          logger.error(s"[getDividendsIncomeSubmission] Dividend income details not found in IF")
+          DataNotFoundError.asLeft[ForeignIncomeSubmission]
         } { data =>
           logger.info(s"[getDividendsIncomeSubmission] Dividend income data found: $data")
           data.asRight[ServiceError]
         }
       }
+  }
+
+  private def getOrCreateForeignIncomeSubmission(ctx: JourneyContext, nino: Nino)(implicit hc: HeaderCarrier) = {
+    getForeignIncomeSubmission(ctx.taxYear, nino).leftFlatMap {
+      case DataNotFoundError =>
+        logger.warn(s"[getOrCreateForeignIncomeSubmission] No foreign income submission found")
+        ITPEnvelope.liftPure(emptyForeignIncomeSubmission)
+      case error =>
+        logger.error(
+          s"[getOrCreateForeignIncomeSubmission] Error returned when trying to fetch foreign income submission: ${error.message}"
+        )
+        ITPEnvelope.liftEither(error.asLeft[ForeignIncomeSubmission])
+    }
   }
 
   def createOrUpdateForeignIncomeSubmission(
@@ -92,7 +106,7 @@ class ForeignIncomeService  @Inject() (
       foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
     )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
       for {
-        foreignIncomeSubmission <- getForeignIncomeSubmission(ctx.taxYear, nino)
+        foreignIncomeSubmission <- getOrCreateForeignIncomeSubmission(ctx, nino)
         _ <- createOrUpdateForeignIncomeSubmission(
           ctx.taxYear,
           nino,
