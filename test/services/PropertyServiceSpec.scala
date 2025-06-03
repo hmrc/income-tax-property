@@ -2493,7 +2493,7 @@ class PropertyServiceSpec
       }
       "return ApiError for invalid request" in {
         val apiError = SingleErrorBody("code", "reason")
-        val apiErrorCodes = Seq(BAD_REQUEST, NOT_FOUND, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+        val apiErrorCodes = Seq(BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, NOT_IMPLEMENTED, BAD_GATEWAY, SERVICE_UNAVAILABLE)
 
         apiErrorCodes.foreach { apiErrorCode =>
           val updatePropertyBFLResult = Left(ApiError(apiErrorCode, apiError))
@@ -2533,7 +2533,7 @@ class PropertyServiceSpec
       }
       "return ApiError for invalid request" in {
         val apiError = SingleErrorBody("code", "reason")
-        val apiErrorCodes = Seq(BAD_REQUEST, NOT_FOUND, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+        val apiErrorCodes = Seq(BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, NOT_IMPLEMENTED, BAD_GATEWAY, SERVICE_UNAVAILABLE)
 
         apiErrorCodes.foreach { apiErrorCode =>
           val updatePropertyBFLResult = Left(ApiError(apiErrorCode, apiError))
