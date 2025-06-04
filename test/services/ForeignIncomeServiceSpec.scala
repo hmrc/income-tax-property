@@ -71,10 +71,10 @@ class ForeignIncomeServiceSpec
         Right(emptyForeignIncomeSubmission.copy(foreignDividend = Some(Seq(foreignDividend))))
     }
 
-    "return an empty foreign income submission when one is not present" in {
+    "return DataNotFoundError when one is not present" in {
       mockGetForeignIncomeSubmission(taxYear, nino, Right(None))
       await(underTest.getForeignIncomeSubmission(taxYear, nino).value) shouldBe
-        ForeignIncomeSubmission.emptyForeignIncomeSubmission.asRight[ServiceError]
+        DataNotFoundError.asLeft[ForeignIncomeSubmission]
     }
 
     "return ApiError when IF call fails" in {
