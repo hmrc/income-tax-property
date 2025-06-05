@@ -17,22 +17,22 @@
 package connectors.response
 
 import utils.UnitTest
-import GetHipPropertyBFLResponse.getHipPropertyBroughtForwardLoss
+import connectors.response.PutHipPropertyBFLResponse.putHipPropertyBroughtForwardLoss
 import models.IncomeSourceType.UKPropertyOther
-import models.errors.{ApiError, SingleErrorBody}
+import models.errors.{SingleErrorBody, ApiError}
 import models.responses.HipPropertyBFLResponse
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{Json, JsValue}
 import uk.gov.hmrc.http.HttpResponse
 
 import java.time.LocalDate
 
-class GetHipPropertyBFLResponseSpec extends UnitTest {
+class PutHipPropertyBFLResponseSpec extends UnitTest {
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
-  private val anyMethod: String = "GET"
+  private val anyMethod: String = "PUT"
   private val anyUrl = "/income-sources/brought-forward-losses/"
 
-  private val underTest = getHipPropertyBroughtForwardLoss
+  private val underTest = putHipPropertyBroughtForwardLoss
 
   val broughtForwardLossResponse: HipPropertyBFLResponse = HipPropertyBFLResponse(
     incomeSourceId = "some-income-source-id",
@@ -43,11 +43,11 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
     submissionDate = LocalDate.now
   )
 
-  "getHipPropertyBroughtForwardLoss" should {
+  "putHipPropertyBroughtForwardLoss" should {
     "convert JsValue to HipPropertyBFL" when {
       "status is OK and valid jsValue" in {
         val httpResponse: HttpResponse = HttpResponse.apply(OK, Json.toJson(broughtForwardLossResponse), anyHeaders)
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Right(broughtForwardLossResponse)
         )
@@ -62,7 +62,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
             |""".stripMargin
         )
         val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
         )
@@ -71,7 +71,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
       "status is NOT_FOUND and any jsValue" in {
         val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
         val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "some-reason")))
         )
@@ -82,7 +82,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )
@@ -93,7 +93,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
         )
@@ -104,7 +104,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
         )
@@ -115,7 +115,7 @@ class GetHipPropertyBFLResponseSpec extends UnitTest {
 
         val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe GetHipPropertyBFLResponse(
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutHipPropertyBFLResponse(
           httpResponse,
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
         )

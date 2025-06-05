@@ -60,17 +60,23 @@ class PropertyServiceSpec
     with MockHipConnector with HttpClientSupport with ScalaCheckPropertyChecks with AppConfigStubProvider {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
-  private val hipApisEnabledFSConfig = FeatureSwitchConfig(hipApi1500 = true, hipApi1502 = true)
+  private val hipApisEnabledFSConfig = FeatureSwitchConfig(hipApi1500 = true, hipApi1501 = true, hipApi1502 = true)
   private val appConfigWithHipApisEnabled: AppConfig = new AppConfigStub().config(featureSwitchConfig = Some(hipApisEnabledFSConfig))
   private val underTestWithHipApisEnabled = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigWithHipApisEnabled, mockHipConnector)
   private val nino = Nino("A34324")
   private val incomeSourceId = IncomeSourceId("Rental")
   private val submissionId = "submissionId"
   private val taxableEntityId = Nino("taxableEntityId")
-  val taxYear: TaxYear = TaxYear(2024)
-  val whenYouReportedTheLoss: WhenYouReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
-  val lossId = "lossId"
-  val lossAmount = BigDecimal(32.47)
+  private val taxYear: TaxYear = TaxYear(2024)
+  private val whenYouReportedTheLoss: WhenYouReportedTheLoss = WhenYouReportedTheLoss.y2018to2019
+  private val lossId = "lossId"
+  private val lossAmount = BigDecimal(32.47)
+  private val businessId = "some-business-id"
+  private val typeOfLossIF = UKProperty
+  private val typeOfLossHiP = UKPropertyOther
+  private val taxYearBroughtForwardFrom = TaxYear(2019)
+  private val lastModified = LocalDate.now
+
 
   ".getAllPropertyPeriodicSubmissions" should {
 
@@ -498,7 +504,9 @@ class PropertyServiceSpec
       ),
       BigDecimal(56.78),
       Some(BigDecimal(78.89)),
-      UnusedLossesBroughtForward(true, Some(32.47)),
+      UnusedLossesBroughtForward(
+        isUnusedLossesBroughtForward = true,
+        unusedLossesBroughtForwardAmount = Some(32.47)),
       Some(WhenYouReportedTheLoss.y2018to2019)
     )
 
@@ -2463,6 +2471,87 @@ class PropertyServiceSpec
           )
           .value
       ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+  }
+
+  "update brought forward loss" when {
+    "feature switch for hip api 1501 is disabled" should {
+      "use the IF API#1501 and return the updated BFL loss Id for valid request" in {
+        val updatePropertyBFLResult = Right(BroughtForwardLossResponse(businessId, typeOfLossIF, lossAmount, taxYearBroughtForwardFrom.endYear.toString, lastModified.toString))
+
+        mockUpdatePropertyBroughtForwardLoss(whenYouReportedTheLoss, nino, lossId, lossAmount, updatePropertyBFLResult)
+
+        val result = await(
+          underTest.updateBroughtForwardLoss(
+            whenYouReportedTheLoss,
+            nino,
+            lossId,
+            lossAmount,
+            incomeSourceId
+          ).value
+        )
+        result shouldBe Right(BroughtForwardLossResponse(businessId, typeOfLossIF, lossAmount, taxYearBroughtForwardFrom.endYear.toString, lastModified.toString))
+      }
+      "return ApiError for invalid request" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val apiErrorCodes = Seq(BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, NOT_IMPLEMENTED, BAD_GATEWAY, SERVICE_UNAVAILABLE)
+
+        apiErrorCodes.foreach { apiErrorCode =>
+          val updatePropertyBFLResult = Left(ApiError(apiErrorCode, apiError))
+          mockUpdatePropertyBroughtForwardLoss(whenYouReportedTheLoss, nino, lossId, lossAmount, updatePropertyBFLResult)
+
+          val result = await(
+            underTest.updateBroughtForwardLoss(
+              whenYouReportedTheLoss,
+              nino,
+              lossId,
+              lossAmount,
+              incomeSourceId
+            ).value
+          )
+          result shouldBe Left(ApiServiceError(apiErrorCode))
+        }
+      }
+
+    }
+
+    "feature switch for hip api 1501 is enabled" should {
+      "use the HIP API#1501 and return the updated BFL loss Id for valid request" in {
+        val updatePropertyBFLResult = Right(HipPropertyBFLResponse(businessId, typeOfLossHiP, lossAmount, toTaxYear(whenYouReportedTheLoss).endYear, lossId, lastModified))
+
+        mockHipUpdatePropertyBroughtForwardLossSubmission(nino, lossAmount, WhenYouReportedTheLoss.y2018to2019, BroughtForwardLossId(lossId), updatePropertyBFLResult)
+
+        val result = await(
+          underTestWithHipApisEnabled.updateBroughtForwardLoss(
+            whenYouReportedTheLoss,
+            nino,
+            lossId,
+            lossAmount,
+            incomeSourceId
+          ).value
+        )
+        result shouldBe Right(BroughtForwardLossResponse(businessId, typeOfLossIF, lossAmount, asTyBefore24(toTaxYear(whenYouReportedTheLoss)),  lastModified.toString))
+      }
+      "return ApiError for invalid request" in {
+        val apiError = SingleErrorBody("code", "reason")
+        val apiErrorCodes = Seq(BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, NOT_IMPLEMENTED, BAD_GATEWAY, SERVICE_UNAVAILABLE)
+
+        apiErrorCodes.foreach { apiErrorCode =>
+          val updatePropertyBFLResult = Left(ApiError(apiErrorCode, apiError))
+          mockHipUpdatePropertyBroughtForwardLossSubmission(nino, lossAmount, whenYouReportedTheLoss, BroughtForwardLossId(lossId), updatePropertyBFLResult)
+
+          val result = await(
+            underTestWithHipApisEnabled.updateBroughtForwardLoss(
+              whenYouReportedTheLoss,
+              nino,
+              lossId,
+              lossAmount,
+              incomeSourceId
+            ).value
+          )
+          result shouldBe Left(ApiServiceError(apiErrorCode))
+        }
+      }
     }
   }
 

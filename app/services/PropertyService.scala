@@ -19,7 +19,7 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import connectors.{HipConnector, IntegrationFrameworkConnector}
+import connectors.{IntegrationFrameworkConnector, HipConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
@@ -415,17 +415,33 @@ class PropertyService @Inject() (
       }
   }
 
-  private def updateBroughtForwardLoss(
+  def updateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     nino: Nino,
     lossId: String,
-    lossAmount: BigDecimal
-  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] =
-    EitherT(integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
-      .leftMap { error =>
-        logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
-        ApiServiceError(error.status)
-      }
+    lossAmount: BigDecimal,
+    incomeSourceId: IncomeSourceId
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+    if (appConfig.hipMigration1501Enabled) {
+      EitherT(hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId)))
+        .map(hipPropertyBFLResponse => BroughtForwardLossResponse(
+          businessId = hipPropertyBFLResponse.incomeSourceId,
+          typeOfLoss = UKProperty,
+          lossAmount = hipPropertyBFLResponse.broughtForwardLossAmount,
+          taxYearBroughtForwardFrom = asTyBefore24(TaxYear(hipPropertyBFLResponse.taxYearBroughtForwardFrom)),
+          lastModified = hipPropertyBFLResponse.submissionDate.toString
+        )).leftMap { error =>
+          logger.error(s"[updateBroughtForwardLoss]: Error updating loss brought forward from Hybrid Integration Platform")
+          ApiServiceError(error.status)
+        }
+    } else {
+      EitherT(integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
+        .leftMap { error =>
+          logger.error(s"[updateBroughtForwardLoss]: Error updating loss brought forward from Integration Framework")
+          ApiServiceError(error.status)
+        }
+    }
+  }
 
   private def createOrUpdateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
@@ -445,7 +461,8 @@ class PropertyService @Inject() (
                                     taxYearBroughtForwardFrom,
                                     nino,
                                     bfl.lossId,
-                                    lossAmount
+                                    lossAmount,
+                                    ctx.incomeSourceId
                                   ).map(_ => bfl.lossId)
                                 case _ =>
                                   createBroughtForwardLoss(

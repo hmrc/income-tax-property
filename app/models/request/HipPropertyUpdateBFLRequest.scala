@@ -16,24 +16,19 @@
 
 package models.request
 
-import models.IncomeSourceType
-import models.common.IncomeSourceId
-import play.api.libs.json.{JsValue, Json, OWrites, Writes}
+import play.api.libs.json.{Writes, OWrites, JsValue, Json}
 import play.api.libs.ws.BodyWritable
 
-case class HipPropertyBFLRequest(
-  incomeSourceId: IncomeSourceId,
-  incomeSourceType: IncomeSourceType,
-  broughtForwardLossAmount: BigDecimal,
-  taxYearBroughtForwardFrom: Int
-)
+case class HipPropertyUpdateBFLRequest(
+                                  updatedBroughtForwardLossAmount: BigDecimal
+                                )
 
-object HipPropertyBFLRequest {
-  implicit val writes: OWrites[HipPropertyBFLRequest] =
-    Json.writes[HipPropertyBFLRequest]
+object HipPropertyUpdateBFLRequest {
+  implicit val writes: OWrites[HipPropertyUpdateBFLRequest] =
+    Json.writes[HipPropertyUpdateBFLRequest]
 
   implicit def jsonBodyWritable[T](implicit
-    writes: Writes[T],
-    jsValueBodyWritable: BodyWritable[JsValue]
-  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
+                                   writes: Writes[T],
+                                   jsValueBodyWritable: BodyWritable[JsValue]
+                                  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 }
