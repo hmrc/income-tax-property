@@ -421,26 +421,27 @@ class PropertyService @Inject() (
     lossId: String,
     lossAmount: BigDecimal,
     incomeSourceId: IncomeSourceId
-  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = EitherT {
-      integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount)
-  }
-    .leftMap { error =>
-      logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
-      ApiServiceError(error.status)
+  )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
+    if (appConfig.hipMigration1501Enabled) {
+      EitherT(hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId)))
+        .map(hipPropertyBFLResponse => BroughtForwardLossResponse(
+          businessId = hipPropertyBFLResponse.incomeSourceId,
+          typeOfLoss = UKProperty,
+          lossAmount = hipPropertyBFLResponse.broughtForwardLossAmount,
+          taxYearBroughtForwardFrom = asTyBefore24(TaxYear(hipPropertyBFLResponse.taxYearBroughtForwardFrom)),
+          lastModified = hipPropertyBFLResponse.submissionDate.toString
+        )).leftMap { error =>
+          logger.error(s"[updateBroughtForwardLoss]: Error updating loss brought forward from Hybrid Integration Platform")
+          ApiServiceError(error.status)
+        }
+    } else {
+      EitherT(integrationFrameworkConnector.updateBroughtForwardLoss(taxYearBroughtForwardFrom, nino, lossId, lossAmount))
+        .leftMap { error =>
+          logger.error(s"[updateBroughtForwardLoss]: Error updating loss brought forward from Integration Framework")
+          ApiServiceError(error.status)
+        }
     }
-
-  def updateBroughtForwardLossHiP(
-                                   taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
-                                   nino: Nino,
-                                   lossId: String,
-                                   lossAmount: BigDecimal
-                                 )(implicit hc: HeaderCarrier): ITPEnvelope[HipPropertyBFLResponse] = EitherT {
-      hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId))
   }
-    .leftMap { error =>
-      logger.error(s"[updateBroughtForwardLoss]: Error updating losses brought forward")
-      ApiServiceError(error.status)
-    }
 
   private def createOrUpdateBroughtForwardLoss(
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
@@ -455,13 +456,6 @@ class PropertyService @Inject() (
                                 incomeSourceId = ctx.incomeSourceId
                               ).orElse(ITPEnvelope.liftPure(Seq.empty[BroughtForwardLossResponseWithId]))
       broughtForwardLossId <- broughtForwardLosses.find(bfl => bfl.typeOfLoss == UKProperty) match {
-                                case Some(bfl) if appConfig.hipMigration1501Enabled =>
-                                  updateBroughtForwardLossHiP(
-                                    taxYearBroughtForwardFrom,
-                                    nino,
-                                    bfl.lossId,
-                                    lossAmount
-                                  ).map(_ => bfl.lossId)
                                 case Some(bfl) =>
                                   updateBroughtForwardLoss(
                                     taxYearBroughtForwardFrom,
