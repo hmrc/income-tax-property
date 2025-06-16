@@ -18,18 +18,18 @@ package connectors
 
 import config.AppConfig
 import connectors.Connector.hcWithCorrelationId
-import connectors.response.{GetHipPropertyBFLResponse, PostBroughtForwardLossResponse, PutHipPropertyBFLResponse}
+import connectors.response.{GetHipBusinessDetailsResponse, GetHipPropertyBFLResponse, PostBroughtForwardLossResponse, PutHipPropertyBFLResponse}
 import models.IncomeSourceType
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
-import models.request.{WhenYouReportedTheLoss, HipPropertyUpdateBFLRequest, HipPropertyBFLRequest}
-import models.responses.{HipPropertyBFLResponse, BroughtForwardLossId}
+import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenYouReportedTheLoss}
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{StringContextOps, HeaderCarrier, HeaderNames}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -154,7 +154,7 @@ class HipConnector @Inject() (
       .get(url"$url")(hcWithCorrelationId(hc))
       .setHeader("Environment" -> appConfig.hipEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiNumber)}")
-      .execute[GetHipPropertyBFLResponse]
+      .execute[GetHipBusinessDetailsResponse]
      ???
   }
 
