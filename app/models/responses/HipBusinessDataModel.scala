@@ -29,6 +29,25 @@ case class HipBusinessDataModel (
 
 object HipBusinessDataModel {
   implicit val format: Format[HipBusinessDataModel] = Json.format[HipBusinessDataModel]
+
+  def toBusinessDetailsModel(hipBusinessDataModel: HipBusinessDataModel): BusinessDetailsModel = {
+    BusinessDetailsModel(
+      incomeSourceId = hipBusinessDataModel.incomeSourceId,
+      accountingPeriodStartDate = hipBusinessDataModel.accPeriodSDate,
+      accountingPeriodEndDate = hipBusinessDataModel.accPeriodEDate,
+      tradingName = hipBusinessDataModel.tradingName,
+      businessAddressDetails = hipBusinessDataModel.businessAddressDetails,
+      businessContactDetails = hipBusinessDataModel.businessContactDetails,
+      tradingStartDate = hipBusinessDataModel.tradingSDate,
+      latencyDetails = hipBusinessDataModel.latencyDetails,
+      cashOrAccruals = Some(hipBusinessDataModel.cashOrAccrualsFlag),
+      seasonal = hipBusinessDataModel.seasonalFlag,
+      cessationDate = hipBusinessDataModel.cessationDate,
+      paperless = hipBusinessDataModel.paperLessFlag,
+      firstAccountingPeriodStartDate = hipBusinessDataModel.firstAccountingPeriodStartDate,
+      firstAccountingPeriodEndDate = hipBusinessDataModel.firstAccountingPeriodEndDate
+    )
+  }
 }
 
 

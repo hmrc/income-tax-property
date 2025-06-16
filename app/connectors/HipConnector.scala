@@ -25,7 +25,8 @@ import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss.toTaxYear
 import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenYouReportedTheLoss}
-import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
+import models.responses.HipBusinessDetailsResponse.toIncomeSourceDetailsModel
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse, IncomeSourceDetailsModel}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -146,7 +147,7 @@ class HipConnector @Inject() (
   }
 
   // HIP API#5266
-  def getBusinessDetails()(implicit hc: HeaderCarrier) = {
+  def getBusinessDetails()(implicit hc: HeaderCarrier): Future[Either[ApiError, IncomeSourceDetailsModel]] = {
     val apiNumber = "1502"
     val url = s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details"
 
@@ -155,7 +156,13 @@ class HipConnector @Inject() (
       .setHeader("Environment" -> appConfig.hipEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiNumber)}")
       .execute[GetHipBusinessDetailsResponse]
-     ???
+      .map { response: GetHipBusinessDetailsResponse =>
+        if (response.result.isLeft) {
+          val correlationId =
+            response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
+        }
+        response.result.map(toIncomeSourceDetailsModel)
+      }
   }
 
 }
