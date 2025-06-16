@@ -44,6 +44,7 @@ trait AppConfig {
   def throwConfigNotFoundError(key: String): RuntimeException
   def hipMigration1500Enabled: Boolean
   def hipMigration1501Enabled: Boolean
+  def hipMigration5266Enabled: Boolean
 }
 
 @Singleton
@@ -104,5 +105,7 @@ class AppConfigImpl @Inject() (config: Configuration) extends AppConfig {
   override lazy val hipMigration1500Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1500-enabled")
 
   override lazy val hipMigration1501Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-1501-enabled")
+
+  override lazy val hipMigration5266Enabled: Boolean = config.get[Boolean]("feature-switch.hip-migration.api-5266-enabled")
 
 }

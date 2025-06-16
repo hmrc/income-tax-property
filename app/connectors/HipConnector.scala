@@ -145,4 +145,17 @@ class HipConnector @Inject() (
       }
   }
 
+  // HIP API#5266
+  def getBusinessDetails()(implicit hc: HeaderCarrier) = {
+    val apiNumber = "1502"
+    val url = s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details"
+
+    http
+      .get(url"$url")(hcWithCorrelationId(hc))
+      .setHeader("Environment" -> appConfig.hipEnvironment)
+      .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiNumber)}")
+      .execute[GetHipPropertyBFLResponse]
+     ???
+  }
+
 }
