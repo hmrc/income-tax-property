@@ -16,16 +16,16 @@
 
 package models.responses
 
-import models.{RentalsAndRaRAbout, Enumerable}
 import models.request._
 import models.request.foreign.{AnnualForeignProperty, WithName}
 import models.request.ukrentaroom.RaRAdjustments
+import models.{Enumerable, RentalsAndRaRAbout}
 import monocle.Optional
 import monocle.macros.GenLens
-import play.api.libs.json.{OFormat, Writes, Json, JsValue}
+import play.api.libs.json.{JsValue, Json, OFormat, Writes}
 import play.api.libs.ws.BodyWritable
 
-import java.time.{LocalDateTime, LocalDate}
+import java.time.{LocalDate, LocalDateTime}
 
 case class PropertyAnnualSubmission(
   submittedOn: Option[LocalDateTime],

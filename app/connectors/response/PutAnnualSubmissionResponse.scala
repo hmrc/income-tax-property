@@ -19,7 +19,7 @@ package connectors.response
 import connectors.Parser
 import models.errors.ApiError
 import play.api.Logging
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 case class PutAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])

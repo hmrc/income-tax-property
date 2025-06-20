@@ -17,10 +17,10 @@
 package connectors.response
 
 import connectors.Parser
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import models.errors.ApiError
 import play.api.Logging
 import play.api.http.Status._
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 case class PutForeignIncomeSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Unit])
 

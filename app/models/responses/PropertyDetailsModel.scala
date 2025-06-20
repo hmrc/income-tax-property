@@ -16,8 +16,8 @@
 
 package models.responses
 
-import play.api.libs.json._
 import models.PropertyDetails
+import play.api.libs.json._
 
 import java.time.LocalDate
 

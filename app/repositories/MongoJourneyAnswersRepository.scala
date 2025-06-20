@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.common.{JourneyContext, JourneyStatus, Mtditid, TaxYear}
+import models.common.{JourneyContext, JourneyStatus}
 import models.domain.JourneyAnswers
 import org.mongodb.scala._
 import org.mongodb.scala.bson._

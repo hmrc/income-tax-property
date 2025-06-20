@@ -20,8 +20,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 
-import java.time.LocalDate
-
 class HipPropertyUpdateBFLRequestSpec extends AnyWordSpec with Matchers {
   private val lossAmount: BigDecimal = BigDecimal(123.45)
 

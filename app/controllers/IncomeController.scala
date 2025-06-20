@@ -22,13 +22,13 @@ import models.common._
 import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import play.api.Logging
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents, AnyContent, Result}
-import services.{JourneyStatusService, ForeignIncomeService}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import services.{ForeignIncomeService, JourneyStatusService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 class IncomeController @Inject()(
   incomeService: ForeignIncomeService,

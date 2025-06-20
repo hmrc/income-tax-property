@@ -23,8 +23,7 @@ import models.errors.{CannotParseJsonError, CannotReadJsonError}
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.PropertyService
-import services.JourneyStatusService
+import services.{JourneyStatusService, PropertyService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject

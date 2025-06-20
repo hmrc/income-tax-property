@@ -17,8 +17,6 @@
 package controllers.ukproperty
 
 import cats.syntax.either._
-import models.{RentalsAndRaRAbout, UKPropertySelect}
-import models.UKPropertySelect.PropertyRentals
 import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments, RentalAbout}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
@@ -29,7 +27,7 @@ import models.request.foreign.TotalIncome
 import models.request.sba._
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import org.mockito.Mockito.when
+import models.{RentalsAndRaRAbout, UKPropertySelect}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._

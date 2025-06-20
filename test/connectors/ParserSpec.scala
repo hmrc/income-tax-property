@@ -16,10 +16,10 @@
 
 package connectors
 
+import models.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
-import models.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
 import utils.UnitTest
 
 class ParserSpec extends UnitTest {

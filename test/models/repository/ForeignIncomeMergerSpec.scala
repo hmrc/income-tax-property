@@ -17,9 +17,9 @@
 package models.repository
 
 import models.repository.ForeignIncomeMerger.ForeignDividendsAnswersMerger
-import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import models.repository.Merger._
-import models.request.foreignincome.{GrossAmountWithReference, ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
+import models.request.foreignincome.{ForeignDividend, ForeignDividendsAnswers, ForeignIncomeSubmission, GrossAmountWithReference}
+import models.{ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
 import utils.UnitTest
 
 class ForeignIncomeMergerSpec extends UnitTest {

@@ -18,13 +18,13 @@ package utils
 
 import config.{AppConfig, AppConfigImpl}
 import org.scalamock.scalatest.MockFactory
-import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 
 class AppConfigStub extends MockFactory {
 
-  def config(environment: String = "test", featureSwitchConfig: Option[FeatureSwitchConfig] = None): AppConfig = new AppConfigImpl(mock[Configuration]) {
+  def config(environment: String = "test", featureSwitchConfig: Option[FeatureSwitchConfig] = None): AppConfig = new AppConfigImpl(mock[ServicesConfig]) {
     private val wireMockPort = 11111
 
     private lazy val authorisationToken: String = "secret"
@@ -47,11 +47,7 @@ class AppConfigStub extends MockFactory {
 
     lazy val featureSwitches: FeatureSwitchConfig = featureSwitchConfig.getOrElse(FeatureSwitchConfig())
 
-    override lazy val hipMigration1500Enabled: Boolean = featureSwitches.hipApi1500
-    override lazy val hipMigration1502Enabled: Boolean = featureSwitches.hipApi1502
-
-
-    override lazy val hipMigration1501Enabled: Boolean = featureSwitches.hipApi1501
+    override def enableHipApis: Boolean = featureSwitches.enableHipApis
 
   }
 }
