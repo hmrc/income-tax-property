@@ -19,10 +19,10 @@ package controllers.foreignincome
 import actions.AuthorisedAction
 import controllers.RequestHandler
 import errorhandling.ErrorHandler
-import models.common.{Nino, TaxYear, JourneyName, IncomeSourceId}
+import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
 import models.request.foreignincome.ForeignIncomeDividendsWithCountryCode
 import play.api.Logging
-import play.api.mvc.{Action, ControllerComponents, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ForeignIncomeService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

@@ -17,7 +17,7 @@
 package models.domain
 
 import models.request.foreignincome.ForeignDividendsAnswers
-import play.api.libs.json.{OFormat, Json}
+import play.api.libs.json.{Json, OFormat}
 
 case class FetchedData(
   propertyData: FetchedPropertyData,

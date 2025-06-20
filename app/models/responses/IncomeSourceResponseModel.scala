@@ -16,8 +16,9 @@
 
 package models.responses
 
-import IncomeSourceDetailsModel.TaxPayerDisplayResponse
+import models.responses.IncomeSourceDetailsModel.TaxPayerDisplayResponse
 import play.api.libs.json.{Format, JsValue, Json, OFormat}
+
 import java.time.LocalDateTime
 
 sealed trait IncomeSourceDetailsResponse {

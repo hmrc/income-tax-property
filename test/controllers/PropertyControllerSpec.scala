@@ -18,17 +18,17 @@ package controllers
 
 import cats.syntax.either._
 import models.common._
-import models.domain.{FetchedUKPropertyData, FetchedPropertyData, FetchedForeignIncomeData, FetchedForeignPropertyData, FetchedData, FetchedUkAndForeignPropertyData}
-import models.errors.{ServiceError, RepositoryError}
+import models.domain._
+import models.errors.{RepositoryError, ServiceError}
 import models.request.esba.EsbaInfo
 import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{Json, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
+import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
 import utils.providers.FakeRequestProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global

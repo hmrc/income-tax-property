@@ -16,13 +16,13 @@
 
 package controllers
 
-import models.{BusinessDetailsResponse, PropertyDetails}
 import models.errors.{ApiServiceError, DataNotFoundError}
+import models.{BusinessDetailsResponse, PropertyDetails}
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers.{contentAsJson, status}
-import utils.ControllerUnitTest
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockBusinessDetailsService}
 import utils.providers.FakeRequestProvider
 

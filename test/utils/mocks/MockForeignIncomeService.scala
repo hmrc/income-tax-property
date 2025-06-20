@@ -20,7 +20,7 @@ import cats.data.EitherT
 import models.common._
 import models.domain.FetchedData
 import models.errors.ServiceError
-import models.request.foreignincome.{ForeignIncomeSubmission, ForeignIncomeDividendsWithCountryCode}
+import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import services.ForeignIncomeService

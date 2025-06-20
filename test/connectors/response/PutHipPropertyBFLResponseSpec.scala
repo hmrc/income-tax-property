@@ -16,14 +16,14 @@
 
 package connectors.response
 
-import utils.UnitTest
 import connectors.response.PutHipPropertyBFLResponse.putHipPropertyBroughtForwardLoss
 import models.IncomeSourceType.UKPropertyOther
-import models.errors.{SingleErrorBody, ApiError}
+import models.errors.{ApiError, SingleErrorBody}
 import models.responses.HipPropertyBFLResponse
 import play.api.http.Status._
-import play.api.libs.json.{Json, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
+import utils.UnitTest
 
 import java.time.LocalDate
 

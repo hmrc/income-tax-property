@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.syntax.either._
 import connectors.IntegrationFrameworkConnector
 import models.ITPEnvelope.ITPEnvelope
+import models._
 import models.common._
 import models.errors._
 import models.request.foreign._
@@ -28,7 +29,6 @@ import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignPrope
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses._
-import models._
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 

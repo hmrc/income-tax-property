@@ -19,13 +19,13 @@ package services
 import cats.data.EitherT
 import cats.syntax.either._
 import config.AppConfig
-import connectors.{IntegrationFrameworkConnector, HipConnector}
+import connectors.{HipConnector, IntegrationFrameworkConnector}
 import models.ITPEnvelope.ITPEnvelope
 import models.LossType.UKProperty
 import models._
 import models.common.TaxYear.asTyBefore24
 import models.common._
-import models.domain.{JourneyAnswers, FetchedData}
+import models.domain.{FetchedData, JourneyAnswers}
 import models.errors._
 import models.repository.Extractor.GeneralExtractor
 import models.request._
@@ -365,7 +365,7 @@ class PropertyService @Inject() (
     lossAmount: BigDecimal
   )(implicit hc: HeaderCarrier): ITPEnvelope[String] =
     EitherT {
-      if (appConfig.hipMigration1500Enabled) {
+      if (appConfig.enableHipApis) {
         hipConnector.createPropertyBroughtForwardLoss(nino, incomeSourceId, IncomeSourceType.UKPropertyOther , lossAmount, taxYearBroughtForwardFrom)
       } else {
         integrationFrameworkConnector.createBroughtForwardLoss(taxYearBroughtForwardFrom, nino, incomeSourceId, lossAmount)
@@ -381,7 +381,7 @@ class PropertyService @Inject() (
     nino: Nino,
     lossId: String
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
-    if(appConfig.hipMigration1502Enabled) {
+    if(appConfig.enableHipApis) {
       EitherT(hipConnector.getPropertyBroughtForwardLoss(nino, lossId))
         .map(hipPropertyBFLResponse => BroughtForwardLossResponse(
           businessId = hipPropertyBFLResponse.incomeSourceId,
@@ -422,7 +422,7 @@ class PropertyService @Inject() (
     lossAmount: BigDecimal,
     incomeSourceId: IncomeSourceId
   )(implicit hc: HeaderCarrier): ITPEnvelope[BroughtForwardLossResponse] = {
-    if (appConfig.hipMigration1501Enabled) {
+    if (appConfig.enableHipApis) {
       EitherT(hipConnector.updatePropertyBroughtForwardLoss(nino, lossAmount, taxYearBroughtForwardFrom, BroughtForwardLossId(lossId)))
         .map(hipPropertyBFLResponse => BroughtForwardLossResponse(
           businessId = hipPropertyBFLResponse.incomeSourceId,

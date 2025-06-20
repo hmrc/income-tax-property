@@ -19,11 +19,11 @@ package models.repository
 import models.repository.Merger._
 import models.request.common.{Address, BuildingName, BuildingNumber, Postcode}
 import models.request.esba._
-import models.request.{PropertyRentalAdjustments, BalancingCharge, WhenYouReportedTheLoss, UnusedLossesBroughtForward, RenovationAllowanceBalancingCharge}
+import models.request._
 import models.responses._
 import utils.UnitTest
 
-import java.time.{LocalDateTime, LocalDate}
+import java.time.{LocalDate, LocalDateTime}
 
 class MergerSpec extends UnitTest {
   "Merger" should {

@@ -19,8 +19,8 @@ package models.request.foreign
 import models.errors.ServiceError
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
-import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate}
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
+import models.responses.{StructuredBuildingAllowance, StructuredBuildingAllowanceBuilding, StructuredBuildingAllowanceDate}
 import monocle.Optional
 import monocle.macros.GenLens
 import play.api.libs.json._
