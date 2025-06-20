@@ -17,19 +17,19 @@
 package connectors
 
 
-import models.{LossType, IncomeSourceType}
 import models.IncomeSourceType.UKPropertyFHL
 import models.LossType.UKProperty
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.{ApiError, SingleErrorBody}
-import models.request.{WhenYouReportedTheLoss, HipPropertyUpdateBFLRequest, HipPropertyBFLRequest}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
+import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenYouReportedTheLoss}
 import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
+import models.{IncomeSourceType, LossType}
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HttpResponse, HeaderCarrier, SessionId}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global

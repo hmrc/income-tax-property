@@ -21,8 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import repositories.MongoJourneyAnswersRepository
-import services.MongoJourneyAnswersService
-import services.JourneyStatusService
+import services.{JourneyStatusService, MongoJourneyAnswersService}
 import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 import utils.AppConfigStub
 

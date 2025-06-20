@@ -17,18 +17,14 @@
 package connectors
 
 import models.LossType.UKProperty
-import models.LossType
-import models.LossType.UKProperty
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.WhenYouReportedTheLoss.y2021to2022
 import models.request.foreign.{CreateForeignPropertyPeriodicSubmissionRequest, UpdateForeignPropertyPeriodicSubmissionRequest}
-import models.request.WhenYouReportedTheLoss.y2021to2022
-import models.request.foreign.UpdateForeignPropertyPeriodicSubmissionRequest
-import models.request.foreignincome.{ForeignDividend, ForeignIncomeSubmission}
 import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
-import models.request.{BroughtForwardLossAmount, BroughtForwardLossRequest, CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
+import models.request.foreignincome.{ForeignDividend, ForeignIncomeSubmission}
+import models.request._
 import models.responses._
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._

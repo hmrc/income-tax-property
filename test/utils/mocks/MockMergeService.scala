@@ -16,7 +16,7 @@
 
 package utils.mocks
 
-import models.domain.{JourneyAnswers, FetchedData}
+import models.domain.{FetchedData, JourneyAnswers}
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.scalamock.scalatest.MockFactory

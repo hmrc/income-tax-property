@@ -19,7 +19,7 @@ package utils.mocks
 import cats.data.EitherT
 import models.ITPEnvelope.ITPEnvelope
 import models.common._
-import models.domain.{FetchedPropertyData, FetchedData}
+import models.domain.FetchedData
 import models.errors.ServiceError
 import models.request._
 import models.request.esba.EsbaInfo
@@ -29,7 +29,6 @@ import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.Writes
 import services.PropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
