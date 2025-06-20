@@ -16,8 +16,8 @@
 
 package models
 
-import models.request.{WhenYouReportedTheLoss, BalancingCharge, UnusedLossesBroughtForward}
-import play.api.libs.json.{OFormat, Json}
+import models.request.{BalancingCharge, UnusedLossesBroughtForward, WhenYouReportedTheLoss}
+import play.api.libs.json.{Json, OFormat}
 
 final case class RentARoomAdjustmentsStoreAnswers(
                                  balancingCharge: Option[BalancingCharge],

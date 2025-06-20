@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.libs.json.{OFormat, Json}
+import play.api.libs.json.{Json, OFormat}
 
 final case class IsRaRUnusedLossesBroughtForward(isRaRUnusedLossesBroughtForward: Boolean)
 

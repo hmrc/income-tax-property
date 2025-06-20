@@ -17,7 +17,7 @@
 package models.request.ukrentaroom
 
 import models.request.{BalancingCharge, UnusedLossesBroughtForward, WhenYouReportedTheLoss}
-import play.api.libs.json.{OFormat, Json}
+import play.api.libs.json.{Json, OFormat}
 
 final case class RaRAdjustments(
   balancingCharge: Option[BalancingCharge],

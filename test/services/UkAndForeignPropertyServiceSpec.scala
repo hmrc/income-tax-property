@@ -17,7 +17,7 @@
 package services
 
 import config.AppConfig
-import models.common.{IncomeSourceId, JourneyContext, JourneyName, Mtditid, TaxYear}
+import models.common._
 import models.errors.RepositoryError
 import models.request.ukandforeign._
 import org.mockito.Mockito.{doReturn, spy}
@@ -26,8 +26,8 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.{AppConfigStub, UnitTest}
 import utils.mocks._
+import utils.{AppConfigStub, UnitTest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

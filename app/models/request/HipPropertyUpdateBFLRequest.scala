@@ -16,7 +16,7 @@
 
 package models.request
 
-import play.api.libs.json.{Writes, OWrites, JsValue, Json}
+import play.api.libs.json.{JsValue, Json, OWrites, Writes}
 import play.api.libs.ws.BodyWritable
 
 case class HipPropertyUpdateBFLRequest(

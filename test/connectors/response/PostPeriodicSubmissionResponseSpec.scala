@@ -16,12 +16,12 @@
 
 package connectors.response
 
-import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.HttpResponse
 import connectors.response.PostPeriodicSubmissionResponse.postPeriodicSubmission
 import models.errors.{ApiError, SingleErrorBody}
 import models.responses.PeriodicSubmissionId
+import play.api.http.Status._
+import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
 class PostPeriodicSubmissionResponseSpec extends UnitTest {

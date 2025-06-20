@@ -19,7 +19,7 @@ package connectors.response
 import connectors.Parser
 import models.errors.ApiError
 import models.responses.PropertyAnnualSubmission
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 case class GetPropertyAnnualSubmissionResponse(httpResponse: HttpResponse, result: Either[ApiError, Option[PropertyAnnualSubmission]])

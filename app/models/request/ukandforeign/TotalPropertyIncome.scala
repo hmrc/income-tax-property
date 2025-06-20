@@ -16,8 +16,8 @@
 
 package models.request.ukandforeign
 
-import models.request.foreign.WithName
 import models.Enumerable
+import models.request.foreign.WithName
 
 
 sealed trait TotalPropertyIncome

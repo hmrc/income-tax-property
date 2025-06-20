@@ -19,18 +19,18 @@ package services
 import models._
 import models.common._
 import models.domain._
-import models.repository.Merger._
+import models.repository.ForeignIncomeMerger._
 import models.repository.ForeignMerger._
+import models.repository.Merger._
 import models.request._
-import models.request.esba.{EsbaInUpstream, EsbaInfoToSave, EsbaInfo}
+import models.request.esba.{EsbaInUpstream, EsbaInfo, EsbaInfoToSave}
 import models.request.foreign._
 import models.request.foreign.allowances.ForeignAllowancesAnswers
-import models.request.foreignincome.{ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
+import models.request.foreignincome.{ForeignDividend, ForeignDividendsAnswers, ForeignIncomeSubmission}
 import models.request.sba.{SbaInfo, SbaInfoToSave}
 import models.request.ukandforeign.UkAndForeignAbout
 import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
-import models.repository.ForeignIncomeMerger._
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
