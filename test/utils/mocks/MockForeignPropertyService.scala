@@ -21,9 +21,9 @@ import models.common._
 import models.errors.ServiceError
 import models.request.foreign._
 import models.request.foreign.adjustments.ForeignPropertyAdjustmentsWithCountryCode
-import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
+import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory

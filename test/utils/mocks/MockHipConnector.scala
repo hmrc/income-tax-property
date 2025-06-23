@@ -21,8 +21,8 @@ import models.IncomeSourceType
 import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss
-import models.responses.{HipPropertyBFLResponse, BroughtForwardLossId}
-import org.scalamock.handlers.{CallHandler6, CallHandler3, CallHandler5}
+import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
+import org.scalamock.handlers.{CallHandler3, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 

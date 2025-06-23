@@ -60,7 +60,7 @@ class PropertyServiceSpec
     with MockHipConnector with HttpClientSupport with ScalaCheckPropertyChecks with AppConfigStubProvider {
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   private val underTest = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
-  private val hipApisEnabledFSConfig = FeatureSwitchConfig(hipApi1500 = true, hipApi1501 = true, hipApi1502 = true)
+  private val hipApisEnabledFSConfig = FeatureSwitchConfig(enableHipApis = true)
   private val appConfigWithHipApisEnabled: AppConfig = new AppConfigStub().config(featureSwitchConfig = Some(hipApisEnabledFSConfig))
   private val underTestWithHipApisEnabled = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigWithHipApisEnabled, mockHipConnector)
   private val nino = Nino("A34324")

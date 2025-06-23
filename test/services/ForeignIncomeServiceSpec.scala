@@ -19,7 +19,7 @@ package services
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import models.common._
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, ServiceError, SingleErrorBody}
+import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
 import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
 import models.request.foreignincome.{ForeignDividend, ForeignIncomeDividend, ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks

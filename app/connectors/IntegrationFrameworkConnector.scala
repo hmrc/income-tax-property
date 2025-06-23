@@ -23,8 +23,8 @@ import models.LossType.UKProperty
 import models.common.TaxYear.{asTyBefore24, asTys}
 import models.common.{IncomeSourceId, Nino, TaxYear}
 import models.errors.ApiError
-import models.request.foreign._
 import models.request._
+import models.request.foreign._
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
