@@ -20,9 +20,10 @@ import models.domain.{FetchedData, JourneyAnswers}
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.MergeService
 
-trait MockMergeService extends MockFactory {
+trait MockMergeService extends MockFactory { _: TestSuite =>
   protected val mergeService: MergeService = mock[MergeService]
 
   def mockMergeServiceMergeAll(returnValue: FetchedData) =

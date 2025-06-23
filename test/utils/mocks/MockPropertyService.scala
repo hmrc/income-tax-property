@@ -29,13 +29,14 @@ import models.responses._
 import models.{ITPEnvelope, PropertyPeriodicSubmissionResponse, RentalsAndRaRAbout}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.PropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockPropertyService extends MockFactory {
+trait MockPropertyService extends MockFactory { _: TestSuite =>
 
   protected val mockPropertyService: PropertyService = mock[PropertyService]
 

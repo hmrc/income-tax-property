@@ -23,13 +23,14 @@ import models.errors.ServiceError
 import models.request.foreignincome.{ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.ForeignIncomeService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockForeignIncomeService extends MockFactory {
+trait MockForeignIncomeService extends MockFactory { _: TestSuite =>
 
   protected val mockForeignIncomeService: ForeignIncomeService = mock[ForeignIncomeService]
 

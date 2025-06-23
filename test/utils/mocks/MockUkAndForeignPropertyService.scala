@@ -22,12 +22,13 @@ import models.errors.ServiceError
 import models.request.ukandforeign.UkAndForeignAbout
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.UkAndForeignPropertyService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockUkAndForeignPropertyService extends MockFactory {
+trait MockUkAndForeignPropertyService extends MockFactory { _: TestSuite =>
 
   protected val mockUkAndForeignPropertyService: UkAndForeignPropertyService = mock[UkAndForeignPropertyService]
 

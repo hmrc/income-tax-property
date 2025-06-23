@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.12.0"
+  private val bootstrapVersion = "9.13.0"
   private val hmrcMongoVersion = "2.6.0"
   private val monocleVersion = "3.3.0"
   val jacksonAndPlayExclusions: Seq[ExclusionRule] = Seq(
@@ -17,9 +17,9 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.19.0",
-    "com.beachape"                 %% "enumeratum"                % "1.7.6",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.8.2" excludeAll (jacksonAndPlayExclusions *),
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.19.1",
+    "com.beachape"                 %% "enumeratum"                % "1.9.0",
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.0" excludeAll (jacksonAndPlayExclusions *),
     "dev.optics"                   %% "monocle-core"              % monocleVersion,
     "dev.optics"                   %% "monocle-macro"             % monocleVersion
   )
@@ -27,7 +27,7 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"           %% "bootstrap-test-play-30"   % bootstrapVersion,
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion,
-    "org.scalamock"         %% "scalamock"                % "5.2.0",
+    "org.scalamock"         %% "scalamock"                % "7.3.3",
     "org.scalatest"         %% "scalatest"                % "3.2.19",
     "org.scalacheck"        %% "scalacheck"               % "1.18.1",
     "org.scalatestplus"     %% "scalacheck-1-15"          % "3.2.11.0",

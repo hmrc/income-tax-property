@@ -17,12 +17,12 @@
 package utils
 
 import config.{AppConfig, AppConfigImpl}
-import org.scalamock.scalatest.MockFactory
+import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 
-class AppConfigStub extends MockFactory {
+class AppConfigStub {
 
   def config(environment: String = "test", featureSwitchConfig: Option[FeatureSwitchConfig] = None): AppConfig = new AppConfigImpl(mock[ServicesConfig]) {
     private val wireMockPort = 11111

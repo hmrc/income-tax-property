@@ -53,7 +53,18 @@ This service runs on port: `localhost:19160`
 
 Run the following command to start the additional required services locally:
 
-    sm2 --start INCOME_TAX_SUBMISSION_ALL -r
+    sm2 --start INCOME_TAX_SUBMISSION_ALL
+
+To test the branch you're working on locally. You will need to run `sm2 --stop INCOME_TAX_PROPERTY` followed by
+`./run.sh`
+
+### Running Tests
+
+- Run Unit Tests:  `sbt test`
+- Run Integration Tests: `sbt it/test`
+- Run Unit and Integration Tests: `sbt test it/test`
+- Run Unit and Integration Tests with coverage report: `./check.sh`<br/>
+  which runs `sbt clean coverage test it/test coverageReport dependencyUpdates`
 
 ### License
 

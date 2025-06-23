@@ -19,6 +19,7 @@ package utils.mocks
 import actions.AuthorisedAction
 import models.auth.Enrolment.{Individual, Nino}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import play.api.mvc._
 import play.api.test.Helpers.stubMessagesControllerComponents
 import uk.gov.hmrc.auth.core.retrieve.~
@@ -27,7 +28,7 @@ import uk.gov.hmrc.auth.core._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockAuthorisedAction extends MockFactory with MockAuthConnector {
+trait MockAuthorisedAction extends MockFactory with MockAuthConnector { _: TestSuite =>
 
   private val mcc = stubMessagesControllerComponents()
   private val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mcc.parsers.default)

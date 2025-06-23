@@ -20,6 +20,7 @@ import models.auth.DelegatedAuthRules
 import models.auth.Enrolment.Individual
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -28,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockAuthConnector extends MockFactory {
+trait MockAuthConnector extends MockFactory { _: TestSuite =>
 
   protected val mockAuthConnector: AuthConnector = mock[AuthConnector]
 

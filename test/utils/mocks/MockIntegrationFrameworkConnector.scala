@@ -25,11 +25,12 @@ import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKProper
 import models.responses._
 import org.scalamock.handlers.{CallHandler3, CallHandler4, CallHandler5, CallHandler6}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockIntegrationFrameworkConnector extends MockFactory {
+trait MockIntegrationFrameworkConnector extends MockFactory { _: TestSuite =>
 
   protected val mockIntegrationFrameworkConnector: IntegrationFrameworkConnector = mock[IntegrationFrameworkConnector]
 
