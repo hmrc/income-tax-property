@@ -15,14 +15,16 @@
  */
 
 package services
-import models.ForeignAdjustmentsStoreAnswers
+import models.{ForeignAdjustmentsStoreAnswers, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
+import models.common.JourneyName.ForeignIncomeDividends
 import models.common.JourneyStatus.InProgress
-import models.common.{IncomeSourceId, JourneyName, Mtditid, TaxYear}
+import models.common.{IncomeSourceId, Mtditid, TaxYear, JourneyName}
 import models.domain.JourneyAnswers
-import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears, ForeignWhenYouReportedTheLoss}
 import models.request.foreign.allowances.ForeignAllowancesAnswers
-import models.request.foreign.{AnnualForeignProperty, ForeignAdjustmentsAnswers, ForeignPropertyAdjustments, ForeignPropertyAllowances}
-import models.request.{BalancingCharge, DeductingTax, PropertyRentalsIncome}
+import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignAdjustmentsAnswers, ForeignPropertyAdjustments}
+import models.request.foreignincome.{GrossAmountWithReference, ForeignIncomeSubmission, ForeignDividend, ForeignDividendsAnswers}
+import models.request.{BalancingCharge, PropertyRentalsIncome, DeductingTax}
 import models.responses._
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
@@ -31,7 +33,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsObject, Json}
 import utils.UnitTest
 
-import java.time.{Instant, LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, Instant, LocalDate}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with ScalaCheckPropertyChecks {
@@ -304,6 +306,71 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
           unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(isUnusedLossesPreviousYears, None)),
           whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
         )
+      result shouldBe Some(Map(countryCode -> expected))
+    }
+  }
+
+  "mergeForeignIncomeDividends" should {
+    "return a map of foreign income dividends" in {
+      val countryCode = "GRE"
+      val amountBeforeTax = BigDecimal(12.34)
+      val taxTakenOff = BigDecimal(34.56)
+      val specialWithholdingTax = BigDecimal(56.78)
+      val foreignTaxCreditRelief = true
+      val taxableAmount = BigDecimal(90.12)
+      val customerReference = "reference"
+      val grossAmount = BigDecimal(78.90)
+      val foreignTaxDeductedFromDividendIncome = true
+      val foreignIncomeDividends = ForeignDividend(
+        countryCode = countryCode,
+        amountBeforeTax = Some(amountBeforeTax),
+        taxTakenOff = Some(taxTakenOff),
+        specialWithholdingTax = Some(specialWithholdingTax),
+        foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
+        taxableAmount = taxableAmount
+      )
+      val grossAmountWithReference: GrossAmountWithReference = GrossAmountWithReference(Some(customerReference), grossAmount)
+
+      val aForeignIncomeSubmission: ForeignIncomeSubmission = ForeignIncomeSubmission(
+        foreignDividend = Some(Seq(foreignIncomeDividends)),
+        dividendIncomeReceivedWhilstAbroad = Some(Seq(foreignIncomeDividends)),
+        stockDividend = Some(grossAmountWithReference),
+        redeemableShares = Some(grossAmountWithReference),
+        bonusIssuesOfSecurities = Some(grossAmountWithReference),
+        closeCompanyLoansWrittenOff = Some(grossAmountWithReference)
+      )
+
+      val foreignIncomeDividendsAnswers: ForeignIncomeDividendsAnswers =
+        ForeignIncomeDividendsAnswers(
+          countryCode = countryCode, foreignTaxDeductedFromDividendIncome = foreignTaxDeductedFromDividendIncome
+        )
+
+      val repositoryAnswers =
+        Some(JourneyAnswers(
+          mtditid = Mtditid("some-mtditid"),
+          incomeSourceId = IncomeSourceId("some-income-source-id"),
+          taxYear = TaxYear(2024),
+          journey = JourneyName.ForeignPropertyAdjustments,
+          countryCode = Some(countryCode),
+          status = InProgress,
+          data = Json.toJsObject(ForeignIncomeDividendsStoreAnswers(
+            Seq(foreignIncomeDividendsAnswers)
+          )),
+          createdAt = Instant.now,
+          updatedAt = Instant.now
+        )
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignIncomeDividends(Some(aForeignIncomeSubmission), repositoryAnswers)
+      val expected = ForeignDividendsAnswers(
+        amountBeforeTax = Some(amountBeforeTax),
+        taxTakenOff = Some(taxTakenOff),
+        specialWithholdingTax = Some(specialWithholdingTax),
+        foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
+        taxableAmount = Some(taxableAmount),
+        foreignTaxDeductedFromDividendIncome = Some(foreignTaxDeductedFromDividendIncome)
+      )
       result shouldBe Some(Map(countryCode -> expected))
     }
   }
