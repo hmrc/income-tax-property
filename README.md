@@ -37,7 +37,7 @@ APIs consumed by this service:
 
 To run the service locally, ensure that the following dependencies are installed and properly configured:
 
-- Rancher/Docker: Follow the installation guide on HMRC confluence 
+- Docker: Follow the [developer set-up guide](https://docs.tax.service.gov.uk/mdtp-handbook/documentation/developer-set-up/)
 - MongoDB: Follow the [MongoDB](https://docs.mongodb.com/manual/installation/) installation guide to install and set up MongoDB being used by HMRC at the time
 - Service Manager: Install/configure Service Manager 2 [sm2](https://github.com/hmrc/sm2) to manage and run the service locally.
 
@@ -53,7 +53,7 @@ This service runs on port: `localhost:19160`
 
 Run the following command to start the additional required services locally:
 
-    sm2 --start INCOME_TAX_SUBMISSION_ALL -r
+    sm2 --start INCOME_TAX_SUBMISSION_ALL
 
 ## Using the service
 
@@ -111,8 +111,7 @@ There are two main flows:
 * Run performance tests: provided in the repo [income-tax-submission-performance-tests](https://github.com/hmrc/income-tax-submission-performance-tests)
 * Run acceptance tests: provided in the repo [income-tax-submission-journey-tests](https://github.com/hmrc/income-tax-submission-journey-tests)
 
-
-## Ninos with stub data for Property in Staging Environment
+## Ninos with stub data for Property in Local/Staging Environment
 
 | Nino      | Description           |
 |-----------|-----------------------|
@@ -120,6 +119,11 @@ There are two main flows:
 | AC210000A | Cash                  |
 | AC180000A | Traditional (accrual) | 
 | AC190000B | Cash                  |
+
+### Feature Switches
+| Feature                     | Description                                                                                              |
+ |-----------------------------|----------------------------------------------------------------------------------------------------------|
+| enableHipApis          | Enables a toggle to use the APIs on the Hybrid Integration Platform
 
 ### License
 
