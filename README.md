@@ -110,6 +110,8 @@ There are two main flows:
 * Run integration tests: `sbt clean it/test`
 * Run performance tests: provided in the repo [income-tax-submission-performance-tests](https://github.com/hmrc/income-tax-submission-performance-tests)
 * Run acceptance tests: provided in the repo [income-tax-submission-journey-tests](https://github.com/hmrc/income-tax-submission-journey-tests)
+* Run Unit and Integration Tests with coverage report and dependency updates: `./check.sh`<br/>
+  which runs `sbt clean coverage test it/test coverageReport dependencyUpdates`
 
 ## Ninos with stub data for Property in Local/Staging Environment
 
