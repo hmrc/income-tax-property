@@ -15,16 +15,16 @@
  */
 
 package services
-import models.{ForeignAdjustmentsStoreAnswers, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers}
-import models.common.JourneyName.ForeignIncomeDividends
+import models.{ForeignAllowancesStoreAnswers, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers, ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 import models.common.JourneyStatus.InProgress
 import models.common.{IncomeSourceId, Mtditid, TaxYear, JourneyName}
-import models.domain.JourneyAnswers
+import models.domain.{JourneyAnswers, JourneyWithStatus}
 import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears, ForeignWhenYouReportedTheLoss}
-import models.request.foreign.allowances.ForeignAllowancesAnswers
-import models.request.foreign.{AnnualForeignProperty, ForeignPropertyAllowances, ForeignAdjustmentsAnswers, ForeignPropertyAdjustments}
-import models.request.foreignincome.{GrossAmountWithReference, ForeignIncomeSubmission, ForeignDividend, ForeignDividendsAnswers}
-import models.request.{BalancingCharge, PropertyRentalsIncome, DeductingTax}
+import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignAllowancesAnswers}
+import models.request.foreign.expenses.ConsolidatedExpenses
+import models.request.foreign.{ForeignPropertyTax, ForeignIncomeTax, ForeignIncomeAnswers, PremiumsOfLeaseGrantAgreed, ForeignPropertyAdjustments, ForeignExpensesAnswers, CalculatedPremiumLeaseTaxable, AnnualForeignProperty, ForeignPropertyAllowances, ForeignAdjustmentsAnswers}
+import models.request.foreignincome.{GrossAmountWithReference, ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
+import models.request.{BalancingCharge, ForeignSbaInfo, PropertyRentalsIncome, DeductingTax}
 import models.responses._
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
@@ -86,14 +86,23 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       result shouldBe None
     }
   }
+
   "mergeForeignPropertyAllowances" should {
 
     "return a map of foreign property allowances" in {
+      val zeroEmissionsCarAllowance = BigDecimal(75.75)
+      val zeroEmissionsGoodsVehicleAllowance = BigDecimal(35.35)
+      val costOfReplacingDomesticItems = BigDecimal(25.25)
+      val otherCapitalAllowance = BigDecimal(45.45)
+      val isCapitalAllowancesForACar = false
+      val capitalAllowancesForACarAmount = None
+      val countryCode = "GRE"
+
       val foreignPropertyAllowances = ForeignPropertyAllowances(
         annualInvestmentAllowance = Some(15.15),
-        costOfReplacingDomesticItems = Some(25.25),
-        zeroEmissionsGoodsVehicleAllowance = Some(35.35),
-        otherCapitalAllowance = Some(45.45),
+        costOfReplacingDomesticItems = Some(costOfReplacingDomesticItems),
+        zeroEmissionsGoodsVehicleAllowance = Some(zeroEmissionsGoodsVehicleAllowance),
+        otherCapitalAllowance = Some(otherCapitalAllowance),
         electricChargePointAllowance = Some(55.55),
         structuredBuildingAllowance = Some(
           Seq(
@@ -107,7 +116,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
             )
           )
         ),
-        zeroEmissionsCarAllowance = Some(75.75),
+        zeroEmissionsCarAllowance = Some(zeroEmissionsCarAllowance),
         propertyAllowance = Some(85.85)
       )
 
@@ -117,14 +126,14 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         foreignProperty = Some(
           Seq(
             AnnualForeignProperty(
-              countryCode = "ESP",
+              countryCode = countryCode,
               adjustments = None,
               allowances = Some(
                 ForeignPropertyAllowances(
                   annualInvestmentAllowance = Some(15.15),
-                  costOfReplacingDomesticItems = Some(25.25),
-                  zeroEmissionsGoodsVehicleAllowance = Some(35.35),
-                  otherCapitalAllowance = Some(45.45),
+                  costOfReplacingDomesticItems = Some(costOfReplacingDomesticItems),
+                  zeroEmissionsGoodsVehicleAllowance = Some(zeroEmissionsGoodsVehicleAllowance),
+                  otherCapitalAllowance = Some(otherCapitalAllowance),
                   electricChargePointAllowance = Some(55.55),
                   structuredBuildingAllowance = Some(
                     Seq(
@@ -144,7 +153,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
                       )
                     )
                   ),
-                  zeroEmissionsCarAllowance = Some(75.75),
+                  zeroEmissionsCarAllowance = Some(zeroEmissionsCarAllowance),
                   propertyAllowance = Some(85.85)
                 )
               )
@@ -153,8 +162,28 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         )
       )
 
+      val repositoryAnswers = Some(
+        Map(
+        countryCode -> JourneyAnswers(
+          mtditid = Mtditid("some-mtditid"),
+          incomeSourceId = IncomeSourceId("some-income-source-id"),
+          taxYear = TaxYear(2024),
+          journey = JourneyName.ForeignPropertyAdjustments,
+          countryCode = Some(countryCode),
+          status = InProgress,
+          data = Json.toJsObject(ForeignAllowancesStoreAnswers(
+            zeroEmissionsCarAllowance = Some(zeroEmissionsCarAllowance),
+            zeroEmissionsGoodsVehicleAllowance = Some(zeroEmissionsGoodsVehicleAllowance),
+            costOfReplacingDomesticItems = Some(costOfReplacingDomesticItems),
+            otherCapitalAllowance = Some(otherCapitalAllowance),
+            isCapitalAllowancesForACar = None
+          )),
+          createdAt = Instant.now,
+          updatedAt = Instant.now
+        )))
+
       val service = new MergeService()
-      val result = service.mergeForeignPropertyAllowances(aPropertyAnnualSubmission, None)
+      val result = service.mergeForeignPropertyAllowances(aPropertyAnnualSubmission, repositoryAnswers)
       val expected = ForeignAllowancesAnswers(
         zeroEmissionsCarAllowance = foreignPropertyAllowances.zeroEmissionsCarAllowance,
         zeroEmissionsGoodsVehicleAllowance = foreignPropertyAllowances.zeroEmissionsGoodsVehicleAllowance,
@@ -164,11 +193,11 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         propertyAllowance = foreignPropertyAllowances.propertyAllowance,
         electricChargePointAllowance = foreignPropertyAllowances.electricChargePointAllowance,
         structuredBuildingAllowance = foreignPropertyAllowances.structuredBuildingAllowance,
-        capitalAllowancesForACar = None
+        capitalAllowancesForACar = Some(CapitalAllowancesForACar(isCapitalAllowancesForACar, capitalAllowancesForACarAmount))
       )
       result shouldBe Some(
         Map(
-          "ESP" -> expected
+          countryCode -> expected
         )
       )
     }
@@ -176,7 +205,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
     "return an empty map when foreign properties have no allowances" in {
       val foreignProperties = Seq(
         AnnualForeignProperty(
-          countryCode = "ESP",
+          countryCode = "GRE",
           adjustments = None,
           allowances = None
         )
@@ -190,6 +219,229 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
 
       val service = new MergeService()
       val result = service.mergeForeignPropertyAllowances(propertyAnnualSubmission, None)
+
+      result shouldBe None
+    }
+
+  }
+
+  "mergeForeignPropertyIncome" should {
+
+    "return a map of foreign property income" in {
+      val countryCode = "GRE"
+      val rentIncome = ForeignPropertyRentIncome(BigDecimal(12.34))
+      val foreignTaxCreditRelief = true
+      val premiumsGrantLeaseReceived = true
+      val premiumsOfLeaseGrant = BigDecimal(56.78)
+      val otherPropertyIncome = BigDecimal(90.12)
+      val calculatedPremiumLeaseTaxable = false
+      val twelveMonthPeriodsInLease = BigDecimal(2)
+      val premiumsOfLeaseGrantAgreed = true
+      val foreignTaxPaidOrDeducted = BigDecimal(34.56)
+      val specialWithholdingTaxOrUkTaxPaid = BigDecimal(78.90)
+      val fromDate = LocalDate.now()
+      val toDate = LocalDate.now()
+      val submissionId = PeriodicSubmissionId("submissionId")
+
+      val foreignPropertyIncome = ForeignPropertyIncome(
+        rentIncome = Some(rentIncome),
+        foreignTaxCreditRelief = Some(foreignTaxCreditRelief),
+        premiumsOfLeaseGrant = Some(premiumsOfLeaseGrant),
+        otherPropertyIncome = Some(otherPropertyIncome),
+        foreignTaxPaidOrDeducted = Some(foreignTaxPaidOrDeducted),
+        specialWithholdingTaxOrUkTaxPaid = Some(specialWithholdingTaxOrUkTaxPaid)
+      )
+
+      val foreignIncomeAnswers = ForeignIncomeAnswers(
+        rentIncome = Some(rentIncome.rentAmount),
+        premiumsGrantLeaseReceived = premiumsGrantLeaseReceived,
+        otherPropertyIncome = Some(otherPropertyIncome),
+        calculatedPremiumLeaseTaxable = Some(CalculatedPremiumLeaseTaxable(calculatedPremiumLeaseTaxable, None)),
+        receivedGrantLeaseAmount = Some(premiumsOfLeaseGrant),
+        twelveMonthPeriodsInLease = Some(twelveMonthPeriodsInLease),
+        premiumsOfLeaseGrantAgreed = Some(PremiumsOfLeaseGrantAgreed(premiumsOfLeaseGrantAgreed, Some(premiumsOfLeaseGrant)))
+      )
+
+      val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
+        submissionId = Some(submissionId),
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(
+          Seq(
+            ForeignProperty(
+              countryCode = countryCode,
+              income = Some(foreignPropertyIncome),
+              expenses = None
+            )
+          )
+        ),
+        fromDate = fromDate,
+        toDate = toDate
+      )
+
+      val repositoryAnswers = Some(
+        Map(
+          countryCode -> JourneyAnswers(
+            mtditid = Mtditid("some-mtditid"),
+            incomeSourceId = IncomeSourceId("some-income-source-id"),
+            taxYear = TaxYear(2024),
+            journey = JourneyName.ForeignPropertyIncome,
+            countryCode = Some(countryCode),
+            status = InProgress,
+            data = Json.toJsObject(ForeignIncomeStoreAnswers(
+              premiumsGrantLeaseReceived = premiumsGrantLeaseReceived,
+              premiumsOfLeaseGrantAgreed = premiumsOfLeaseGrantAgreed,
+              calculatedPremiumLeaseTaxable = calculatedPremiumLeaseTaxable,
+              twelveMonthPeriodsInLease = Some(twelveMonthPeriodsInLease),
+              receivedGrantLeaseAmount = Some(premiumsOfLeaseGrant)
+            )),
+            createdAt = Instant.now,
+            updatedAt = Instant.now
+          )))
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyIncome(Some(aPropertyPeriodicSubmission), repositoryAnswers)
+      val expected = foreignIncomeAnswers
+      result shouldBe Some(
+        Map(
+          countryCode -> expected
+        )
+      )
+    }
+
+    "return an empty map when foreign properties have no allowances" in {
+      val foreignProperties = Seq(
+        ForeignProperty(
+                countryCode = "GRE",
+                income = None,
+                expenses = None
+              )
+        )
+
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        submissionId = None,
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(foreignProperties),
+        fromDate = LocalDate.now(),
+        toDate = LocalDate.now()
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyIncome(Some(propertyPeriodicSubmission), None)
+
+      result shouldBe None
+    }
+
+  }
+
+  "mergeForeignPropertyExpenses" should {
+
+    "return a map of foreign property expenses" in {
+      val countryCode = "GRE"
+      val premisesRunningCosts = BigDecimal(12.34)
+      val repairsAndMaintenance = BigDecimal(56.78)
+      val financialCosts = BigDecimal(22.34)
+      val professionalFees = BigDecimal(90.12)
+      val travelCosts = BigDecimal(34.56)
+      val costOfServices = BigDecimal(78.90)
+      val residentialFinancialCost = BigDecimal(34.56)
+      val broughtFwdResidentialFinancialCost = BigDecimal(78.90)
+      val other = BigDecimal(12.34)
+      val consolidatedExpense = BigDecimal(56.78)
+      val consolidateExpenseAmount = BigDecimal(90.12)
+      val fromDate = LocalDate.now()
+      val toDate = LocalDate.now()
+      val isConsolidatedExpenses = true
+      val submissionId = PeriodicSubmissionId("submissionId")
+
+      val foreignPropertyExpenses = ForeignPropertyExpenses(
+        premisesRunningCosts = Some(premisesRunningCosts),
+        repairsAndMaintenance = Some(repairsAndMaintenance),
+        financialCosts = Some(financialCosts),
+        professionalFees = Some(professionalFees),
+        travelCosts = Some(travelCosts),
+        costOfServices = Some(costOfServices),
+        residentialFinancialCost = Some(residentialFinancialCost),
+        broughtFwdResidentialFinancialCost = Some(broughtFwdResidentialFinancialCost),
+        other = Some(other),
+        consolidatedExpense = Some(consolidatedExpense),
+        consolidatedExpenseAmount = Some(consolidateExpenseAmount)
+      )
+
+      val foreignExpensesAnswers = ForeignExpensesAnswers(
+        consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedExpenses, Some(consolidatedExpense))),
+        premisesRunningCosts = Some(premisesRunningCosts),
+        repairsAndMaintenance = Some(repairsAndMaintenance),
+        financialCosts = Some(financialCosts),
+        professionalFees = Some(professionalFees),
+        costOfServices = Some(costOfServices),
+        other = Some(other)
+      )
+
+      val aPropertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
+        submissionId = Some(submissionId),
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(
+          Seq(
+            ForeignProperty(
+              countryCode = countryCode,
+              income = None,
+              expenses = Some(foreignPropertyExpenses)
+            )
+          )
+        ),
+        fromDate = fromDate,
+        toDate = toDate
+      )
+
+      val repositoryAnswers = Some(
+        Map(
+          countryCode -> JourneyAnswers(
+            mtditid = Mtditid("some-mtditid"),
+            incomeSourceId = IncomeSourceId("some-income-source-id"),
+            taxYear = TaxYear(2024),
+            journey = JourneyName.ForeignPropertyExpenses,
+            countryCode = Some(countryCode),
+            status = InProgress,
+            data = Json.toJsObject(ForeignPropertyExpensesStoreAnswers(
+              isConsolidatedExpenses = isConsolidatedExpenses
+            )),
+            createdAt = Instant.now,
+            updatedAt = Instant.now
+          )))
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyExpenses(Some(aPropertyPeriodicSubmission), repositoryAnswers)
+      val expected = foreignExpensesAnswers
+      result shouldBe Some(
+        Map(
+          countryCode -> expected
+        )
+      )
+    }
+
+    "return an empty map when foreign properties have no allowances" in {
+      val foreignProperties = Seq(
+        ForeignProperty(
+          countryCode = "GRE",
+          income = None,
+          expenses = None
+        )
+      )
+
+      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
+        submissionId = None,
+        submittedOn = Some(LocalDateTime.now()),
+        ukOtherProperty = None,
+        foreignProperty = Some(foreignProperties),
+        fromDate = LocalDate.now(),
+        toDate = LocalDate.now()
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignPropertyExpenses(Some(propertyPeriodicSubmission), None)
 
       result shouldBe None
     }
@@ -306,6 +558,38 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
           unusedLossesPreviousYears = Some(UnusedLossesPreviousYears(isUnusedLossesPreviousYears, None)),
           whenYouReportedTheLoss = Some(whenYouReportedTheLoss)
         )
+      result shouldBe Some(Map(countryCode -> expected))
+    }
+  }
+
+  "mergeForeignPropertyStatuses" should {
+    "return a map of foreign journey with status" in {
+      val countryCode = "GRE"
+      val journeyName = "foreign-property-adjustments"
+      val journeyStatus = "inProgress"
+      val repositoryAnswers = Map(
+        countryCode -> JourneyAnswers(
+          mtditid = Mtditid("some-mtditid"),
+          incomeSourceId = IncomeSourceId("some-income-source-id"),
+          taxYear = TaxYear(2024),
+          journey = JourneyName.ForeignPropertyAdjustments,
+          countryCode = Some(countryCode),
+          status = InProgress,
+          data = Json.toJsObject(JourneyWithStatus(
+            journeyName = journeyName,
+            journeyStatus = journeyStatus
+          )),
+          createdAt = Instant.now,
+          updatedAt = Instant.now
+        )
+      )
+
+      val service = new MergeService()
+      val result = service.mergeForeignStatuses(Map(journeyName -> repositoryAnswers))
+      val expected = List(JourneyWithStatus(
+        journeyName = journeyName,
+        journeyStatus = journeyStatus
+      ))
       result shouldBe Some(Map(countryCode -> expected))
     }
   }
