@@ -17,9 +17,9 @@
 package utils.mocks
 
 import config.AppConfig
-import org.scalamock.scalatest.MockFactory
+import org.scalatestplus.mockito.MockitoSugar.mock
 
-trait MockAppConfig extends MockFactory {
+trait MockAppConfig {
 
   lazy val mockAppConfig: AppConfig = mock[AppConfig]
 

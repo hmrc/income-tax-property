@@ -21,11 +21,12 @@ import models.errors.ApiError
 import models.responses._
 import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockBusinessDetailsConnector extends MockFactory {
+trait MockBusinessDetailsConnector extends MockFactory { _: TestSuite =>
 
   protected val mockIntegrationFrameworkConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 

@@ -27,13 +27,14 @@ import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses.PeriodicSubmissionId
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.ForeignPropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockForeignPropertyService extends MockFactory {
+trait MockForeignPropertyService extends MockFactory { _: TestSuite =>
 
   protected val mockForeignPropertyService: ForeignPropertyService = mock[ForeignPropertyService]
 

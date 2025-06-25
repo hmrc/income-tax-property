@@ -20,12 +20,13 @@ import models.BusinessDetailsResponse
 import models.errors.ServiceError
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.BusinessDetailsService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockBusinessDetailsService extends MockFactory {
+trait MockBusinessDetailsService extends MockFactory { _: TestSuite =>
 
   protected val mockIntegrationFrameworkService: BusinessDetailsService = mock[BusinessDetailsService]
 
