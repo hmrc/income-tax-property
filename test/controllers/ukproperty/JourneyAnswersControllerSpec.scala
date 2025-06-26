@@ -17,7 +17,7 @@
 package controllers.ukproperty
 
 import cats.syntax.either._
-import models.common.JourneyName.{About, RentARoomAbout, RentARoomAdjustments, RentalAbout}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomAllowances, RentARoomExpenses, RentARoomAdjustments, RentalAbout}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.WhenYouReportedTheLoss.y2018to2019
@@ -123,6 +123,115 @@ class JourneyAnswersControllerSpec
       mockAuthorisation()
       val result = underTest.saveRentARoomAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+//  "create or update uk rent a room allowances section" should {
+//    val ctx: JourneyContextWithNino =
+//      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+//
+//    val validRequestBody: JsValue = Json.parse("""{
+//                                                 |    "capitalAllowancesForACar" : {
+//                                                 |        "isCapitalAllowancesForACar" : true,
+//                                                 |        "capitalAllowancesForACarAmount" : 10.22
+//                                                 |    },
+//                                                 |    "zeroEmissionCarAllowance" : 34.56,
+//                                                 |    "zeroEmissionGoodsVehicleAllowance" : 56.78,
+//                                                 |    "replacementOfDomesticGoodsAllowance" : 78.90,
+//                                                 |    "otherCapitalAllowance" : 90.12
+//                                                 |}""".stripMargin)
+//
+//    "return no_content for valid request body" in {
+//
+//      mockAuthorisation()
+//      mockSaveUkRentARoomAllowances(
+//        ctx,
+//        models.request.RentARoomAllowances(
+//          capitalAllowancesForACar = Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(12.34))),
+//          zeroEmissionCarAllowance = Some(34.56),
+//          zeroEmissionGoodsVehicleAllowance = Some(56.78),
+//          replacementOfDomesticGoodsAllowance = Some(78.90),
+//          otherCapitalAllowance = Some(90.12)
+//        )
+//      )
+//
+//      val request = fakePostRequest.withJsonBody(validRequestBody)
+//      val result = await(underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(request))
+//      result.header.status shouldBe NO_CONTENT
+//    }
+//
+//    "should return bad request error when request body is empty" in {
+//      mockAuthorisation()
+//      val result = underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+//      status(result) shouldBe BAD_REQUEST
+//    }
+//  }
+
+  "create or update uk rent a room expenses section" should {
+    val ctx: JourneyContext =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino).toJourneyContext(RentARoomExpenses)
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |    "consolidatedExpenses" : {
+                                                 |        "isConsolidatedExpenses" : true,
+                                                 |        "consolidatedExpensesAmount" : 12.34
+                                                 |    },
+                                                 |    "rentsRatesAndInsurance": 34.56,
+                                                 |    "repairsAndMaintenanceCosts" : 56.78,
+                                                 |    "legalManagementOtherFee" : 78.90,
+                                                 |    "costOfServicesProvided" : 90.12,
+                                                 |    "otherPropertyExpenses" : 12.34
+                                                 |}""".stripMargin)
+
+    "return CREATED for valid request body" in {
+
+      mockAuthorisation()
+      mockSaveUkRaRExpenses(
+        ctx,
+        nino,
+        models.request.RentARoomExpenses(
+          consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedExpenses = true, consolidatedExpensesAmount = Some(12.34))),
+          rentsRatesAndInsurance = Some(34.56),
+          repairsAndMaintenanceCosts = Some(56.78),
+          legalManagementOtherFee = Some(78.90),
+          costOfServicesProvided = Some(90.12),
+          otherPropertyExpenses = Some(12.34)
+        ),
+
+        Some(PeriodicSubmissionId("1")).asRight[ServiceError]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRaRExpenses(taxYear, incomeSourceId, nino, ctx.journey.toString)(request))
+      result.header.status shouldBe CREATED
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveRaRExpenses(taxYear, incomeSourceId, nino, ctx.journey.toString)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "return INTERNAL_SERVER_ERROR when service returns service error" in {
+
+      mockAuthorisation()
+      mockSaveUkRaRExpenses(
+        ctx,
+        nino,
+        models.request.RentARoomExpenses(
+          consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedExpenses = true, consolidatedExpensesAmount = Some(12.34))),
+          rentsRatesAndInsurance = Some(34.56),
+          repairsAndMaintenanceCosts = Some(56.78),
+          legalManagementOtherFee = Some(78.90),
+          costOfServicesProvided = Some(90.12),
+          otherPropertyExpenses = Some(12.34)
+        ),
+        ApiServiceError(500).asLeft[Option[PeriodicSubmissionId]]
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRaRExpenses(taxYear, incomeSourceId, nino, ctx.journey.toString)(request))
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
@@ -316,7 +425,7 @@ class JourneyAnswersControllerSpec
 
     "should return bad request error when request body is empty" in {
       mockAuthorisation()
-      val result = underTest.savePropertyAbout(taxYear, incomeSourceId, nino)(fakePostRequest)
+      val result = underTest.savePropertyRentalAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }

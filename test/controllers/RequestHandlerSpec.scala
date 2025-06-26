@@ -58,15 +58,21 @@ class RequestHandlerSpec
                                                |        }
                                                |""".stripMargin)
 
-  "RequestHandler" should {
-    "handle errors and parsing correctly" in {
-      val scenarios = Table[Request[AnyContent], Int, String](
-        ("Request", "Expected Status", "Expected Message"),
-        // (fakeRequest.withHeaders(("Content-Type", "application/json")).withRawBody(ByteString("test")), BAD_REQUEST, "Cannot parse JSON"),
-        (fakeRequest.withJsonBody(validRequestBody), OK, "Success"),
-        (fakeRequest.withJsonBody(Json.toJson(PremiumsGrantLease(true, Some(12.34)))), BAD_REQUEST, "Cannot read JSON")
-      )
+  val readErrorJs: JsValue = Json.parse(
+    """
+      |{
+      | "foo": "completed"
+      |}
+      |""".stripMargin)
+  val scenarios = Table[Request[AnyContent], Int, String](
+    ("Request", "Expected Status", "Expected Message"),
+    // (fakeRequest.withHeaders(("Content-Type", "application/json")).withRawBody(ByteString("test")), BAD_REQUEST, "Cannot parse JSON"),
+    (fakeRequest.withJsonBody(validRequestBody), OK, "Success"),
+    (fakeRequest.withJsonBody(readErrorJs), BAD_REQUEST, "Cannot read JSON")
+  )
 
+  "RequestHandler JourneyContextAndEntity" should {
+    "handle errors and parsing correctly" in {
       forAll(scenarios) { (request: Request[AnyContent], expectedStatus: Int, expectedMessage: String) =>
         val result = requestHandler.withJourneyContextAndEntity[PropertyRentalsIncome](
           TaxYear(2023),
@@ -75,6 +81,21 @@ class RequestHandlerSpec
           JourneyName.NoJourney,
           AuthorisationRequest[AnyContent](User("", None), request)
         ) { (_, _) =>
+          Future.successful(Ok("Success"))
+        }
+
+        await(result.map(a => consumeBody(a))).contains(expectedMessage) shouldBe true
+        status(result) shouldBe expectedStatus
+      }
+    }
+  }
+
+  "RequestHandler Entity" should {
+    "handle errors and parsing correctly" in {
+      forAll(scenarios) { (request: Request[AnyContent], expectedStatus: Int, expectedMessage: String) =>
+        val result = requestHandler.withEntity[PropertyRentalsIncome](
+          AuthorisationRequest[AnyContent](User("", None), request)
+        ) { _ =>
           Future.successful(Ok("Success"))
         }
 
