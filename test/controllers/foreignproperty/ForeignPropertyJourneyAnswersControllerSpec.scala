@@ -18,19 +18,20 @@ package controllers.foreignproperty
 
 import cats.syntax.either._
 import models.common._
-import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
+import models.errors.{InvalidJsonFormatError, ServiceError, ApiServiceError}
 import models.request.BalancingCharge
 import models.request.foreign._
-import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
+import models.request.foreign.adjustments.{ForeignPropertyAdjustmentsWithCountryCode, ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears, ForeignWhenYouReportedTheLoss}
 import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCode
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
-import models.request.foreign.sba.{ForeignPropertySbaWithCountryCode, ForeignStructureBuildingAllowance, ForeignStructureBuildingAllowanceAddress}
+import models.request.foreign.sba.{ForeignStructureBuildingAllowanceAddress, ForeignStructureBuildingAllowance, ForeignPropertySbaWithCountryCode}
 import models.responses.PeriodicSubmissionId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{JsValue, Json}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.libs.json.{Json, JsValue}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
-import utils.mocks.{MockAuthorisedAction, MockForeignPropertyService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockForeignPropertyService, MockMongoJourneyAnswersRepository, MockAuthorisedAction}
 import utils.providers.FakeRequestProvider
 
 import java.time.LocalDate
@@ -51,6 +52,7 @@ class ForeignPropertyJourneyAnswersControllerSpec
   val incomeSubmissionId: SubmissionId = SubmissionId("submissionId123")
   val nino: Nino = Nino("nino")
   val mtditid: Mtditid = Mtditid("1234567890")
+  val internalServerError: ServiceError = ApiServiceError(INTERNAL_SERVER_ERROR)
 
   "create or update foreign property section " should {
 
@@ -581,6 +583,74 @@ class ForeignPropertyJourneyAnswersControllerSpec
       status(result) shouldBe BAD_REQUEST
     }
 
+  }
+
+  "deleteForeignPropertyAnswers" should {
+
+    val validForeignPropertyAnswers: JsValue =
+      Json.parse("""
+                   |{
+                   |    "journeyNames": ["foreign-property-select-country"]
+                   |}
+                   |""".stripMargin)
+
+    val journeyContext = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.ForeignPropertySelectCountry)
+
+    "return a header status with NO_CONTENT for a valid request" in {
+
+      val answers = validForeignPropertyAnswers.as[DeleteJourneyAnswers]
+
+      mockAuthorisation()
+      mockDeleteForeignPropertyAnswers(journeyContext, answers, true.asRight[ServiceError])
+
+      val request = fakePostRequest.withJsonBody(validForeignPropertyAnswers)
+      val result = await(underTest.deleteForeignPropertyAnswers(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "return serviceError when there is an error in Downstream Api or error in Parsing" in {
+      val scenarios = Table[ServiceError, Int](
+        ("Error", "Expected Response"),
+        (ApiServiceError(BAD_REQUEST), BAD_REQUEST),
+        (ApiServiceError(CONFLICT), CONFLICT),
+        (InvalidJsonFormatError("", "", Nil), INTERNAL_SERVER_ERROR)
+      )
+
+      forAll(scenarios) { (serviceError: ServiceError, expectedError: Int) =>
+
+        val answers = validForeignPropertyAnswers.as[DeleteJourneyAnswers]
+
+        mockAuthorisation()
+        mockDeleteForeignPropertyAnswers(journeyContext, answers, serviceError.asLeft[Boolean])
+
+        val request = fakePostRequest.withJsonBody(validForeignPropertyAnswers)
+        val result = await(underTest.deleteForeignPropertyAnswers(taxYear, incomeSourceId, nino)(request))
+        result.header.status shouldBe expectedError
+      }
+    }
+
+    "for foreign property sba should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.deleteForeignPropertyAnswers(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+
+//    "return ApiError when IF call fails" in {
+//      val validForeignPropertyAnswers: JsValue =
+//        Json.parse("""
+//                     |{
+//                     |    "journeyNames": "foreign-property-select-country"
+//                     |}
+//                     |""".stripMargin)
+//      val journeyContext = JourneyContext(taxYear, incomeSourceId, mtditid, JourneyName.ForeignPropertySelectCountry)
+//      val deleteJourneyAnswers = DeleteJourneyAnswers(Seq("foreign-property-select-country"))
+//      mockAuthorisation()
+//      mockDeleteForeignPropertyAnswers(journeyContext, deleteJourneyAnswers, Left(internalServerError))
+//      val request = fakePostRequest.withJsonBody(validForeignPropertyAnswers)
+//      await(underTest.deleteForeignPropertyAnswers(taxYear, incomeSourceId, nino)(request)) shouldBe
+//        ApiServiceError(500).asLeft[DeleteJourneyAnswers]
+//    }
   }
 
 }
