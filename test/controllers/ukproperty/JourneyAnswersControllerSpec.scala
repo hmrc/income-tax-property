@@ -17,7 +17,7 @@
 package controllers.ukproperty
 
 import cats.syntax.either._
-import models.common.JourneyName.{About, RentARoomAbout, RentARoomAllowances, RentARoomExpenses, RentARoomAdjustments, RentalAbout}
+import models.common.JourneyName.{About, RentARoomAbout, RentARoomExpenses, RentARoomAdjustments, RentalAbout}
 import models.common._
 import models.errors.{ApiServiceError, InvalidJsonFormatError, ServiceError}
 import models.request.WhenYouReportedTheLoss.y2018to2019
@@ -126,46 +126,46 @@ class JourneyAnswersControllerSpec
     }
   }
 
-//  "create or update uk rent a room allowances section" should {
-//    val ctx: JourneyContextWithNino =
-//      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
-//
-//    val validRequestBody: JsValue = Json.parse("""{
-//                                                 |    "capitalAllowancesForACar" : {
-//                                                 |        "isCapitalAllowancesForACar" : true,
-//                                                 |        "capitalAllowancesForACarAmount" : 10.22
-//                                                 |    },
-//                                                 |    "zeroEmissionCarAllowance" : 34.56,
-//                                                 |    "zeroEmissionGoodsVehicleAllowance" : 56.78,
-//                                                 |    "replacementOfDomesticGoodsAllowance" : 78.90,
-//                                                 |    "otherCapitalAllowance" : 90.12
-//                                                 |}""".stripMargin)
-//
-//    "return no_content for valid request body" in {
-//
-//      mockAuthorisation()
-//      mockSaveUkRentARoomAllowances(
-//        ctx,
-//        models.request.RentARoomAllowances(
-//          capitalAllowancesForACar = Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(12.34))),
-//          zeroEmissionCarAllowance = Some(34.56),
-//          zeroEmissionGoodsVehicleAllowance = Some(56.78),
-//          replacementOfDomesticGoodsAllowance = Some(78.90),
-//          otherCapitalAllowance = Some(90.12)
-//        )
-//      )
-//
-//      val request = fakePostRequest.withJsonBody(validRequestBody)
-//      val result = await(underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(request))
-//      result.header.status shouldBe NO_CONTENT
-//    }
-//
-//    "should return bad request error when request body is empty" in {
-//      mockAuthorisation()
-//      val result = underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
-//      status(result) shouldBe BAD_REQUEST
-//    }
-//  }
+  "create or update uk rent a room allowances section" should {
+    val ctx: JourneyContextWithNino =
+      JourneyContextWithNino(taxYear, incomeSourceId, mtditid, nino)
+
+    val validRequestBody: JsValue = Json.parse("""{
+                                                 |    "capitalAllowancesForACar" : {
+                                                 |        "isCapitalAllowancesForACar" : true,
+                                                 |        "capitalAllowancesForACarAmount" : 12.34
+                                                 |    },
+                                                 |    "zeroEmissionCarAllowance" : 34.56,
+                                                 |    "zeroEmissionGoodsVehicleAllowance" : 56.78,
+                                                 |    "replacementOfDomesticGoodsAllowance" : 78.90,
+                                                 |    "otherCapitalAllowance" : 90.12
+                                                 |}""".stripMargin)
+
+    "return no_content for valid request body" in {
+
+      mockAuthorisation()
+      mockSaveUkRentARoomAllowances(
+        ctx,
+        models.request.RentARoomAllowances(
+          capitalAllowancesForACar = Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, Some(12.34))),
+          zeroEmissionCarAllowance = Some(34.56),
+          zeroEmissionGoodsVehicleAllowance = Some(56.78),
+          replacementOfDomesticGoodsAllowance = Some(78.90),
+          otherCapitalAllowance = Some(90.12)
+        )
+      )
+
+      val request = fakePostRequest.withJsonBody(validRequestBody)
+      val result = await(underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(request))
+      result.header.status shouldBe NO_CONTENT
+    }
+
+    "should return bad request error when request body is empty" in {
+      mockAuthorisation()
+      val result = underTest.saveRentARoomAllowances(taxYear, incomeSourceId, nino)(fakePostRequest)
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
 
   "create or update uk rent a room expenses section" should {
     val ctx: JourneyContext =
