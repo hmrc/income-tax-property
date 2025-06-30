@@ -15,17 +15,17 @@
  */
 
 package services
-import models.{ForeignAllowancesStoreAnswers, ForeignIncomeDividendsAnswers, ForeignIncomeDividendsStoreAnswers, ForeignAdjustmentsStoreAnswers, ForeignPropertyExpensesStoreAnswers}
 import models.common.JourneyStatus.InProgress
-import models.common.{IncomeSourceId, Mtditid, TaxYear, JourneyName}
+import models.common.{IncomeSourceId, JourneyName, Mtditid, TaxYear}
 import models.domain.{JourneyAnswers, JourneyWithStatus}
-import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, UnusedLossesPreviousYears, ForeignWhenYouReportedTheLoss}
-import models.request.foreign.allowances.{CapitalAllowancesForACar, ForeignAllowancesAnswers}
-import models.request.foreign.expenses.ConsolidatedExpenses
-import models.request.foreign.{ForeignPropertyTax, ForeignIncomeTax, ForeignIncomeAnswers, PremiumsOfLeaseGrantAgreed, ForeignPropertyAdjustments, ForeignExpensesAnswers, CalculatedPremiumLeaseTaxable, AnnualForeignProperty, ForeignPropertyAllowances, ForeignAdjustmentsAnswers}
-import models.request.foreignincome.{GrossAmountWithReference, ForeignDividendsAnswers, ForeignIncomeSubmission, ForeignDividend}
-import models.request.{BalancingCharge, ForeignSbaInfo, PropertyRentalsIncome, DeductingTax}
+import models.request.foreign.adjustments.{ForeignUnusedResidentialFinanceCost, ForeignWhenYouReportedTheLoss, UnusedLossesPreviousYears}
+import models.request.foreign.allowances.{ForeignAllowancesAnswers, CapitalAllowancesForACar => ForeignCapitalAllowancesForACar}
+import models.request.foreign.expenses.{ConsolidatedExpenses => ForeignConsolidatedExpenses}
+import models.request.foreign._
+import models.request.foreignincome.{ForeignDividend, ForeignDividendsAnswers, ForeignIncomeSubmission, GrossAmountWithReference}
+import models.request._
 import models.responses._
+import models._
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
@@ -33,7 +33,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{JsObject, Json}
 import utils.UnitTest
 
-import java.time.{LocalDateTime, Instant, LocalDate}
+import java.time.{Instant, LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with ScalaCheckPropertyChecks {
@@ -41,7 +41,11 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
   val mockJourneyAnswers: JourneyAnswers = mock[JourneyAnswers]
   val otherUkProperty: UkOtherProperty = UkOtherProperty(
     Some(UkOtherPropertyIncome(None, None, Some(BigDecimal(567)), Some(BigDecimal(2340)), Some(BigDecimal(999)), None)),
-    None
+    Some(UkOtherPropertyExpenses(Some(BigDecimal(2340)), Some(BigDecimal(2341)), Some(BigDecimal(2342)), None, None, None, None, None, None, None, Some(BigDecimal(99))))
+  )
+  val otherAnnualUkProperty: AnnualUkOtherProperty = AnnualUkOtherProperty(
+    Some(UkOtherAdjustments(None, None, Some(BigDecimal(567)), Some(BigDecimal(2340)), Some(true), None, None, None)),
+    Some(UkOtherAllowances(Some(BigDecimal(2340)), Some(BigDecimal(2341)), Some(BigDecimal(2342)), None, None, None, None, None, None, None))
   )
 
   val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
@@ -51,6 +55,12 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
     toDate = LocalDate.now(),
     foreignProperty = None,
     ukOtherProperty = Some(otherUkProperty)
+  )
+
+  val propertyAnnualSubmission: PropertyAnnualSubmission = PropertyAnnualSubmission(
+    submittedOn = Some(LocalDateTime.now),
+    foreignProperty = None,
+    ukOtherProperty = Some(otherAnnualUkProperty)
   )
 
   val mergeService = new MergeService()
@@ -82,6 +92,193 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
 
     "return None when no data is available" in {
       val result = mergeService.mergeRentalsIncome(None, None)
+
+      result shouldBe None
+    }
+  }
+
+  "mergeRentalsAndRaRIncome" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "isNonUKLandlord" -> true
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergeRentalsAndRaRIncome(Some(propertyPeriodicSubmission), Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        RentalsAndRaRIncome(
+          isNonUKLandlord = true,
+          999,
+          Some(DeductingTax(isTaxDeducted = true, Some(BigDecimal(2340)))),
+          None,
+          None,
+          None,
+          None,
+          None
+        )
+      )
+    }
+
+    "return None when no data is available" in {
+      val result = mergeService.mergeRentalsAndRaRIncome(None, None)
+
+      result shouldBe None
+    }
+  }
+
+  "mergeRentalsExpenses" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "isConsolidatedExpenses" -> true
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergeRentalsExpenses(Some(propertyPeriodicSubmission), Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        PropertyRentalsExpense(
+          Some(ConsolidatedExpenses(isConsolidatedExpenses = true, Some(99))),
+          Some(BigDecimal(2340)),
+          Some(BigDecimal(2341)),
+          Some(BigDecimal(2342)),
+          None,
+          None,
+          None,
+          None
+        )
+      )
+    }
+
+    "return None when no data is available" in {
+      val result = mergeService.mergeRentalsExpenses(None, None)
+
+      result shouldBe None
+    }
+  }
+
+  "mergeRaRExpenses" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "isConsolidatedExpenses" -> true
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergeRaRExpenses(Some(propertyPeriodicSubmission), Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        RentARoomExpenses(
+          Some(ConsolidatedExpenses(isConsolidatedExpenses = true, Some(99))),
+          Some(BigDecimal(2340)),
+          Some(BigDecimal(2341)),
+          None,
+          None,
+          None
+        )
+      )
+    }
+
+    "return None when no data is available" in {
+      val result = mergeService.mergeRaRExpenses(None, None)
+
+      result shouldBe None
+    }
+  }
+
+  "mergeAllowances" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "isCapitalAllowancesForACar" -> true
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergeAllowances(propertyAnnualSubmission, Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        RentalAllowances(
+          Some(CapitalAllowancesForACar(isCapitalAllowancesForACar = true, None)),
+          Some(BigDecimal(2340)),
+          None,
+          Some(BigDecimal(2341)),
+          Some(BigDecimal(2342)),
+          None,
+          None
+        )
+      )
+    }
+
+    "return None merged when no data is available" in {
+      val result = mergeService.mergeAllowances(propertyAnnualSubmission, None)
+
+      result shouldBe Some(
+        RentalAllowances(
+          None,
+          Some(BigDecimal(2340)),
+          None,
+          Some(BigDecimal(2341)),
+          Some(BigDecimal(2342)),
+          None,
+          None
+        )
+      )
+    }
+  }
+
+  "mergeRaRAllowances" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "isRaRCapitalAllowancesForACar" -> true
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergeRaRAllowances(propertyAnnualSubmission, Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        RentARoomAllowances(
+          None,
+          None,
+          Some(BigDecimal(2341)),
+          None,
+          None
+        )
+      )
+    }
+
+    "return None merged when no data is available" in {
+      val result = mergeService.mergeRaRAllowances(propertyAnnualSubmission, None)
+
+      result shouldBe Some(
+        RentARoomAllowances(
+          None,
+          None,
+          Some(BigDecimal(2341)),
+          None,
+          None
+        )
+      )
+    }
+  }
+
+  "mergePropertyAbout" should {
+    "merge correctly with valid inputs" in {
+      val mockData: JsObject = Json.obj(
+        "totalIncome" -> "200"
+      )
+      when(mockJourneyAnswers.data).thenReturn(mockData)
+
+      val result = mergeService.mergePropertyAbout(Some(mockJourneyAnswers))
+
+      result shouldBe Some(
+        PropertyAbout(
+          "200",
+          None,
+          None
+        )
+      )
+    }
+
+    "return None when no data is available" in {
+      val result = mergeService.mergePropertyAbout(None)
 
       result shouldBe None
     }
@@ -193,7 +390,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
         propertyAllowance = foreignPropertyAllowances.propertyAllowance,
         electricChargePointAllowance = foreignPropertyAllowances.electricChargePointAllowance,
         structuredBuildingAllowance = foreignPropertyAllowances.structuredBuildingAllowance,
-        capitalAllowancesForACar = Some(CapitalAllowancesForACar(isCapitalAllowancesForACar, capitalAllowancesForACarAmount))
+        capitalAllowancesForACar = Some(ForeignCapitalAllowancesForACar(isCapitalAllowancesForACar, capitalAllowancesForACarAmount))
       )
       result shouldBe Some(
         Map(
@@ -370,7 +567,7 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
       )
 
       val foreignExpensesAnswers = ForeignExpensesAnswers(
-        consolidatedExpenses = Some(ConsolidatedExpenses(isConsolidatedExpenses, Some(consolidatedExpense))),
+        consolidatedExpenses = Some(ForeignConsolidatedExpenses(isConsolidatedExpenses, Some(consolidatedExpense))),
         premisesRunningCosts = Some(premisesRunningCosts),
         repairsAndMaintenance = Some(repairsAndMaintenance),
         financialCosts = Some(financialCosts),
