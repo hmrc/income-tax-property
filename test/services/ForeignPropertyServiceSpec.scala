@@ -48,6 +48,8 @@ class ForeignPropertyServiceSpec
   private val incomeSourceId = IncomeSourceId("ForeignProperty")
   private val taxYear: TaxYear = TaxYear(2024)
   private val foreignPropertyIncome = ForeignPropertyIncome(None, Some(true), None, None, Some(456.75), Some(678.95))
+  private val foreignPropertyAdjustments = ForeignPropertyAdjustments(Some(BigDecimal(12.12)), Some(BigDecimal(34.34)))
+  private val foreignPropertyAllowances = ForeignPropertyAllowances(Some(BigDecimal(12.12)), Some(BigDecimal(34.34)), None, None, None, None, None, None)
 
   val foreignProperty: Option[Seq[ForeignProperty]] = Some(
     Seq(
@@ -59,8 +61,23 @@ class ForeignPropertyServiceSpec
     )
   )
 
+  val annualForeignProperty: Option[Seq[AnnualForeignProperty]] = Some(
+    Seq(
+      AnnualForeignProperty(
+        "AUS",
+        Some(foreignPropertyAdjustments),
+        Some(foreignPropertyAllowances)
+      )
+    )
+  )
+
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
   private val underTest = new ForeignPropertyService(mockIntegrationFrameworkConnector, journeyAnswersService)
+
+  val validCreateForeignPropertyAnnualSubmissionRequest: AnnualForeignPropertySubmission =
+    AnnualForeignPropertySubmission(
+      annualForeignProperty
+    )
 
   val validCreateForeignPropertyPeriodicSubmissionRequest: CreateForeignPropertyPeriodicSubmissionRequest =
     CreateForeignPropertyPeriodicSubmissionRequest(
@@ -152,6 +169,52 @@ class ForeignPropertyServiceSpec
         ApiServiceError(500)
       )
     }
+  }
+
+  "create annual submission" should {
+
+    "return submissionId for valid request" in {
+
+      mockCreateAnnualForeignSubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Right(true)
+      )
+
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            validCreateForeignPropertyAnnualSubmissionRequest
+          )
+          .value
+      ) shouldBe
+        Right(true)
+    }
+
+    "return ApiError for invalid request" in {
+
+      mockCreateAnnualForeignSubmission(
+        taxYear,
+        incomeSourceId,
+        nino,
+        Left(ApiError(BAD_REQUEST, SingleErrorBody("code", "error")))
+      )
+      await(
+        underTest
+          .createOrUpdateAnnualForeignPropertySubmission(
+            taxYear,
+            incomeSourceId,
+            nino,
+            validCreateForeignPropertyAnnualSubmissionRequest
+          )
+          .value
+      ) shouldBe Left(ApiServiceError(BAD_REQUEST))
+    }
+
   }
 
   "create periodic submission" should {
