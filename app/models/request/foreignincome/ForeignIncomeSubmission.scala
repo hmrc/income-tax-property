@@ -16,8 +16,9 @@
 
 package models.request.foreignincome
 
+import models.domain.{FetchedUKPropertyData, FetchedPropertyData, FetchedForeignIncomeData, FetchedForeignPropertyData, FetchedData, FetchedUkAndForeignPropertyData}
 import monocle.Optional
-import play.api.libs.json.{JsValue, Json, OFormat, Writes}
+import play.api.libs.json.{OFormat, Writes, Json, JsValue}
 import play.api.libs.ws.BodyWritable
 
 case class ForeignIncomeSubmission(
@@ -55,6 +56,13 @@ object ForeignIncomeSubmission {
   implicit val format: OFormat[ForeignIncomeSubmission] = Json.format[ForeignIncomeSubmission]
 
   val emptyForeignIncomeSubmission: ForeignIncomeSubmission = ForeignIncomeSubmission(None, None, None, None, None, None)
+  val emptyFetchedPropertyData: FetchedPropertyData = FetchedPropertyData(
+    FetchedUKPropertyData(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, List(), None),
+    FetchedForeignPropertyData(None, None, None, None, None, None, None),
+    FetchedUkAndForeignPropertyData(None)
+  )
+  val emptyFetchedForeignIncomeData: FetchedForeignIncomeData = FetchedForeignIncomeData(None, List())
+  val emptyFetchedData = FetchedData(emptyFetchedPropertyData, emptyFetchedForeignIncomeData)
 
   implicit def jsonBodyWritable[T](implicit
     writes: Writes[T],

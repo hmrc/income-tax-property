@@ -19,14 +19,15 @@ package services
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import models.common._
-import models.errors.{ApiError, ApiServiceError, DataNotFoundError, SingleErrorBody}
-import models.request.foreignincome.ForeignIncomeSubmission.emptyForeignIncomeSubmission
-import models.request.foreignincome.{ForeignDividend, ForeignIncomeDividend, ForeignIncomeDividendsWithCountryCode, ForeignIncomeSubmission}
+import models.domain.FetchedForeignIncomeData
+import models.errors.{ApiServiceError, DataNotFoundError, SingleErrorBody, ApiError}
+import models.request.foreignincome.ForeignIncomeSubmission.{emptyForeignIncomeSubmission, emptyFetchedData, emptyFetchedPropertyData}
+import models.request.foreignincome.{ForeignIncomeDividend, ForeignDividend, ForeignIncomeSubmission, ForeignDividendsAnswers, ForeignIncomeDividendsWithCountryCode}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
-import utils.mocks.{MockHipConnector, MockIntegrationFrameworkConnector, MockMergeService, MockMongoJourneyAnswersRepository}
+import utils.mocks.{MockMergeService, MockHipConnector, MockMongoJourneyAnswersRepository, MockIntegrationFrameworkConnector}
 import utils.{AppConfigStub, UnitTest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,6 +50,14 @@ class ForeignIncomeServiceSpec
     foreignTaxCreditRelief = Some(true),
     taxableAmount = 80.80
   )
+  private val fetchedForeignIncomeData = FetchedForeignIncomeData(Some(Map(foreignDividend.countryCode -> ForeignDividendsAnswers(
+    amountBeforeTax = Some(231.45),
+    taxTakenOff = Some(321.54),
+    specialWithholdingTax = Some(490.58),
+    foreignTaxCreditRelief = Some(true),
+    taxableAmount = Some(80.80),
+    foreignTaxDeductedFromDividendIncome = Some(true)))),
+    List())
 
   override val mergeService = new MergeService
   val propertyService = new PropertyService(mergeService, mockIntegrationFrameworkConnector, journeyAnswersService, appConfigStub, mockHipConnector)
@@ -137,6 +146,24 @@ class ForeignIncomeServiceSpec
     "return ApiError when IF call fails" in {
       mockGetForeignIncomeSubmission(taxYear, nino, Left(internalServerError))
       await(underTest.saveForeignIncomeDividends(journeyContext, nino, foreignIncomeDividendsRequest).value) shouldBe
+        ApiServiceError(500).asLeft[Boolean]
+    }
+  }
+
+  "getFetchedIncomeDataMerged" should {
+    val ctx = JourneyContextWithNino(taxYear, incomeSourceId, Mtditid(mtditid), nino)
+    val journeyContext = ctx.toJourneyContext(JourneyName.ForeignPropertyIncome)
+
+    "return true for successful API calls and persistence" in {
+      mockGetForeignIncomeSubmission(taxYear, nino, Right(Some(foreignIncomeSubmission)))
+
+      await(underTest.getFetchedIncomeDataMerged(journeyContext, nino).value) shouldBe
+        Right(emptyFetchedData.copy(emptyFetchedPropertyData, fetchedForeignIncomeData))
+    }
+
+    "return ApiError when IF call fails" in {
+      mockGetForeignIncomeSubmission(taxYear, nino, Left(internalServerError))
+      await(underTest.getFetchedIncomeDataMerged(journeyContext, nino).value) shouldBe
         ApiServiceError(500).asLeft[Boolean]
     }
   }

@@ -172,4 +172,21 @@ trait MockForeignPropertyService extends MockFactory { _: TestSuite =>
       .returning(EitherT.fromEither(result))
   }
 
+  def mockDeleteForeignPropertyAnswers(journeyContext: JourneyContext,
+                                       deleteJourneyAnswers: DeleteJourneyAnswers,
+                                       result: Either[ServiceError, Boolean]
+                                      ): CallHandler2[JourneyContext, DeleteJourneyAnswers, EitherT[
+    Future,
+    ServiceError,
+    Boolean
+  ]] = {
+    (mockForeignPropertyService
+      .deleteForeignPropertyAnswers(
+        _: JourneyContext,
+        _: DeleteJourneyAnswers
+      ))
+      .expects(journeyContext, deleteJourneyAnswers)
+      .returning(EitherT.fromEither(result))
+  }
+
 }

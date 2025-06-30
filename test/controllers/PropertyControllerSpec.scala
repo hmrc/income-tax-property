@@ -25,7 +25,7 @@ import models.request.foreign.{ForeignPropertySelectCountry, TotalIncome}
 import org.apache.pekko.util.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.test.Helpers._
 import utils.ControllerUnitTest
 import utils.mocks.{MockAuthorisedAction, MockMongoJourneyAnswersRepository, MockPropertyService}
@@ -84,6 +84,14 @@ class PropertyControllerSpec
         await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
       result.header.status shouldBe BAD_REQUEST
     }
+
+    "should return bad request when no JSON is provided" in {
+      mockAuthorisation()
+      val request = fakePostRequest
+      val result =
+        await(underTest.setStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), "rent-a-room-expenses")(request))
+      result.header.status shouldBe BAD_REQUEST
+    }
   }
 
   "Update journey status for foreign property" should {
@@ -115,6 +123,14 @@ class PropertyControllerSpec
     "should return bad request when a field named status is not present in the request body" in {
       mockAuthorisation()
       val request = fakePostRequest.withJsonBody(journeyStatusErrorJs)
+      val result =
+        await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
+      result.header.status shouldBe BAD_REQUEST
+    }
+
+    "should return bad request when no JSON is provided" in {
+      mockAuthorisation()
+      val request = fakePostRequest
       val result =
         await(underTest.setForeignStatus(TaxYear(2023), IncomeSourceId("incomeSourceId"), JourneyName.ForeignPropertyExpenses.entryName, countryCode)(request))
       result.header.status shouldBe BAD_REQUEST

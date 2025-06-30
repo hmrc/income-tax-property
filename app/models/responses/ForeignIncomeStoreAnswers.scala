@@ -16,7 +16,7 @@
 
 package models.responses
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
 case class ForeignIncomeStoreAnswers(
   premiumsGrantLeaseReceived: Boolean,
@@ -27,5 +27,5 @@ case class ForeignIncomeStoreAnswers(
 )
 
 object ForeignIncomeStoreAnswers {
-  implicit val format: Format[ForeignIncomeStoreAnswers] = Json.format
+  implicit val format: OFormat[ForeignIncomeStoreAnswers] = Json.format[ForeignIncomeStoreAnswers]
 }
