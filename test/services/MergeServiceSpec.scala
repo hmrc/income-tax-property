@@ -284,6 +284,12 @@ class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with Sca
     }
   }
 
+  /* TODO Finish the rest of the coverage for the following methods
+  * mergeUkAndForeignPropertyAbout, mergeForeignPropertySelectCountry, mergePropertyRentalsAbout, mergeRentalsAndRaRAbout
+  * mergeRaRAbout, mergeStatuses, mergeAdjustments, mergeRaRAdjustments, mergeEsbaInfo, mergeSbaInfo, mergeForeignPropertyTax
+  * mergeForeignPropertySba, mergeForeignIncomeStatuses, mergeForeignStatuses
+  * */
+
   "mergeForeignPropertyAllowances" should {
 
     "return a map of foreign property allowances" in {
