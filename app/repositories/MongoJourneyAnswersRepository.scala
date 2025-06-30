@@ -107,18 +107,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     collection.deleteMany(filter).toFuture()
   }
 
-  def fetch(ctx: JourneyContext): Future[Seq[JourneyAnswers]] = {
-    val filter: Bson = Filters
-      .and(
-        Filters.equal("incomeSourceId", ctx.incomeSourceId.value),
-        Filters.equal("taxYear", ctx.taxYear.endYear),
-        Filters.equal("mtditid", ctx.mtditid.value),
-        Filters.equal("journey", ctx.journey.entryName)
-      )
-
-    collection.find(filter).toFuture()
-  }
-
   def fetchAllJourneysUserTaxYear(taxYear: Int, mtditid: String): Future[Seq[JourneyAnswers]] = {
     val filter: Bson = Filters
       .and(
