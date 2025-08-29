@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.19.0"
+  private val bootstrapVersion = "10.1.0"
   private val hmrcMongoVersion = "2.7.0"
   private val monocleVersion = "3.3.0"
   val jacksonAndPlayExclusions: Seq[ExclusionRule] = Seq(
@@ -27,7 +27,7 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"           %% "bootstrap-test-play-30"   % bootstrapVersion,
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion,
-    "org.scalamock"         %% "scalamock"                % "7.4.0",
+    "org.scalamock"         %% "scalamock"                % "7.4.1",
     "org.scalatest"         %% "scalatest"                % "3.2.19",
     "org.scalacheck"        %% "scalacheck"               % "1.18.1",
     "org.scalatestplus"     %% "scalacheck-1-15"          % "3.2.11.0",
