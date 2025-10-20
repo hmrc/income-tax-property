@@ -278,7 +278,6 @@ object PropertyAnnualSubmission {
         auop.copy(ukOtherPropertyAnnualAllowances = Some(uoa))
       }
 
-    val annualInvestmentAllowanceLens = GenLens[UkOtherAllowances](_.annualInvestmentAllowance)
     val zeroEmissionGoodsVehicleAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionGoodsVehicleAllowance)
     val zeroEmissionCarAllowanceLens = GenLens[UkOtherAllowances](_.zeroEmissionsCarAllowance)
     val otherCapitalAllowanceLens = GenLens[UkOtherAllowances](_.otherCapitalAllowance)

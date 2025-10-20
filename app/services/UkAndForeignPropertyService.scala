@@ -23,11 +23,11 @@ import models.request.ukandforeign.UkAndForeignAbout
 import play.api.Logging
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class UkAndForeignPropertyService @Inject() (
     mongoService: MongoJourneyAnswersService
-  )(implicit ec: ExecutionContext)
+  )
   extends Logging {
 
   def saveUkAndForeignPropertyAbout(
