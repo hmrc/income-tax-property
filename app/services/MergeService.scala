@@ -33,11 +33,8 @@ import models.request.ukrentaroom.RaRAdjustments
 import models.responses._
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
 
-class MergeService @Inject() (implicit
-  ec: ExecutionContext
-) {
+class MergeService @Inject() () {
 
   def mergeAll(
                 resultFromAnnualDownstream: Option[PropertyAnnualSubmission],

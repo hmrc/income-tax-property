@@ -208,16 +208,16 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .withBody[CreateUKPropertyPeriodicSubmissionRequest](body)
       .execute[PostPeriodicSubmissionResponse]
       .map { response: PostPeriodicSubmissionResponse =>
-        if (response.result.isLeft) {
-          val apiError: ApiError = response.result.left.get
-          val correlationId =
+        response.result match {
+          case Left (apiError: ApiError) => val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
-          logger.error(
-            s"Error creating a property periodic submission from the Integration Framework: URL: $url" +
-              s" correlationId: $correlationId; Body:${response.result.left} status: ${apiError.status} Error body: ${apiError.body} "
-          )
+            logger.error(
+              s"Error creating a property periodic submission from the Integration Framework: URL: $url" +
+                s" correlationId: $correlationId; Body:${response.result.left} status: ${apiError.status} Error body: ${apiError.body} "
+            )
+            response.result
+          case _ => response.result
         }
-        response.result
       }
   }
 

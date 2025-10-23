@@ -34,7 +34,6 @@ import play.api.libs.json.{JsObject, Json}
 import utils.UnitTest
 
 import java.time.{Instant, LocalDate, LocalDateTime}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class MergeServiceSpec extends UnitTest with Matchers with MockitoSugar with ScalaCheckPropertyChecks {
 

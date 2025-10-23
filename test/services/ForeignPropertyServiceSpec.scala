@@ -999,12 +999,6 @@ class ForeignPropertyServiceSpec
 
   "save foreign property adjustments" should {
     val mtditid = "1234567890"
-    val ctx = JourneyContextWithNino(
-      taxYear = taxYear,
-      incomeSourceId = incomeSourceId,
-      mtditid = Mtditid(mtditid),
-      nino = nino
-    )
 
     val foreignPropertyAdjustmentsWithCountryCode = ForeignPropertyAdjustmentsWithCountryCode(
       countryCode = "AUS",
@@ -1035,29 +1029,6 @@ class ForeignPropertyServiceSpec
       val submissionId = "test-periodic-submission-id"
       val fromDate = TaxYear.startDate(taxYear.endYear)
       val toDate = TaxYear.endDate(taxYear.endYear)
-      val mayBeAnnualForeignPropertySubmissionFromDownstream =
-        AnnualForeignPropertySubmission(
-          foreignProperty = Some(
-            Seq(
-              AnnualForeignProperty(
-                countryCode = "AUS",
-                allowances = Some(
-                  ForeignPropertyAllowances(
-                    zeroEmissionsCarAllowance = Some(21.5),
-                    zeroEmissionsGoodsVehicleAllowance = Some(32.5),
-                    costOfReplacingDomesticItems = Some(43.5),
-                    otherCapitalAllowance = Some(54.5),
-                    annualInvestmentAllowance = Some(64.5),
-                    propertyAllowance = Some(74.5),
-                    electricChargePointAllowance = Some(84.5),
-                    structuredBuildingAllowance = None
-                  )
-                ),
-                adjustments = None
-              )
-            )
-          )
-        )
       val propertyPeriodicSubmission: PropertyPeriodicSubmission = PropertyPeriodicSubmission(
         None,
         None,

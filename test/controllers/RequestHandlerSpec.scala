@@ -19,7 +19,7 @@ package controllers
 import actions.AuthorisationRequest
 import models.User
 import models.common.{IncomeSourceId, JourneyName, Nino, TaxYear}
-import models.request.{PremiumsGrantLease, PropertyRentalsIncome}
+import models.request.PropertyRentalsIncome
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, OK}

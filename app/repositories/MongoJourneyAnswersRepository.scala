@@ -19,7 +19,6 @@ package repositories
 import config.AppConfig
 import models.common.{JourneyContext, JourneyStatus}
 import models.domain.JourneyAnswers
-import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._

@@ -18,14 +18,13 @@ package connectors
 
 
 import models.IncomeSourceType.UKPropertyFHL
-import models.LossType.UKProperty
 import models.common.TaxYear.asTys
 import models.common.{IncomeSourceId, Nino}
 import models.errors.{ApiError, SingleErrorBody}
 import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenYouReportedTheLoss}
 import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
-import models.{IncomeSourceType, LossType}
+import models.IncomeSourceType
 import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -42,10 +41,6 @@ class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
   private val incomeSourceType: IncomeSourceType = UKPropertyFHL
   private val lossAmount: BigDecimal = BigDecimal(100.01)
   private val broughtForwardLossTaxYear: WhenYouReportedTheLoss = y2021to2022
-  private val submissionDate: LocalDate = LocalDate.now
-  private val businessId = incomeSourceId.toString
-  private val lastModified: String = LocalDate.now.toString
-  private val lossType: LossType = UKProperty
 
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 

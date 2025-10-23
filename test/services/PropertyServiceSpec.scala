@@ -1345,14 +1345,6 @@ class PropertyServiceSpec
 
     "return submissionId when creating" in {
 
-      val ukOtherPropertyIncome = UkOtherPropertyIncome(
-        Some(0),
-        None,
-        None,
-        None,
-        None,
-        None
-      )
       val raRExpenses = RentARoomExpenses(
         None,
         Some(200),
@@ -1361,21 +1353,6 @@ class PropertyServiceSpec
         None,
         None
       )
-      val propertyPeriodicSubmission = PropertyPeriodicSubmission(
-        None,
-        None,
-        LocalDate.parse(TaxYear.startDate(taxYear)),
-        LocalDate.parse(TaxYear.endDate(taxYear)),
-        None,
-        Some(
-          UkOtherProperty(
-            Some(ukOtherPropertyIncome),
-            Some(UkOtherPropertyExpenses(None, None, None, None, None, None, None, None, None, None, None))
-          )
-        )
-      )
-      val fromDate = LocalDate.now().minusYears(2)
-      val toDate = fromDate.plusYears(3)
 
       mockGetAllPeriodicSubmissionIds(
         taxYear,
