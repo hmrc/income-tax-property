@@ -109,9 +109,9 @@ class CreateForeignPropertyPeriodicSubmissionRequestSpec extends AnyWordSpec wit
       )
 
       result shouldBe a[Left[_, _]]
-      result.left.get shouldBe InternalError(
+      result shouldBe Left(InternalError(
         "No relevant entity found to convert from (to CreateForeignPropertyPeriodicSubmissionRequest)"
-      )
+      ))
     }
 
     "handle missing periodic submission gracefully" in {
