@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "10.5.0"
+  private val bootstrapVersion = "10.6.0"
   private val hmrcMongoVersion = "2.12.0"
   private val monocleVersion = "3.3.0"
   val jacksonAndPlayExclusions: Seq[ExclusionRule] = Seq(
@@ -17,9 +17,9 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.21.0",
-    "com.beachape"                 %% "enumeratum"                % "1.9.4",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.4" excludeAll (jacksonAndPlayExclusions *),
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.21.1",
+    "com.beachape"                 %% "enumeratum"                % "1.9.5",
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.5" excludeAll (jacksonAndPlayExclusions *),
     "dev.optics"                   %% "monocle-core"              % monocleVersion,
     "dev.optics"                   %% "monocle-macro"             % monocleVersion
   )
