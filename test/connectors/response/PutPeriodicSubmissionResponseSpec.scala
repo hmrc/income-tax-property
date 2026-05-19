@@ -34,13 +34,16 @@ class PutPeriodicSubmissionResponseSpec extends UnitTest {
   "putPropertyPeriodicSubmissionDataReads" should {
 
     "convert JsValue to PutPropertyPeriodicSubmissionResponse" when {
+      
+      "status is NO_CONTENT" in {
 
-      val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
 
-      underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-        httpResponse,
-        Right(None)
-      )
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Right(None)
+        )
+      }
 
       "status is OK and invalid jsValue" in {
         val jsValue: JsValue = Json.parse("""

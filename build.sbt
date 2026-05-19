@@ -47,8 +47,7 @@ inThisBuild(
   List(
     majorVersion := 0,
     scalaVersion := "3.3.7",
-    semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision
+    semanticdbEnabled := true
   )
 )
 
@@ -57,8 +56,7 @@ lazy val microservice = Project("income-tax-property", file("."))
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions ++= Seq(
-      "-Wconf:src=target/.*:s,src=routes/.*:s", // suppress warnings in generated routes files
-      "-Wconf:msg=unused import&src=views/.*:s" // suppress unused import warnings in Twirl templates
+      "-Wconf:src=target/.*:s,src=routes/.*:s" // suppress warnings in generated routes files
     )
   )
   .settings(
