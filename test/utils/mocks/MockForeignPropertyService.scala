@@ -25,16 +25,16 @@ import models.request.foreign.allowances.ForeignPropertyAllowancesWithCountryCod
 import models.request.foreign.expenses.ForeignPropertyExpensesWithCountryCode
 import models.request.foreign.sba.ForeignPropertySbaWithCountryCode
 import models.responses.PeriodicSubmissionId
-import org.scalamock.handlers._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import services.ForeignPropertyService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockForeignPropertyService extends MockFactory { _: TestSuite =>
+trait MockForeignPropertyService extends MockitoSugar {
 
   protected val mockForeignPropertyService: ForeignPropertyService = mock[ForeignPropertyService]
 
@@ -42,151 +42,74 @@ trait MockForeignPropertyService extends MockFactory { _: TestSuite =>
     journeyContext: JourneyContext,
     foreignPropertiesInformation: ForeignPropertySelectCountry,
     result: Either[ServiceError, Boolean]
-  ): CallHandler3[JourneyContext, ForeignPropertySelectCountry, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Boolean
-  ]] =
-    (mockForeignPropertyService
-      .saveForeignPropertySelectCountry(
-        _: JourneyContext,
-        _: ForeignPropertySelectCountry
-      )(_: HeaderCarrier))
-      .expects(journeyContext, foreignPropertiesInformation, *)
-      .returning(EitherT.fromEither(result))
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertySelectCountry(any[JourneyContext], eqTo(foreignPropertiesInformation))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyTax(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyTaxWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Option[PeriodicSubmissionId]
-  ]] =
-    (mockForeignPropertyService
-      .saveForeignPropertyTax(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertyTaxWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyTaxWithCountryCode, *)
-      .returning(EitherT.fromEither(result))
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertyTax(any[JourneyContext], any[Nino], eqTo(foreignPropertyTaxWithCountryCode))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyExpenses(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertyExpenses: ForeignPropertyExpensesWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyExpensesWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Option[PeriodicSubmissionId]
-  ]] =
-    (mockForeignPropertyService
-      .saveForeignPropertyExpenses(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertyExpensesWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyExpenses, *)
-      .returning(EitherT.fromEither(result))
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertyExpenses(any[JourneyContext], any[Nino], eqTo(foreignPropertyExpenses))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignIncomeSection(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignIncome: ForeignIncomeWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
-  ): CallHandler4[JourneyContext, Nino, ForeignIncomeWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Option[PeriodicSubmissionId]
-  ]] =
-    (mockForeignPropertyService
-      .saveForeignIncome(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignIncomeWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignIncome, *)
-      .returning(EitherT.fromEither(result))
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignIncome(any[JourneyContext], any[Nino], eqTo(foreignIncome))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyAllowancesSection(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertyAllowancesWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Boolean
-  ]] =
-    (mockForeignPropertyService
-      .saveForeignPropertyAllowances(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertyAllowancesWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyAllowancesWithCountryCode, *)
-      .returning(EitherT.fromEither(result))
-
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertyAllowances(any[JourneyContext], any[Nino], eqTo(foreignPropertyAllowancesWithCountryCode))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyAdjustmentsSection(
-                                                 journeyContext: JourneyContext,
-                                                 nino: Nino,
-                                                 foreignPropertyAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode,
-                                                 result: Either[ServiceError, Boolean]
-                                              ):
-  CallHandler4[JourneyContext, Nino, ForeignPropertyAdjustmentsWithCountryCode, HeaderCarrier, EitherT[Future, ServiceError, Boolean]] =
-    (mockForeignPropertyService
-      .saveForeignPropertyAdjustments(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertyAdjustmentsWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, foreignPropertyAdjustmentsWithCountryCode, *)
-      .returning(EitherT.fromEither(result))
+    journeyContext: JourneyContext,
+    nino: Nino,
+    foreignPropertyAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode,
+    result: Either[ServiceError, Boolean]
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertyAdjustments(any[JourneyContext], any[Nino], eqTo(foreignPropertyAdjustmentsWithCountryCode))(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertySbaSection(
     journeyContext: JourneyContext,
     nino: Nino,
     foreignPropertySbaWithCountryCode: ForeignPropertySbaWithCountryCode,
     result: Either[ServiceError, Boolean]
-  ): CallHandler4[JourneyContext, Nino, ForeignPropertySbaWithCountryCode, HeaderCarrier, EitherT[
-    Future,
-    ServiceError,
-    Boolean
-  ]] = {
-    val compareSba: ForeignPropertySbaWithCountryCode => Boolean = other =>
-      foreignPropertySbaWithCountryCode.claimStructureBuildingAllowance == other.claimStructureBuildingAllowance &&
-      foreignPropertySbaWithCountryCode.countryCode == other.countryCode &&
-        foreignPropertySbaWithCountryCode.allowances.map(_.toSeq) == other.allowances.map(_.toSeq)
-    (mockForeignPropertyService
-      .saveForeignPropertySba(
-        _: JourneyContext,
-        _: Nino,
-        _: ForeignPropertySbaWithCountryCode
-      )(_: HeaderCarrier))
-      .expects(journeyContext, nino, argThat[ForeignPropertySbaWithCountryCode](compareSba), *)
-      .returning(EitherT.fromEither(result))
-  }
+  ): Unit =
+    when(mockForeignPropertyService.saveForeignPropertySba(
+      any[JourneyContext],
+      any[Nino],
+      eqTo(foreignPropertySbaWithCountryCode)
+    )(any[HeaderCarrier]))
+      .thenReturn(EitherT.fromEither[Future](result))
 
-  def mockDeleteForeignPropertyAnswers(journeyContext: JourneyContext,
-                                       deleteJourneyAnswers: DeleteJourneyAnswers,
-                                       result: Either[ServiceError, Boolean]
-                                      ): CallHandler2[JourneyContext, DeleteJourneyAnswers, EitherT[
-    Future,
-    ServiceError,
-    Boolean
-  ]] = {
-    (mockForeignPropertyService
-      .deleteForeignPropertyAnswers(
-        _: JourneyContext,
-        _: DeleteJourneyAnswers
-      ))
-      .expects(journeyContext, deleteJourneyAnswers)
-      .returning(EitherT.fromEither(result))
-  }
+  def mockDeleteForeignPropertyAnswers(
+    journeyContext: JourneyContext,
+    deleteJourneyAnswers: DeleteJourneyAnswers,
+    result: Either[ServiceError, Boolean]
+  ): Unit =
+    when(mockForeignPropertyService.deleteForeignPropertyAnswers(any[JourneyContext], eqTo(deleteJourneyAnswers)))
+      .thenReturn(EitherT.fromEither[Future](result))
 
 }

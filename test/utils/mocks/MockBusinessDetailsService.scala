@@ -18,30 +18,27 @@ package utils.mocks
 
 import models.BusinessDetailsResponse
 import models.errors.ServiceError
-import org.scalamock.handlers._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import services.BusinessDetailsService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockBusinessDetailsService extends MockFactory { _: TestSuite =>
+trait MockBusinessDetailsService extends MockitoSugar {
 
   protected val mockIntegrationFrameworkService: BusinessDetailsService = mock[BusinessDetailsService]
 
   def mockGetBusinessDetails(nino: String,
                              result: Either[ServiceError, BusinessDetailsResponse]
-                            ): CallHandler2[String, HeaderCarrier, Future[Either[ServiceError, BusinessDetailsResponse]]] = {
-    (mockIntegrationFrameworkService.getBusinessDetails(_: String)(_: HeaderCarrier))
-      .expects(nino, *)
-      .returning(Future.successful(result))
-  }
+                            ): Unit =
+    when(mockIntegrationFrameworkService.getBusinessDetails(eqTo(nino))(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result))
 
   def mockGetBusinessDetailsException(nino: String,
-                                   result: Throwable
-                                  ): CallHandler2[String, HeaderCarrier, Future[Either[ServiceError, BusinessDetailsResponse]]] =
-    (mockIntegrationFrameworkService.getBusinessDetails(_: String)(_: HeaderCarrier))
-      .expects(nino, *)
-      .returning(Future.failed(result))
+                                      result: Throwable
+                                     ): Unit =
+    when(mockIntegrationFrameworkService.getBusinessDetails(eqTo(nino))(any[HeaderCarrier]))
+      .thenReturn(Future.failed(result))
 }

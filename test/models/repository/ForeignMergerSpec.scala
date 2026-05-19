@@ -348,7 +348,7 @@ class ForeignMergerSpec extends UnitTest {
 
       val fromDownstreamMaybe: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]] = {
         aPropertyAnnualSubmission.foreignProperty.map { annualForeignProperties =>
-          annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+          annualForeignProperties.flatMap { (annualForeignProperty: AnnualForeignProperty) =>
             for {
               adjustments <- annualForeignProperty.adjustments
               periodicForeignProperties <- aPropertyPeriodicSubmission.foreignProperty
@@ -410,7 +410,7 @@ class ForeignMergerSpec extends UnitTest {
     "merge foreign allowances from downstream response and from repo into response model" when {
       val fromDownstreamMaybe: Option[Map[String, ForeignPropertyAllowances]] = {
         aPropertyAnnualSubmission.foreignProperty.map { annualForeignProperties =>
-          annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+          annualForeignProperties.flatMap { (annualForeignProperty: AnnualForeignProperty) =>
             for {
               allowances <- annualForeignProperty.allowances
             } yield annualForeignProperty.countryCode -> allowances

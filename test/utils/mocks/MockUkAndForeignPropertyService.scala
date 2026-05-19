@@ -20,15 +20,15 @@ import cats.data.EitherT
 import models.common._
 import models.errors.ServiceError
 import models.request.ukandforeign.UkAndForeignAbout
-import org.scalamock.handlers._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.eq as eqTo
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import services.UkAndForeignPropertyService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockUkAndForeignPropertyService extends MockFactory { _: TestSuite =>
+trait MockUkAndForeignPropertyService extends MockitoSugar {
 
   protected val mockUkAndForeignPropertyService: UkAndForeignPropertyService = mock[UkAndForeignPropertyService]
 
@@ -36,14 +36,8 @@ trait MockUkAndForeignPropertyService extends MockFactory { _: TestSuite =>
     journeyContext: JourneyContext,
     ukAndForeignPropertiesInformation: UkAndForeignAbout,
     result: Either[ServiceError, Boolean]
-  ): CallHandler2[JourneyContext, UkAndForeignAbout, EitherT[Future, ServiceError, Boolean]] =
-
-    (mockUkAndForeignPropertyService
-      .saveUkAndForeignPropertyAbout(
-        _: JourneyContext,
-        _: UkAndForeignAbout
-      ))
-      .expects(journeyContext, ukAndForeignPropertiesInformation)
-      .returning(EitherT.fromEither(result))
+  ): Unit =
+    when(mockUkAndForeignPropertyService.saveUkAndForeignPropertyAbout(eqTo(journeyContext), eqTo(ukAndForeignPropertiesInformation)))
+      .thenReturn(EitherT.fromEither[Future](result))
 
 }

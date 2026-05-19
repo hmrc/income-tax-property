@@ -17,8 +17,8 @@
 package utils.mocks
 
 import config.AppConfig
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{OptionValues, TestSuite}
+import org.scalatest.OptionValues
+import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import repositories.MongoJourneyAnswersRepository
 import services.{JourneyStatusService, MongoJourneyAnswersService}
@@ -30,7 +30,8 @@ import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MockMongoJourneyAnswersRepository
-    extends MockFactory with CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues { _: TestSuite =>
+    extends CleanMongoCollectionSupport with GuiceOneAppPerSuite with OptionValues {
+  this: TestSuite =>
 
   val stubAppConfig: AppConfig = new AppConfigStub().config()
 

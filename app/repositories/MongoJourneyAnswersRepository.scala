@@ -45,7 +45,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         IndexModel(
           Indexes.ascending("updatedAt"),
           IndexOptions()
-            .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
+            .expireAfter(appConfig.timeToLive.toLong, TimeUnit.DAYS)
             .name("TTL_UpdatedAt_Index")
         ),
         IndexModel(

@@ -28,6 +28,7 @@ import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenY
 import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
@@ -67,7 +68,7 @@ class HipConnector @Inject() (
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}")
       .withBody[HipPropertyBFLRequest](requestBody)
       .execute[PostBroughtForwardLossResponse]
-      .map { response: PostBroughtForwardLossResponse =>
+      .map { (response: PostBroughtForwardLossResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -103,7 +104,7 @@ class HipConnector @Inject() (
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(hipApiVersion)}")
       .withBody[HipPropertyUpdateBFLRequest](requestBody)
       .execute[PutHipPropertyBFLResponse]
-      .map { response: PutHipPropertyBFLResponse =>
+      .map { (response: PutHipPropertyBFLResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -132,7 +133,7 @@ class HipConnector @Inject() (
       .setHeader("Environment" -> appConfig.hipEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.hipAuthTokenFor(apiVersion)}")
       .execute[GetHipPropertyBFLResponse]
-      .map { response: GetHipPropertyBFLResponse =>
+      .map { (response: GetHipPropertyBFLResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")

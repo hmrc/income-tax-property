@@ -29,6 +29,7 @@ import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
@@ -207,9 +208,10 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody[CreateUKPropertyPeriodicSubmissionRequest](body)
       .execute[PostPeriodicSubmissionResponse]
-      .map { response: PostPeriodicSubmissionResponse =>
+      .map { (response: PostPeriodicSubmissionResponse) =>
         response.result match {
-          case Left (apiError: ApiError) => val correlationId =
+          case Left(apiError: ApiError) =>
+            val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
             logger.error(
               s"Error creating a property periodic submission from the Integration Framework: URL: $url" +
@@ -248,7 +250,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody[CreateForeignPropertyPeriodicSubmissionRequest](body)
       .execute[PostPeriodicSubmissionResponse]
-      .map { response: PostPeriodicSubmissionResponse =>
+      .map { (response: PostPeriodicSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -291,7 +293,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(propertyPeriodicSubmissionRequest)
       .execute[PutPeriodicSubmissionResponse]
-      .map { response: PutPeriodicSubmissionResponse =>
+      .map { (response: PutPeriodicSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -335,7 +337,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(propertyPeriodicSubmissionRequest)
       .execute[PutPeriodicSubmissionResponse]
-      .map { response: PutPeriodicSubmissionResponse =>
+      .map { (response: PutPeriodicSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -379,7 +381,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(submissionRequest)
       .execute[PutAnnualSubmissionResponse]
-      .map { response: PutAnnualSubmissionResponse =>
+      .map { (response: PutAnnualSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -455,7 +457,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(foreignProperty)
       .execute[PutAnnualSubmissionResponse]
-      .map { response: PutAnnualSubmissionResponse =>
+      .map { (response: PutAnnualSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -496,7 +498,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(Json.toJson(foreignProperty))
       .execute[PutAnnualSubmissionResponse]
-      .map { response: PutAnnualSubmissionResponse =>
+      .map { (response: PutAnnualSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -538,7 +540,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(Json.toJson(foreignProperty))
       .execute[PutAnnualSubmissionResponse]
-      .map { response: PutAnnualSubmissionResponse =>
+      .map { (response: PutAnnualSubmissionResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -576,7 +578,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(Json.toJson(body))
       .execute[PostBroughtForwardLossResponse]
-      .map { response: PostBroughtForwardLossResponse =>
+      .map { (response: PostBroughtForwardLossResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -604,7 +606,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .execute[GetBroughtForwardLossResponse]
-      .map { response: GetBroughtForwardLossResponse =>
+      .map { (response: GetBroughtForwardLossResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -634,7 +636,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader("Environment" -> appConfig.ifEnvironment)
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .execute[GetBroughtForwardLossesResponse]
-      .map { response: GetBroughtForwardLossesResponse =>
+      .map { (response: GetBroughtForwardLossesResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")
@@ -666,7 +668,7 @@ class IntegrationFrameworkConnector @Inject() (http: HttpClientV2, appConfig: Ap
       .setHeader(HeaderNames.authorisation -> s"Bearer ${appConfig.authorisationTokenFor(apiVersion)}")
       .withBody(Json.toJson(body))
       .execute[PutBroughtForwardLossResponse]
-      .map { response: PutBroughtForwardLossResponse =>
+      .map { (response: PutBroughtForwardLossResponse) =>
         if (response.result.isLeft) {
           val correlationId =
             response.httpResponse.header(key = "CorrelationId").map(id => s" CorrelationId: $id").getOrElse("")

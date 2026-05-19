@@ -615,7 +615,7 @@ class MergeService @Inject() () {
 
     val adjustmentsPIAAndPeriodicExpenses: Option[Map[String, (ForeignPropertyAdjustments, Option[BigDecimal], ForeignPropertyExpenses)]] =
       resultFromAnnualDownstream.foreignProperty.map { annualForeignProperties =>
-        annualForeignProperties.flatMap { annualForeignProperty: AnnualForeignProperty =>
+        annualForeignProperties.flatMap { (annualForeignProperty: AnnualForeignProperty) =>
           for {
             adjustments <- annualForeignProperty.adjustments
             periodicForeignProperties <- resultFromPeriodicDownstreamMaybe.flatMap(_.foreignProperty)

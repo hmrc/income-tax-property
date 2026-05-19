@@ -19,24 +19,15 @@ package utils.mocks
 import models.domain.{FetchedData, JourneyAnswers}
 import models.request.foreignincome.ForeignIncomeSubmission
 import models.responses._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import services.MergeService
 
-trait MockMergeService extends MockFactory { _: TestSuite =>
+trait MockMergeService extends MockitoSugar {
   protected val mergeService: MergeService = mock[MergeService]
 
-  def mockMergeServiceMergeAll(returnValue: FetchedData) =
-    (mergeService
-      .mergeAll(_: Option[PropertyAnnualSubmission],
-        _: Option[PropertyPeriodicSubmission],
-        _: Map[String, JourneyAnswers],
-        _: Map[String, Map[String, JourneyAnswers]],
-        _: Option[ForeignIncomeSubmission],
-        _: Map[String, JourneyAnswers]
-      ))
-      .expects(*, *, *, *, *, *)
-      .returning(
-        returnValue
-      )
+  def mockMergeServiceMergeAll(returnValue: FetchedData): Unit =
+    when(mergeService.mergeAll(any(), any(), any(), any(), any(), any()))
+      .thenReturn(returnValue)
 }

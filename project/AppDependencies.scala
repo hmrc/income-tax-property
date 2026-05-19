@@ -27,10 +27,10 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"           %% "bootstrap-test-play-30"   % bootstrapVersion,
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion,
-    "org.scalamock"         %% "scalamock"                % "7.5.5",
+    "org.mockito"           %% "mockito-scala"            % "2.2.1",
     "org.scalatest"         %% "scalatest"                % "3.2.19",
     "org.scalacheck"        %% "scalacheck"               % "1.19.0",
-    "org.scalatestplus"     %% "scalacheck-1-15"          % "3.2.11.0",
+    "org.scalatestplus"     %% "scalacheck-1-18"          % "3.2.19.0",
     "com.vladsch.flexmark"   % "flexmark-all"             % "0.64.8",
     "com.github.tomakehurst" % "wiremock-jre8-standalone" % "3.0.1"
   ).map(_ % "test")

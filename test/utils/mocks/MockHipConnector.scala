@@ -22,14 +22,14 @@ import models.common.{IncomeSourceId, Nino}
 import models.errors.ApiError
 import models.request.WhenYouReportedTheLoss
 import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
-import org.scalamock.handlers.{CallHandler3, CallHandler5, CallHandler6}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchersSugar
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockHipConnector extends MockFactory { _: TestSuite =>
+trait MockHipConnector extends MockitoSugar with ArgumentMatchersSugar {
 
   protected val mockHipConnector: HipConnector = mock[HipConnector]
 
@@ -40,52 +40,25 @@ trait MockHipConnector extends MockFactory { _: TestSuite =>
     lossAmount: BigDecimal,
     taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
     result: Either[ApiError, BroughtForwardLossId]
-  ): CallHandler6[Nino, IncomeSourceId, IncomeSourceType, BigDecimal, WhenYouReportedTheLoss, HeaderCarrier, Future[
-    Either[ApiError, BroughtForwardLossId]
-  ]] = (
-    mockHipConnector
-      .createPropertyBroughtForwardLoss(
-        _: Nino,
-        _: IncomeSourceId,
-        _: IncomeSourceType,
-        _: BigDecimal,
-        _: WhenYouReportedTheLoss
-      )(
-        _: HeaderCarrier
-      ))
-      .expects(nino, incomeSourceId, incomeSourceType, lossAmount, taxYearBroughtForwardFrom, *)
-      .returning(Future.successful(result))
+  ): Unit =
+    when(mockHipConnector.createPropertyBroughtForwardLoss(eqTo(nino), eqTo(incomeSourceId), eqTo(incomeSourceType), eqTo(lossAmount), eqTo(taxYearBroughtForwardFrom))(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result))
 
   def mockHipGetPropertyBroughtForwardLossSubmission(
     nino: Nino,
     lossId: String,
     result: Either[ApiError, HipPropertyBFLResponse]
-  ): CallHandler3[Nino, String, HeaderCarrier, Future[
-    Either[ApiError, HipPropertyBFLResponse]
-  ]] =
-    (mockHipConnector
-      .getPropertyBroughtForwardLoss(_: Nino, _: String)(_: HeaderCarrier))
-      .expects(nino, lossId, *)
-      .returning(Future.successful(result))
+  ): Unit =
+    when(mockHipConnector.getPropertyBroughtForwardLoss(eqTo(nino), eqTo(lossId))(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result))
 
   def mockHipUpdatePropertyBroughtForwardLossSubmission(
-                                                         nino: Nino,
-                                                         broughtForwardLossAmount: BigDecimal,
-                                                         taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
-                                                         lossId: BroughtForwardLossId,
-                                                         result: Either[ApiError, HipPropertyBFLResponse]
-                                                       ): CallHandler5[Nino, BigDecimal, WhenYouReportedTheLoss, BroughtForwardLossId, HeaderCarrier, Future[
-    Either[ApiError, HipPropertyBFLResponse]
-  ]] = (
-    mockHipConnector
-      .updatePropertyBroughtForwardLoss(
-        _: Nino,
-        _: BigDecimal,
-        _: WhenYouReportedTheLoss,
-        _: BroughtForwardLossId
-      )(
-        _: HeaderCarrier
-      ))
-    .expects(nino, broughtForwardLossAmount, taxYearBroughtForwardFrom, lossId, *)
-    .returning(Future.successful(result))
+    nino: Nino,
+    broughtForwardLossAmount: BigDecimal,
+    taxYearBroughtForwardFrom: WhenYouReportedTheLoss,
+    lossId: BroughtForwardLossId,
+    result: Either[ApiError, HipPropertyBFLResponse]
+  ): Unit =
+    when(mockHipConnector.updatePropertyBroughtForwardLoss(eqTo(nino), eqTo(broughtForwardLossAmount), eqTo(taxYearBroughtForwardFrom), eqTo(lossId))(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result))
 }
