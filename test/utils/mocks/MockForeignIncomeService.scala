@@ -65,7 +65,7 @@ trait MockForeignIncomeService extends MockitoSugar {
     foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode,
     result: Either[ServiceError, Boolean]
   ): Unit =
-    when(mockForeignIncomeService.saveForeignIncomeDividends(any[JourneyContext], any[Nino], eqTo(foreignDividendsWithCountryCode))(any[HeaderCarrier]))
+    when(mockForeignIncomeService.saveForeignIncomeDividends(eqTo(ctx), any[Nino], eqTo(foreignDividendsWithCountryCode))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockGetFetchedIncomeDataMerged(

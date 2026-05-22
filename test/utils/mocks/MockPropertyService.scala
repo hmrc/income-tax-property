@@ -188,7 +188,7 @@ trait MockPropertyService extends MockitoSugar with ArgumentMatchersSugar {
     nino: Nino,
     answers: RentalAllowances
   ): Unit =
-    when(mockPropertyService.savePropertyRentalAllowances(any(), any(), any())(any()))
+    when(mockPropertyService.savePropertyRentalAllowances(any[JourneyContext], any[Nino], any[RentalAllowances])(any[HeaderCarrier]))
       .thenReturn(EitherT.pure[Future, ServiceError](true))
 
   def mockSavePropertyRentalAdjustments[A](
@@ -196,7 +196,7 @@ trait MockPropertyService extends MockitoSugar with ArgumentMatchersSugar {
     nino: Nino,
     propertyRentalAdjustments: PropertyRentalAdjustments
   ): Unit =
-    when(mockPropertyService.savePropertyRentalAdjustments(any(), any(), any())(any()))
+    when(mockPropertyService.savePropertyRentalAdjustments(any[JourneyContext], any[Nino], any[PropertyRentalAdjustments])(any[HeaderCarrier]))
       .thenReturn(EitherT.pure[Future, ServiceError](true))
 
   def mockSaveUkRentARoomAbout[A](
@@ -221,7 +221,7 @@ trait MockPropertyService extends MockitoSugar with ArgumentMatchersSugar {
     journeyContext: JourneyContextWithNino,
     ukRaRAllowances: RentARoomAllowances
   ): Unit =
-    when(mockPropertyService.saveRentARoomAllowances(any(), any())(any()))
+    when(mockPropertyService.saveRentARoomAllowances(any[JourneyContextWithNino], any[RentARoomAllowances])(any[HeaderCarrier]))
       .thenReturn(EitherT.pure[Future, ServiceError](true))
 
   def mockSaveUkRaRExpenses[A](

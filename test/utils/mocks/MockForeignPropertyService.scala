@@ -43,7 +43,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignPropertiesInformation: ForeignPropertySelectCountry,
     result: Either[ServiceError, Boolean]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignPropertySelectCountry(any[JourneyContext], eqTo(foreignPropertiesInformation))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignPropertySelectCountry(eqTo(journeyContext), eqTo(foreignPropertiesInformation))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyTax(
@@ -52,7 +52,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignPropertyTaxWithCountryCode: ForeignPropertyTaxWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignPropertyTax(any[JourneyContext], any[Nino], eqTo(foreignPropertyTaxWithCountryCode))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignPropertyTax(eqTo(journeyContext), any[Nino], eqTo(foreignPropertyTaxWithCountryCode))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyExpenses(
@@ -61,7 +61,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignPropertyExpenses: ForeignPropertyExpensesWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignPropertyExpenses(any[JourneyContext], any[Nino], eqTo(foreignPropertyExpenses))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignPropertyExpenses(eqTo(journeyContext), any[Nino], eqTo(foreignPropertyExpenses))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignIncomeSection(
@@ -70,7 +70,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignIncome: ForeignIncomeWithCountryCode,
     result: Either[ServiceError, Option[PeriodicSubmissionId]]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignIncome(any[JourneyContext], any[Nino], eqTo(foreignIncome))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignIncome(eqTo(journeyContext), any[Nino], eqTo(foreignIncome))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyAllowancesSection(
@@ -79,7 +79,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignPropertyAllowancesWithCountryCode: ForeignPropertyAllowancesWithCountryCode,
     result: Either[ServiceError, Boolean]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignPropertyAllowances(any[JourneyContext], any[Nino], eqTo(foreignPropertyAllowancesWithCountryCode))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignPropertyAllowances(eqTo(journeyContext), any[Nino], eqTo(foreignPropertyAllowancesWithCountryCode))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertyAdjustmentsSection(
@@ -88,7 +88,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     foreignPropertyAdjustmentsWithCountryCode: ForeignPropertyAdjustmentsWithCountryCode,
     result: Either[ServiceError, Boolean]
   ): Unit =
-    when(mockForeignPropertyService.saveForeignPropertyAdjustments(any[JourneyContext], any[Nino], eqTo(foreignPropertyAdjustmentsWithCountryCode))(any[HeaderCarrier]))
+    when(mockForeignPropertyService.saveForeignPropertyAdjustments(eqTo(journeyContext), any[Nino], eqTo(foreignPropertyAdjustmentsWithCountryCode))(any[HeaderCarrier]))
       .thenReturn(EitherT.fromEither[Future](result))
 
   def mockSaveForeignPropertySbaSection(
@@ -98,7 +98,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     result: Either[ServiceError, Boolean]
   ): Unit =
     when(mockForeignPropertyService.saveForeignPropertySba(
-      any[JourneyContext],
+      eqTo(journeyContext),
       any[Nino],
       eqTo(foreignPropertySbaWithCountryCode)
     )(any[HeaderCarrier]))
@@ -109,7 +109,7 @@ trait MockForeignPropertyService extends MockitoSugar {
     deleteJourneyAnswers: DeleteJourneyAnswers,
     result: Either[ServiceError, Boolean]
   ): Unit =
-    when(mockForeignPropertyService.deleteForeignPropertyAnswers(any[JourneyContext], eqTo(deleteJourneyAnswers)))
+    when(mockForeignPropertyService.deleteForeignPropertyAnswers(eqTo(journeyContext), eqTo(deleteJourneyAnswers)))
       .thenReturn(EitherT.fromEither[Future](result))
 
 }

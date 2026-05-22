@@ -18,8 +18,8 @@ package utils.mocks
 
 import models.domain.{FetchedData, JourneyAnswers}
 import models.request.foreignincome.ForeignIncomeSubmission
-import models.responses._
-import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import models.responses.{PropertyAnnualSubmission, PropertyPeriodicSubmission}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import services.MergeService
@@ -28,6 +28,6 @@ trait MockMergeService extends MockitoSugar {
   protected val mergeService: MergeService = mock[MergeService]
 
   def mockMergeServiceMergeAll(returnValue: FetchedData): Unit =
-    when(mergeService.mergeAll(any(), any(), any(), any(), any(), any()))
+    when(mergeService.mergeAll(any[Option[PropertyAnnualSubmission]], any[Option[PropertyPeriodicSubmission]], any[Map[String, JourneyAnswers]], any[Map[String, Map[String, JourneyAnswers]]], any[Option[ForeignIncomeSubmission]], any[Map[String, JourneyAnswers]]))
       .thenReturn(returnValue)
 }
