@@ -288,7 +288,7 @@ class PropertyService @Inject() (
                 s"[getForeignJourneysPerJourneyName] Foreign journey map from the repository: ${validJourneys + (journeyName -> fjm)}"
               )
               (validJourneys + (journeyName -> fjm)).asRight[ServiceError]
-            case x =>
+            case _ =>
               logger.warn(
                 s"[getForeignJourneysPerJourneyName] For foreign journey map from the repository: $validJourneys"
               )

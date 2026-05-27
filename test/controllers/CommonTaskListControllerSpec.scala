@@ -18,7 +18,9 @@ package controllers
 
 import models.common.JourneyStatus
 import models.taskList.{SectionTitle, TaskListSection, TaskListSectionItem, TaskTitle}
-import org.scalamock.handlers.CallHandler5
+import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentAsJson, status}
@@ -30,7 +32,7 @@ import utils.{ControllerUnitTest, TaxYearUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorisedAction with FakeRequestProvider {
+class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorisedAction with MockitoSugar with FakeRequestProvider {
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   val nino: String = "123456789"
   val taxYear: Int = TaxYearUtils.taxYear
@@ -97,11 +99,9 @@ class CommonTaskListControllerSpec extends ControllerUnitTest with MockAuthorise
       |""".stripMargin
   )
 
-  def mockPropertyService(taskListSection: Seq[TaskListSection]): CallHandler5[Int, String, String, ExecutionContext, HeaderCarrier, Future[Seq[TaskListSection]]] = {
-    (commonTaskListService.get(_: Int, _: String, _: String)(_: ExecutionContext, _: HeaderCarrier))
-      .expects(*, *, *, *, *)
-      .returning(Future.successful(taskListSection))
-  }
+  def mockPropertyService(taskListSection: Seq[TaskListSection]): Unit =
+    when(commonTaskListService.get(any[Int], any[String], any[String])(any[ExecutionContext], any[HeaderCarrier]))
+      .thenReturn(Future.successful(taskListSection))
 
   ".getCommonTaskList" should {
     "return a task list section model for None returns" in {

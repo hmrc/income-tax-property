@@ -23,9 +23,10 @@ import models.taskList._
 import models.{BusinessDetailsResponse, PropertyDetails}
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters
-import org.scalamock.scalatest.proxy.MockFactory
+import org.mongodb.scala.SingleObservableFuture
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers.mustBe
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.UnitTest
@@ -36,7 +37,7 @@ import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 class CommonTaskListServiceSpec extends UnitTest
-  with MockFactory
+  with MockitoSugar
   with AppConfigStubProvider
   with MockBusinessDetailsService
   with MockMongoJourneyAnswersRepository

@@ -18,9 +18,9 @@ package utils.mocks
 
 import models.auth.DelegatedAuthRules
 import models.auth.Enrolment.Individual
-import org.scalamock.handlers.CallHandler4
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -29,11 +29,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockAuthConnector extends MockFactory { _: TestSuite =>
+trait MockAuthConnector extends MockitoSugar {
 
   protected val mockAuthConnector: AuthConnector = mock[AuthConnector]
-
-  type AuthConnectorResponse[A] = CallHandler4[Predicate, Retrieval[A], HeaderCarrier, ExecutionContext, Future[A]]
 
   val primaryAgentPredicate: String => Enrolment = mtdId =>
     Enrolment(Individual.key)
@@ -41,20 +39,19 @@ trait MockAuthConnector extends MockFactory { _: TestSuite =>
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
 
   def mockAuthConnectorResponse[A](predicate: Predicate, retrieval: Retrieval[A])
-                                  (returnValue: Future[A]): CallHandler4[Predicate, Retrieval[A], HeaderCarrier, ExecutionContext, Future[A]] =
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[A])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(predicate, retrieval, *, *)
-      .returning(returnValue)
+                                  (returnValue: Future[A]): Unit =
+    when(mockAuthConnector.authorise(eqTo(predicate), eqTo(retrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(returnValue)
 
-  def mockAuthAffinityGroup(affinityGroup: AffinityGroup): AuthConnectorResponse[Option[AffinityGroup]] =
+  def mockAuthAffinityGroup(affinityGroup: AffinityGroup): Unit =
     mockAuthConnectorResponse(EmptyPredicate, Retrievals.affinityGroup)(Future.successful(Some(affinityGroup)))
 
-  def mockAuthReturnException[A](predicate: Predicate, retrieval: Retrieval[A])(exception: Exception): AuthConnectorResponse[A] =
+  def mockAuthReturnException[A](predicate: Predicate, retrieval: Retrieval[A])(exception: Exception): Unit =
     mockAuthConnectorResponse(predicate, retrieval)(Future.failed(exception))
 
-  def mockAuthAsPrimaryAgent(mtdId: String)(enrolments: Enrolments): AuthConnectorResponse[Enrolments] =
+  def mockAuthAsPrimaryAgent(mtdId: String)(enrolments: Enrolments): Unit =
     mockAuthConnectorResponse(primaryAgentPredicate(mtdId), Retrievals.allEnrolments)(Future.successful(enrolments))
 
-  def mockAuthAsIndividual(response: Enrolments ~ ConfidenceLevel): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] =
+  def mockAuthAsIndividual(response: Enrolments ~ ConfidenceLevel): Unit =
     mockAuthConnectorResponse(EmptyPredicate, Retrievals.allEnrolments and Retrievals.confidenceLevel)(Future.successful(response))
 }

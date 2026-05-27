@@ -21,7 +21,6 @@ import models.errors.{SingleErrorBody, ApiError}
 import models.request.foreign.{AnnualForeignPropertySubmission, AnnualForeignPropertyAdjustments, AnnualForeignPropertyAllowances, AnnualForeignProperty, AnnualForeignPropertySubmissionAdjustments, AnnualForeignPropertySubmissionAllowances, ForeignPropertyAdjustments, ForeignPropertyAllowances}
 import models.request.{CreateUKPropertyPeriodicSubmissionRequest, UpdateUKPropertyPeriodicSubmissionRequest, WhenYouReportedTheLoss}
 import models.responses._
-import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
@@ -29,7 +28,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
+class IntegrationFrameworkConnectorSpec extends ConnectorIntegrationSpec {
 
   private val nino = Nino("some-nino")
   private val taxableEntityId = Nino("some-taxable-entity-id")

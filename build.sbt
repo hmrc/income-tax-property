@@ -43,14 +43,11 @@ lazy val coverageSettings: Seq[Setting[?]] = {
   )
 }
 
-Global / scalacOptions += "-Ymacro-annotations"
-
 inThisBuild(
   List(
     majorVersion := 0,
-    scalaVersion := "2.13.18",
-    semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision
+    scalaVersion := "3.3.7",
+    semanticdbEnabled := true
   )
 )
 
@@ -58,8 +55,9 @@ lazy val microservice = Project("income-tax-property", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions ++= Seq(
+      "-Wconf:src=target/.*:s,src=routes/.*:s" // suppress warnings in generated routes files
+    )
   )
   .settings(
     RoutesKeys.routesImport ++= Seq(

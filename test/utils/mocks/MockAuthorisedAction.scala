@@ -18,8 +18,7 @@ package utils.mocks
 
 import actions.AuthorisedAction
 import models.auth.Enrolment.{Individual, Nino}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc._
 import play.api.test.Helpers.stubMessagesControllerComponents
 import uk.gov.hmrc.auth.core.retrieve.~
@@ -28,7 +27,7 @@ import uk.gov.hmrc.auth.core._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockAuthorisedAction extends MockFactory with MockAuthConnector { _: TestSuite =>
+trait MockAuthorisedAction extends MockitoSugar with MockAuthConnector {
 
   private val mcc = stubMessagesControllerComponents()
   private val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mcc.parsers.default)
@@ -36,7 +35,7 @@ trait MockAuthorisedAction extends MockFactory with MockAuthConnector { _: TestS
   protected val mockAuthorisedAction: AuthorisedAction =
     new AuthorisedAction(defaultActionBuilder, mockAuthConnector, mcc)
 
-  def mockAuthorisation(): AuthConnectorResponse[Enrolments ~ ConfidenceLevel] = {
+  def mockAuthorisation(): Unit = {
     val individualEnrolments: Enrolments = Enrolments(
       Set(
         Enrolment(Individual.key, Seq(EnrolmentIdentifier(Individual.value, "1234567890")), "Activated"),

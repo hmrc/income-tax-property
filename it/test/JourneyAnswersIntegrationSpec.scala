@@ -36,6 +36,7 @@ import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.WSClient
 import repositories.MongoJourneyAnswersRepository
 import support.stubs.AuthStub._

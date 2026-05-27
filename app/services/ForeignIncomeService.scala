@@ -100,31 +100,31 @@ class ForeignIncomeService  @Inject() (
     EitherT(connector.deleteForeignIncomeSubmission(taxYear, nino))
       .leftMap(e => ApiServiceError(e.status))
 
-    def saveForeignIncomeDividends(
-      ctx: JourneyContext,
-      nino: Nino,
-      foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
-    )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
-      for {
-        foreignIncomeSubmission <- getOrCreateForeignIncomeSubmission(ctx, nino)
-        _ <- createOrUpdateForeignIncomeSubmission(
-          ctx.taxYear,
-          nino,
-          ForeignIncomeSubmission.fromForeignIncomeDividends(foreignIncomeSubmission, foreignDividendsWithCountryCode)
+  def saveForeignIncomeDividends(
+    ctx: JourneyContext,
+    nino: Nino,
+    foreignDividendsWithCountryCode: ForeignIncomeDividendsWithCountryCode
+  )(implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Boolean] = {
+    for {
+      foreignIncomeSubmission <- getOrCreateForeignIncomeSubmission(ctx, nino)
+      _ <- createOrUpdateForeignIncomeSubmission(
+        ctx.taxYear,
+        nino,
+        ForeignIncomeSubmission.fromForeignIncomeDividends(foreignIncomeSubmission, foreignDividendsWithCountryCode)
+      )
+      res <- mongoService.persistAnswers(
+        ctx,
+        ForeignIncomeDividendsStoreAnswers(
+          foreignDividendsWithCountryCode.foreignIncomeDividends.map { foreignIncomeDividend =>
+            ForeignIncomeDividendsAnswers(
+              countryCode = foreignIncomeDividend.countryCode,
+              foreignTaxDeductedFromDividendIncome = foreignIncomeDividend.foreignTaxDeductedFromDividendIncome
+            )
+          }
         )
-        res <- mongoService.persistAnswers(
-          ctx,
-          ForeignIncomeDividendsStoreAnswers(
-            foreignDividendsWithCountryCode.foreignIncomeDividends.map { foreignIncomeDividend =>
-              ForeignIncomeDividendsAnswers(
-                countryCode = foreignIncomeDividend.countryCode,
-                foreignTaxDeductedFromDividendIncome = foreignIncomeDividend.foreignTaxDeductedFromDividendIncome
-              )
-            }
-          )
-        )
-      } yield res
-    }
+      )
+    } yield res
+  }
 
   def getFetchedIncomeDataMerged(
                                     ctx: JourneyContext,

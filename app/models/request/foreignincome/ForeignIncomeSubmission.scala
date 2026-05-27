@@ -92,7 +92,7 @@ object ForeignIncomeSubmission {
         taxableAmount = downstreamDividend.map(_.taxableAmount).getOrElse(0)
       )
     }
-
-   foreignDividendLens.replace(updatedForeignIncomeDividends)(foreignIncomeSubmission)
+    
+    foreignDividendLens.replace(updatedForeignIncomeDividends)(foreignIncomeSubmission)
   }
 }

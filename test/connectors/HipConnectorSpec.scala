@@ -25,7 +25,6 @@ import models.request.WhenYouReportedTheLoss.{toTaxYear, y2021to2022}
 import models.request.{HipPropertyBFLRequest, HipPropertyUpdateBFLRequest, WhenYouReportedTheLoss}
 import models.responses.{BroughtForwardLossId, HipPropertyBFLResponse}
 import models.IncomeSourceType
-import org.scalamock.scalatest.MockFactory
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
@@ -33,7 +32,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class HipConnectorSpec extends ConnectorIntegrationSpec with MockFactory {
+class HipConnectorSpec extends ConnectorIntegrationSpec {
 
   private val nino = Nino("test-nino")
   private val lossId = BroughtForwardLossId("test-loss-id")

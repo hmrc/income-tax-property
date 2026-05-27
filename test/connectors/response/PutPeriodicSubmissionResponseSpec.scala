@@ -23,95 +23,97 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import utils.UnitTest
 
-class PutPeriodicSubmissionResponseSpec extends UnitTest{
+class PutPeriodicSubmissionResponseSpec extends UnitTest {
 
-    private val anyHeaders: Map[String, Seq[String]] = Map.empty
-    private val anyMethod: String = "PUT"
-    private val anyUrl = "/income-tax/business/property/"
+  private val anyHeaders: Map[String, Seq[String]] = Map.empty
+  private val anyMethod: String = "PUT"
+  private val anyUrl = "/income-tax/business/property/"
 
-    private val underTest = putPeriodicSubmission
+  private val underTest = putPeriodicSubmission
 
-    "putPropertyPeriodicSubmissionDataReads" should {
+  "putPropertyPeriodicSubmissionDataReads" should {
 
-      "convert JsValue to PutPropertyPeriodicSubmissionResponse" when {
+    "convert JsValue to PutPropertyPeriodicSubmissionResponse" when {
+      
+      "status is NO_CONTENT" in {
 
-          val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Right(None)
-          )
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Right(None)
+        )
+      }
 
-        "status is OK and invalid jsValue" in {
-          val jsValue: JsValue = Json.parse(
-            """
-              |{
-              |   "PropertyAnnualSubmission": {"value": []}
-              |}
-              |""".stripMargin)
+      "status is OK and invalid jsValue" in {
+        val jsValue: JsValue = Json.parse("""
+                                            |{
+                                            |   "PropertyAnnualSubmission": {"value": []}
+                                            |}
+                                            |""".stripMargin)
 
-          val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(OK, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError))
+        )
+      }
 
-        "status is NOT_FOUND and any jsValue" in {
-          val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
+      "status is NOT_FOUND and any jsValue" in {
+        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
 
-          val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(NOT_FOUND, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "some-reason")))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(NOT_FOUND, SingleErrorBody("some-code", "some-reason")))
+        )
+      }
 
-        "status is INTERNAL_SERVER_ERROR and jsValue for error" in {
-          val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
+      "status is INTERNAL_SERVER_ERROR and jsValue for error" in {
+        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
 
-          val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
+        )
+      }
 
-        "status is SERVICE_UNAVAILABLE and jsValue for error" in {
-          val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
+      "status is SERVICE_UNAVAILABLE and jsValue for error" in {
+        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
 
-          val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("some-code", "some-reason")))
+        )
+      }
 
-        "status is BAD_REQUEST and jsValue for error" in {
-          val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
+      "status is BAD_REQUEST and jsValue for error" in {
+        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
 
-          val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(BAD_REQUEST, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(BAD_REQUEST, SingleErrorBody("some-code", "some-reason")))
+        )
+      }
 
-        "status is OTHER and jsValue for error" in {
-          val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
+      "status is OTHER and jsValue for error" in {
+        val jsValue: JsValue = Json.toJson(SingleErrorBody("some-code", "some-reason"))
 
-          val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
+        val httpResponse: HttpResponse = HttpResponse.apply(FAILED_DEPENDENCY, jsValue, anyHeaders)
 
-          underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
-            httpResponse,
-            Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
-          )
-        }
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe PutPeriodicSubmissionResponse(
+          httpResponse,
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
+        )
       }
     }
   }
+}

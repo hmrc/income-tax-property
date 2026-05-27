@@ -24,6 +24,7 @@ import models.domain.JourneyAnswers
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
+import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -42,7 +43,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with DefaultPlayMongo
 
   val mockAppConfig: AppConfig = new AppConfigStub().config()
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
+  override val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, stubClock)
 
   val taxYear: TaxYear = TaxYear(2024)
   val incomeSourceId: IncomeSourceId = IncomeSourceId("incomeSourceId")

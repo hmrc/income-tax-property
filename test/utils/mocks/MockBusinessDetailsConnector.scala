@@ -19,24 +19,22 @@ package utils.mocks
 import connectors.BusinessDetailsConnector
 import models.errors.ApiError
 import models.responses._
-import org.scalamock.handlers.CallHandler2
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockBusinessDetailsConnector extends MockFactory { _: TestSuite =>
+trait MockBusinessDetailsConnector extends MockitoSugar {
 
   protected val mockIntegrationFrameworkConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
   def mockGetBusinessDetails(
     nino: String,
     result: Either[ApiError, Option[IncomeSourceDetailsModel]]
-  ): CallHandler2[String, HeaderCarrier, Future[Either[ApiError, Option[IncomeSourceDetailsModel]]]] =
-    (mockIntegrationFrameworkConnector
-      .getBusinessDetails(_: String)(_: HeaderCarrier))
-      .expects(nino, *)
-      .returning(Future.successful(result))
+  ): Unit =
+    when(mockIntegrationFrameworkConnector.getBusinessDetails(eqTo(nino))(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result))
 
 }
